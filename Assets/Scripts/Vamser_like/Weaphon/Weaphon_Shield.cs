@@ -21,7 +21,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private GameObject boomerangPrefab;
         [SerializeField] private float boomerangSpeed = 5f;
         [SerializeField] private float boomerangDistance = 3f;
-        [SerializeField] private float returnDelay = 0.5f;
+        [SerializeField] private float returnDelay = 0.1f;
 
         private readonly int boomerangCount = 5;
         private GameObject[] boomerangs;

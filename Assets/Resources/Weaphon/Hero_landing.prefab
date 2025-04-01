@@ -62,9 +62,9 @@ MonoBehaviour:
   shieldCollider: {fileID: 6276148643301183331}
   isUpgradelv1: 1
   boomerangPrefab: {fileID: 2029326127143702795, guid: dd047f8d2e80dca43b400823b5c14539, type: 3}
-  boomerangSpeed: 5
+  boomerangSpeed: 10
   boomerangDistance: 3
-  returnDelay: 0.5
+  returnDelay: 0.01
 --- !u!1 &1929210761387709798
 GameObject:
   m_ObjectHideFlags: 0

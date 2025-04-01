@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
@@ -12,14 +13,23 @@ namespace DogGuns_Games.vamsir
     {
         [Header("<color=green>Text UI")] [SerializeField]
         private TMP_Text mobWaveText;
-
         [SerializeField] private TMP_Text coinText;
         [SerializeField] private TMP_Text mobCountText;
         [SerializeField] private TMP_Text playerLevelText;
 
-        [FormerlySerializedAs("SettingBtn")] [SerializeField]
-        private Button settingBtn;
+        
+        [SerializeField] private Button MenuBtn;
 
+        [Header("<color=green>Menu UI")] [SerializeField]
+        private GameObject menuPanel;
+        [SerializeField] private Button settingBtn;
+        [SerializeField] private Button exitBtn;
+        
+        public List<GameObject> WeaponUIList = new List<GameObject>();
+        public List<GameObject> JuListUIList = new List<GameObject>();
+        
+        
+        
         [Header("<color=green>조이스틱")] [SerializeField]
         private VariableJoystick variableJoystick;
 
