@@ -18,7 +18,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private TMP_Text playerLevelText;
 
         
-        [SerializeField] private Button MenuBtn;
+        [FormerlySerializedAs("MenuBtn")] [SerializeField] private Button menuBtn;
 
         [Header("<color=green>Menu UI")] [SerializeField]
         private GameObject menuPanel;
@@ -90,8 +90,25 @@ namespace DogGuns_Games.vamsir
                 _gameManager.settingsData.joystickPos.y, 0);
         }
 
+        private void ToggleMenuAndJoystickVisibility()
+        {
+            // 메뉴 패널의 현재 활성 상태의 반대로 설정합니다.
+            bool isMenuPanelBecomingActive = !menuPanel.activeSelf;
+            menuPanel.SetActive(isMenuPanelBecomingActive);
+
+            // isMenuPanelBecomingActive 값에 따라 게임의 Pause/Resume 상태를 설정합니다.
+            _gameManager.Open_MenuPopUp(isMenuPanelBecomingActive);
+
+            // 메뉴 패널이 활성화되면 조이스틱을 비활성화하고, 그 반대의 경우도 마찬가지입니다.
+            joystickTransform.gameObject.SetActive(!isMenuPanelBecomingActive);
+        }
+
         private void BtnSetting()
         {
+            menuBtn.onClick.AddListener(ToggleMenuAndJoystickVisibility);
+    
+            exitBtn.onClick.AddListener(ToggleMenuAndJoystickVisibility);
+    
             settingBtn.onClick.AddListener(() =>
             {
                 _gameManager.Open_OptionPopUp();

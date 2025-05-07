@@ -99,12 +99,14 @@ namespace DogGuns_Games.vamsir
          
         }
 
+        public void Open_MenuPopUp(bool isPause)
+        {
+            Play_State.instance.PlayState = isPause ? Play_State.GameState.Pause : Play_State.GameState.Resume;
+        }
         public void Open_OptionPopUp()
         {
             Instantiate(optionPopupManager);
             optionPopupManager.gameObject.SetActive(true);
-
-            Play_State.instance.PlayState = Play_State.GameState.Pause;
         }
 
         public int Mob_Count()
