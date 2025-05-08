@@ -7,8 +7,8 @@ public class Manager : MonoBehaviour
 
     static Manager s_instance;
     static Manager Instance { get { Init(); return s_instance; } }
-    Soundmanager _sound = new Soundmanager();
-    public static Soundmanager Sound { get { return Instance._sound; } }
+    SoundManager _sound = new SoundManager();
+    public static SoundManager Sound { get { return Instance._sound; } }
     ResourceManager _resource = new ResourceManager();
 
     public static ResourceManager Resource { get { return Instance._resource; } }

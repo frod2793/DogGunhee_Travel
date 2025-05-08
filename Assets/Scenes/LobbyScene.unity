@@ -998,8 +998,8 @@ MonoBehaviour:
   startBtn: {fileID: 623481682}
   tutorialBtn: {fileID: 8499905}
   optionBtn: {fileID: 1785994343}
-  OptionPopUP: {fileID: 4094199759714701802, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
-  CgamePopUp: {fileID: 62640894}
+  optionPopUp: {fileID: 4094199759714701802, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
+  cgamePopUp: {fileID: 62640894}
   selectCharacterUIManager: {fileID: 617242525}
   openCharacterSelectButton: {fileID: 845655990}
   openCharacterListPanel: {fileID: 948598534}
@@ -1009,7 +1009,7 @@ MonoBehaviour:
   openMessingerButton: {fileID: 142006359}
   questPanelManager: {fileID: 1515052229}
   openQuestPanelButton: {fileID: 803496075}
-  Gold: {fileID: 1907996060}
+  gold: {fileID: 1907996060}
   dia: {fileID: 424256521}
   playerDataManagerDontdesytoy: {fileID: 0}
 --- !u!1 &81575512
@@ -1712,8 +1712,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1342390517}
   m_HandleRect: {fileID: 1342390516}
   m_Direction: 0
-  m_Value: 0
-  m_Size: 0.9999999
+  m_Value: 1
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2833,12 +2833,12 @@ MonoBehaviour:
   postBoxPanel: {fileID: 196991696}
   postboxcontainer: {fileID: 440166886}
   postboxPrefab: {fileID: 302336552260605802, guid: 8fae60c29b5a65b4ea61032ca96d5277, type: 3}
-  postBoxPanel_CloseBtn: {fileID: 2060208934}
-  postBoxPanel_Extension: {fileID: 1765612370}
-  postBoxPanel_Extension_Text: {fileID: 517755146}
-  postBoxSendername_Text: {fileID: 1394223268}
-  rewardItemName_Text: {fileID: 1037687263}
-  postBoxPanel_Extension_CloseBtn: {fileID: 1903731116}
+  postBoxPanelCloseBtn: {fileID: 2060208934}
+  postBoxPanelExtension: {fileID: 1765612370}
+  postBoxPanelExtensionText: {fileID: 517755146}
+  postBoxSendernameText: {fileID: 1394223268}
+  rewardItemNameText: {fileID: 815190495}
+  postBoxPanelExtensionCloseBtn: {fileID: 1903731116}
 --- !u!1 &379894546
 GameObject:
   m_ObjectHideFlags: 0
@@ -3782,7 +3782,7 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 726657442}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.000000059604645, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
@@ -6861,7 +6861,7 @@ GameObject:
   - component: {fileID: 860760909}
   - component: {fileID: 860760911}
   m_Layer: 5
-  m_Name: Close_Btn
+  m_Name: Quest_Close_Btn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13280,12 +13280,12 @@ MonoBehaviour:
   questPanel: {fileID: 1110550279}
   questContainer: {fileID: 593691768}
   questPrefab: {fileID: 4884317437775229061, guid: c16eb1c2c10c746189cf73af69b707f7, type: 3}
-  all_comfirmBtn: {fileID: 651901279}
-  questPanel_CloseBtn: {fileID: 860760911}
-  questPanel_Extension: {fileID: 465830104}
-  questPanel_Extension_Text: {fileID: 1785840214}
-  rewardItemName_Text: {fileID: 1768412941}
-  questPanel_Extension_CloseBtn: {fileID: 916068383}
+  allComfirmBtn: {fileID: 651901279}
+  questPanelCloseBtn: {fileID: 860760911}
+  questPanelExtension: {fileID: 465830104}
+  questPanelExtensionText: {fileID: 1785840214}
+  rewardItemNameText: {fileID: 1768412941}
+  questPanelExtensionCloseBtn: {fileID: 916068383}
 --- !u!1 &1544096946
 GameObject:
   m_ObjectHideFlags: 0
@@ -16328,7 +16328,7 @@ GameObject:
   - component: {fileID: 1903731117}
   - component: {fileID: 1903731116}
   m_Layer: 5
-  m_Name: Close_Button
+  m_Name: PostBox_Ex_Close_Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17584,7 +17584,7 @@ GameObject:
   - component: {fileID: 2060208935}
   - component: {fileID: 2060208934}
   m_Layer: 5
-  m_Name: Close_Button
+  m_Name: PostBox_Close_Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18332,8 +18332,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 508714303}
   m_HandleRect: {fileID: 508714302}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.99999994
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

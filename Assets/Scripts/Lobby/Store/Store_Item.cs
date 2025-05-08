@@ -66,9 +66,9 @@ namespace DogGuns_Games.Lobby
 
             _scritpableobjInventoryData.AddItem(itemData);
 
-            Inventory_Data_Manager_Dontdestory.Instance.Update_Inventory_Data(_scritpableobjInventoryData);
+            InventoryDataManagerDontdestory.Instance.Update_Inventory_Data(_scritpableobjInventoryData);
 
-            Server_Manager.Instance.Inventory_Data_Update();
+            ServerManager.Instance.Inventory_Data_Update();
         }
     }
 }

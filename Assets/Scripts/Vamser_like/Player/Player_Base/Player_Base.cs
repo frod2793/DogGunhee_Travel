@@ -85,7 +85,7 @@ namespace DogGuns_Games.vamsir
                 
                 Coin_Obj coinObj = other.gameObject.GetComponent<Coin_Obj>();
 
-                Player_Data_Manager_Dontdesytoy.Instance.scritpableobj_playerData.currency1 += 1;
+                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.currency1 += 1;
 
                 
                 coinObj.objectPoolSpawner.CoinObjectPool.Release(coinObj);

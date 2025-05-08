@@ -4,7 +4,7 @@ namespace DogGuns_Games.vamsir
 {
     public class Vamser_Mob_Base : MonoBehaviour
     {
-        public ObjectPool_Spawner objectPool_Spawner;
+        public ObjectPoolSpawner objectPool_Spawner;
 
         
         public float Mob_Speed { get; set; }
@@ -31,12 +31,12 @@ namespace DogGuns_Games.vamsir
 
         public virtual void OnEnable()
         {
-            objectPool_Spawner = FindFirstObjectByType<ObjectPool_Spawner>();
+            objectPool_Spawner = FindFirstObjectByType<ObjectPoolSpawner>();
 
             Mob_IsDie = false;
             
-            Play_State.OnGamePause += Pause;
-            Play_State.OnGameResume += Resume;
+            PlayStateManager.OnGamePause += Pause;
+            PlayStateManager.OnGameResume += Resume;
         }
 
         
@@ -105,7 +105,7 @@ namespace DogGuns_Games.vamsir
             {
                 Mob_IsDie = true;
                 objectPool_Spawner.MobObjectPool.Release(this);
-                Player_Data_Manager_Dontdesytoy.Instance.scritpableobj_playerData.nowPlayMObkillCOunt++;
+                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt++;
                 Debug.Log("Die : " + name);
             }
         }

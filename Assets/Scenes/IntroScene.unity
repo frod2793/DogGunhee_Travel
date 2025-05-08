@@ -764,20 +764,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14ea42ba3cc0440e4a607dba2670e287, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SignUp_PopUp: {fileID: 1864831180}
-  SignUp_NickName_InputField: {fileID: 958617272}
-  SignUp_ID_InputField: {fileID: 529880721}
-  SignUp_PW_InputField: {fileID: 1464652147}
-  SignUp_PW_Check_InputField: {fileID: 409951286}
-  SignUpBtn: {fileID: 1427951444}
-  Login_PopUp: {fileID: 460715061}
-  Login_ID_InputField: {fileID: 1771300658}
-  Login_PW_InputField: {fileID: 1257065018}
-  LoginBtn: {fileID: 907283340}
-  OpenSingUpPopUp_Btn: {fileID: 39406609}
-  StartBtn: {fileID: 1676048293}
-  GuestLoginBtn: {fileID: 2136691803}
-  OpenLoginPopUpBtn: {fileID: 575120355}
+  signUpPopUp: {fileID: 1864831180}
+  signUpNickNameInputField: {fileID: 958617272}
+  signUpIDInputField: {fileID: 529880721}
+  signUpPwInputField: {fileID: 1464652147}
+  signUpPwCheckInputField: {fileID: 409951286}
+  signUpBtn: {fileID: 1427951444}
+  loginPopUp: {fileID: 460715061}
+  loginIDInputField: {fileID: 1771300658}
+  loginPwInputField: {fileID: 1257065018}
+  loginBtn: {fileID: 907283340}
+  openSingUpPopUpBtn: {fileID: 39406609}
+  startBtn: {fileID: 1676048293}
+  guestLoginBtn: {fileID: 2136691803}
+  openLoginPopUpBtn: {fileID: 575120355}
 --- !u!1 &409951282
 GameObject:
   m_ObjectHideFlags: 0
@@ -4295,7 +4295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5852d493f67eb724fbe3810b42d07969, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scritpableobj_playerData: {fileID: 0}
+  scritpableobjPlayerData: {fileID: 0}
 --- !u!1 &1495696211
 GameObject:
   m_ObjectHideFlags: 0

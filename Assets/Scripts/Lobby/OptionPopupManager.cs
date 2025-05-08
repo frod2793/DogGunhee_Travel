@@ -15,7 +15,7 @@ public class OptionPopupManager : MonoBehaviour
     [Header("<color=green> 나가기 버튼")] [SerializeField]
     private Button exitBtn;
 
-    Soundmanager _soundmanager;
+    SoundManager _soundManager;
 
 
     [Header("조이스틱 사이즈및 타입 조절 버튼")] [SerializeField]
@@ -34,9 +34,9 @@ public class OptionPopupManager : MonoBehaviour
         joystickSizeBtn.onClick.AddListener(EnableJoystickSizeBtn);
         DropDown_Init();
         
-        if (_soundmanager == null)
+        if (_soundManager == null)
         {
-            _soundmanager = FindAnyObjectByType<Soundmanager>();
+            _soundManager = FindAnyObjectByType<SoundManager>();
         }
 
         LoadSettings(); // 시작 시 설정 불러오기
@@ -54,17 +54,17 @@ public class OptionPopupManager : MonoBehaviour
 
     private void EffectsoundVolumSlider()
     {
-        if (_soundmanager != null)
+        if (_soundManager != null)
         {
-            _soundmanager.VolumSet(Sound.Effect, effectSoundVolum.value);
+            _soundManager.VolumSet(Sound.Effect, effectSoundVolum.value);
         }
     }
 
     private void BgmSoundVolumSlider()
     {
-        if (_soundmanager != null)
+        if (_soundManager != null)
         {
-            _soundmanager.VolumSet(Sound.Bgm, bgMsoundVolum.value);
+            _soundManager.VolumSet(Sound.Bgm, bgMsoundVolum.value);
         }
     }
 
@@ -78,7 +78,7 @@ public class OptionPopupManager : MonoBehaviour
         // ScriptableObject는 자동으로 저장되므로, 별도로 저장할 필요 없음
         Destroy(gameObject); // 창 종료
 
-        Play_State.instance.PlayState = Play_State.GameState.Resume;
+        PlayStateManager.instance.PlayState = PlayStateManager.GameState.Resume;
     }
 
 

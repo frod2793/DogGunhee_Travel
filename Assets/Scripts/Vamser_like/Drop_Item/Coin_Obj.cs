@@ -4,6 +4,6 @@ namespace DogGuns_Games.vamsir
 {
     public class Coin_Obj : MonoBehaviour
     {
-        public ObjectPool_Spawner objectPoolSpawner;
+        public ObjectPoolSpawner objectPoolSpawner;
     }
 }
