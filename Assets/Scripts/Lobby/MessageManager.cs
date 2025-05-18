@@ -13,7 +13,7 @@ namespace DogGuns_Games
 
         [SerializeField] private Text message_Text;
 
-        void onMessage()
+        void OnMessage()
         {
             messageCanvas.gameObject.SetActive(true);
             message_BG.color = Color.white;
@@ -45,7 +45,7 @@ namespace DogGuns_Games
         public void OnEmptyGameMessage()
         {
             message_Text.text = "구상중인 항목입니다.";
-            onMessage();
+            OnMessage();
         }
 
         public void Func_Continue()

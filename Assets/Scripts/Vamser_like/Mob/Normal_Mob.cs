@@ -5,10 +5,10 @@ using UnityEngine;
 
 namespace DogGuns_Games.vamsir
 {
-    public class Normal_Mob : Vamser_Mob_Base
+    public class Normal_Mob : VamserMobBase
     {
         [Header("<color=green>플레이여")] [SerializeField]
-        private Player_Base player;
+        private PlayerBase player;
 
         [Header("<color=green>플레이어 무기")] [SerializeField]
         private Weaphon_base player_Weaphon;
@@ -23,7 +23,7 @@ namespace DogGuns_Games.vamsir
 
         private void Init()
         {
-            player = FindFirstObjectByType<Player_Base>();
+            player = FindFirstObjectByType<PlayerBase>();
             player_Weaphon = FindFirstObjectByType<Weaphon_base>();
             Mob_Speed = 0.5f;
             Mob_Hp = 100f;
@@ -62,7 +62,7 @@ namespace DogGuns_Games.vamsir
             
             if (player == null)
             {  
-                player = FindFirstObjectByType<Player_Base>();
+                player = FindFirstObjectByType<PlayerBase>();
                 return;
             }
 

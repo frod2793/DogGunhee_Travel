@@ -9,7 +9,7 @@ namespace DogGuns_Games.vamsir
         public static Action OnGamePause;
         public static Action OnGameResume;
         public static Action OnGameOver;
-
+        
         public static PlayStateManager instance;
 
         public bool isPlay = false;

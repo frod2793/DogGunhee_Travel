@@ -12,6 +12,11 @@ namespace DogGuns_Games.Lobby
         [SerializeField] private RectTransform storeItemList; // 상점 아이템 리스트
         [SerializeField] private List<Store_Item> storeItems = new List<Store_Item>(); // 상점 아이템 리스트
 
+        [SerializeField] private GameObject storeItemPrefab;
+        [Header("<color=green>상점 UI")]
+        [SerializeField] private GameObject storePanel;
+        [SerializeField] private GameObject storeItemPopUp;
+        
         #endregion
 
         #region Unity 라이프사이클
@@ -23,6 +28,41 @@ namespace DogGuns_Games.Lobby
 
         #endregion
 
+        private void StorePanelControl(bool isActive)
+        {
+            storePanel.SetActive(isActive);
+        }
+        private void StoreItemPopUpControl(bool isActive)
+        {
+            storeItemPopUp.SetActive(isActive);
+        }
+        
+      /// <summary>
+      /// 상점 패널을 화면에 표시합니다.
+      /// </summary>
+      public void OpenStorePanel()
+      {
+          Debug.Log("상점 패널 열기");
+          StorePanelControl(true);
+          LobbyUIManager.AddClosePopUpAction(CloseStorePanel);
+      }
+      
+      /// <summary>
+      /// 상점 아이템 팝업을 닫습니다.
+      /// </summary>
+      public void CloseStoreItemPopUp()
+      {
+          Debug.Log("상점 아이템 팝업 닫기");
+          StoreItemPopUpControl(false);
+      }
+
+      public void CloseStorePanel()
+      {
+            Debug.Log("상점 패널 닫기");
+            StorePanelControl(false);
+      }
+        
+        
         #region 상점 아이템 로드
 
         private void LoadAddressableStoreItems()

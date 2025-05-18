@@ -101,8 +101,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 476d768bf831cfc4ebfb1a6ac137ce4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPool_Spawner: {fileID: 0}
-  bulletSpeed: 5
+  objectPoolSpawner: {fileID: 0}
+  bulletSpeed: 50
 --- !u!58 &2167751140473522919
 CircleCollider2D:
   m_ObjectHideFlags: 0

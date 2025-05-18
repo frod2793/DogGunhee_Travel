@@ -1,35 +1,50 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
 
 namespace DogGuns_Games.Lobby
 {
+    /// <summary>
+    /// 게임 내 우편 시스템을 관리하는 클래스
+    /// </summary>
     public class PostManager : MonoBehaviour
     {
-        #region 필드 및 변수
+        #region 데이터 구조
 
-        struct Postmessage
+        /// <summary>
+        /// 우편 메시지 데이터 구조체
+        /// </summary>
+        private struct PostMessage
         {
-            string _message;
-            string _sender;
-            string _date;
+            public string Message;
+            public string Sender;
+            public string Date;
+            public int ItemCode;
+            public string RewardItemName;
         }
 
-        [Header("<color=green> 우편함 관리")] [SerializeField]
-        private GameObject postBoxPanel;
+        #endregion
 
-        [SerializeField] private GameObject postboxcontainer;
-        [SerializeField] private Post_Index postboxPrefab;
-        [SerializeField] private Button postBoxPanelCloseBtn;
+        #region 우편함 UI 요소
 
-        [Header("<color=green> 확장 패널")] [SerializeField]
-        GameObject postBoxPanelExtension;
+        [Header("<color=green>우편함 기본 UI")]
+        [SerializeField] private GameObject postBoxPanel;
+        [SerializeField] private GameObject postboxContainer;
+        [SerializeField] private PostIndex postboxPrefab;
 
-        [SerializeField] TMP_Text postBoxPanelExtensionText; // 상세 내용
-        [SerializeField] TMP_Text postBoxSendernameText;
-        [SerializeField] TMP_Text rewardItemNameText;
-        [SerializeField] private Button postBoxPanelExtensionCloseBtn;
+        [Header("<color=green>우편함 상세 UI")]
+        [SerializeField] private GameObject postBoxPanelExtension;
+        [SerializeField] private TMP_Text postBoxPanelExtensionText;
+        [SerializeField] private TMP_Text postBoxSendernameText;
+        [SerializeField] private TMP_Text rewardItemNameText;
+
+        #endregion
+
+        #region 데이터 필드
+
+        /// <summary>
+        /// 현재 선택된 아이템 코드
+        /// </summary>
+        private int _currentItemCode;
 
         #endregion
 
@@ -37,72 +52,182 @@ namespace DogGuns_Games.Lobby
 
         private void Start()
         {
-            postBoxPanelCloseBtn.onClick.AddListener(() => postBoxPanel.SetActive(false));
-            postBoxPanelExtensionCloseBtn.onClick.AddListener(() => postBoxPanelExtension.SetActive(false));
-            addPost_index();
+            InitializePostSystem();
         }
 
         #endregion
 
-        #region UI 패널 관리
+        #region 초기화
 
+        /// <summary>
+        /// 우편 시스템 초기화
+        /// </summary>
+        private void InitializePostSystem()
+        {
+            // UI 초기 상태 설정
+            if (postBoxPanel != null)
+                postBoxPanel.SetActive(false);
+            
+            if (postBoxPanelExtension != null)
+                postBoxPanelExtension.SetActive(false);
+            
+            // 테스트용 우편 생성
+            AddPostSample();
+        }
+
+        /// <summary>
+        /// 샘플 우편 데이터 추가 (개발/테스트용)
+        /// </summary>
+        private void AddPostSample()
+        {
+            // 샘플 우편 추가
+            AddPostItem("게임 출시 기념 선물", "운영팀", "2023-11-01", "골드 1000개", 1001);
+            AddPostItem("이벤트 보상", "이벤트팀", "2023-11-02", "다이아몬드 50개", 1002);
+        }
+
+        #endregion
+
+        #region 우편함 UI 관리
+
+        /// <summary>
+        /// 우편함 메인 패널 열기
+        /// </summary>
         public void OpenPostBoxPanel()
         {
+            if (postBoxPanel == null)
+            {
+                Debug.LogError("우편함 패널이 설정되지 않았습니다.");
+                return;
+            }
+
             postBoxPanel.SetActive(true);
+            LobbyUIManager.AddClosePopUpAction(ClosePostBoxPanel);
+            Debug.Log("우편함 패널 열림");
         }
 
-        public void OpenPostBoxPanel_Extension(string message, string sender, string rewardItemName, int itemCode)
+        /// <summary>
+        /// 우편함 메인 패널 닫기
+        /// </summary>
+        private void ClosePostBoxPanel()
         {
+            if (postBoxPanel == null) return;
+            
+            postBoxPanel.SetActive(false);
+            Debug.Log("우편함 패널 닫힘");
+        }
+
+        /// <summary>
+        /// 우편 상세 패널 열기
+        /// </summary>
+        private void OpenPostBoxPanel_Extension(string message, string sender, string rewardItemName, int itemCode)
+        {
+            if (postBoxPanelExtension == null)
+            {
+                Debug.LogError("우편함 상세 패널이 설정되지 않았습니다.");
+                return;
+            }
+
+            // 상세 패널 UI 업데이트
             postBoxPanelExtension.SetActive(true);
-            postBoxPanelExtensionText.text = message;
-            postBoxSendernameText.text = sender;
-            rewardItemNameText.text = rewardItemName;
-            postBoxPanelExtensionCloseBtn.onClick.AddListener(() => ConfiromReword(itemCode));
+            
+            if (postBoxPanelExtensionText != null)
+                postBoxPanelExtensionText.text = message;
+            
+            if (postBoxSendernameText != null)
+                postBoxSendernameText.text = sender;
+            
+            if (rewardItemNameText != null)
+                rewardItemNameText.text = rewardItemName;
+            
+            // 아이템 코드 저장 및 팝업 닫기 액션 등록
+            _currentItemCode = itemCode;
+            LobbyUIManager.AddClosePopUpAction(ClosePostBoxPanel_Extension);
+            
+            Debug.Log($"우편 상세 열림: {sender}로부터의 메시지, 아이템 코드: {itemCode}");
         }
 
-        public void ClosePostBoxPanel_Extension()
+        /// <summary>
+        /// 우편 상세 패널 닫기
+        /// </summary>
+        private void ClosePostBoxPanel_Extension()
         {
+            if (postBoxPanelExtension == null) return;
+            
             postBoxPanelExtension.SetActive(false);
+            Debug.Log("우편 상세 패널 닫힘");
         }
 
         #endregion
 
         #region 우편 데이터 관리
-
-        // todo: 프리펩에 메시지 와 물품 아이템 코드를 저장하고 받을수 있는 클래스를 생성하여 사용 
-        //todo: 메시지를 받을시 메시지를 어떻게 처리 할것인가 
-
-        private void addPost_index()
+        
+        /// <summary>
+        /// 우편 아이템 추가 및 UI 이벤트 설정
+        /// </summary>
+        /// <param name="message">우편 내용</param>
+        /// <param name="sender">발신자</param>
+        /// <param name="date">발송 날짜</param>
+        /// <param name="rewardItemName">보상 아이템 이름</param>
+        /// <param name="itemCode">보상 아이템 코드</param>
+        private void AddPostItem(string message, string sender, string date, string rewardItemName, int itemCode)
         {
-            if (postboxPrefab == null || postboxcontainer == null)
+            // 필수 컴포넌트 확인
+            if (postboxPrefab == null || postboxContainer == null)
             {
-                Debug.LogError("Postbox prefab or container is null!");
+                Debug.LogError("우편함 프리팹 또는 컨테이너가 설정되지 않았습니다.");
                 return;
             }
 
-            Post_Index postIndex = Instantiate(postboxPrefab, postboxcontainer.transform);
-
+            // 우편 인덱스 생성
+            PostIndex postIndex = Instantiate(postboxPrefab, postboxContainer.transform);
             if (postIndex == null)
             {
-                Debug.LogError("Failed to instantiate postbox prefab!");
+                Debug.LogError("우편함 프리팹 생성 실패!");
                 return;
             }
 
-            // 샘플 데이터
-            string message = "Sample message";
-            string sender = "Sender name";
-            string rewardItemName = "Gold";
-            int itemCode = 1001;
-
+            // 이벤트 설정
             UnityEngine.Events.UnityEvent clickEvent = new UnityEngine.Events.UnityEvent();
             clickEvent.AddListener(() => OpenPostBoxPanel_Extension(message, sender, rewardItemName, itemCode));
 
-            postIndex.SetPostIndex(sender, message, "date", clickEvent);
+            UnityEngine.Events.UnityEvent rewardEvent = new UnityEngine.Events.UnityEvent();
+            rewardEvent.AddListener(() => ConfiromReword(itemCode));
+
+            // 우편 인덱스 초기화
+            postIndex.SetPostIndex(sender, message, date, rewardEvent, clickEvent);
+    
+            Debug.Log($"우편 추가됨: {sender}로부터 {date}에 받은 메시지, 보상: {rewardItemName}");
         }
 
+        /// <summary>
+        /// 보상 수령 처리
+        /// </summary>
+        public void Getreward()
+        {
+            if (_currentItemCode <= 0)
+            {
+                Debug.LogWarning("유효하지 않은 아이템 코드입니다.");
+                return;
+            }
+
+            ConfiromReword(_currentItemCode);
+            Debug.Log($"보상 수령: 아이템 코드 {_currentItemCode}");
+        }
+
+        /// <summary>
+        /// 보상 수령 확인 및 처리
+        /// </summary>
+        /// <param name="itemCode">수령할 아이템 코드</param>
         private void ConfiromReword(int itemCode)
         {
+            if (InventoryDataManagerDontdestory.Instance == null)
+            {
+                Debug.LogError("인벤토리 데이터 매니저가 설정되지 않았습니다.");
+                return;
+            }
+
             InventoryDataManagerDontdestory.Instance.GetItemByItemCode(itemCode);
+            Debug.Log($"아이템 코드 {itemCode} 아이템이 인벤토리에 추가되었습니다.");
         }
 
         #endregion

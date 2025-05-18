@@ -10,6 +10,9 @@ namespace DogGuns_Games.Lobby
     {
        [SerializeField] private Toggle questToggle;
        [SerializeField] private TMP_Text questName;
+       [SerializeField] private Button  questButton;
+       
+       public Button QuestButton => questButton;
        
          public void SetQuestIndex(string name)
          {

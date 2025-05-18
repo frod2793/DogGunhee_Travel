@@ -17,19 +17,19 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private TMP_Text coinText;
         [SerializeField] private TMP_Text mobCountText;
         [SerializeField] private TMP_Text playerLevelText;
+        [SerializeField] private Slider expSlider;
 
-
-        [SerializeField] private Button menuBtn;
 
         [Header("<color=green>Menu UI")] [SerializeField]
-        private GameObject menuPanel;
+        private Button menuBtn;
+
+        [SerializeField] private GameObject menuPanel;
 
         [SerializeField] private Button settingBtn;
         [SerializeField] private Button exitBtn;
 
         public List<GameObject> weaponUIList = new List<GameObject>();
         public List<GameObject> juListUIList = new List<GameObject>();
-
 
         [Header("<color=green>조이스틱")] [SerializeField]
         private VariableJoystick variableJoystick;
@@ -58,7 +58,7 @@ namespace DogGuns_Games.vamsir
         private void OnDestroy()
         {
             _cancellationTokenSource?.Cancel();
-            
+
             // 이벤트 구독 해제 추가
             PlayStateManager.OnGameStart -= GameStart;
             PlayStateManager.OnGamePause -= Pause;
@@ -111,9 +111,9 @@ namespace DogGuns_Games.vamsir
 
         private void BtnSetting()
         {
-            menuBtn.onClick.AddListener(ToggleMenuAndJoystickVisibility);
+            menuBtn.onClick.AddListener(PausePopUp);
 
-            exitBtn.onClick.AddListener(ToggleMenuAndJoystickVisibility);
+            exitBtn.onClick.AddListener(PausePopUp);
 
             settingBtn.onClick.AddListener(() =>
             {
@@ -126,7 +126,7 @@ namespace DogGuns_Games.vamsir
 
         #region UI 이벤트 및 동작
 
-        private void ToggleMenuAndJoystickVisibility()
+        private void PausePopUp()
         {
             // 메뉴 패널의 현재 활성 상태의 반대로 설정합니다.
             bool isMenuPanelBecomingActive = !menuPanel.activeSelf;

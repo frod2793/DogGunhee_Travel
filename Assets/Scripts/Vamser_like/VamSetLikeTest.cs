@@ -8,11 +8,18 @@ namespace DogGuns_Games.vamsir
     [CustomEditor(typeof(VamserLikeGameManager))]
     public class VamSetLikeTest : Editor
     {
+        #region 필드 및 변수
 
         [FormerlySerializedAs("Character_Index")]
         [Header("<color=green> 인게임내에 캐릭터 및 무기 변경")]
         [SerializeField] private int characterIndex;
-        [FormerlySerializedAs("Weapon_Index")] [SerializeField] private int weaponIndex;
+        
+        [FormerlySerializedAs("Weapon_Index")] 
+        [SerializeField] private int weaponIndex;
+
+        #endregion
+
+        #region 에디터 UI
 
         public override void OnInspectorGUI()
         {
@@ -20,19 +27,27 @@ namespace DogGuns_Games.vamsir
 
             VamserLikeGameManager vamserLikeGameManager = (VamserLikeGameManager) target;
 
-            characterIndex = EditorGUILayout.IntField("characterIndex", characterIndex);
-            weaponIndex = EditorGUILayout.IntField("weaponIndex", weaponIndex);
+            characterIndex = EditorGUILayout.IntField("캐릭터 인덱스", characterIndex);
+            weaponIndex = EditorGUILayout.IntField("무기 인덱스", weaponIndex);
 
-            if (GUILayout.Button("Change Character And Weapon"))
+            if (GUILayout.Button("캐릭터 및 무기 변경"))
             {
-                PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = characterIndex;
-                PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = weaponIndex;
-                vamserLikeGameManager.ChangeCharacterAndWeapon_Spawn();
+                ChangeCharacterAndWeapon(vamserLikeGameManager);
             }
         }
-      
-        
-        
+
+        #endregion
+
+        #region 버튼 액션
+
+        private void ChangeCharacterAndWeapon(VamserLikeGameManager gameManager)
+        {
+            PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = characterIndex;
+            PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = weaponIndex;
+            gameManager.ChangeCharacterAndWeapon_Spawn();
+        }
+
+        #endregion
     }
 }
 #endif

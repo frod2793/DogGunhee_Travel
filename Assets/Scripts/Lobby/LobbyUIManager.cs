@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,31 +18,48 @@ namespace DogGuns_Games.Lobby
         [SerializeField] private Button tutorialBtn;
         [SerializeField] private Button optionBtn;
 
-        [Header("팝업 UI")]
+        [Header("<color=green>팝업 UI</color>")]
         [SerializeField] private GameObject optionPopUp;
         [SerializeField] private GameObject cgamePopUp;
 
-        [Header("<color=green>캐릭터 시스템</color>")]
-        [SerializeField] private SelectCharacter_UI_Manager selectCharacterUIManager;
+        [Header("<color=green>캐릭터 선택 시스템</color>")]
+        [SerializeField] private CharacterSelectUIManager characterSelectUIManager;
         [SerializeField] private Button openCharacterSelectButton;
-        [SerializeField] private Button openCharacterListPanel;
-        [SerializeField] private Button openCharacterSkillViewPanel;
-        [SerializeField] private Button closeCharacterSelectButton;
 
         [Header("<color=green>우편 시스템</color>")]
         [SerializeField] private PostManager postManager;
         [SerializeField] private Button openMessingerButton;
+        [SerializeField] private Button getPostReiwordButton;
+        [SerializeField] private Button closeMessingerButton;
+        [SerializeField] private Button getPostExpensionReiwordButton;
+        [SerializeField] private Button closeMessingerExpensionButton;
 
         [Header("<color=green>퀘스트 시스템</color>")]
         [SerializeField] private QuestPanelManager questPanelManager;
         [SerializeField] private Button openQuestPanelButton;
+        [SerializeField] private Button closeQuestPanelButton;
+        [SerializeField] private Button closeQuestExpensionButton;
 
         [Header("<color=green>재화 시스템</color>")]
         [SerializeField] private TMP_Text gold;
         [SerializeField] private TMP_Text dia;
+        
+        [Header("<color=green>상점 시스템</color>")]
+        [SerializeField] private StoreManager storeManager;
+        [SerializeField] private Button openStoreButton;
+        [SerializeField] private Button closeStoreButton;
+        [SerializeField] private Button closeStoreExpendPopUp;
 
-        [Header("플레이어 정보")]
+        [Header("<color=green>아이템 팝업</color>")]
+        [SerializeField] private ItemSelectManager itemSelectManager;
+        [SerializeField] private Button openItemSelectButton;
+        [SerializeField] private Button closeItemSelectButton;
+        [SerializeField] private Button closeItemSelectExpensionButton;
+
+        [Header("<color=green>플레이어 정보</color>")]
         [SerializeField] private PlayerDataManagerDontdesytoy playerDataManagerDontdesytoy;
+
+        private static List<Action> closePopUpActionList = new List<Action>();
 
         // 상수
         private const string ErrorNullReference = "참조가 없습니다: {0}";
@@ -54,9 +73,9 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void Awake()
         {
-            // 플레이어 데이터 매니저 찾기
-            playerDataManagerDontdesytoy = FindAnyObjectByType<PlayerDataManagerDontdesytoy>();
-
+            // 필수 참조 확인 및 초기화
+            CheckRequiredReferences();
+    
             // 버튼 초기화
             InitializeButtons();
         }
@@ -66,7 +85,40 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void Start()
         {
+            // 싱글톤 패턴 활용 - FindAnyObjectByType 사용 최소화
+            if (playerDataManagerDontdesytoy == null)
+                playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
+    
             UpdateCurrencyDisplay();
+        }
+        
+        /// <summary>
+        /// 필수 참조 확인
+        /// </summary>
+        private void CheckRequiredReferences()
+        {
+            // 중요 매니저 참조 확인
+            if (characterSelectUIManager == null)
+                Debug.LogWarning(string.Format(ErrorNullReference, "캐릭터 선택 매니저"));
+    
+            if (postManager == null)
+                Debug.LogWarning(string.Format(ErrorNullReference, "우편 매니저"));
+    
+            if (questPanelManager == null)
+                Debug.LogWarning(string.Format(ErrorNullReference, "퀘스트 매니저"));
+    
+            if (storeManager == null)
+                Debug.LogWarning(string.Format(ErrorNullReference, "상점 매니저"));
+    
+            if (itemSelectManager == null)
+                Debug.LogWarning(string.Format(ErrorNullReference, "아이템 선택 매니저"));
+        }
+        /// <summary>
+        /// 모바일 뒤로가기 버튼 입력 감지
+        /// </summary>
+        private void Update()
+        {
+            ClickmobileBackButton();
         }
 
         #endregion
@@ -81,6 +133,10 @@ namespace DogGuns_Games.Lobby
             playButton_Init();
             CharacterSelct_Init();
             InitOtherSystems();
+            InitQuestManager();
+            InitPostManager();
+            InitStoreManager();
+            InitItemSelectManager();
         }
 
         /// <summary>
@@ -109,31 +165,16 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void CharacterSelct_Init()
         {
-            if (selectCharacterUIManager == null)
+            if (characterSelectUIManager == null)
             {
                 Debug.LogError(string.Format(ErrorNullReference, "캐릭터 선택 매니저"));
                 return;
             }
 
             if (openCharacterSelectButton != null)
-                openCharacterSelectButton.onClick.AddListener(selectCharacterUIManager.OpenCharacterSelectPanel);
+                openCharacterSelectButton.onClick.AddListener(characterSelectUIManager.OpenCharacterSelectPanel);
             else
                 Debug.LogError(string.Format(ErrorNullReference, "캐릭터 선택창 열기 버튼"));
-
-            if (openCharacterListPanel != null)
-                openCharacterListPanel.onClick.AddListener(selectCharacterUIManager.OpenCharacterListPanel);
-            else
-                Debug.LogError(string.Format(ErrorNullReference, "캐릭터 리스트 열기 버튼"));
-
-            if (openCharacterSkillViewPanel != null)
-                openCharacterSkillViewPanel.onClick.AddListener(selectCharacterUIManager.OpenCharacterSkillViewPanel);
-            else
-                Debug.LogError(string.Format(ErrorNullReference, "캐릭터 스킬뷰 열기 버튼"));
-
-            if (closeCharacterSelectButton != null)
-                closeCharacterSelectButton.onClick.AddListener(selectCharacterUIManager.CloseCharacterSelectPanel);
-            else
-                Debug.LogError(string.Format(ErrorNullReference, "캐릭터 선택창 닫기 버튼"));
         }
 
         /// <summary>
@@ -152,6 +193,173 @@ namespace DogGuns_Games.Lobby
                 Debug.LogError(string.Format(ErrorNullReference, "퀘스트 버튼 또는 매니저"));
         }
 
+        /// <summary>
+        /// 아이템 선택 시스템 초기화
+        /// </summary>
+        private void InitItemSelectManager()
+        {
+            if (openItemSelectButton != null && itemSelectManager != null)
+                openItemSelectButton.onClick.AddListener(() => itemSelectManager.OpenItemSelectPanel());
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "아이템 선택 버튼 또는 매니저"));
+        
+            // 아이템 선택 닫기 버튼 초기화
+            if (closeItemSelectButton != null && itemSelectManager != null)
+            {
+                closeItemSelectButton.onClick.AddListener(CloseButtonClick);
+                Debug.Log("아이템 선택 닫기 버튼 이벤트 등록 완료");
+            }
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "아이템 선택 닫기 버튼 또는 매니저"));
+        
+            // 아이템 확장 패널 닫기 버튼 초기화
+            if (closeItemSelectExpensionButton != null && itemSelectManager != null)
+            {
+                closeItemSelectExpensionButton.onClick.AddListener(CloseButtonClick);
+                Debug.Log("아이템 확장 닫기 버튼 이벤트 등록 완료");
+            }
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "아이템 확장 닫기 버튼 또는 매니저"));
+        }
+
+        /// <summary>
+        /// 상점 시스템 초기화
+        /// </summary>
+        private void InitStoreManager()
+        {
+            if (openStoreButton != null && storeManager != null)
+                openStoreButton.onClick.AddListener(() => storeManager.OpenStorePanel());
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "상점 버튼 또는 매니저"));
+
+            if (closeStoreButton != null && storeManager != null)
+                closeStoreButton.onClick.AddListener(() => storeManager.CloseStoreItemPopUp());
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "상점 닫기 버튼 또는 매니저"));
+        
+            // 상점 확장 팝업 닫기 버튼 초기화
+            if (closeStoreExpendPopUp != null && storeManager != null)
+            {
+                closeStoreExpendPopUp.onClick.AddListener(CloseButtonClick);
+                Debug.Log("상점 확장 닫기 버튼 이벤트 등록 완료");
+            }
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "상점 확장 닫기 버튼 또는 매니저"));
+        }
+
+        /// <summary>
+        /// 퀘스트 관련 버튼 이벤트 초기화
+        /// </summary>
+        private void InitQuestManager()
+        {
+            if (closeQuestPanelButton != null && questPanelManager != null)
+                closeQuestPanelButton.onClick.AddListener(CloseButtonClick);
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "퀘스트 닫기 버튼 또는 매니저"));
+
+            if (closeQuestExpensionButton != null && questPanelManager != null)
+                closeQuestExpensionButton.onClick.AddListener(CloseButtonClick);
+            else
+                Debug.LogError(string.Format(ErrorNullReference, "퀘스트 확장 닫기 버튼 또는 매니저"));
+        }
+
+        /// <summary>
+        /// 우편 시스템 관련 버튼 이벤트 초기화
+        /// </summary>
+        private void InitPostManager()
+        {
+            // 우편함 닫기 버튼 초기화
+            if (closeMessingerButton != null && postManager != null)
+            {
+                closeMessingerButton.onClick.AddListener(CloseButtonClick);
+                Debug.Log("우편함 닫기 버튼 이벤트 등록 완료");
+            }
+            else
+            {
+                Debug.LogError(string.Format(ErrorNullReference, "우편함 닫기 버튼 또는 매니저"));
+            }
+
+            // 우편함 확장 패널 닫기 버튼 초기화
+            if (closeMessingerExpensionButton != null && postManager != null)
+            {
+                closeMessingerExpensionButton.onClick.AddListener(CloseButtonClick);
+                Debug.Log("우편함 확장 닫기 버튼 이벤트 등록 완료");
+            }
+            else
+            {
+                Debug.LogError(string.Format(ErrorNullReference, "우편함 확장 닫기 버튼 또는 매니저"));
+            }
+
+            // 우편 보상 수령 버튼 초기화
+            if (getPostExpensionReiwordButton != null && postManager != null)
+            {
+                getPostExpensionReiwordButton.onClick.AddListener(() =>
+                {
+                    postManager.Getreward();
+                    CloseButtonClick();
+                });
+
+                // 우편 목록 보상 버튼 초기화
+                if (getPostReiwordButton != null)
+                {
+                    getPostReiwordButton.onClick.AddListener(() => postManager.Getreward());
+                    Debug.Log("우편 보상 수령 버튼 이벤트 등록 완료");
+                }
+            }
+            else
+            {
+                Debug.LogError(string.Format(ErrorNullReference, "우편 보상 수령 버튼 또는 매니저"));
+            }
+        }
+
+        /// <summary>
+        /// 모바일 뒤로가기 버튼 처리
+        /// </summary>
+        private void ClickmobileBackButton()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CloseButtonClick();
+            }
+        }
+
+        /// <summary>
+        /// 팝업 닫기 액션 추가
+        /// </summary>
+        public static void AddClosePopUpAction(Action action)
+        {
+            if (action != null)
+            {
+                closePopUpActionList.Add(action);
+                Debug.Log($"팝업 닫기 액션 등록됨 (현재 {closePopUpActionList.Count}개)");
+            }
+            else
+            {
+                Debug.LogError(string.Format(ErrorNullReference, "액션"));
+            }
+        }
+
+        /// <summary>
+        /// 팝업 닫기 버튼 클릭 처리
+        /// </summary>
+        private void CloseButtonClick()
+        {
+            if (closePopUpActionList.Count > 0)
+            {
+                int lastIndex = closePopUpActionList.Count - 1;
+                Action lastAction = closePopUpActionList[lastIndex];
+                
+                closePopUpActionList.RemoveAt(lastIndex);
+                lastAction?.Invoke();
+                
+                Debug.Log($"팝업 닫기 실행 (남은 팝업: {closePopUpActionList.Count}개)");
+            }
+            else
+            {
+                Debug.Log("닫을 팝업이 없습니다.");
+            }
+        }
+
         #endregion
 
         #region UI 업데이트 메서드
@@ -168,10 +376,12 @@ namespace DogGuns_Games.Lobby
             }
 
             if (gold != null)
-                gold.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.currency1.ToString();
+                gold.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.currency1.ToString("N0");
 
             if (dia != null)
-                dia.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.currency2.ToString();
+                dia.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.currency2.ToString("N0");
+            
+            Debug.Log("재화 정보 업데이트 완료");
         }
 
         #endregion
@@ -186,18 +396,25 @@ namespace DogGuns_Games.Lobby
             Debug.Log("게임 선택 팝업");
 
             if (cgamePopUp != null)
+            {
                 cgamePopUp.SetActive(true);
+                AddClosePopUpAction(() => cgamePopUp.SetActive(false));
+            }
             else
                 Debug.LogError(string.Format(ErrorNullReference, "게임 선택 팝업"));
         }
 
         /// <summary>
-        /// 튜토리얼 버튼 콜백 - 미구현
+        /// 튜토리얼 버튼 콜백 - 기본 튜토리얼 시작
         /// </summary>
         private void func_tutorialBtn()
         {
-            // 튜토리얼 기능 구현 예정
-            Debug.Log("튜토리얼 기능 호출됨 (미구현)");
+            Debug.Log("튜토리얼 시작");
+            // TODO: 튜토리얼 씬으로 이동하거나 가이드 표시
+            if (SceneLoader.Instace != null)
+            {
+                SceneLoader.Instace.LoadScene("Tutorial");
+            }
         }
 
         /// <summary>
@@ -207,8 +424,9 @@ namespace DogGuns_Games.Lobby
         {
             if (optionPopUp != null)
             {
-                // 새로운 인스턴스 생성 대신 활성화
                 optionPopUp.SetActive(true);
+                AddClosePopUpAction(() => optionPopUp.SetActive(false));
+                Debug.Log("옵션 팝업 표시");
             }
             else
                 Debug.LogError(string.Format(ErrorNullReference, "옵션 팝업"));
@@ -221,7 +439,7 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 게임 실행 - 씬 전환
         /// </summary>
-        private void runGame()
+        public void runGame()
         {
             if (SceneLoader.Instace != null)
             {

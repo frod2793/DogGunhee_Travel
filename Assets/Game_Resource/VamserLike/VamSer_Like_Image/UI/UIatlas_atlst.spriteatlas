@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UIatlas_atlst
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: da03dd352225244448603cddc8dd6638, type: 3}
+    - {fileID: 2800000, guid: 793083e9f093446618d9c82c37c4faa5, type: 3}
+    - {fileID: 2800000, guid: c066861a731fa46a8a37732045595bbb, type: 3}
+    - {fileID: 2800000, guid: 2e7f00599c7474bd9b84fc770b8f2ad6, type: 3}
+    - {fileID: 2800000, guid: eb0db6a9198f34fb69fdb572b11d1b08, type: 3}
+    - {fileID: 2800000, guid: 65a272648c8314ae595614a9aac757ab, type: 3}
+    - {fileID: 2800000, guid: 609ae50c64c224727b08d1f9dd54c3a2, type: 3}
+    - {fileID: 2800000, guid: c72e02460ee2d431b9d36857cbd6ac2f, type: 3}
+    - {fileID: 2800000, guid: 5a7def193fb554ee7b1b6cba1a426f5c, type: 3}
+    - {fileID: 2800000, guid: 88a597587eb034dc18b78fb90f4a3a36, type: 3}
+    - {fileID: 2800000, guid: 555d8d0a298a14f87bda2362375c6842, type: 3}
+    - {fileID: 2800000, guid: df5e57e0dad590e4cb169ce4c4ebcc39, type: 3}
+    - {fileID: 2800000, guid: 33cf9ac38f6c17b459b7731a11f3631e, type: 3}
+    - {fileID: 2800000, guid: 4178e5a53eceda74b924ca84e6af3956, type: 3}
+    - {fileID: 2800000, guid: 9d95841d07f0a0a4a909da5e28488ec4, type: 3}
+    - {fileID: 2800000, guid: 85012d3646e658f468c4aeaf774de1c5, type: 3}
+    - {fileID: 2800000, guid: f67f3b21e4b78104c80425ef2891c397, type: 3}
+    - {fileID: 2800000, guid: ebb3a707f58ec454ca958eb76ef3c755, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - df5e57e0dad590e4cb169ce4c4ebcc39: -945176411537064799
+    - f67f3b21e4b78104c80425ef2891c397: 1212823793818621940
+    - 33cf9ac38f6c17b459b7731a11f3631e: 3338408736399014475
+    - 65a272648c8314ae595614a9aac757ab: 21300000
+    - da03dd352225244448603cddc8dd6638: 21300000
+    - 4178e5a53eceda74b924ca84e6af3956: -298254353982646701
+    - 85012d3646e658f468c4aeaf774de1c5: 7790039512426867906
+    - c72e02460ee2d431b9d36857cbd6ac2f: 21300000
+    - ebb3a707f58ec454ca958eb76ef3c755: 21300000
+    - 88a597587eb034dc18b78fb90f4a3a36: 21300000
+    - 5a7def193fb554ee7b1b6cba1a426f5c: 21300000
+    - 2e7f00599c7474bd9b84fc770b8f2ad6: 21300000
+    - eb0db6a9198f34fb69fdb572b11d1b08: 21300000
+    - 793083e9f093446618d9c82c37c4faa5: 21300000
+    - 555d8d0a298a14f87bda2362375c6842: 21300000
+    - c066861a731fa46a8a37732045595bbb: 21300000
+    - 609ae50c64c224727b08d1f9dd54c3a2: 21300000
+    - 9d95841d07f0a0a4a909da5e28488ec4: 4206530796596308481
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: -945176411537064799, guid: df5e57e0dad590e4cb169ce4c4ebcc39, type: 3}
+  - {fileID: 1212823793818621940, guid: f67f3b21e4b78104c80425ef2891c397, type: 3}
+  - {fileID: 3338408736399014475, guid: 33cf9ac38f6c17b459b7731a11f3631e, type: 3}
+  - {fileID: 21300000, guid: 65a272648c8314ae595614a9aac757ab, type: 3}
+  - {fileID: 21300000, guid: da03dd352225244448603cddc8dd6638, type: 3}
+  - {fileID: -298254353982646701, guid: 4178e5a53eceda74b924ca84e6af3956, type: 3}
+  - {fileID: 7790039512426867906, guid: 85012d3646e658f468c4aeaf774de1c5, type: 3}
+  - {fileID: 21300000, guid: c72e02460ee2d431b9d36857cbd6ac2f, type: 3}
+  - {fileID: 21300000, guid: ebb3a707f58ec454ca958eb76ef3c755, type: 3}
+  - {fileID: 21300000, guid: 88a597587eb034dc18b78fb90f4a3a36, type: 3}
+  - {fileID: 21300000, guid: 5a7def193fb554ee7b1b6cba1a426f5c, type: 3}
+  - {fileID: 21300000, guid: 2e7f00599c7474bd9b84fc770b8f2ad6, type: 3}
+  - {fileID: 21300000, guid: eb0db6a9198f34fb69fdb572b11d1b08, type: 3}
+  - {fileID: 21300000, guid: 793083e9f093446618d9c82c37c4faa5, type: 3}
+  - {fileID: 21300000, guid: 555d8d0a298a14f87bda2362375c6842, type: 3}
+  - {fileID: 21300000, guid: c066861a731fa46a8a37732045595bbb, type: 3}
+  - {fileID: 21300000, guid: 609ae50c64c224727b08d1f9dd54c3a2, type: 3}
+  - {fileID: 4206530796596308481, guid: 9d95841d07f0a0a4a909da5e28488ec4, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - Juel_icon_0
+  - "\uBA54\uB274_sample_0"
+  - menu_Back_0
+  - Exp_Text_box
+  - CoinCount_back
+  - Menu_slot_0
+  - Weapoin_Icon_0
+  - HP_bar_Fil
+  - Coin
+  - Menu_Btn
+  - KillCount_back
+  - Exp_obj_B
+  - Exp_Obj_s
+  - Exp_Box_back
+  - Sample
+  - Exp_Box_fil
+  - HP_bar_Back
+  - Meun_Btn_0
+  m_RenderDataMap: {}
+  m_Tag: UIatlas_atlst
+  m_IsVariant: 0

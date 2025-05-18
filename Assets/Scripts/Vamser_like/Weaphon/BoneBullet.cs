@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using DogGuns_Games.vamsir;
 using UnityEngine;
 
@@ -12,10 +13,11 @@ public class BoneBullet : MonoBehaviour
     // 공격 방향을 저장하는 벡터
     private Vector3 _attackAngle;
 
+    [HideInInspector]
     // 총알의 이동 속도 총알 대미지는 WeaphonBone 에서처리
-    public float bulletSpeed = 5;
+    public float bulletSpeed = 0;
 
-    private readonly float _rotateSpeed = 1f;
+    private readonly float _rotateSpeed = 5f;
 
     private bool _isActive;
     private readonly bool _isNecclassary = false;
@@ -29,7 +31,11 @@ public class BoneBullet : MonoBehaviour
         _isActive = true;
         MoveAndRotateBullet().Forget();
     }
-
+    private void OnDisable()
+    {
+        _isActive = false;
+        DOTween.Kill(transform);
+    }
     private void OnCollisionEnter2D(Collision2D other)
     {
         if (other.gameObject.CompareTag("Mob"))
@@ -53,19 +59,31 @@ public class BoneBullet : MonoBehaviour
     // 총알 이동과 회전 함수 (UniTask 사용)
     private async UniTaskVoid MoveAndRotateBullet()
     {
+        // 기존 트윈이 실행 중이면 종료
+        DOTween.Kill(transform);
+
+        // 총알 이동 설정 - 현재 위치에서 진행 방향으로 계속 이동
+        Vector3 targetPosition = transform.position + _attackAngle * 100f; // 충분히 먼 거리
+        transform.DOMove(targetPosition, 100f / bulletSpeed)
+            .SetSpeedBased(true)
+            .SetEase(Ease.Linear);
+
+        // Z축 회전 설정
+        transform.DORotate(new Vector3(0, 0, 360f), 1f / _rotateSpeed, RotateMode.LocalAxisAdd)
+            .SetLoops(-1, LoopType.Restart)
+            .SetEase(Ease.Linear);
+
+        // 화면 밖으로 나가는지 주기적으로 체크
         while (_isActive)
         {
-            // 총알 이동
-            transform.Translate(_attackAngle * bulletSpeed * Time.deltaTime, Space.World);
-
-            // Z 축으로 오브젝트 회전 (이동 방향에 영향을 주지 않음)
-            transform.Rotate(0, 0, 360 * Time.deltaTime * _rotateSpeed);
-
             CheckBounds();
-
-            await UniTask.Yield();
+            await UniTask.Delay(50, cancellationToken: this.GetCancellationTokenOnDestroy());
         }
+    
+        // 비활성화될 때 트윈 정리
+        DOTween.Kill(transform);
     }
+
 
     #endregion
 
@@ -84,7 +102,7 @@ public class BoneBullet : MonoBehaviour
     }
 
     // 총알 발사 방향 설정 함수
-    public void Thow_Bullet(Vector3 direction)
+    public void Throw_Bullet(Vector3 direction)
     {
         _attackAngle = direction.normalized;
     }
@@ -101,4 +119,10 @@ public class BoneBullet : MonoBehaviour
     }
 
     #endregion
+    public void ResetState()
+    {
+        // 필요한 상태 초기화
+        _isActive = true;
+        // 기타 속성 초기화
+    }
 }
