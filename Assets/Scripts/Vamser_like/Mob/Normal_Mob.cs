@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace DogGuns_Games.vamsir
 {
-    public class Normal_Mob : Vamser_Mob_Base
+    public class Normal_Mob : VamserMobBase
     {
         [Header("<color=green>플레이여")] [SerializeField]
         private PlayerBase player;

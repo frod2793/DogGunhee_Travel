@@ -13,7 +13,7 @@ namespace DogGuns_Games.vamsir
         #region 필드 및 속성
 
         // 오브젝트 풀 참조
-        public IObjectPool<Vamser_Mob_Base> MobObjectPool;
+        public IObjectPool<VamserMobBase> MobObjectPool;
         public IObjectPool<EXP_Obj> ExpObjectPool;
         public IObjectPool<Coin_Obj> CoinObjectPool;
         
@@ -21,7 +21,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private int poolSizeMobCount = 20;
         
         [Header("<color=green>몹 프리팹</color>")]
-        [SerializeField] private Vamser_Mob_Base mobPrefab;
+        [SerializeField] private VamserMobBase mobPrefab;
 
         [Header("<color=green>몹 오브젝트 스폰 위치</color>")]
         [SerializeField] private Transform mobParent;
@@ -67,7 +67,7 @@ namespace DogGuns_Games.vamsir
         private void InitializePools()
         {
             // 몹 오브젝트 풀 초기화
-            MobObjectPool = new ObjectPool<Vamser_Mob_Base>(
+            MobObjectPool = new ObjectPool<VamserMobBase>(
                 Create_Mob,
                 OnGet,
                 OnRelease,
@@ -263,7 +263,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 지정된 몹 위치에 경험치 오브젝트 스폰
         /// </summary>
-        private void SpawnExp(Vamser_Mob_Base obj)
+        private void SpawnExp(VamserMobBase obj)
         {
             if (!_isSpawningAllowed) return;
             
@@ -275,7 +275,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 확률에 따라 지정된 몹 위치에 코인 오브젝트 스폰
         /// </summary>
-        private void SpawnCoin(Vamser_Mob_Base obj)
+        private void SpawnCoin(VamserMobBase obj)
         {
             if (!_isSpawningAllowed) return;
             
@@ -294,17 +294,17 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 몹 오브젝트 생성
         /// </summary>
-        private Vamser_Mob_Base Create_Mob()
+        private VamserMobBase Create_Mob()
         {
-            Vamser_Mob_Base mob = Instantiate(mobPrefab.gameObject, mobParent).GetComponent<Vamser_Mob_Base>();
-            mob.objectPool_Spawner = this;
+            VamserMobBase mob = Instantiate(mobPrefab.gameObject, mobParent).GetComponent<VamserMobBase>();
+            mob.objectPoolSpawner = this;
             return mob;
         }
 
         /// <summary>
         /// 몹 오브젝트 풀에서 가져올 때 처리
         /// </summary>
-        private void OnGet(Vamser_Mob_Base obj)
+        private void OnGet(VamserMobBase obj)
         {
             MoveObjectOffScreen(obj);
         }
@@ -312,7 +312,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 몹 오브젝트를 풀에 반환할 때 처리
         /// </summary>
-        private void OnRelease(Vamser_Mob_Base obj)
+        private void OnRelease(VamserMobBase obj)
         {
             obj.gameObject.SetActive(false);
             _mobCount--;
@@ -328,7 +328,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 몹 오브젝트 파괴 시 처리
         /// </summary>
-        private void OnDestory(Vamser_Mob_Base obj)
+        private void OnDestory(VamserMobBase obj)
         {
             Destroy(obj.gameObject);
         }
@@ -462,7 +462,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 오브젝트를 화면 밖에 위치시키는 메서드
         /// </summary>
-        private void MoveObjectOffScreen(Vamser_Mob_Base obj)
+        private void MoveObjectOffScreen(VamserMobBase obj)
         {
             if (_mainCamera == null)
             {

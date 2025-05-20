@@ -167,7 +167,7 @@ namespace DogGuns_Games.vamsir
             PlayState = playerState.Hit;
     
             // 몹으로부터 피해 계산
-            Vamser_Mob_Base mob = mobObject.GetComponent<Vamser_Mob_Base>();
+            VamserMobBase mob = mobObject.GetComponent<VamserMobBase>();
             if (mob != null)
             {
                 float damageAmount = CalculateDamage(mob.Mob_AttackDamage);

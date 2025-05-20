@@ -2,9 +2,9 @@
 using UnityEngine;
 namespace DogGuns_Games.vamsir
 {
-    public class Vamser_Mob_Base : MonoBehaviour
+    public class VamserMobBase : MonoBehaviour
     {
-        public ObjectPoolSpawner objectPool_Spawner;
+        public ObjectPoolSpawner objectPoolSpawner;
 
         
         public float Mob_Speed { get; set; }
@@ -31,7 +31,7 @@ namespace DogGuns_Games.vamsir
 
         public virtual void OnEnable()
         {
-            objectPool_Spawner = FindFirstObjectByType<ObjectPoolSpawner>();
+            objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
 
             Mob_IsDie = false;
             
@@ -104,7 +104,7 @@ namespace DogGuns_Games.vamsir
             if (!Mob_IsDie)
             {
                 Mob_IsDie = true;
-                objectPool_Spawner.MobObjectPool.Release(this);
+                objectPoolSpawner.MobObjectPool.Release(this);
                 PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt++;
                 Debug.Log("Die : " + name);
             }
