@@ -92,7 +92,7 @@ namespace DogGuns_Games.Lobby
         {
             if (itemDataJsonFile == null)
             {
-                Debug.LogError("Item data JSON file not assigned in inspector");
+                Debug.LogError("아이템 데이터 JSON 파일이 인스펙터에서 할당되지 않았습니다");
                 return;
             }
 
@@ -102,7 +102,7 @@ namespace DogGuns_Games.Lobby
                 
                 if (jsonItems == null || jsonItems.Length == 0)
                 {
-                    Debug.LogWarning("No items found in JSON data");
+                    Debug.LogWarning("JSON 데이터에서 아이템을 찾을 수 없습니다");
                     return;
                 }
                 
@@ -122,11 +122,12 @@ namespace DogGuns_Games.Lobby
                 }
                 
                 _isDataLoaded = true;
-                Debug.Log($"Successfully loaded {_itemDataCache.Count} items from JSON data");
+                Debug.Log($"JSON 데이터에서 {_itemDataCache.Count}개의 아이템을 성공적으로 로드했습니다");
             }
             catch (Exception e)
             {
-                Debug.LogError($"Error parsing JSON data: {e.Message}");
+                Debug.LogError($"JSON 데이터 파싱 오류: {e.Message}");
+                
             }
         }
         
@@ -138,17 +139,17 @@ namespace DogGuns_Games.Lobby
         {
             if (!_isDataLoaded)
             {
-                Debug.LogWarning("Item data not loaded yet");
+                Debug.LogWarning("아이템 데이터가 아직 로드되지 않았습니다");
                 return null;
             }
-            
+
             if (_itemDataCache.TryGetValue(itemCode, out Item_Data item))
             {
                 _scritpableobjItemData = item;
                 return item;
             }
-            
-            Debug.LogWarning($"Item with code {itemCode} not found");
+
+            Debug.LogWarning($"코드 {itemCode}를 가진 아이템을 찾을 수 없습니다");
             return null;
         }
 
@@ -172,23 +173,23 @@ namespace DogGuns_Games.Lobby
 
         #region 데이터 저장
 
-        public void SaveInventoryData()
+    public void SaveInventoryData()
+    {
+        if (scritpableobjInventoryData == null)
+            return;
+            
+        try 
         {
-            if (scritpableobjInventoryData == null)
-                return;
-                
-            try 
-            {
-                string savePath = System.IO.Path.Combine(Application.persistentDataPath, "inventoryData.json");
-                string jsonData = JsonUtility.ToJson(scritpableobjInventoryData, true);
-                System.IO.File.WriteAllText(savePath, jsonData);
-                Debug.Log($"Saved Inventory data to {savePath}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to save Inventory data: {e.Message}");
-            }
+            string savePath = System.IO.Path.Combine(Application.persistentDataPath, "inventoryData.json");
+            string jsonData = JsonUtility.ToJson(scritpableobjInventoryData, true);
+            System.IO.File.WriteAllText(savePath, jsonData);
+            Debug.Log($"인벤토리 데이터를 {savePath}에 저장했습니다");
         }
+        catch (Exception e)
+        {
+            Debug.LogError($"인벤토리 데이터 저장 실패: {e.Message}");
+        }
+    }
 
         public void SaveItemData()
         {
@@ -204,7 +205,7 @@ namespace DogGuns_Games.Lobby
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to save item data: {e.Message}");
+                Debug.LogWarning("JSON에서 아이템 데이터를 로드하는데 실패했습니다");
             }
         }
         
