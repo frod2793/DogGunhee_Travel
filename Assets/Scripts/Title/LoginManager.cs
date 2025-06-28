@@ -51,13 +51,13 @@ namespace DogGuns_Games
         {
             signUpBtn.onClick.AddListener(Func_SignUpBtn);
             loginBtn.onClick.AddListener(Func_LoginBtn);
+            _serverManager = ServerManager.Instance;
+            _playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
         }
 
         void Start()
         {
-            _serverManager = FindAnyObjectByType<ServerManager>();
             _savePath = Path.Combine(Application.persistentDataPath, "playerData.json");
-            _playerDataManagerDontdesytoy = FindAnyObjectByType<PlayerDataManagerDontdesytoy>();
 
             startBtn.onClick.AddListener(Func_StartBtn);
             openSingUpPopUpBtn.onClick.AddListener(Func_OpenSingUpPopUp_Btn);
@@ -77,7 +77,10 @@ namespace DogGuns_Games
         private void TokenLogin()
         {
             _serverManager.TokenLogin(
-                onSuccess: () => { SceneLoader.Instace.LoadScene("LobbyScene"); },
+                onSuccess: () => {     
+                    FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
+                    SceneLoader.Instace.LoadScene("LobbyScene"); 
+                },
                 onFailure: () => LoginButtonGroupACtive(true)
             );
         }
@@ -103,8 +106,8 @@ namespace DogGuns_Games
                 startBtn.interactable = true;
                 startBtn.gameObject.SetActive(true);
                 FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
-                SceneLoader.Instace.LoadScene("LobbyScene");
                 LoginButtonGroupACtive(false);
+                SceneLoader.Instace.LoadScene("LobbyScene");
             });
         }
 
@@ -123,11 +126,11 @@ namespace DogGuns_Games
                 {
                     loginPopUp.SetActive(false);
                     FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
+                    startBtn.interactable = true;
+                    startBtn.gameObject.SetActive(true);
+                    SceneLoader.Instace.LoadScene("LobbyScene");
                 });
-                yield return new WaitForSeconds(1f);
-                startBtn.interactable = true;
-                startBtn.gameObject.SetActive(true);
-                SceneLoader.Instace.LoadScene("LobbyScene");
+                yield return null;
             }
             else
             {
@@ -173,8 +176,13 @@ namespace DogGuns_Games
                         {
                             signUpPopUp.SetActive(false);
                             loginPopUp.SetActive(true);
-                            CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
-                            SceneLoader.Instace.LoadScene("LobbyScene");
+                            CreateNewPlayerData(signUpNickNameInputField.text, ""); // UID는 로그인 후 채워짐
+                            // 회원가입 후 바로 로그인 처리
+                            _serverManager.Login(signUpIDInputField.text, signUpPwInputField.text, () =>
+                            {
+                                FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
+                                SceneLoader.Instace.LoadScene("LobbyScene");
+                            });
                         });
                 }
                 else
@@ -222,8 +230,9 @@ namespace DogGuns_Games
         private void CreateNewPlayerData(string playerName, string uid)
         {
             _playerDataManagerDontdesytoy.scritpableobjPlayerData.InitializePlayerData(playerName, uid);
+            _playerDataManagerDontdesytoy.SavePlayerData(); // 로컬에 저장
+            _playerDataManagerDontdesytoy.UploadDataToServer(); // 서버에 업로드
             startBtn.interactable = true;
-            InsertPlayerData(); // 새로 생성한 데이터를 저장
         }
 
         /// <summary>
@@ -231,42 +240,13 @@ namespace DogGuns_Games
         /// </summary>
         public void InsertPlayerData()
         {
-            // ScriptableObject를 JSON으로 직렬화
-            string jsonData = JsonUtility.ToJson(_playerDataManagerDontdesytoy.scritpableobjPlayerData, true);
-
-            // 파일에 저장
-            File.WriteAllText(_savePath, jsonData);
-            Debug.Log("PlayerData saved to: " + _savePath);
-
-            //저장된 파일을 클라우드에 저장
-            Debug.Log(_playerDataManagerDontdesytoy.scritpableobjPlayerData.nickname);
-            _serverManager.GameDataInsert(_playerDataManagerDontdesytoy.scritpableobjPlayerData);
+            _playerDataManagerDontdesytoy.SavePlayerData();
+            _playerDataManagerDontdesytoy.UploadDataToServer();
         }
 
         private void LoadPlayerData()
         {
-            if (File.Exists(_savePath))
-            {
-                // JSON 파일을 읽어와 ScriptableObject에 덮어씌움
-                string jsonData = File.ReadAllText(_savePath);
-                if (_playerDataManagerDontdesytoy == null)
-                {
-                    _playerDataManagerDontdesytoy = FindFirstObjectByType<PlayerDataManagerDontdesytoy>();
-                }
-
-                if (_playerDataManagerDontdesytoy.scritpableobjPlayerData == null)
-                {
-                    _playerDataManagerDontdesytoy.scritpableobjPlayerData =
-                        ScriptableObject.CreateInstance<PlayerData>();
-                }
-
-                JsonUtility.FromJsonOverwrite(jsonData, _playerDataManagerDontdesytoy.scritpableobjPlayerData);
-                Debug.Log("PlayerData loaded from: " + _savePath);
-            }
-            else
-            {
-                Debug.LogWarning("No PlayerData file found at: " + _savePath);
-            }
+            _playerDataManagerDontdesytoy.LoadPlayerData();
         }
 
         /// <summary>
@@ -275,7 +255,7 @@ namespace DogGuns_Games
         /// <param name="action">게임 데이터가 존재하지않을떄 실행할 액션</param>
         private void FindPlayerdata(Action action)
         {
-            _serverManager.GameDataGet(action);
+            _playerDataManagerDontdesytoy.LoadDataFromServer(action);
         }
 
         /// <summary>

@@ -4152,7 +4152,7 @@ GameObject:
   - component: {fileID: 1479499486}
   - component: {fileID: 1479499487}
   m_Layer: 0
-  m_Name: PlayerData_(DonDestroy)
+  m_Name: 'PlayerData_ [ DonDestroy ]'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4805,7 +4805,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.2
+  orthographic size: 3.7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -5037,7 +5037,7 @@ GameObject:
   - component: {fileID: 1690165583}
   - component: {fileID: 1690165584}
   m_Layer: 0
-  m_Name: ServerManager(DonDestroy)
+  m_Name: 'ServerManager [ DonDestroy ]'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5306,7 +5306,7 @@ GameObject:
   - component: {fileID: 1776397526}
   - component: {fileID: 1776397525}
   m_Layer: 0
-  m_Name: Intro_BackGround_0
+  m_Name: Intro_BackGround
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 namespace DogGuns_Games

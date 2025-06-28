@@ -6,6 +6,7 @@ namespace DogGuns_Games
     [CreateAssetMenu(fileName = "Inventory_Data", menuName = "GameData/Inventory_Data")]
     public class Inventory_Data : ScriptableObject
     {
+
         public List<InventoryEntry> inventory = new List<InventoryEntry>(); // 인벤토리
 
         [System.Serializable]

@@ -61,14 +61,12 @@ namespace DogGuns_Games.Lobby
             // 서버에서 아이템 구매 성공시
             // 인벤토리에 아이템 추가
 
-
-            _scritpableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
-
-            _scritpableobjInventoryData.AddItem(itemData);
-
-            InventoryDataManagerDontdestory.Instance.Update_Inventory_Data(_scritpableobjInventoryData);
-
-            ServerManager.Instance.Inventory_Data_Update();
+            // 로컬 인벤토리 데이터에 아이템 추가
+            InventoryDataManagerDontdestory.Instance.scritpableobjInventoryData.AddItem(itemData);
+            // 변경된 인벤토리 데이터를 로컬에 저장
+            InventoryDataManagerDontdestory.Instance.SaveInventoryData();
+            // 변경된 인벤토리 데이터를 서버에 업로드
+            InventoryDataManagerDontdestory.Instance.UploadDataToServer();
         }
     }
 }
