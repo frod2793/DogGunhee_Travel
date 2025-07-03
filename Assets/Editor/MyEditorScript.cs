@@ -58,6 +58,7 @@ class MyEditorScript
 
         // 빌드 결과물이 저장될 경로와 파일 이름을 설정합니다.
         buildPlayerOptions.locationPathName = "Builds/Android/" + fileName;
+        
 
         // 빌드 타겟을 안드로이드로 설정합니다.
         buildPlayerOptions.target = BuildTarget.Android;
@@ -65,6 +66,11 @@ class MyEditorScript
         // 빌드 옵션을 설정합니다. 개발용 빌드는 BuildOptions.Development를 추가하면 좋습니다.
         buildPlayerOptions.options = BuildOptions.None; // 또는 BuildOptions.Development
 
+        //빌드 완료후 I:\내 드라이브\공유문서\테스트 빌드\TestBuild 이경로에도 빌드 결과물을 복사합니다.
+        
+   
+
+        
         
         // --------------------------------------------------
         // 3. 빌드 실행
@@ -78,6 +84,27 @@ class MyEditorScript
         if (summary.result == BuildResult.Succeeded)
         {
             Debug.Log($"빌드 성공! 경로: {summary.outputPath}, 용량: {summary.totalSize / 1024 / 1024} MB");
+            // 빌드 완료 후 지정된 경로로 결과물 복사
+            try
+            {
+                string destinationDir = @"I:\내 드라이브\공유문서\테스트 빌드\TestBuild";
+                // 대상 디렉토리가 없으면 생성합니다.
+                if (!System.IO.Directory.Exists(destinationDir))
+                {
+                    System.IO.Directory.CreateDirectory(destinationDir);
+                }
+
+                string sourceFile = summary.outputPath;
+                string destFile = System.IO.Path.Combine(destinationDir, System.IO.Path.GetFileName(sourceFile));
+
+                // 파일을 복사합니다. 이미 파일이 존재하면 덮어씁니다.
+                System.IO.File.Copy(sourceFile, destFile, true);
+                Debug.Log($"빌드 결과물을 다음 경로에 복사했습니다: {destFile}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"빌드 결과물 복사 실패: {e.Message}");
+            }
         }
         else
         {
