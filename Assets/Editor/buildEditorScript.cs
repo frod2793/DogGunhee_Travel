@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Build.Reporting; // BuildReport를 사용하기 위해 추가
 using UnityEngine;
 
-class MyEditorScript
+class buildEditorScript
 {
     // [MenuItem] 속성을 추가하여 유니티 에디터 메뉴에서 빌드를 실행할 수 있도록 합니다.
     [MenuItem("Build/Build Android (APK)")]
@@ -13,7 +13,7 @@ class MyEditorScript
         // 빌드 타겟을 Android로 설정합니다.
         SetupAndroidBuild("MyGame.apk", false);
     }
-    
+
     [MenuItem("Build/Build Android (AAB)")]
     public static void PerformAndroidBuild_AAB()
     {
@@ -31,7 +31,7 @@ class MyEditorScript
         // --------------------------------------------------
         // 1. 안드로이드 빌드에 필요한 PlayerSettings 설정
         // --------------------------------------------------
-        
+
         // 패키지 이름(Application Identifier) 설정. "com.회사이름.게임이름" 형식으로 반드시 수정해야 합니다.
         PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.DefaultCompany.DogGun_E_Run");
 
@@ -58,25 +58,19 @@ class MyEditorScript
 
         // 빌드 결과물이 저장될 경로와 파일 이름을 설정합니다.
         buildPlayerOptions.locationPathName = "Builds/Android/" + fileName;
-        
+
 
         // 빌드 타겟을 안드로이드로 설정합니다.
         buildPlayerOptions.target = BuildTarget.Android;
 
-        // 빌드 옵션을 설정합니다. 개발용 빌드는 BuildOptions.Development를 추가하면 좋습니다.
-        buildPlayerOptions.options = BuildOptions.None; // 또는 BuildOptions.Development
+        buildPlayerOptions.options = BuildOptions.None; // 빌드 옵션을 설정합니다. 필요에 따라 추가 옵션을 설정할 수 있습니다.
 
-        //빌드 완료후 I:\내 드라이브\공유문서\테스트 빌드\TestBuild 이경로에도 빌드 결과물을 복사합니다.
-        
-   
 
-        
-        
         // --------------------------------------------------
         // 3. 빌드 실행
         // --------------------------------------------------
         Debug.Log("Android 빌드를 시작합니다...");
-        
+
         // BuildPipeline.BuildPlayer에 옵션을 전달하여 빌드를 실행합니다.
         BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
         BuildSummary summary = report.summary;
@@ -124,16 +118,18 @@ class MyEditorScript
             if (!scene.enabled) continue;
             editorScenes.Add(scene.path);
         }
+
         return editorScenes.ToArray();
     }
-    
+
     // 참고: 원래의 윈도우 빌드 코드도 메뉴 아이템으로 만들어 둘 수 있습니다.
     [MenuItem("Build/Build Windows")]
     static void PerformWindowsBuild()
     {
- //       // 윈도우 빌드 경로는 .exe 확장자를 사용합니다.
+        //       // 윈도우 빌드 경로는 .exe 확장자를 사용합니다.
         string buildPath = "Builds/Windows/MyGame.exe";
-        BuildPipeline.BuildPlayer(FindEnabledEditorScenes(), buildPath, BuildTarget.StandaloneWindows, BuildOptions.None);
+        BuildPipeline.BuildPlayer(FindEnabledEditorScenes(), buildPath, BuildTarget.StandaloneWindows,
+            BuildOptions.None);
         Debug.Log($"Windows 빌드 완료! 경로: {buildPath}");
     }
 }
