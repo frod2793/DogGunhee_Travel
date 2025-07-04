@@ -101,23 +101,23 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void OnEnable()
         {
-            InitializeWeapon();
+        //    InitializeWeapon();
         }
 
         /// <summary>
         /// 무기 초기화 및 위치 설정
         /// </summary>
-        private void InitializeWeapon()
+        public void InitializeWeapon(Weaphon_base weapon)
         {
-            WeaphonBase = FindFirstObjectByType<Weaphon_base>();
-            if (WeaphonBase != null)
+            if (weapon != null)
             {
+                WeaphonBase = weapon;
                 WeaphonBase.transform.SetParent(transform);
                 WeaphonBase.transform.localPosition = Vector3.zero;
             }
             else
             {
-                Debug.LogWarning("무기 베이스를 찾을 수 없습니다.");
+                Debug.LogWarning("전달된 무기 베이스가 없습니다.");
             }
         }
 

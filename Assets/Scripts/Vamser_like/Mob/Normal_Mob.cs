@@ -1,4 +1,4 @@
-
+using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -7,78 +7,86 @@ namespace DogGuns_Games.vamsir
 {
     public class Normal_Mob : VamserMobBase
     {
-        [Header("<color=green>플레이여")] [SerializeField]
-        private PlayerBase player;
-
-        [Header("<color=green>플레이어 무기")] [SerializeField]
+        [Header("<color=green>플레이어 무기")] 
         private Weaphon_base player_Weaphon;
 
         //피격 물체가 발사체인지 구분
         private bool _isHitByShoot;
 
+        [Header("몹 스탯")]
+        [SerializeField] private float initialHp = 100f;
+        [SerializeField] private float initialSpeed = 1f;
+        [SerializeField] private float initialAttackDamage = 10f;
+        [SerializeField] private float initialAttackSpeed = 1f;
+        [SerializeField] private float initialAttackRange = 1f;
+        [SerializeField] private float initialStunTime = 0.1f;
+        
         private void Awake()
         {
             DOTween.SetTweensCapacity(500, 50);
         }
 
-        private void Init()
+        private void Start()
         {
-            player = FindFirstObjectByType<PlayerBase>();
-            player_Weaphon = FindFirstObjectByType<Weaphon_base>();
-            Mob_Speed = 0.5f;
-            Mob_Hp = 100f;
-            Mob_AttackDamage = 10f;
-            Mob_AttackSpeed = 1f;
-            Mob_AttackRange = 1f;
-            Mob_IsDie = false;
-            Mob_IsHit = false;
-            Mob_StunTime = 0.1f;
-            _isHitByShoot = player_Weaphon.isShooting;
+            // Init() 호출을 SetTarget으로 이동하여 player 참조가 보장되도록 합니다.
         }
 
+        private void Init()
+        {
+            if (player != null)
+            {
+                player_Weaphon = player.WeaphonBase;
+                if (player_Weaphon != null)
+                {
+                    _isHitByShoot = player_Weaphon.isShooting;
+                }
+            }
+            
+            Mob_Hp = initialHp;
+            Mob_Speed = initialSpeed;
+            Mob_AttackDamage = initialAttackDamage;
+            Mob_AttackSpeed = initialAttackSpeed;
+            Mob_AttackRange = initialAttackRange;
+            Mob_StunTime = initialStunTime;
+            
+            Mob_IsDie = false;
+            Mob_IsHit = false;
+        }
 
+        public override void SetTarget(PlayerBase target)
+        {
+            base.SetTarget(target);
+            Init();
+        }
+   
         public override void OnEnable()
         {
             base.OnEnable();
-
-            Init();
-
+            // Init() 호출을 SetTarget으로 이동하여 player 참조가 보장되도록 합니다.
             SetMobState(MobState.Move);
         }
 
 
         private void FixedUpdate()
         {
-            if (player_Weaphon == null)
+            if (!ismove || player == null) // player가 null이면 이동 로직을 실행하지 않습니다.
             {
-                player_Weaphon = FindFirstObjectByType<Weaphon_base>();
-                _isHitByShoot = player_Weaphon.isShooting;
-            }
-            if (!ismove)
-            {
-                transform.DOKill();
+                if (ismove) transform.DOKill();
                 return;
             }
             
-            if (player == null)
-            {  
-                player = FindFirstObjectByType<PlayerBase>();
-                return;
-            }
-
-            // 플레이어 방향으로 이동 dotween
-            // 플레이어 위치에 도달하면 멈춤
+            // 플레이어를 추적하는 로직
             Vector3 direction = (player.transform.position - transform.position).normalized;
-            float distance = Vector3.Distance(player.transform.position, transform.position);
-            
-            //플레이어와의 거리가 5이하면 이동하지 않음
-            if (distance < 0.3f)
-            {
-                transform.DOKill();
-                return;
-            }
+            transform.position += direction * Mob_Speed * Time.fixedDeltaTime;
 
-            transform.DOMove(transform.position + direction * distance, distance / Mob_Speed);
+            // 플레이어 방향으로 몹 회전 (좌우 반전)
+            if (direction.x != 0)
+            {
+                // direction.x > 0 이면 오른쪽을 보도록 180도 회전 (스프라이트가 왼쪽을 보고 있을 경우)
+                // direction.x < 0 이면 왼쪽을 보도록 0도 회전
+                float yRotation = direction.x > 0 ? 180f : 0f;
+                transform.rotation = Quaternion.Euler(0, yRotation, 0);
+            }
         }
 
         private void OnCollisionEnter2D(Collision2D other)

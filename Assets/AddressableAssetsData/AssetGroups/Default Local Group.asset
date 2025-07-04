@@ -15,35 +15,71 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: c0218446462d6b744bc070f0277a6ea3
   m_SerializeEntries:
-  - m_GUID: 0fb3ab37b22f5d046b0ae9aa41dc7e90
-    m_Address: Assets/Game_Resource/rungame/Store_Items/Item 1.prefab
+  - m_GUID: 16425c45709f14b4c9ed480607630a29
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Enemy
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Store_Item
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 13fcdc3dde31c064b9b8aa730517b39f
-    m_Address: Assets/Game_Resource/rungame/Store_Items/Item.prefab
+  - m_GUID: 35b424dfd3cc7cd46818c4a2a9f27d3d
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Weaphon/MiniShield.prefab
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Store_Item
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7d8bbe329dcef174d808ac5c9ec55f80
-    m_Address: Assets/Game_Resource/rungame/Store_Items
+  - m_GUID: 4fff049a21ea62141b5c6bf468f172fb
+    m_Address: Weapon_0
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Store_Item
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b195c56687d988a41aec6c14b5fee10a
-    m_Address: Assets/Game_Resource/rungame/Store_Items/Item 3.prefab
+  - m_GUID: 6da3e616afe6e9642a2a6fbe5d363ca8
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Player_charactor
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Store_Item
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d6648bec230a92c4fb9793b480b85197
-    m_Address: Assets/Game_Resource/rungame/Store_Items/Item 2.prefab
+  - m_GUID: 821ef9c335b6c144bb5835894543add6
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Weaphon/Strong_blackWater.prefab
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Store_Item
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c6a7642feb521b4d9465614d4c03ff6
+    m_Address: Player_Character_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dfc825aed78fcd4ba02077103263b40
+    m_Address: Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ae081f6c20b40ad4992af47818d27772
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Weaphon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aeb5e4e24acdcf340ae813706eb1d555
+    m_Address: "Assets/Game_Resource/VamserLike/VamSer_Like_Image/Player/\uAC74\uD76C_\uC0D8\uD50C
+      1.png"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c471a13dad9b00644acffbffcbad0eb4
+    m_Address: Mob_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df12ff3e664cd1e4dbac653da5e1d79e
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Map
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f03efe7b01bc19143974838bf0497ac2
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/charactor_skin
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f12391ae88c4b2742944ab27fdce585c
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Weaphon/Hero_landing.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: f81b927aabe27c140b936a55fa05287c, type: 2}

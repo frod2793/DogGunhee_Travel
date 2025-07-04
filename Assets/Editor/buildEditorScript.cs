@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.Build; // NamedBuildTarget을 사용하기 위해 추가
 using UnityEditor.Build.Reporting; // BuildReport를 사용하기 위해 추가
 using UnityEngine;
 
@@ -10,15 +13,32 @@ class buildEditorScript
     [MenuItem("Build/Build Android (APK)")]
     public static void PerformAndroidBuild_APK()
     {
+        // 어드레서블 콘텐츠를 빌드합니다.
+        BuildAddressables();
         // 빌드 타겟을 Android로 설정합니다.
-        SetupAndroidBuild("MyGame.apk", false);
+        SetupAndroidBuild("DogGunhee.apk", false);
     }
 
     [MenuItem("Build/Build Android (AAB)")]
     public static void PerformAndroidBuild_AAB()
     {
+        // 어드레서블 콘텐츠를 빌드합니다.
+        BuildAddressables();
         // 구글 플레이 스토어에 올리기 위한 AAB(Android App Bundle) 형식으로 빌드합니다.
-        SetupAndroidBuild("MyGame.aab", true);
+        SetupAndroidBuild("DogGunhee.aab", true);
+    }
+
+    /// <summary>
+    /// 어드레서블 콘텐츠를 빌드하는 메소드입니다.
+    /// </summary>
+    private static void BuildAddressables()
+    {
+        Debug.Log("어드레서블 빌드를 시작합니다...");
+        // 이전 빌드 캐시를 정리하고 새로 빌드합니다.
+        AddressableAssetSettings.CleanPlayerContent(
+            AddressableAssetSettingsDefaultObject.Settings.ActivePlayerDataBuilder);
+        AddressableAssetSettings.BuildPlayerContent();
+        Debug.Log("어드레서블 빌드가 완료되었습니다.");
     }
 
     /// <summary>
@@ -32,8 +52,8 @@ class buildEditorScript
         // 1. 안드로이드 빌드에 필요한 PlayerSettings 설정
         // --------------------------------------------------
 
-        // 패키지 이름(Application Identifier) 설정. "com.회사이름.게임이름" 형식으로 반드시 수정해야 합니다.
-        PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.DefaultCompany.DogGun_E_Run");
+        // 패키지 이름(Application Identifier) 설정. 새로운 NamedBuildTarget을 사용합니다.
+        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.DefaultCompany.DogGun_E_Run");
 
         // 앱 번들(AAB)로 빌드할지 APK로 빌드할지 설정합니다.
         EditorUserBuildSettings.buildAppBundle = isBundle;

@@ -6893,8 +6893,12 @@ MonoBehaviour:
   objectPoolSpawner: {fileID: 0}
   ismove: 0
   mobState: 0
-  player: {fileID: 0}
-  player_Weaphon: {fileID: 0}
+  initialHp: 100
+  initialSpeed: 1
+  initialAttackDamage: 10
+  initialAttackSpeed: 1
+  initialAttackRange: 1
+  initialStunTime: 0.1
 --- !u!61 &6024610064113227362
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -8921,7 +8925,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   poolSizeMobCount: 10
-  mobPrefab: {fileID: 8859754313619575736}
+  mobPrefabReference:
+    m_AssetGUID: c471a13dad9b00644acffbffcbad0eb4
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 1
   mobParent: {fileID: 3963251007470096304}
   expPrefab: {fileID: 4566103890259729249, guid: 4c8425f62f705cc4a99f433172396afc, type: 3}
   bigExpPrefab: {fileID: 7148867924126193655, guid: 4938e6d7b52b8a54eb1d81472b4f565c, type: 3}

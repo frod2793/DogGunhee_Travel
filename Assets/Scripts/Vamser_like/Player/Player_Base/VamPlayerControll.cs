@@ -76,16 +76,25 @@ namespace DogGuns_Games.vamsir
 
         private void PlayerInit()
         {
-            if (playerCharactor == null)
+            // 캐릭터 스폰과의 레이스 컨디션을 피하기 위해 초기화 로직을 AssignCharacter로 이동했습니다.
+            // OnGameStart 이벤트에서는 게임 시작 플래그만 설정합니다.
+            _isGameStart = true;
+        }
+
+        /// <summary>
+        /// VamserLikeGameManager가 플레이어 스폰 후 호출하여 캐릭터를 설정합니다.
+        /// </summary>
+        /// <param name="character">스폰된 플레이어 캐릭터</param>
+        public void AssignCharacter(PlayerBase character)
+        {
+            if (playerCharactor == null && character != null)
             {
-                playerCharactor = FindFirstObjectByType<PlayerBase>();
+                playerCharactor = character;
                 playerCharactor.transform.SetParent(player.gameObject.transform);
                 _playerAnimator = playerCharactor.GetComponent<Animator>();
                 cameraTransform = Camera.main;
                 Set_playerHpSlider();
             }
-
-            _isGameStart = true;
         }
 
         private void Pause()
@@ -139,7 +148,7 @@ namespace DogGuns_Games.vamsir
             // 플레이어 객체 유효성 검사
             if (player == null || playerCharactor == null)
             {
-                PlayerInit();
+                // PlayerInit(); // 재귀 호출 및 로직 문제로 제거
                 return;
             }
 
@@ -255,6 +264,13 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void FallowCamera()
         {
+            // playerCharactor, cameraTransform, mapRange가 모두 할당되었는지 확인
+            if (playerCharactor == null || cameraTransform == null || mapRange == null)
+            {
+                // 필수 컴포넌트가 없으면 카메라 추적을 시도하지 않음
+                return;
+            }
+            
             // 카메라가 맵 경계를 벗어나지 않도록 설정
             Vector3 cameraPosition = new Vector3(playerCharactor.transform.position.x,
                 playerCharactor.transform.position.y, cameraTransform.transform.position.z);

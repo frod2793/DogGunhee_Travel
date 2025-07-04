@@ -1,4 +1,3 @@
-
 using UnityEngine;
 namespace DogGuns_Games.vamsir
 {
@@ -16,7 +15,8 @@ namespace DogGuns_Games.vamsir
         protected bool  Mob_IsDie { get; set; }
         protected bool  Mob_IsHit { get; set; }
         
-        
+        protected PlayerBase player; // 플레이어 참조를 저장할 필드
+
         public bool ismove;
         public enum MobState
         {
@@ -31,14 +31,11 @@ namespace DogGuns_Games.vamsir
 
         public virtual void OnEnable()
         {
-            objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
-
+            // objectPoolSpawner는 풀에서 생성될 때 외부에서 할당해 주므로 Find는 불필요합니다.
             Mob_IsDie = false;
-            
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
         }
-
         
         private void OnValidate()
         {
@@ -48,7 +45,13 @@ namespace DogGuns_Games.vamsir
                 SetMobState(mobState);
             }
         }
-
+        /// <summary>
+        /// 외부에서 플레이어(타겟)를 설정합니다.
+        /// </summary>
+        public virtual void SetTarget(PlayerBase target)
+        {
+            player = target;
+        }
         private void Pause()
         {
             ismove = false;
