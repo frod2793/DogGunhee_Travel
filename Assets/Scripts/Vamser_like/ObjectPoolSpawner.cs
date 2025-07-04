@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -37,11 +38,14 @@ namespace DogGuns_Games.vamsir
         public int MobSpawnWave => _mobSpawnWave;
         
         [Header("<color=green>경험치 오브젝트</color>")]
-        [SerializeField] private EXP_Obj expPrefab;
-        [SerializeField] private EXP_Obj bigExpPrefab;
+        [SerializeField] private AssetReferenceGameObject expPrefabReference;
+        [SerializeField] private AssetReferenceGameObject bigExpPrefabReference;
+        private GameObject _loadedExpPrefab;
+        private GameObject _loadedBigExpPrefab;
         
         [Header("<color=green>코인 오브젝트</color>")]
-        [SerializeField] private Coin_Obj coinPrefab;
+        [SerializeField] private AssetReferenceGameObject coinPrefabReference;
+        private GameObject _loadedCoinPrefab;
         [SerializeField] private float coinSpawnPercent = 25;
         
         // 스폰 제어 변수
@@ -141,19 +145,26 @@ namespace DogGuns_Games.vamsir
                 return;
             }
 
-            // Addressable에서 몹 프리팹 로드
-            if (_loadedMobPrefab == null)
+            // Addressable에서 모든 프리팹 비동기 로드
+            var loadingTasks = new List<UniTask>();
+            if (_loadedMobPrefab == null && mobPrefabReference.RuntimeKeyIsValid())
+                loadingTasks.Add(mobPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedMobPrefab = p));
+            
+            if (_loadedExpPrefab == null && expPrefabReference.RuntimeKeyIsValid())
+                loadingTasks.Add(expPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedExpPrefab = p));
+            
+            if (_loadedBigExpPrefab == null && bigExpPrefabReference.RuntimeKeyIsValid())
+                loadingTasks.Add(bigExpPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedBigExpPrefab = p));
+            
+            if (_loadedCoinPrefab == null && coinPrefabReference.RuntimeKeyIsValid())
+                loadingTasks.Add(coinPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedCoinPrefab = p));
+
+            await UniTask.WhenAll(loadingTasks);
+
+            if (_loadedMobPrefab == null || _loadedExpPrefab == null || _loadedCoinPrefab == null)
             {
-                if (mobPrefabReference != null && mobPrefabReference.RuntimeKeyIsValid())
-                {
-                    _loadedMobPrefab = await mobPrefabReference.LoadAssetAsync<GameObject>().ToUniTask();
-                }
-                
-                if (_loadedMobPrefab == null)
-                {
-                    Debug.LogError("몹 프리팹을 Addressable에서 로드하는 데 실패했습니다.");
-                    return;
-                }
+                Debug.LogError("필수 프리팹 로드에 실패했습니다. 스폰을 시작할 수 없습니다.");
+                return;
             }
             
             // 프리팹 로드 후 풀 초기화
@@ -394,12 +405,12 @@ namespace DogGuns_Games.vamsir
         private EXP_Obj Create_EXP()
         {
             // TODO: 큰 경험치는 일정 웨이브 이후 또는 특정 조건에서 생성
-            if (_mobSpawnWave >= 5 && Random.value > 0.9f && bigExpPrefab != null)
+            if (_mobSpawnWave >= 5 && Random.value > 0.9f && _loadedBigExpPrefab != null)
             {
-                return CreateObject(bigExpPrefab);
+                return CreateObject<EXP_Obj>(_loadedBigExpPrefab);
             }
             
-            return CreateObject(expPrefab);
+            return CreateObject<EXP_Obj>(_loadedExpPrefab);
         }
 
         /// <summary>
@@ -435,7 +446,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private Coin_Obj CreateCoin()
         {
-            return CreateObject(coinPrefab);
+            return CreateObject<Coin_Obj>(_loadedCoinPrefab);
         }
 
         /// <summary>
@@ -469,9 +480,15 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 제네릭 오브젝트 생성 메서드
         /// </summary>
-        private T CreateObject<T>(T prefab) where T : MonoBehaviour
+        private T CreateObject<T>(GameObject prefab) where T : MonoBehaviour
         {
-            T obj = Instantiate(prefab.gameObject, mobParent).GetComponent<T>();
+            if (prefab == null)
+            {
+                Debug.LogError($"{typeof(T).Name}의 프리팹이 로드되지 않았습니다.");
+                return null;
+            }
+            
+            T obj = Instantiate(prefab, mobParent).GetComponent<T>();
             
             // 오브젝트 타입에 따라 추가 설정
             if (obj is EXP_Obj expObj)
