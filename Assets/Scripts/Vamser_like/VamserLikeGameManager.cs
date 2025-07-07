@@ -62,8 +62,6 @@ namespace DogGuns_Games.vamsir
 
         #region 게임 상태 관리
 
-     
-      
         /// <summary>
         /// 게임 시작 이벤트 처리 (비동기로 변경)
         /// </summary>

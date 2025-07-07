@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: LobbyScene
+  m_EditorClassIdentifier: 
+  m_GroupName: LobbyScene
+  m_GUID: aae5b5579dcf1154e9404869c75c45cf
+  m_SerializeEntries:
+  - m_GUID: 194573e79eefa49f0b3ff5f34eb75b92
+    m_Address: Skin_Index_Button
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f4a15099f266d440b977e5fc8f76583
+    m_Address: postBox
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 876b43e7e9f1b487181bc17ea500e55e
+    m_Address: QuestBox
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88c51965dbe994453af63584c9c40dc5
+    m_Address: Charactor_Index_Button
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8fae60c29b5a65b4ea61032ca96d5277
+    m_Address: Post_InDex
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c16eb1c2c10c746189cf73af69b707f7
+    m_Address: Quest_Index
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e52acb60929a24fe6b4bd705b3f551f7
+    m_Address: CharactorSelect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f97405356d95048daa59d0e370435a6a
+    m_Address: Item_Index
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fee22283781604232af13d6403880090
+    m_Address: ItemSelect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: f81b927aabe27c140b936a55fa05287c, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7507515b7c1e7ff42baa59db2cce1941, type: 2}
+    - {fileID: 11400000, guid: a0fe489a957c11a4396c4e3b21dc8d41, type: 2}

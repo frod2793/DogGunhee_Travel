@@ -15,9 +15,9 @@ MonoBehaviour:
   m_DefaultGroup: c0218446462d6b744bc070f0277a6ea3
   m_currentHash:
     serializedVersion: 2
-    Hash: dd7b0afcff1251a3d4fa4a2a0d4783c5
+    Hash: 00000000000000000000000000000000
   m_OptimizeCatalogSize: 0
-  m_BuildRemoteCatalog: 0
+  m_BuildRemoteCatalog: 1
   m_CatalogRequestsTimeout: 0
   m_DisableCatalogUpdateOnStart: 0
   m_InternalIdNamingMode: 0
@@ -33,7 +33,7 @@ MonoBehaviour:
   m_UniqueBundleIds: 0
   m_EnableJsonCatalog: 0
   m_NonRecursiveBuilding: 1
-  m_CCDEnabled: 0
+  m_CCDEnabled: 1
   m_maxConcurrentWebRequests: 3
   m_UseUWRForLocalBundles: 0
   m_BundleTimeout: 0
@@ -48,17 +48,19 @@ MonoBehaviour:
   mBuiltInBundleCustomNaming: 
   m_MonoScriptBundleNaming: 0
   m_CheckForContentUpdateRestrictionsOption: 0
+  m_BuildAndReleaseBinFileOption: 0
   m_MonoScriptBundleCustomNaming: 
   m_RemoteCatalogBuildPath:
-    m_Id: 
+    m_Id: 2b6d97230360f3c4db941d8f6734ff3b
   m_RemoteCatalogLoadPath:
-    m_Id: 
-  m_ContentStateBuildPathProfileVariableName: 
+    m_Id: bd5abed8307a89a4f8cfbee81cb61eda
+  m_ContentStateBuildPathProfileVariableName: <default settings path>
   m_CustomContentStateBuildPath: 
   m_ContentStateBuildPath: 
   m_BuildAddressablesWithPlayerBuild: 0
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
+  - {fileID: 11400000, guid: 488695fd65377724fa33c73c330c5fb5, type: 2}
   - {fileID: 11400000, guid: b197d331a5c8e944d93be2559440c054, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -68,6 +70,34 @@ MonoBehaviour:
     - m_InheritedParent: 
       m_Id: 386be15ae8459424c8e5be8d055b2a9b
       m_ProfileName: Default
+      m_Values:
+      - m_Id: 2b136268c4103534ab9b88b1952e78a8
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 2b6d97230360f3c4db941d8f6734ff3b
+        m_Value: 'ServerData/[BuildTarget]'
+      - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
+        m_Value: <undefined>
+    - m_InheritedParent: 
+      m_Id: 020a8b7d816678e40a60a31bc9ddfb08
+      m_ProfileName: Android_Test
+      m_Values:
+      - m_Id: 2b136268c4103534ab9b88b1952e78a8
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 2b6d97230360f3c4db941d8f6734ff3b
+        m_Value: 'ServerData/[BuildTarget]'
+      - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
+        m_Value: https://console.cloud.google.com/storage/browser/unity_addressableasset/bit_travel_bundle/Android
+    - m_InheritedParent: 
+      m_Id: 4b1b7a828bb56af47a25ae4fff7281cc
+      m_ProfileName: Pc_test
       m_Values:
       - m_Id: 2b136268c4103534ab9b88b1952e78a8
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
@@ -112,4 +142,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6efcef9100589a94d8bb1fcf5916984b, type: 2}
   - {fileID: 11400000, guid: 45299f25834eebe43a1c265d68fb0912, type: 2}
   - {fileID: 11400000, guid: f0101f86a336f2647876f7bfad988b57, type: 2}
-  m_ActiveProfileId: 386be15ae8459424c8e5be8d055b2a9b
+  m_ActiveProfileId: 020a8b7d816678e40a60a31bc9ddfb08
+  m_CcdManagedData:
+    EnvironmentId: 
+    EnvironmentName: 
+    BucketId: 
+    Badge: 
+    State: 0

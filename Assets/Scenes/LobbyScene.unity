@@ -1283,6 +1283,7 @@ MonoBehaviour:
   closeItemSelectButton: {fileID: 1925497325}
   closeItemSelectExpensionButton: {fileID: 2030477381}
   playerDataManagerDontdesytoy: {fileID: 0}
+  _isDebugMode: 0
 --- !u!1 &81575512
 GameObject:
   m_ObjectHideFlags: 0

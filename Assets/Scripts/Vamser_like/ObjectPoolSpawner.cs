@@ -16,17 +16,16 @@ namespace DogGuns_Games.vamsir
         #region 필드 및 속성
         private PlayerBase _player;
         // 오브젝트 풀 참조
-        public IObjectPool<VamserMobBase> MobObjectPool;
-        public IObjectPool<EXP_Obj> ExpObjectPool;
-        public IObjectPool<Coin_Obj> CoinObjectPool;
+        public IObjectPool<VamserMobBase> MobObjectPool { get; private set; }
+        public IObjectPool<EXP_Obj> ExpObjectPool { get; private set; }
+        public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
         
         [Header("<color=green>몹 오브젝트</color>")]
         [SerializeField] private int poolSizeMobCount = 20;
         
         [Header("<color=green>몹 프리팹</color>")]
         [SerializeField] private AssetReferenceGameObject mobPrefabReference;
-        private GameObject _loadedMobPrefab;
-
+        
         [Header("<color=green>몹 오브젝트 스폰 위치</color>")]
         [SerializeField] private Transform mobParent;
         
@@ -40,17 +39,16 @@ namespace DogGuns_Games.vamsir
         [Header("<color=green>경험치 오브젝트</color>")]
         [SerializeField] private AssetReferenceGameObject expPrefabReference;
         [SerializeField] private AssetReferenceGameObject bigExpPrefabReference;
-        private GameObject _loadedExpPrefab;
-        private GameObject _loadedBigExpPrefab;
         
         [Header("<color=green>코인 오브젝트</color>")]
         [SerializeField] private AssetReferenceGameObject coinPrefabReference;
-        private GameObject _loadedCoinPrefab;
         [SerializeField] private float coinSpawnPercent = 25;
+
+        // 로드된 프리팹 캐시
+        private readonly Dictionary<AssetReferenceGameObject, GameObject> _loadedPrefabs = new Dictionary<AssetReferenceGameObject, GameObject>();
         
         // 스폰 제어 변수
         private bool _isSpawningAllowed = true;
-        private Coroutine _spawnCoroutine;
         
         // 기타 참조
         private Camera _mainCamera;
@@ -60,11 +58,10 @@ namespace DogGuns_Games.vamsir
         #region 초기화 및 라이프사이클
 
         /// <summary>
-        /// 컴포넌트 초기화 및 오브젝트 풀 생성
+        /// 컴포넌트 초기화
         /// </summary>
          private void Awake()
          {
-             // InitializePools() 호출을 InitializeAndStartSpawning으로 이동했습니다.
              _mainCamera = Camera.main;
          }
 
@@ -76,27 +73,27 @@ namespace DogGuns_Games.vamsir
             // 몹 오브젝트 풀 초기화
             MobObjectPool = new ObjectPool<VamserMobBase>(
                 Create_Mob,
-                OnGet,
-                OnRelease,
-                OnDestory,
+                OnGet_Mob,
+                OnRelease_Mob,
+                OnDestroy_PoolObject,
                 maxSize: poolSizeMobCount
             );
 
             // 경험치 오브젝트 풀 초기화
             ExpObjectPool = new ObjectPool<EXP_Obj>(
                 Create_EXP,
-                OnGet_EXP,
-                OnRelease_EXP,
-                OnDestory_EXP,
+                OnGet_PoolObject,
+                OnRelease_PoolObject,
+                OnDestroy_PoolObject,
                 maxSize: poolSizeMobCount
             );
 
             // 코인 오브젝트 풀 초기화
             CoinObjectPool = new LinkedPool<Coin_Obj>(
-                CreateCoin,
-                OnGet_Coin,
-                Onrelease_Coin,
-                OnDestory_Coin,
+                Create_Coin,
+                OnGet_PoolObject,
+                OnRelease_PoolObject,
+                OnDestroy_PoolObject,
                 maxSize: poolSizeMobCount
             );
         }
@@ -104,7 +101,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 이벤트 구독 설정
         /// </summary>
-        private void Start()
+        private void OnEnable()
         {
             SubscribeToEvents();
         }
@@ -114,7 +111,6 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void SubscribeToEvents()
         {
-            PlayStateManager.OnGameStart -= GameStart; // 중복 구독 방지
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
             PlayStateManager.OnGameOver -= GameEnd;
@@ -124,13 +120,13 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameOver += GameEnd;
         }
 
-        // /// <summary>
-        // /// 이벤트 구독 해제
-        // /// </summary>
-        // private void OnDestroy()
-        // {
-        //     UnsubscribeFromEvents();
-        // }
+        /// <summary>
+        /// 이벤트 구독 해제
+        /// </summary>
+        private void OnDisable()
+        {
+            UnsubscribeFromEvents();
+        }
 
         /// <summary>
         /// VamserLikeGameManager에 의해 호출되어 스포너를 초기화하고 몹 스폰을 시작합니다.
@@ -146,22 +142,9 @@ namespace DogGuns_Games.vamsir
             }
 
             // Addressable에서 모든 프리팹 비동기 로드
-            var loadingTasks = new List<UniTask>();
-            if (_loadedMobPrefab == null && mobPrefabReference.RuntimeKeyIsValid())
-                loadingTasks.Add(mobPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedMobPrefab = p));
-            
-            if (_loadedExpPrefab == null && expPrefabReference.RuntimeKeyIsValid())
-                loadingTasks.Add(expPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedExpPrefab = p));
-            
-            if (_loadedBigExpPrefab == null && bigExpPrefabReference.RuntimeKeyIsValid())
-                loadingTasks.Add(bigExpPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedBigExpPrefab = p));
-            
-            if (_loadedCoinPrefab == null && coinPrefabReference.RuntimeKeyIsValid())
-                loadingTasks.Add(coinPrefabReference.LoadAssetAsync<GameObject>().ToUniTask().ContinueWith(p => _loadedCoinPrefab = p));
+            await LoadAllPrefabsAsync();
 
-            await UniTask.WhenAll(loadingTasks);
-
-            if (_loadedMobPrefab == null || _loadedExpPrefab == null || _loadedCoinPrefab == null)
+            if (!ArePrefabsLoaded())
             {
                 Debug.LogError("필수 프리팹 로드에 실패했습니다. 스폰을 시작할 수 없습니다.");
                 return;
@@ -172,15 +155,12 @@ namespace DogGuns_Games.vamsir
             
             Debug.Log("ObjectPoolSpawner가 플레이어 참조를 받고 스폰을 시작합니다.");
             
-            // GameStart 로직을 여기로 이동
+            // GameStart 로직
             if (PlayStateManager.instance.isPlay)
             {
                 // 초기 몹 스폰
                 SpawnInitialMobs();
                 _mobSpawnWave = 1;
-                
-                // 스폰 코루틴 시작 (필요시 활성화)
-                // _spawnCoroutine = StartCoroutine(SpawnRoutine());
             }
         }
         /// <summary>
@@ -188,7 +168,6 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void UnsubscribeFromEvents()
         {
-            PlayStateManager.OnGameStart -= GameStart;
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
             PlayStateManager.OnGameOver -= GameEnd;
@@ -199,29 +178,11 @@ namespace DogGuns_Games.vamsir
         #region 게임 상태 관리
 
         /// <summary>
-        /// 게임 시작 시 몹 스폰 초기화 (이제 VamserLikeGameManager에서 호출됨)
-        /// </summary>
-        private void GameStart()
-        {
-            // 이 메서드의 로직은 InitializeAndStartSpawning으로 이동했습니다.
-            // OnGameStart 이벤트에서 직접 호출되지 않습니다.
-        }
-
-        /// <summary>
         /// 게임 일시정지 처리
         /// </summary>
         private void Pause()
         {
-            // 스폰 일시 중지
             _isSpawningAllowed = false;
-    
-            // 진행 중인 스폰 코루틴 중지
-            if (_spawnCoroutine != null)
-            {
-                StopCoroutine(_spawnCoroutine);
-                _spawnCoroutine = null;
-            }
-    
             Debug.Log("오브젝트 스폰 일시 중지됨");
         }
 
@@ -230,15 +191,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void Resume()
         {
-            // 스폰 재개
             _isSpawningAllowed = true;
-    
-            // 필요시 스폰 코루틴 재시작
-            if (_spawnCoroutine == null && PlayStateManager.instance.isPlay)
-            {
-                // _spawnCoroutine = StartCoroutine(SpawnRoutine());
-            }
-    
             Debug.Log("오브젝트 스폰 재개됨");
         }
 
@@ -247,17 +200,12 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void GameEnd()
         {
-            // 모든 코루틴 종료
-            if (_spawnCoroutine != null)
-            {
-                StopCoroutine(_spawnCoroutine);
-                _spawnCoroutine = null;
-            }
+            _isSpawningAllowed = false;
             
             // 모든 오브젝트 풀 정리
-            MobObjectPool.Clear();
-            ExpObjectPool.Clear();
-            CoinObjectPool.Clear();
+            MobObjectPool?.Clear();
+            ExpObjectPool?.Clear();
+            CoinObjectPool?.Clear();
             
             Debug.Log("게임 종료: 모든 오브젝트 풀 정리됨");
         }
@@ -324,7 +272,6 @@ namespace DogGuns_Games.vamsir
             
             EXP_Obj exp = ExpObjectPool.Get();
             exp.transform.position = obj.transform.position;
-            exp.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -338,7 +285,6 @@ namespace DogGuns_Games.vamsir
             {
                 Coin_Obj coin = CoinObjectPool.Get();
                 coin.transform.position = obj.transform.position;
-                coin.gameObject.SetActive(true);
             }
         }
 
@@ -351,22 +297,15 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private VamserMobBase Create_Mob()
         {
-            if (_loadedMobPrefab == null)
-            {
-                Debug.LogError("몹 프리팹이 로드되지 않아 몹을 생성할 수 없습니다.");
-                return null;
-            }
-            
-            VamserMobBase mob = Instantiate(_loadedMobPrefab, mobParent).GetComponent<VamserMobBase>();
-            mob.objectPoolSpawner = this;
-            return mob;
+            return CreatePoolObject<VamserMobBase>(mobPrefabReference);
         }
 
         /// <summary>
         /// 몹 오브젝트 풀에서 가져올 때 처리
         /// </summary>
-        private void OnGet(VamserMobBase mob)
+        private void OnGet_Mob(VamserMobBase mob)
         {
+            OnGet_PoolObject(mob);
             MoveObjectOffScreen(mob);
             mob.SetTarget(_player);
         }
@@ -374,9 +313,9 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 몹 오브젝트를 풀에 반환할 때 처리
         /// </summary>
-        private void OnRelease(VamserMobBase obj)
+        private void OnRelease_Mob(VamserMobBase obj)
         {
-            obj.gameObject.SetActive(false);
+            OnRelease_PoolObject(obj);
             _mobCount--;
             
             // 남은 몹 수 체크
@@ -385,14 +324,6 @@ namespace DogGuns_Games.vamsir
             // 몹이 죽었을 때 아이템 생성
             SpawnExp(obj);
             SpawnCoin(obj);
-        }
-
-        /// <summary>
-        /// 몹 오브젝트 파괴 시 처리
-        /// </summary>
-        private void OnDestory(VamserMobBase obj)
-        {
-            Destroy(obj.gameObject);
         }
 
         #endregion
@@ -405,36 +336,9 @@ namespace DogGuns_Games.vamsir
         private EXP_Obj Create_EXP()
         {
             // TODO: 큰 경험치는 일정 웨이브 이후 또는 특정 조건에서 생성
-            if (_mobSpawnWave >= 5 && Random.value > 0.9f && _loadedBigExpPrefab != null)
-            {
-                return CreateObject<EXP_Obj>(_loadedBigExpPrefab);
-            }
-            
-            return CreateObject<EXP_Obj>(_loadedExpPrefab);
-        }
-
-        /// <summary>
-        /// 경험치 오브젝트 풀에서 가져올 때 처리
-        /// </summary>
-        private void OnGet_EXP(EXP_Obj obj)
-        {
-            OnGetObject(obj);
-        }
-
-        /// <summary>
-        /// 경험치 오브젝트를 풀에 반환할 때 처리
-        /// </summary>
-        private void OnRelease_EXP(EXP_Obj obj)
-        {
-            OnReleaseObject(obj);
-        }
-
-        /// <summary>
-        /// 경험치 오브젝트 파괴 시 처리
-        /// </summary>
-        private void OnDestory_EXP(EXP_Obj obj)
-        {
-            OnDestroyObject(obj);
+            bool canSpawnBigExp = _mobSpawnWave >= 5 && Random.value > 0.9f;
+            AssetReferenceGameObject prefabRef = canSpawnBigExp ? bigExpPrefabReference : expPrefabReference;
+            return CreatePoolObject<EXP_Obj>(prefabRef);
         }
 
         #endregion
@@ -444,45 +348,21 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 코인 오브젝트 생성
         /// </summary>
-        private Coin_Obj CreateCoin()
+        private Coin_Obj Create_Coin()
         {
-            return CreateObject<Coin_Obj>(_loadedCoinPrefab);
-        }
-
-        /// <summary>
-        /// 코인 오브젝트 풀에서 가져올 때 처리
-        /// </summary>
-        private void OnGet_Coin(Coin_Obj obj)
-        {
-            OnGetObject(obj);
-        }
-
-        /// <summary>
-        /// 코인 오브젝트를 풀에 반환할 때 처리
-        /// </summary>
-        private void Onrelease_Coin(Coin_Obj obj)
-        {
-            OnReleaseObject(obj);
-        }
-
-        /// <summary>
-        /// 코인 오브젝트 파괴 시 처리
-        /// </summary>
-        private void OnDestory_Coin(Coin_Obj obj)
-        {
-            OnDestroyObject(obj);
+            return CreatePoolObject<Coin_Obj>(coinPrefabReference);
         }
 
         #endregion
 
-        #region 공통 유틸리티
+        #region 공통 풀링 로직
 
         /// <summary>
         /// 제네릭 오브젝트 생성 메서드
         /// </summary>
-        private T CreateObject<T>(GameObject prefab) where T : MonoBehaviour
+        private T CreatePoolObject<T>(AssetReferenceGameObject prefabRef) where T : MonoBehaviour
         {
-            if (prefab == null)
+            if (!_loadedPrefabs.TryGetValue(prefabRef, out var prefab) || prefab == null)
             {
                 Debug.LogError($"{typeof(T).Name}의 프리팹이 로드되지 않았습니다.");
                 return null;
@@ -491,13 +371,9 @@ namespace DogGuns_Games.vamsir
             T obj = Instantiate(prefab, mobParent).GetComponent<T>();
             
             // 오브젝트 타입에 따라 추가 설정
-            if (obj is EXP_Obj expObj)
+            if (obj is IObjectPoolSpawnerSettable poolObj)
             {
-                expObj.objectPoolSpawner = this;
-            }
-            else if (obj is Coin_Obj coinObj)
-            {
-                coinObj.objectPoolSpawner = this;
+                poolObj.objectPoolSpawner = this;
             }
 
             return obj;
@@ -506,7 +382,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 오브젝트 활성화 공통 처리
         /// </summary>
-        private void OnGetObject<T>(T obj) where T : MonoBehaviour
+        private void OnGet_PoolObject<T>(T obj) where T : MonoBehaviour
         {
             obj.gameObject.SetActive(true);
         }
@@ -514,7 +390,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 오브젝트 비활성화 공통 처리
         /// </summary>
-        private void OnReleaseObject<T>(T obj) where T : MonoBehaviour
+        private void OnRelease_PoolObject<T>(T obj) where T : MonoBehaviour
         {
             obj.gameObject.SetActive(false);
         }
@@ -522,9 +398,61 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 오브젝트 파괴 공통 처리
         /// </summary>
-        private void OnDestroyObject<T>(T obj) where T : MonoBehaviour
+        private void OnDestroy_PoolObject<T>(T obj) where T : MonoBehaviour
         {
-            Destroy(obj.gameObject);
+            if (obj != null)
+            {
+                Destroy(obj.gameObject);
+            }
+        }
+
+        #endregion
+
+        #region 공통 유틸리티
+
+        /// <summary>
+        /// 모든 프리팹을 비동기적으로 로드합니다.
+        /// </summary>
+        private async UniTask LoadAllPrefabsAsync()
+        {
+            var tasks = new List<UniTask>
+            {
+                LoadPrefabAsync(mobPrefabReference),
+                LoadPrefabAsync(expPrefabReference),
+                LoadPrefabAsync(bigExpPrefabReference),
+                LoadPrefabAsync(coinPrefabReference)
+            };
+            await UniTask.WhenAll(tasks);
+        }
+
+        /// <summary>
+        /// 단일 프리팹을 로드하고 캐시에 저장합니다.
+        /// </summary>
+        private async UniTask LoadPrefabAsync(AssetReferenceGameObject reference)
+        {
+            if (reference == null || !reference.RuntimeKeyIsValid()) return;
+            if (_loadedPrefabs.ContainsKey(reference)) return;
+
+            var handle = Addressables.LoadAssetAsync<GameObject>(reference);
+            await handle.ToUniTask();
+            if (handle.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+            {
+                _loadedPrefabs[reference] = handle.Result;
+            }
+            else
+            {
+                Debug.LogError($"에셋 로드 실패: {reference.AssetGUID}");
+            }
+        }
+
+        /// <summary>
+        /// 필수 프리팹이 모두 로드되었는지 확인합니다.
+        /// </summary>
+        private bool ArePrefabsLoaded()
+        {
+            return _loadedPrefabs.ContainsKey(mobPrefabReference) &&
+                   _loadedPrefabs.ContainsKey(expPrefabReference) &&
+                   _loadedPrefabs.ContainsKey(coinPrefabReference);
         }
 
         /// <summary>
@@ -567,5 +495,12 @@ namespace DogGuns_Games.vamsir
         
         #endregion
     }
-}
 
+    /// <summary>
+    /// ObjectPoolSpawner 참조를 설정하기 위한 인터페이스
+    /// </summary>
+    public interface IObjectPoolSpawnerSettable
+    {
+        ObjectPoolSpawner objectPoolSpawner { set; }
+    }
+}

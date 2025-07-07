@@ -1,9 +1,9 @@
 using UnityEngine;
 namespace DogGuns_Games.vamsir
 {
-    public class VamserMobBase : MonoBehaviour
+    public class VamserMobBase : MonoBehaviour, IObjectPoolSpawnerSettable
     {
-        public ObjectPoolSpawner objectPoolSpawner;
+        public ObjectPoolSpawner objectPoolSpawner { get; set; }
 
         
         public float Mob_Speed { get; set; }
