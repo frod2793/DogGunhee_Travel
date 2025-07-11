@@ -56,7 +56,7 @@ public class OptionPopupManager : MonoBehaviour
     {
         if (_soundManager != null)
         {
-            _soundManager.VolumSet(Sound.Effect, effectSoundVolum.value);
+            _soundManager.VolumSet(Sound.SFX, effectSoundVolum.value);
         }
     }
 
@@ -64,7 +64,7 @@ public class OptionPopupManager : MonoBehaviour
     {
         if (_soundManager != null)
         {
-            _soundManager.VolumSet(Sound.Bgm, bgMsoundVolum.value);
+            _soundManager.VolumSet(Sound.BGM, bgMsoundVolum.value);
         }
     }
 

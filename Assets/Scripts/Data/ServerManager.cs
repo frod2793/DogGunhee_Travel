@@ -148,6 +148,7 @@ namespace DogGuns_Games
                 else
                 {
                     Debug.LogError("게스트 로그인 실패: " + bro);
+                    Backend.BMember.DeleteGuestInfo();
                 }
             });
         }

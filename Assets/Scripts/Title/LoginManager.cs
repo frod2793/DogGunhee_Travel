@@ -53,10 +53,12 @@ namespace DogGuns_Games
             loginBtn.onClick.AddListener(Func_LoginBtn);
             _serverManager = ServerManager.Instance;
             _playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
+            
         }
 
         void Start()
         {
+            
             _savePath = Path.Combine(Application.persistentDataPath, "playerData.json");
 
             startBtn.onClick.AddListener(Func_StartBtn);
@@ -64,6 +66,7 @@ namespace DogGuns_Games
             openLoginPopUpBtn.onClick.AddListener(Func_OpenLoginPopUp_Btn);
             guestLoginBtn.onClick.AddListener(() => { Func_GuestLoginBtn(); });
 
+            SoundManager.PlaySound (Sound.BGM, SoundKeys.Intro, true);
             LoginButtonGroupACtive(false);
         }
 
