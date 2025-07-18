@@ -11,8 +11,7 @@ namespace DogGuns_Games
     {
         #region 변수 및 필드
 
-        [Header("회원 가입")] 
-        [SerializeField] private GameObject signUpPopUp;
+        [Header("회원 가입")] [SerializeField] private GameObject signUpPopUp;
 
         [SerializeField] private TMP_InputField signUpNickNameInputField;
         [SerializeField] private TMP_InputField signUpIDInputField;
@@ -53,20 +52,21 @@ namespace DogGuns_Games
             loginBtn.onClick.AddListener(Func_LoginBtn);
             _serverManager = ServerManager.Instance;
             _playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
-            
         }
 
         void Start()
         {
-            
             _savePath = Path.Combine(Application.persistentDataPath, "playerData.json");
 
             startBtn.onClick.AddListener(Func_StartBtn);
             openSingUpPopUpBtn.onClick.AddListener(Func_OpenSingUpPopUp_Btn);
             openLoginPopUpBtn.onClick.AddListener(Func_OpenLoginPopUp_Btn);
-            guestLoginBtn.onClick.AddListener(() => { Func_GuestLoginBtn(); });
+            guestLoginBtn.onClick.AddListener(() =>
+            {
+                Func_GuestLoginBtn();
+            });
 
-            SoundManager.PlaySound (Sound.BGM, SoundKeys.Intro, true);
+            SoundManager.PlaySound(Sound.BGM, SoundKeys.Intro, true);
             LoginButtonGroupACtive(false);
         }
 
@@ -80,9 +80,13 @@ namespace DogGuns_Games
         private void TokenLogin()
         {
             _serverManager.TokenLogin(
-                onSuccess: () => {     
-                    FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
-                    SceneLoader.Instace.LoadScene("LobbyScene"); 
+                onSuccess: () =>
+                {
+                    FindPlayerdata(() =>
+                    {
+                        CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
+                    });
+                    SceneLoader.Instace.LoadScene("LobbyScene");
                 },
                 onFailure: () => LoginButtonGroupACtive(true)
             );
@@ -128,7 +132,10 @@ namespace DogGuns_Games
                 _serverManager.Login(loginIDInputField.text, loginPwInputField.text, () =>
                 {
                     loginPopUp.SetActive(false);
-                    FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
+                    FindPlayerdata(() =>
+                    {
+                        CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
+                    });
                     startBtn.interactable = true;
                     startBtn.gameObject.SetActive(true);
                     SceneLoader.Instace.LoadScene("LobbyScene");
@@ -183,7 +190,10 @@ namespace DogGuns_Games
                             // 회원가입 후 바로 로그인 처리
                             _serverManager.Login(signUpIDInputField.text, signUpPwInputField.text, () =>
                             {
-                                FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
+                                FindPlayerdata(() =>
+                                {
+                                    CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
+                                });
                                 SceneLoader.Instace.LoadScene("LobbyScene");
                             });
                         });

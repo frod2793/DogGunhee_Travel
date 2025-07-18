@@ -21,6 +21,7 @@ namespace DogGuns_Games.Lobby
         [Header("<color=green>팝업 UI</color>")]
         [SerializeField] private GameObject optionPopUp;
         [SerializeField] private GameObject cgamePopUp;
+        [SerializeField] private Button closeBtn;
 
         [Header("<color=green>캐릭터 선택 시스템</color>")]
         [SerializeField] private CharacterSelectUIManager characterSelectUIManager;
@@ -162,6 +163,11 @@ namespace DogGuns_Games.Lobby
                 optionBtn.onClick.AddListener(func_optionBtn);
             else
                 if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "옵션 버튼"));
+            
+            if (closeBtn != null)
+                closeBtn.onClick.AddListener(CloseButtonClick);
+            else
+                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "닫기 버튼"));
         }
 
         /// <summary>

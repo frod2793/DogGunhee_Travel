@@ -494,6 +494,38 @@ PrefabInstance:
       propertyPath: m_Name
       value: '[ - GAME - ]'
       objectReference: {fileID: 0}
+    - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1984303396593330076, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1984303396593330076, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1984303396593330076, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1984303396593330076, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2182036410863012217, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
