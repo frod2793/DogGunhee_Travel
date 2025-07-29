@@ -14,8 +14,7 @@ public class SoundManager : MonoBehaviour
             if (_instance == null)
             {
                 // 씬에서 SoundManager를 찾아봅니다.
-                _instance = FindObjectOfType<SoundManager>();
-
+                _instance = FindFirstObjectByType<SoundManager>();
                 // 씬에 SoundManager가 없다면, 새로 생성하지 않고 경고를 출력합니다.
                 // SoundManager는 씬에 미리 배치하고 SoundData를 할당해야 합니다.
                 if (_instance == null)
@@ -159,10 +158,23 @@ public class SoundManager : MonoBehaviour
         if (type == Sound.BGM)
         {
             _bgmSoundVolum = volum;
+            // 현재 재생 중인 BGM의 볼륨을 즉시 업데이트
+            if (_audioSources[(int)Sound.BGM] != null)
+            {
+                _audioSources[(int)Sound.BGM].volume = _bgmSoundVolum;
+            }
         }
         else if (type == Sound.SFX)
         {
             _effectsoundVolum = volum;
+            // SFX는 PlayOneShot을 사용하므로 다음 재생부터 적용됨
+            
+            if (_audioSources[(int)Sound.SFX] != null)
+            {
+                _audioSources[(int)Sound.SFX].volume = _effectsoundVolum;
+            }
+            
+            //Debug.Log($"SFX volume updated to: {_effectsoundVolum}");
         }
     }
 

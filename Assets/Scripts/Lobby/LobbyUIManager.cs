@@ -22,6 +22,7 @@ namespace DogGuns_Games.Lobby
         [SerializeField] private GameObject optionPopUp;
         [SerializeField] private GameObject cgamePopUp;
         [SerializeField] private Button closeBtn;
+        [SerializeField] private Button GameStartButton;
 
         [Header("<color=green>캐릭터 선택 시스템</color>")]
         [SerializeField] private CharacterSelectUIManager characterSelectUIManager;
@@ -95,6 +96,9 @@ namespace DogGuns_Games.Lobby
                 playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
     
             UpdateCurrencyDisplay();
+            
+            SoundManager.PlaySound(Sound.BGM, SoundKeys.Lobby, true);
+
         }
         
         /// <summary>
@@ -168,6 +172,11 @@ namespace DogGuns_Games.Lobby
                 closeBtn.onClick.AddListener(CloseButtonClick);
             else
                 if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "닫기 버튼"));
+            
+            if (GameStartButton != null)
+                GameStartButton.onClick.AddListener(VamSerlikeStart);
+            else
+                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "게임 시작 버튼"));
         }
 
         /// <summary>
@@ -449,11 +458,11 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 게임 실행 - 씬 전환
         /// </summary>
-        public void runGame()
+        private void VamSerlikeStart()
         {
             if (SceneLoader.Instace != null)
             {
-                SceneLoader.Instace.LoadScene("RunGame");
+                SceneLoader.Instace.LoadScene("VamSerlike");
                 if (_isDebugMode) Debug.Log("런게임 씬으로 전환");
             }
             else

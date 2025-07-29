@@ -3472,6 +3472,51 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &2522644308629791337
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8226133265963310142}
+  - component: {fileID: 3038148193590664681}
+  m_Layer: 0
+  m_Name: '[ - SoundManager - ]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8226133265963310142
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2522644308629791337}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5033402755607727901}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3038148193590664681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2522644308629791337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa6955cba98e64042b8efb54ea6c1549, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
 --- !u!1 &2536832316562801150
 GameObject:
   m_ObjectHideFlags: 0
@@ -3938,6 +3983,7 @@ Transform:
   - {fileID: 7140588035988983269}
   - {fileID: 2977578344186954463}
   - {fileID: 8909315435496517097}
+  - {fileID: 8226133265963310142}
   m_Father: {fileID: 3890279269560482727}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3096312699230443881
@@ -6890,7 +6936,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 639ebc134cdc4c44cac9bd90dd711e7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPoolSpawner: {fileID: 0}
   ismove: 0
   mobState: 0
   initialHp: 100
@@ -7724,7 +7769,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a725d9be5ab1f47dd9b14f11fb975b09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPoolSpawner: {fileID: 0}
 --- !u!1 &6226803593973240889
 GameObject:
   m_ObjectHideFlags: 0
@@ -9558,7 +9602,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2709c06c63540654aac063bc3fe1bf8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPoolSpawner: {fileID: 0}
+  expValue: 10
 --- !u!61 &2350294113008716996
 BoxCollider2D:
   m_ObjectHideFlags: 0

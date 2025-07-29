@@ -7,101 +7,224 @@ using UnityEngine.UI;
 
 public class OptionPopupManager : MonoBehaviour
 {
-    public SettingsData_oBJ settingsData; // ScriptableObject 참조
+    [Header("설정 데이터")] public SettingsData_oBJ settingsData; // ScriptableObject 참조
 
-    [Header("사운드 조절")] [SerializeField] private Slider effectSoundVolum;
+    [Header("사운드 조절")] 
+    [SerializeField] private Slider effectSoundVolum;
     [SerializeField] private Slider bgMsoundVolum;
 
     [Header("<color=green> 나가기 버튼")] [SerializeField]
     private Button exitBtn;
-
-    SoundManager _soundManager;
-
 
     [Header("조이스틱 사이즈및 타입 조절 버튼")] [SerializeField]
     private Button joystickSizeBtn;
 
     [SerializeField] private Joystic_setter joysticSetterPopUp_Prefb;
 
+    private bool _isInitialized = false;
+    private SoundManager _soundManager => SoundManager.Instance;
+
+    private void Start()
+    {
+        // SoundManager.instance를 사용하므로 별도 초기화 불필요
+    }
 
     private void OnEnable()
     {
-        settingsData.LoadSettings();
-        // 슬라이더와 토글에 대한 리스너 등록
-        effectSoundVolum.onValueChanged.AddListener(delegate { EffectsoundVolumSlider(); });
-        bgMsoundVolum.onValueChanged.AddListener(delegate { BgmSoundVolumSlider(); });
-        exitBtn.onClick.AddListener(SaveAndExit);
-        joystickSizeBtn.onClick.AddListener(EnableJoystickSizeBtn);
-        DropDown_Init();
-        
         if (_soundManager == null)
         {
-            _soundManager = FindAnyObjectByType<SoundManager>();
+            Debug.LogError("SoundManager를 찾을 수 없습니다. OptionPopupManager가 정상적으로 작동하지 않을 수 있습니다.");
         }
 
-        LoadSettings(); // 시작 시 설정 불러오기
+        if (!_isInitialized)
+        {
+            InitializeComponents();
+            _isInitialized = true;
+        }
+
+        LoadAndApplySettings();
+    }
+
+    private void OnDisable()
+    {
+        // OnDisable에서 리스너 해제 (더 안전함)
+        RemoveAllListeners();
     }
 
     private void OnDestroy()
     {
-        // 슬라이더와 토글에 대한 리스너 해제
-        effectSoundVolum.onValueChanged.RemoveAllListeners();
-        bgMsoundVolum.onValueChanged.RemoveAllListeners();
-        exitBtn.onClick.RemoveAllListeners();
-        joystickSizeBtn.onClick.RemoveAllListeners();
+        RemoveAllListeners();
     }
 
+    /// <summary>
+    /// 컴포넌트 초기화 및 이벤트 리스너 등록
+    /// </summary>
+    private void InitializeComponents()
+    {
+        // 설정 데이터 검증
+        if (settingsData == null)
+        {
+            Debug.LogError("SettingsData가 할당되지 않았습니다!");
+            return;
+        }
 
-    private void EffectsoundVolumSlider()
+        settingsData.LoadSettings();
+
+        // 이벤트 리스너 등록
+        RegisterEventListeners();
+
+        // 드롭다운 초기화 (현재는 사용되지 않지만 확장성을 위해 유지)
+        InitializeDropdown();
+    }
+
+    /// <summary>
+    /// 이벤트 리스너 등록
+    /// </summary>
+    private void RegisterEventListeners()
+    {
+        effectSoundVolum?.onValueChanged.AddListener(OnEffectVolumeChanged);
+        bgMsoundVolum?.onValueChanged.AddListener(OnBgmVolumeChanged);
+        exitBtn?.onClick.AddListener(SaveAndExit);
+        joystickSizeBtn?.onClick.AddListener(OpenJoystickSettings);
+    }
+
+    /// <summary>
+    /// 모든 이벤트 리스너 해제
+    /// </summary>
+    private void RemoveAllListeners()
+    {
+        effectSoundVolum?.onValueChanged.RemoveAllListeners();
+        bgMsoundVolum?.onValueChanged.RemoveAllListeners();
+        exitBtn?.onClick.RemoveAllListeners();
+        joystickSizeBtn?.onClick.RemoveAllListeners();
+    }
+
+    /// <summary>
+    /// 효과음 볼륨 변경 처리
+    /// </summary>
+    /// <param name="value">볼륨 값</param>
+    private void OnEffectVolumeChanged(float value)
+    {
+        SetSoundVolume(Sound.SFX, value);
+    }
+
+    /// <summary>
+    /// 배경음 볼륨 변경 처리
+    /// </summary>
+    /// <param name="value">볼륨 값</param>
+    private void OnBgmVolumeChanged(float value)
+    {
+        SetSoundVolume(Sound.BGM, value);
+    }
+
+    /// <summary>
+    /// 사운드 볼륨 설정 (통합 메서드)
+    /// </summary>
+    /// <param name="soundType">사운드 타입</param>
+    /// <param name="volume">볼륨 값</param>
+    private void SetSoundVolume(Sound soundType, float volume)
     {
         if (_soundManager != null)
         {
-            _soundManager.VolumSet(Sound.SFX, effectSoundVolum.value);
+            _soundManager.VolumSet(soundType, volume);
         }
-    }
-
-    private void BgmSoundVolumSlider()
-    {
-        if (_soundManager != null)
+        else
         {
-            _soundManager.VolumSet(Sound.BGM, bgMsoundVolum.value);
+            Debug.LogWarning("SoundManager를 찾을 수 없습니다.");
         }
     }
 
+    /// <summary>
+    /// 설정 저장 및 창 닫기
+    /// </summary>
     private void SaveAndExit()
     {
-        // ScriptableObject에 직접 저장
+        SaveCurrentSettings();
+        CloseOptionPopup();
+    }
+
+    /// <summary>
+    /// 현재 설정값 저장
+    /// </summary>
+    private void SaveCurrentSettings()
+    {
+        if (settingsData == null) return;
+
+        // 현재 UI 값을 설정 데이터에 저장
         settingsData.effectSoundVolume = effectSoundVolum.value;
         settingsData.backgroundSoundVolume = bgMsoundVolum.value;
 
+        // 설정 저장
         settingsData.SaveSettings();
-        // ScriptableObject는 자동으로 저장되므로, 별도로 저장할 필요 없음
-        Destroy(gameObject); // 창 종료
-
-        PlayStateManager.instance.PlayState = PlayStateManager.GameState.Resume;
     }
 
-
-    private void LoadSettings()
+    /// <summary>
+    /// 옵션 팝업 닫기
+    /// </summary>
+    private void CloseOptionPopup()
     {
-        // ScriptableObject에서 설정 불러오기
-        effectSoundVolum.value = settingsData.effectSoundVolume;
-        bgMsoundVolum.value = settingsData.backgroundSoundVolume;
+        // 게임 상태를 Resume으로 변경
+        if (PlayStateManager.instance != null)
+        {
+            PlayStateManager.instance.PlayState = PlayStateManager.GameState.Resume;
+        }
+
+        // 오브젝트 제거
+        Destroy(gameObject);
     }
 
-    private void DropDown_Init()
+    /// <summary>
+    /// 저장된 설정값 불러오기 및 UI에 적용
+    /// </summary>
+    private void LoadAndApplySettings()
     {
-        List<string> options = new List<string>();
-        options.Add("Fixed");
-        options.Add("Floating");
-        options.Add("Dynamic");
+        if (settingsData == null) return;
+
+        // UI에 설정값 적용 (이벤트 트리거 방지를 위해 일시적으로 리스너 해제)
+        effectSoundVolum.SetValueWithoutNotify(settingsData.effectSoundVolume);
+        bgMsoundVolum.SetValueWithoutNotify(settingsData.backgroundSoundVolume);
+
+        // SoundManager에도 즉시 적용
+        SetSoundVolume(Sound.SFX, settingsData.effectSoundVolume);
+        SetSoundVolume(Sound.BGM, settingsData.backgroundSoundVolume);
     }
 
-
-    private void EnableJoystickSizeBtn()
+    /// <summary>
+    /// 드롭다운 초기화 (현재 미사용이지만 확장성을 위해 유지)
+    /// </summary>
+    private void InitializeDropdown()
     {
-        GameObject joystickSetterPopUp = Instantiate(joysticSetterPopUp_Prefb.gameObject, transform);
-
-        joystickSetterPopUp.SetActive(true);
+        // 향후 조이스틱 타입 선택 기능 확장을 위한 메서드
+        var joystickTypes = new List<string> { "Fixed", "Floating", "Dynamic" };
+        // 실제 드롭다운 컴포넌트가 추가되면 여기서 설정
     }
+
+    /// <summary>
+    /// 조이스틱 설정 팝업 열기
+    /// </summary>
+    private void OpenJoystickSettings()
+    {
+        if (joysticSetterPopUp_Prefb == null)
+        {
+            Debug.LogError("조이스틱 설정 프리팹이 할당되지 않았습니다!");
+            return;
+        }
+
+        // 조이스틱 설정 팝업 생성
+        var joystickSettingPopup = Instantiate(joysticSetterPopUp_Prefb.gameObject, transform);
+        joystickSettingPopup.SetActive(true);
+    }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 에디터에서 설정 검증 (디버그용)
+    /// </summary>
+    private void OnValidate()
+    {
+        if (settingsData == null)
+        {
+            Debug.LogWarning($"{gameObject.name}: SettingsData가 할당되지 않았습니다.");
+        }
+    }
+#endif
 }

@@ -70,7 +70,9 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.instance.isPlay = true;
             PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt = 0;
             
+            SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
             // 플레이어와 무기 스폰이 완료될 때까지 기다립니다.
+            
             await SpawnPlayer();
             
             // 플레이어 스폰이 성공적으로 완료된 후에 몹 스포너를 활성화합니다.

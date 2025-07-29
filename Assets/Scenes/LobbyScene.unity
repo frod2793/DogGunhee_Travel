@@ -1159,6 +1159,7 @@ MonoBehaviour:
   optionPopUp: {fileID: 4094199759714701802, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
   cgamePopUp: {fileID: 297852345}
   closeBtn: {fileID: 1793167909}
+  GameStartButton: {fileID: 1785914719}
   characterSelectUIManager: {fileID: 617242525}
   openCharacterSelectButton: {fileID: 845655990}
   postManager: {fileID: 378748809}
@@ -15602,7 +15603,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa6955cba98e64042b8efb54ea6c1549, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  soundData: {fileID: 0}
+  soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
 --- !u!1 &1561755448
 GameObject:
   m_ObjectHideFlags: 0
@@ -17354,7 +17355,7 @@ GameObject:
   - component: {fileID: 1785914719}
   - component: {fileID: 1785914720}
   m_Layer: 5
-  m_Name: RunGameBtn
+  m_Name: VamSerlikeBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
