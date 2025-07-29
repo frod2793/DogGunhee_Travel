@@ -6,7 +6,9 @@ using UnityEngine;
 public class SoundManager : MonoBehaviour
 {
     #region 싱글톤
+
     private static SoundManager _instance;
+
     public static SoundManager Instance
     {
         get
@@ -19,17 +21,23 @@ public class SoundManager : MonoBehaviour
                 // SoundManager는 씬에 미리 배치하고 SoundData를 할당해야 합니다.
                 if (_instance == null)
                 {
-                    Debug.LogError("SoundManager instance not found in the scene. Please add SoundManager to your scene and assign SoundData.");
+                    Debug.LogError(
+                        "SoundManager instance not found in the scene. Please add SoundManager to your scene and assign SoundData.");
                 }
             }
+
             return _instance;
         }
     }
+
     #endregion
 
     #region 변수 및 필드
+
     [SerializeField] private SoundData soundData; // 인스펙터에서 할당할 SoundData
 
+    [SerializeField] private SettingsData_oBJ settingsData;
+    
     AudioSource[] _audioSources = new AudioSource[(int)Sound.Max];
     Dictionary<string, AudioClip> _audioClips = new Dictionary<string, AudioClip>();
     private float _effectsoundVolum = 1.0f;
@@ -61,6 +69,7 @@ public class SoundManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         _instance = this;
         Init();
         DontDestroyOnLoad(gameObject);
@@ -80,6 +89,7 @@ public class SoundManager : MonoBehaviour
             _audioSources[i] = go.AddComponent<AudioSource>();
             go.transform.parent = root.transform;
         }
+
         _audioSources[(int)Sound.BGM].loop = true;
 
         // 할당된 SoundData에서 오디오 클립 초기화
@@ -97,8 +107,30 @@ public class SoundManager : MonoBehaviour
         {
             Debug.LogError("SoundData가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
         }
+
+        LoadSoundSetting();
     }
 
+
+    public void LoadSoundSetting()
+    {
+        
+        settingsData.LoadSettings();
+        
+        if (settingsData == null)
+        {
+            Debug.LogError("SettingsData_oBJ가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
+            return;
+        }
+        // 배경음과 효과음 볼륨 설정
+        _bgmSoundVolum = settingsData.backgroundSoundVolume;
+        _effectsoundVolum = settingsData.effectSoundVolume;
+
+        // 초기 볼륨 설정
+        VolumSet(Sound.BGM, _bgmSoundVolum);
+        VolumSet(Sound.SFX, _effectsoundVolum);
+    }
+    
     public void Clear()
     {
         foreach (AudioSource audioSource in _audioSources)
@@ -107,6 +139,7 @@ public class SoundManager : MonoBehaviour
             audioSource.clip = null;
             audioSource.Stop();
         }
+
         _audioClips.Clear();
     }
 
@@ -168,12 +201,12 @@ public class SoundManager : MonoBehaviour
         {
             _effectsoundVolum = volum;
             // SFX는 PlayOneShot을 사용하므로 다음 재생부터 적용됨
-            
+
             if (_audioSources[(int)Sound.SFX] != null)
             {
                 _audioSources[(int)Sound.SFX].volume = _effectsoundVolum;
             }
-            
+
             //Debug.Log($"SFX volume updated to: {_effectsoundVolum}");
         }
     }
@@ -184,7 +217,7 @@ public class SoundManager : MonoBehaviour
         {
             return audioClip;
         }
-        
+
         Debug.LogWarning($"AudioClip not found: {key}");
         return null;
     }

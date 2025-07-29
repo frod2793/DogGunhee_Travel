@@ -61,12 +61,10 @@ namespace DogGuns_Games
             startBtn.onClick.AddListener(Func_StartBtn);
             openSingUpPopUpBtn.onClick.AddListener(Func_OpenSingUpPopUp_Btn);
             openLoginPopUpBtn.onClick.AddListener(Func_OpenLoginPopUp_Btn);
-            guestLoginBtn.onClick.AddListener(() =>
-            {
-                Func_GuestLoginBtn();
-            });
-
+            guestLoginBtn.onClick.AddListener(() => { Func_GuestLoginBtn(); });
             SoundManager.PlaySound(Sound.BGM, SoundKeys.Intro, true);
+
+            SoundManager.Instance.LoadSoundSetting();
             LoginButtonGroupACtive(false);
         }
 
@@ -82,10 +80,7 @@ namespace DogGuns_Games
             _serverManager.TokenLogin(
                 onSuccess: () =>
                 {
-                    FindPlayerdata(() =>
-                    {
-                        CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
-                    });
+                    FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
                     SceneLoader.Instace.LoadScene("LobbyScene");
                 },
                 onFailure: () => LoginButtonGroupACtive(true)
@@ -132,10 +127,7 @@ namespace DogGuns_Games
                 _serverManager.Login(loginIDInputField.text, loginPwInputField.text, () =>
                 {
                     loginPopUp.SetActive(false);
-                    FindPlayerdata(() =>
-                    {
-                        CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
-                    });
+                    FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
                     startBtn.interactable = true;
                     startBtn.gameObject.SetActive(true);
                     SceneLoader.Instace.LoadScene("LobbyScene");

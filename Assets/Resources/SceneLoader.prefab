@@ -296,6 +296,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sceneLoadferCanvasGroup: {fileID: 4317269913157135772}
   progressbar: {fileID: 8706325752149968415}
+  sceneReferences:
+  - sceneName: Lobby
+    sceneAsset: {fileID: 102900000, guid: 2917fd536eadc4346ba3a9a1d8058c09, type: 3}
+  - sceneName: GameScene
+    sceneAsset: {fileID: 102900000, guid: 54271c5352bc9f3469adffd87bbdd691, type: 3}
+  lobbyScene:
+    sceneName: 
+    sceneAsset: {fileID: 0}
+  gameScene:
+    sceneName: 
+    sceneAsset: {fileID: 0}
+  settingsScene:
+    sceneName: 
+    sceneAsset: {fileID: 0}
 --- !u!95 &4449833707620572402
 Animator:
   serializedVersion: 7

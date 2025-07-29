@@ -9,8 +9,7 @@ public class OptionPopupManager : MonoBehaviour
 {
     [Header("설정 데이터")] public SettingsData_oBJ settingsData; // ScriptableObject 참조
 
-    [Header("사운드 조절")] 
-    [SerializeField] private Slider effectSoundVolum;
+    [Header("사운드 조절")] [SerializeField] private Slider effectSoundVolum;
     [SerializeField] private Slider bgMsoundVolum;
 
     [Header("<color=green> 나가기 버튼")] [SerializeField]
@@ -19,7 +18,7 @@ public class OptionPopupManager : MonoBehaviour
     [Header("조이스틱 사이즈및 타입 조절 버튼")] [SerializeField]
     private Button joystickSizeBtn;
 
-    [SerializeField] private Joystic_setter joysticSetterPopUp_Prefb;
+    [SerializeField] private Joystic_setter joysticSetterPopUpPrefb;
 
     private bool _isInitialized = false;
     private SoundManager _soundManager => SoundManager.Instance;
@@ -163,12 +162,6 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void CloseOptionPopup()
     {
-        // 게임 상태를 Resume으로 변경
-        if (PlayStateManager.instance != null)
-        {
-            PlayStateManager.instance.PlayState = PlayStateManager.GameState.Resume;
-        }
-
         // 오브젝트 제거
         Destroy(gameObject);
     }
@@ -204,14 +197,14 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void OpenJoystickSettings()
     {
-        if (joysticSetterPopUp_Prefb == null)
+        if (joysticSetterPopUpPrefb == null)
         {
             Debug.LogError("조이스틱 설정 프리팹이 할당되지 않았습니다!");
             return;
         }
 
         // 조이스틱 설정 팝업 생성
-        var joystickSettingPopup = Instantiate(joysticSetterPopUp_Prefb.gameObject, transform);
+        var joystickSettingPopup = Instantiate(joysticSetterPopUpPrefb.gameObject, transform);
         joystickSettingPopup.SetActive(true);
     }
 

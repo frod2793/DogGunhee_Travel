@@ -5209,6 +5209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
+  settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
 --- !u!1 &1771300656
 GameObject:
   m_ObjectHideFlags: 0

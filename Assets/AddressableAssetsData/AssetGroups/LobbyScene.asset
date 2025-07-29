@@ -15,6 +15,18 @@ MonoBehaviour:
   m_GroupName: LobbyScene
   m_GUID: aae5b5579dcf1154e9404869c75c45cf
   m_SerializeEntries:
+  - m_GUID: 0fb3ab37b22f5d046b0ae9aa41dc7e90
+    m_Address: Item 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Store_Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13fcdc3dde31c064b9b8aa730517b39f
+    m_Address: Item
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Store_Item
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 194573e79eefa49f0b3ff5f34eb75b92
     m_Address: Skin_Index_Button
     m_ReadOnly: 0
@@ -40,10 +52,22 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b195c56687d988a41aec6c14b5fee10a
+    m_Address: Item 3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Store_Item
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c16eb1c2c10c746189cf73af69b707f7
     m_Address: Quest_Index
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6648bec230a92c4fb9793b480b85197
+    m_Address: Item 2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Store_Item
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e52acb60929a24fe6b4bd705b3f551f7
     m_Address: CharactorSelect

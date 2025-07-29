@@ -34,7 +34,30 @@ namespace DogGuns_Games
 
         [SerializeField] private CanvasGroup sceneLoadferCanvasGroup;
         [SerializeField] private Slider progressbar;
-
+        
+        [Header("Scene References")]
+        [SerializeField] private SceneReference[] sceneReferences;
+        
+        [System.Serializable]
+        public class SceneReference
+        {
+            public string sceneName;
+            
+            #if UNITY_EDITOR
+            [SerializeField] private UnityEditor.SceneAsset sceneAsset;
+            
+            public UnityEditor.SceneAsset SceneAsset
+            {
+                get => sceneAsset;
+                set
+                {
+                    sceneAsset = value;
+                    sceneName = sceneAsset != null ? sceneAsset.name : "";
+                }
+            }
+            #endif
+        }
+        
 
         private string loadSceneName;
 
@@ -64,6 +87,54 @@ namespace DogGuns_Games
             Debug.Log("Scene change activie");
         }
 
+        /// <summary>
+        /// SceneReference를 통해 씬을 로드합니다.
+        /// </summary>
+        public void LoadScene(SceneReference sceneRef)
+        {
+            if (sceneRef != null && !string.IsNullOrEmpty(sceneRef.sceneName))
+            {
+                LoadScene(sceneRef.sceneName);
+            }
+            else
+            {
+                Debug.LogError("SceneReference가 유효하지 않습니다!");
+            }
+        }
+
+        /// <summary>
+        /// 로비 씬으로 이동합니다.
+        /// </summary>
+        public void LoadLobbyScene()
+        {
+            LoadScene(sceneReferences[0]);
+        }
+
+        /// <summary>
+        /// 게임 씬으로 이동합니다.
+        /// </summary>
+        public void LoadGameScene()
+        {
+            LoadScene(sceneReferences[1]);
+        }
+        
+
+        /// <summary>
+        /// 씬 이름으로 SceneReference를 찾습니다.
+        /// </summary>
+        public SceneReference FindSceneReference(string sceneName)
+        {
+            if (sceneReferences != null)
+            {
+                foreach (var sceneRef in sceneReferences)
+                {
+                    if (sceneRef.sceneName == sceneName)
+                        return sceneRef;
+                }
+            }
+            return null;
+        }
+        
         private IEnumerator Load(string sceneName)
         {
             progressbar.value = 0f;

@@ -254,8 +254,16 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void Player_Die()
         {
-            Debug.Log("플레이어 사망");
-            // 자식 클래스에서 구현
+            Debug.Log("플레이어 사망 - 게임 오버 처리 시작");
+            
+            // 게임 오버 상태로 변경
+            if (PlayStateManager.instance != null)
+            {
+                PlayStateManager.instance.PlayState = PlayStateManager.GameState.GameOver;
+            }
+            
+            // 플레이어 비활성화 (선택사항)
+            gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -263,6 +271,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void Player_Hit()
         {
+            // 체력이 0 이하로 떨어지면 사망 처리
             if (Health <= 0)
             {
                 Player_Die();

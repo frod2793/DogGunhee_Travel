@@ -7,6 +7,9 @@ namespace DogGuns_Games.vamsir
 {
     public class VamPlayerControll : MonoBehaviour
     {
+        
+        //todo: 플레이어의 HP가 O 이하로 떨어지면 게임 오버 처리
+        
         #region 필드 및 변수
 
         [Header("<color=green>Player Object")] [SerializeField]
@@ -133,6 +136,9 @@ namespace DogGuns_Games.vamsir
             {
                 _playerHpSliderValue = playerCharactor.Health;
                 _playerHpSlider.value = _playerHpSliderValue;
+                
+                // 게임 오버 처리는 PlayerBase의 Player_Hit에서 담당하므로 여기서는 제거
+                // PlayerBase에서 Health <= 0일 때 자동으로 게임 오버 처리됨
             }
         }
 

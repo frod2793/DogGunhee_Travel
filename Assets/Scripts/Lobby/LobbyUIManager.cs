@@ -12,6 +12,12 @@ namespace DogGuns_Games.Lobby
     public class LobbyUIManager : MonoBehaviour
     {
         #region 변수 및 필드
+        
+        [Header("<color=green>플레이어 프로필")]
+        [SerializeField] private Image playerProfileImage;
+        [SerializeField] private TMP_Text playerNameText;
+        [SerializeField] private TMP_Text playerLevelText;
+        [SerializeField] private Slider playerLevelSlider;
 
         [Header("<color=green>플레이 및 설정 버튼 UI 목록</color>")]
         [SerializeField] private Button startBtn;
@@ -19,7 +25,7 @@ namespace DogGuns_Games.Lobby
         [SerializeField] private Button optionBtn;
 
         [Header("<color=green>팝업 UI</color>")]
-        [SerializeField] private GameObject optionPopUp;
+        [SerializeField] private OptionPopupManager optionPopupPrefab;
         [SerializeField] private GameObject cgamePopUp;
         [SerializeField] private Button closeBtn;
         [SerializeField] private Button GameStartButton;
@@ -70,6 +76,8 @@ namespace DogGuns_Games.Lobby
         [SerializeField]
         private bool _isDebugMode = false;
 
+        private OptionPopupManager currentOptionPopup; // 현재 활성화된 옵션 팝업 인스턴스
+
         #endregion
 
         #region Unity 라이프사이클
@@ -96,9 +104,24 @@ namespace DogGuns_Games.Lobby
                 playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
     
             UpdateCurrencyDisplay();
-            
+            SetPlayerData ();
             SoundManager.PlaySound(Sound.BGM, SoundKeys.Lobby, true);
+            SoundManager.Instance.LoadSoundSetting();
 
+        }
+
+        private void SetPlayerData()
+        {
+            if (playerDataManagerDontdesytoy == null || playerDataManagerDontdesytoy.scritpableobjPlayerData == null)
+            {
+                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "플레이어 데이터"));
+                return;
+            }
+
+            playerNameText.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.nickname;
+            playerLevelText.text = $"Lv. {playerDataManagerDontdesytoy.scritpableobjPlayerData.level}";
+            playerLevelSlider.value = playerDataManagerDontdesytoy.scritpableobjPlayerData.experience / 100f; // 예시로 100을 최대 경험치로 설정
+            
         }
         
         /// <summary>
@@ -252,7 +275,7 @@ namespace DogGuns_Games.Lobby
                 if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "상점 버튼 또는 매니저"));
 
             if (closeStoreButton != null && storeManager != null)
-                closeStoreButton.onClick.AddListener(() => storeManager.CloseStoreItemPopUp());
+                closeStoreButton.onClick.AddListener(() => storeManager.CloseStorePanel());
             else
                 if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "상점 닫기 버튼 또는 매니저"));
         
@@ -441,14 +464,31 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void func_optionBtn()
         {
-            if (optionPopUp != null)
+            if (optionPopupPrefab != null)
             {
-                optionPopUp.SetActive(true);
-                AddClosePopUpAction(() => optionPopUp.SetActive(false));
+                // 이미 열린 팝업이 있으면 닫기
+                if (currentOptionPopup != null)
+                {
+                    Destroy(currentOptionPopup.gameObject);
+                    currentOptionPopup = null;
+                }
+
+                // 새 옵션 팝업 인스턴스 생성
+                currentOptionPopup = Instantiate(optionPopupPrefab, transform.parent);
+                
+                // 팝업 닫기 액션 등록
+                AddClosePopUpAction(() => {
+                    if (currentOptionPopup != null)
+                    {
+                        Destroy(currentOptionPopup.gameObject);
+                        currentOptionPopup = null;
+                    }
+                });
+                
                 if (_isDebugMode) Debug.Log("옵션 팝업 표시");
             }
             else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "옵션 팝업"));
+                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "옵션 팝업 프리팹"));
         }
 
         #endregion
@@ -474,3 +514,4 @@ namespace DogGuns_Games.Lobby
         #endregion
     }
 }
+
