@@ -10,7 +10,13 @@ namespace DogGuns_Games
     {
         protected static SceneLoader instance;
 
-        public static SceneLoader Instace
+        // 씬 이름 상수들
+        public const string INTRO_SCENE = "IntroScene";
+        public const string LOBBY_SCENE = "LobbyScene";
+        public const string RUN_GAME_SCENE = "RunGame";
+        public const string VAMSER_LIKE_SCENE = "VamSerlike";
+
+        public static SceneLoader Instance // 오타 수정: Instace -> Instance
         {
             get
             {
@@ -61,7 +67,7 @@ namespace DogGuns_Games
 
         private string loadSceneName;
 
-        public static SceneLoader Create()
+        public static SceneLoader Create(SceneLoader prefab = null)
         {
             var SeneLoadprefeb = Resources.Load<SceneLoader>("SceneLoader");
             return Instantiate(SeneLoadprefeb);
@@ -78,13 +84,69 @@ namespace DogGuns_Games
             DontDestroyOnLoad(gameObject);
         }
 
+        /// <summary>
+        /// 로비 씬으로 이동합니다.
+        /// </summary>
+        public void LoadLobbyScene()
+        {
+            LoadScene(LOBBY_SCENE);
+        }
+
+        /// <summary>
+        /// 게임 씬으로 이동합니다.
+        /// </summary>
+        public void LoadGameScene()
+        {
+            LoadScene(RUN_GAME_SCENE);
+        }
+
+        /// <summary>
+        /// VamSerLike 씬으로 이동합니다.
+        /// </summary>
+        public void LoadVamSerLikeScene()
+        {
+            LoadScene(VAMSER_LIKE_SCENE);
+        }
+
+        /// <summary>
+        /// 인트로 씬으로 이동합니다.
+        /// </summary>
+        public void LoadIntroScene()
+        {
+            LoadScene(INTRO_SCENE);
+        }
+
         public void LoadScene(string SceneName)
         {
+            // 씬이 빌드에 포함되어 있는지 확인
+            if (!IsSceneInBuild(SceneName))
+            {
+                Debug.LogError($"씬 '{SceneName}'이 빌드 설정에 포함되어 있지 않습니다!");
+                return;
+            }
+
             gameObject.SetActive(true);
             SceneManager.sceneLoaded += LoadSceneEnd;
             loadSceneName = SceneName;
             StartCoroutine(Load(SceneName));
-            Debug.Log("Scene change activie");
+            Debug.Log($"씬 변경 시작: {SceneName}");
+        }
+
+        /// <summary>
+        /// 씬이 빌드에 포함되어 있는지 확인합니다.
+        /// </summary>
+        private bool IsSceneInBuild(string sceneName)
+        {
+            for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+            {
+                string scenePath = SceneUtility.GetScenePathByBuildIndex(i);
+                string sceneNameInBuild = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+                if (sceneNameInBuild == sceneName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -102,22 +164,6 @@ namespace DogGuns_Games
             }
         }
 
-        /// <summary>
-        /// 로비 씬으로 이동합니다.
-        /// </summary>
-        public void LoadLobbyScene()
-        {
-            LoadScene(sceneReferences[0]);
-        }
-
-        /// <summary>
-        /// 게임 씬으로 이동합니다.
-        /// </summary>
-        public void LoadGameScene()
-        {
-            LoadScene(sceneReferences[1]);
-        }
-        
 
         /// <summary>
         /// 씬 이름으로 SceneReference를 찾습니다.

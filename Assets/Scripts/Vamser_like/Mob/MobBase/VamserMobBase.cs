@@ -35,6 +35,19 @@ namespace DogGuns_Games.vamsir
             Mob_IsDie = false;
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
+            PlayStateManager.OnGameOver += OnGameOver;
+        }
+
+        private void OnDisable()
+        {
+            PlayStateManager.OnGamePause -= Pause;
+            PlayStateManager.OnGameResume -= Resume;
+            PlayStateManager.OnGameOver -= OnGameOver;
+        }
+
+        private void OnGameOver()
+        {
+            ismove = false;
         }
         
         private void OnValidate()

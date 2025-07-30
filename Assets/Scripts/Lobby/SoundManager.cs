@@ -36,7 +36,7 @@ public class SoundManager : MonoBehaviour
 
     [SerializeField] private SoundData soundData; // 인스펙터에서 할당할 SoundData
 
-    [SerializeField] private SettingsData_oBJ settingsData;
+    [SerializeField] public SettingsData_oBJ settingsData;
     
     AudioSource[] _audioSources = new AudioSource[(int)Sound.Max];
     Dictionary<string, AudioClip> _audioClips = new Dictionary<string, AudioClip>();

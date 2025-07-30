@@ -18,7 +18,7 @@ public class OptionPopupManager : MonoBehaviour
     [Header("조이스틱 사이즈및 타입 조절 버튼")] [SerializeField]
     private Button joystickSizeBtn;
 
-    [SerializeField] private Joystic_setter joysticSetterPopUpPrefb;
+    [SerializeField] private JoysticSetter joysticSetterPopUpPrefb;
 
     private bool _isInitialized = false;
     private SoundManager _soundManager => SoundManager.Instance;

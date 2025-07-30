@@ -80,8 +80,11 @@ namespace DogGuns_Games
             _serverManager.TokenLogin(
                 onSuccess: () =>
                 {
-                    FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
-                    SceneLoader.Instace.LoadScene("LobbyScene");
+                    FindPlayerdata(() =>
+                    {
+                        CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
+                    });
+                    SceneLoader.Instance.LoadScene("LobbyScene");
                 },
                 onFailure: () => LoginButtonGroupACtive(true)
             );
@@ -109,7 +112,7 @@ namespace DogGuns_Games
                 startBtn.gameObject.SetActive(true);
                 FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
                 LoginButtonGroupACtive(false);
-                SceneLoader.Instace.LoadScene("LobbyScene");
+                SceneLoader.Instance.LoadScene("LobbyScene");
             });
         }
 
@@ -130,7 +133,7 @@ namespace DogGuns_Games
                     FindPlayerdata(() => { CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid); });
                     startBtn.interactable = true;
                     startBtn.gameObject.SetActive(true);
-                    SceneLoader.Instace.LoadScene("LobbyScene");
+                    SceneLoader.Instance.LoadScene("LobbyScene");
                 });
                 yield return null;
             }
@@ -186,7 +189,7 @@ namespace DogGuns_Games
                                 {
                                     CreateNewPlayerData(_serverManager.nickName, _serverManager.uuid);
                                 });
-                                SceneLoader.Instace.LoadScene("LobbyScene");
+                                SceneLoader.Instance.LoadScene("LobbyScene");
                             });
                         });
                 }

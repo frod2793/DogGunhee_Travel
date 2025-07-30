@@ -58,7 +58,7 @@ namespace DogGuns_Games
 
         private void Vamsirlike()
         {
-            SceneLoader.Instace.LoadScene("VamSerlike");
+            SceneLoader.Instance.LoadVamSerLikeScene();
             Debug.Log("런게임");
         }
 

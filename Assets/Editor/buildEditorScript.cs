@@ -150,6 +150,6 @@ class buildEditorScript
         string buildPath = "Builds/Windows/MyGame.exe";
         BuildPipeline.BuildPlayer(FindEnabledEditorScenes(), buildPath, BuildTarget.StandaloneWindows,
             BuildOptions.None);
-        Debug.Log($"Windows 빌드 완료! 경로: {buildPath}");
+        Debug.Log($"Windows 빌드 완료! 전체 경로: {System.IO.Path.GetFullPath(buildPath)}");
     }
 }

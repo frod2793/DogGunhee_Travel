@@ -34,9 +34,17 @@ namespace DogGuns_Games.vamsir
         public float Reroll { get; set; }
 
         [Header("캐릭터 정보")]
-        public float Level { get; set; }
+        public float Level { get; set; } = 0f;
         public Vector3 AttackAngle { get; set; }
         public int characterIndex; // 현재 캐릭터 인덱스
+
+        [Header("경험치 시스템")]
+        public float CurrentExp { get; set; } = 0f;
+        public float MaxExp { get; set; } = 100f;
+
+        // 레벨업 이벤트
+        public static event System.Action<float> OnLevelUp;
+        public static event System.Action<float, float> OnExpChanged; // currentExp, maxExp
 
         #endregion
 
@@ -102,6 +110,20 @@ namespace DogGuns_Games.vamsir
         public virtual void OnEnable()
         {
         //    InitializeWeapon();
+            Level = 0f;
+            PlayStateManager.OnGameOver += OnGameOver;
+        }
+
+        protected virtual void OnDisable()
+        {
+            PlayStateManager.OnGameOver -= OnGameOver;
+        }
+
+        private void OnGameOver()
+        {
+            // 플레이어 이동 정지: 상태를 Idle로 변경하거나, 이동 관련 변수/컨트롤러 비활성화
+            PlayState = playerState.Idle;
+            // 필요시 이동 관련 추가 변수/컨트롤러도 비활성화
         }
 
         /// <summary>
@@ -210,6 +232,9 @@ namespace DogGuns_Games.vamsir
                 float expAmount = 1 * ExpGain; // 기본 경험치에 획득 보너스 적용
                 Debug.Log($"경험치 {expAmount} 획득");
                 
+                // 경험치 증가 및 UI 업데이트
+                AddExperience(expAmount);
+                
                 // 오브젝트 풀로 반환
                 expObj.objectPoolSpawner.ExpObjectPool.Release(expObj);
             }
@@ -302,6 +327,85 @@ namespace DogGuns_Games.vamsir
         public virtual void PlayerMovement()
         {
             // 자식 클래스에서 구현
+        }
+
+        #endregion
+        
+        #region 경험치 시스템
+
+        /// <summary>
+        /// 경험치를 추가하고 레벨업을 체크합니다.
+        /// </summary>
+        /// <param name="expAmount">추가할 경험치 양</param>
+        public void AddExperience(float expAmount)
+        {
+            CurrentExp += expAmount;
+            
+            // 경험치 변경 이벤트 발생
+            OnExpChanged?.Invoke(CurrentExp, MaxExp);
+            
+            // 레벨업 체크
+            CheckLevelUp();
+        }
+
+        /// <summary>
+        /// 레벨업 조건을 체크하고 레벨업을 처리합니다.
+        /// </summary>
+        private void CheckLevelUp()
+        {
+            while (CurrentExp >= MaxExp)
+            {
+                // 경험치 차감
+                CurrentExp -= MaxExp;
+                // 레벨 증가
+                Level++;
+                // 다음 레벨 필요 경험치 계산
+                MaxExp = CalculateMaxExpForLevel(Level);
+                // 레벨업 이벤트 발생
+                OnLevelUp?.Invoke(Level);
+                // 레벨업 효과 처리
+                HandleLevelUp();
+                Debug.Log($"레벨업! 현재 레벨: {Level}, 필요 경험치: {MaxExp}");
+                // 경험치 변경 이벤트를 레벨업마다 호출하여 UI가 즉시 반영되도록 함
+                OnExpChanged?.Invoke(CurrentExp, MaxExp);
+            }
+            // 경험치 변경 이벤트 재발생 (레벨업 후 UI 업데이트용)
+            OnExpChanged?.Invoke(CurrentExp, MaxExp);
+        }
+
+        /// <summary>
+        /// 레벨에 따른 최대 경험치를 계산합니다.
+        /// </summary>
+        /// <param name="level">현재 레벨</param>
+        /// <returns>해당 레벨에서 필요한 최대 경험치</returns>
+        private float CalculateMaxExpForLevel(float level)
+        {
+            // 레벨 0→1: 10, 레벨 1→2: 20, ...
+            return (level + 1) * 10f;
+        }
+
+        /// <summary>
+        /// 레벨업 시 플레이어 능력치 증가를 처리합니다.
+        /// </summary>
+        private void HandleLevelUp()
+        {
+            // 레벨업 시 스탯 증가
+            AttackPower += 5f;
+            Health += 20f;
+            Defense += 2f;
+            MoveSpeed += 0.1f;
+            
+            // 레벨업 사운드 효과 (선택사항)
+            // SoundManager.PlaySound(Sound.SFX, "LevelUp");
+        }
+
+        /// <summary>
+        /// 현재 경험치 진행률을 0~1 범위로 반환합니다.
+        /// </summary>
+        /// <returns>경험치 진행률 (0~1)</returns>
+        public float GetExpProgress()
+        {
+            return MaxExp > 0 ? CurrentExp / MaxExp : 0f;
         }
 
         #endregion

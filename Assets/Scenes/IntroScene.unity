@@ -508,7 +508,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1733847517}
   - {fileID: 348494725}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2565,6 +2564,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 958617270}
   m_CullTransparentMesh: 1
+--- !u!1 &968750567
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 968750568}
+  - component: {fileID: 968750569}
+  m_Layer: 0
+  m_Name: '[ - DonDestroyGroup - ]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &968750568
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968750567}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.7430905, y: 3.8661587, z: -0.13702638}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1690165583}
+  - {fileID: 1479499486}
+  - {fileID: 1733847517}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &968750569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968750567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5a8ba8ad9681b44fa0a3930933ade75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1063948775
 GameObject:
   m_ObjectHideFlags: 0
@@ -4244,7 +4290,7 @@ GameObject:
   - component: {fileID: 1479499486}
   - component: {fileID: 1479499487}
   m_Layer: 0
-  m_Name: 'PlayerData_ [ DonDestroy ]'
+  m_Name: '[ - PlayerData_DonDestroy - ]'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4259,11 +4305,11 @@ Transform:
   m_GameObject: {fileID: 1479499485}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 90}
+  m_LocalPosition: {x: -1.7430905, y: -3.8661587, z: 90.137024}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 968750568}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1479499487
 MonoBehaviour:
@@ -4897,7 +4943,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.7
+  orthographic size: 3.015
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -5129,7 +5175,7 @@ GameObject:
   - component: {fileID: 1690165583}
   - component: {fileID: 1690165584}
   m_Layer: 0
-  m_Name: 'ServerManager [ DonDestroy ]'
+  m_Name: '[ - ServerManager_DonDestroy - ] '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5144,11 +5190,11 @@ Transform:
   m_GameObject: {fileID: 1690165582}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 962.30865, y: 603.7087, z: -11.64328}
+  m_LocalPosition: {x: 960.56555, y: 599.8425, z: -11.506253}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 968750568}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1690165584
 MonoBehaviour:
@@ -5175,7 +5221,7 @@ GameObject:
   - component: {fileID: 1733847517}
   - component: {fileID: 1733847518}
   m_Layer: 0
-  m_Name: Soundmanager
+  m_Name: '[ - Soundmanager - ]'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5190,11 +5236,11 @@ Transform:
   m_GameObject: {fileID: 1733847516}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1.7430905, y: -3.8661587, z: 90.137024}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 180459241}
+  m_Father: {fileID: 968750568}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1733847518
 MonoBehaviour:
@@ -6909,6 +6955,5 @@ SceneRoots:
   - {fileID: 1968118300}
   - {fileID: 1599846621}
   - {fileID: 180459241}
-  - {fileID: 1690165583}
-  - {fileID: 1479499486}
   - {fileID: 1776397527}
+  - {fileID: 968750568}

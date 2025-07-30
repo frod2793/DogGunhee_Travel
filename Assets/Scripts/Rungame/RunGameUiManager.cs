@@ -205,7 +205,7 @@ namespace DogGuns_Games.Run
 
         private void Exit()
         {
-            SceneLoader.Instace.LoadScene("LobbyScene");
+            SceneLoader.Instance.LoadScene("LobbyScene");
         }
     }
 }

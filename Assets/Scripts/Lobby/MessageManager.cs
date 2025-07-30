@@ -50,7 +50,7 @@ namespace DogGuns_Games
 
         public void Func_Continue()
         {
-            SceneLoader.Instace.LoadScene("LobbyScene");
+            SceneLoader.Instance.LoadScene("LobbyScene");
         }
     }
 }

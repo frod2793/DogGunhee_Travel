@@ -12,6 +12,9 @@ namespace DogGuns_Games.vamsir
     /// </summary>
     public class VamserLikeGameManager : MonoBehaviour
     {
+        //TODO: 게임 오버시 플레이어 이동 완전정지 및 조이스틱 비활성화 
+        //게임오버시 획득 코인 플레이어 데이터에 저장후 동기화 
+        
         #region 필드 및 변수
 
         private PlayerBase _spawnedPlayer;
@@ -23,7 +26,6 @@ namespace DogGuns_Games.vamsir
 
         [Header("옵션 팝업 매니저")]
         [SerializeField] private OptionPopupManager optionPopupManager;
-        public SettingsData_oBJ settingsData;
 
         private ObjectPoolSpawner _objectPoolSpawner;
         private VamPlayerControll _vamPlayerControll;
@@ -315,6 +317,45 @@ namespace DogGuns_Games.vamsir
             
             Debug.LogWarning("스폰된 플레이어가 없어 레벨을 가져올 수 없습니다.");
             return 1; // 기본값 반환
+        }
+
+        /// <summary>
+        /// 현재 플레이어의 경험치 반환
+        /// </summary>
+        public float GetPlayerCurrentExp()
+        {
+            if (_spawnedPlayer != null)
+            {
+                return _spawnedPlayer.CurrentExp;
+            }
+            
+            return 0f;
+        }
+
+        /// <summary>
+        /// 현재 플레이어의 최대 경험치 반환
+        /// </summary>
+        public float GetPlayerMaxExp()
+        {
+            if (_spawnedPlayer != null)
+            {
+                return _spawnedPlayer.MaxExp;
+            }
+            
+            return 100f; // 기본값
+        }
+
+        /// <summary>
+        /// 현재 플레이어의 경험치 진행률 반환 (0~1)
+        /// </summary>
+        public float GetPlayerExpProgress()
+        {
+            if (_spawnedPlayer != null)
+            {
+                return _spawnedPlayer.GetExpProgress();
+            }
+            
+            return 0f;
         }
 
         /// <summary>

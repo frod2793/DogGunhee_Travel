@@ -26,15 +26,15 @@ RectTransform:
   m_GameObject: {fileID: 1609177341327321089}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.89392, y: 0.89392, z: 0.89392}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8802606995665209800}
   m_Father: {fileID: 8985091217023866837}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -390}
+  m_AnchoredPosition: {x: 0, y: -859}
   m_SizeDelta: {x: 1374.022, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8706325752149968415
@@ -242,12 +242,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 2560, y: 1440}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -301,15 +301,6 @@ MonoBehaviour:
     sceneAsset: {fileID: 102900000, guid: 2917fd536eadc4346ba3a9a1d8058c09, type: 3}
   - sceneName: GameScene
     sceneAsset: {fileID: 102900000, guid: 54271c5352bc9f3469adffd87bbdd691, type: 3}
-  lobbyScene:
-    sceneName: 
-    sceneAsset: {fileID: 0}
-  gameScene:
-    sceneName: 
-    sceneAsset: {fileID: 0}
-  settingsScene:
-    sceneName: 
-    sceneAsset: {fileID: 0}
 --- !u!95 &4449833707620572402
 Animator:
   serializedVersion: 7

@@ -2,8 +2,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Joystic_setter : MonoBehaviour
+public class JoysticSetter : MonoBehaviour
 {
+    
+    //todo : defaultposBtn 클릭시 조이스틱 위치를 초기화하는 기능 추가
     [Header("<color=green>조이스틱 데이터")] [SerializeField]
     private SettingsData_oBJ settingsData; // ScriptableObject 참조
 
@@ -12,17 +14,31 @@ public class Joystic_setter : MonoBehaviour
 
     [SerializeField] private TMP_Dropdown joystickTypeDropdown;
     [SerializeField] private Transform joystickTransform;
-    [SerializeField] JoyStick_Pos_dragandDrop joyStickPosDragandDrop;
+    [SerializeField] JoyStickPosDragandDrop joyStickPosDragandDrop;
     [SerializeField] private Button saveandExitBtn;
-
+    [SerializeField] private Button defaultposBtn;
+    
+    [SerializeField] private Vector3 defaultJoystickPos = new Vector3(363, -173, 0);
+    
     private void OnEnable()
     {
         joystickSizeSlider.onValueChanged.AddListener(delegate { JoystickSizeSliderChanged(); });
         joystickTypeDropdown.onValueChanged.AddListener(delegate { JoystickTypeDropdownChanged(); });
         saveandExitBtn.onClick.AddListener(SaveAndExit);
+        defaultposBtn.onClick.AddListener(ResetJoystickPosition); // 미구현 기능 구현
         LoadSettings();
     }
 
+    // defaultposBtn 클릭 시 조이스틱 위치를 초기화하는 기능 구현
+    private void ResetJoystickPosition()
+    {
+        var rectTransform = joystickTransform as RectTransform;
+        if (rectTransform != null)
+        {
+            rectTransform.anchoredPosition = defaultJoystickPos;
+            settingsData.joystickPos = defaultJoystickPos;
+        }
+    }
 
     private void JoystickSizeSliderChanged()
     {
@@ -40,7 +56,10 @@ public class Joystic_setter : MonoBehaviour
         joystickSizeSlider.value = settingsData.joystickSize;
         joystickTypeDropdown.value = settingsData.joystickType;
         joystickTransform.localScale = new Vector3(settingsData.joystickSize, settingsData.joystickSize, 1);
-        joystickTransform.position = settingsData.joystickPos;
+
+        var rectTransform = joystickTransform as RectTransform;
+        if (rectTransform != null)
+            rectTransform.anchoredPosition = settingsData.joystickPos;
     }
 
 
@@ -55,9 +74,13 @@ public class Joystic_setter : MonoBehaviour
         settingsData.joystickType = joystickTypeDropdown.value;
         settingsData.joystickPos = joystickTransform.position;
         settingsData.joystickSize = joystickSizeSlider.value;
-
         settingsData.SaveSettings();
         SetJoystickPos();
+        // 리스너 해제 및 최적화
+        joystickSizeSlider.onValueChanged.RemoveAllListeners();
+        joystickTypeDropdown.onValueChanged.RemoveAllListeners();
+        saveandExitBtn.onClick.RemoveAllListeners();
+        defaultposBtn.onClick.RemoveAllListeners();
         Destroy(gameObject);
     }
 }

@@ -25,6 +25,8 @@ namespace DogGuns_Games.vamsir
             GoldGain = 1.3f;
             ItemGainRange = 1.5f;
             Reroll = 2f;
+            CurrentExp = 0f;
+            MaxExp = 0;
         }
 
         public override void OnEnable()

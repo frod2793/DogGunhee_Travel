@@ -453,9 +453,9 @@ namespace DogGuns_Games.Lobby
         {
             if (_isDebugMode) Debug.Log("튜토리얼 시작");
             // TODO: 튜토리얼 씬으로 이동하거나 가이드 표시
-            if (SceneLoader.Instace != null)
+            if (SceneLoader.Instance != null)
             {
-                SceneLoader.Instace.LoadScene("Tutorial");
+                SceneLoader.Instance.LoadScene("Tutorial");
             }
         }
 
@@ -500,9 +500,9 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void VamSerlikeStart()
         {
-            if (SceneLoader.Instace != null)
+            if (SceneLoader.Instance != null)
             {
-                SceneLoader.Instace.LoadScene("VamSerlike");
+                SceneLoader.Instance.LoadScene("VamSerlike");
                 if (_isDebugMode) Debug.Log("런게임 씬으로 전환");
             }
             else
