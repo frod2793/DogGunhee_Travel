@@ -12,8 +12,6 @@ namespace DogGuns_Games.vamsir
     /// </summary>
     public class VamserLikeGameManager : MonoBehaviour
     {
-        //TODO: 게임 오버시 플레이어 이동 완전정지 및 조이스틱 비활성화 
-        //게임오버시 획득 코인 플레이어 데이터에 저장후 동기화 
         
         #region 필드 및 변수
 
@@ -47,6 +45,7 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameStart += GameStart;
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
+            PlayStateManager.OnGameOver += OnGameOver;
         }
 
         /// <summary>
@@ -57,6 +56,7 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameStart -= GameStart;
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
+            PlayStateManager.OnGameOver -= OnGameOver;
         }
 
 
@@ -107,6 +107,42 @@ namespace DogGuns_Games.vamsir
             Debug.Log("게임 재개");
         }
 
+        private async void OnGameOver()
+        {
+            PlayStateManager.instance.isPlay = false;
+
+            // 게임 내에 획득한 코인 합산
+            var playerData = PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData;
+            if (playerData != null)
+            {
+                playerData.currency1 += playerData.ingameCoin; // ingameCoin을 totalCoin에 합산
+                playerData.ingameCoin = 0; // 인게임 코인 초기화
+                Debug.Log($"게임 오버: 코인 합산 완료 (총 코인: {playerData.currency1})");
+
+                // 서버 업로드는 반드시 메인 스레드에서 실행
+                await UniTask.SwitchToMainThread();
+                var param = new BackEnd.Param();
+                param.Add("Money1", playerData.currency1);
+                ServerManager.Instance.UploadData("User_Data", param, bro =>
+                {
+                    if (bro.IsSuccess())
+                    {
+                        Debug.Log("서버에 코인 데이터 업로드 성공");
+                    }
+                    else
+                    {
+                        Debug.LogError($"서버에 코인 데이터 업로드 실패: {bro}");
+                    }
+                });
+            }
+            else
+            {
+                Debug.LogWarning("PlayerDataManagerDontdesytoy 또는 scritpableobjPlayerData가 null입니다. 코인 합산 실패");
+            }
+
+            Debug.Log("게임 오버");
+        }
+        
         /// <summary>
         /// 메뉴 팝업 열기와 게임 상태 변경
         /// </summary>
@@ -126,7 +162,7 @@ namespace DogGuns_Games.vamsir
         {
             if (optionPopupManager == null)
             {
-                Debug.LogError("옵션 팝업 매니저가 설정되지 않았습니다.");
+                Debug.LogError("옵션 팝업 매니저가 설정되지 않았습니��.");
                 return;
             }
 
@@ -251,7 +287,7 @@ namespace DogGuns_Games.vamsir
             for (int i = inGameObjectParent.transform.childCount - 1; i >= 0; i--)
             {
                 Transform child = inGameObjectParent.transform.GetChild(i);
-                // Addressables로 생성된 오브젝트는 Addressables.ReleaseInstance로 해제하는 것이 좋습니다.
+                // Addressables로 생성된 오브젝트는 Addressables.ReleaseInstance로 해���하는 것이 좋습니다.
                 Addressables.ReleaseInstance(child.gameObject);
             }
             _spawnedPlayer = null; // 참조 제거
@@ -333,7 +369,7 @@ namespace DogGuns_Games.vamsir
         }
 
         /// <summary>
-        /// 현재 플레이어의 최대 경험치 반환
+        /// 현재 플레이어의 최대 경험치 ���환
         /// </summary>
         public float GetPlayerMaxExp()
         {
@@ -363,7 +399,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public int CoinCount()
         {
-            return PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData?.currency1 ?? 0;
+            return PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData.ingameCoin ?? 0;
         }
 
         #endregion

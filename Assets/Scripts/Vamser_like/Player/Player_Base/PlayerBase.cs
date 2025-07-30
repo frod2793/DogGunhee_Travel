@@ -214,7 +214,7 @@ namespace DogGuns_Games.vamsir
             Health -= damageAmount;
             
             // 피해량 디버그 로그
-            Debug.Log($"플레이어가 {damageAmount:F1} 데미지를 받음 (남은 체력: {Health:F1})");
+         //   Debug.Log($"플레이어가 {damageAmount:F1} 데미지를 받음 (남은 체력: {Health:F1})");
     
             // 피격 효과 재생
             PlayHitEffect();
@@ -253,7 +253,7 @@ namespace DogGuns_Games.vamsir
                 int coinsToAdd = Mathf.RoundToInt(1 * goldBonus);
                 
                 // 실제 코인 증가
-                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.currency1 += coinsToAdd;
+                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.ingameCoin += coinsToAdd;
                 Debug.Log($"코인 {coinsToAdd}개 획득");
                 
                 // 오브젝트 풀로 반환

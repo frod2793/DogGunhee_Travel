@@ -11,8 +11,12 @@ namespace DogGuns_Games.vamsir
 {
     public class VamserLikeUI : MonoBehaviour
     {
+        
+        //TODO: 게임 오버시 플레이어 이동 완전정지 및 조이스틱 비활성화 
+        //게임오버시 획득 코인 플레이어 데이터에 저장후 동기화 
+        
         #region 필드 및 변수
-//TODO 플레이어 레벨 플레이어 데이터에 동기화 
+        //TODO 플레이어 레벨 플레이어 데이터에 동기화 
         [Header("<color=green>User Info UI")] [SerializeField]
         private TMP_Text LevelText;
         [SerializeField] private Slider playerLevelSlider;
@@ -24,7 +28,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private TMP_Text mobCountText;
         [SerializeField] private TMP_Text playerLevelText;
         [SerializeField] private Slider expSlider;
-
+private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
         [Header("<color=green>Menu UI")] [SerializeField]
         private Button menuBtn;
@@ -230,7 +234,7 @@ namespace DogGuns_Games.vamsir
         private void UpdateGameOverUI()
         {
             gameOverText.text = "Game Over";
-            gameOverCoinText.text = $"Coins: {_gameManager.CoinCount()}";
+            gameOverCoinText.text = $"Coins: {getcoinCount}";
             gameOverWaveText.text = $"Wave: {_gameManager.MobSpawnWave()}";
             gameOverMobCountText.text = $"Kills: {_gameManager.Mob_Count()}";
         }
@@ -251,6 +255,7 @@ namespace DogGuns_Games.vamsir
                     lastWaveText = currentWaveText;
                 }
                 coinText.text = $"{_gameManager.CoinCount()}";
+                getcoinCount = _gameManager.CoinCount();
                 mobCountText.text = $"{_gameManager.Mob_Count()}";
                 playerLevelText.text = $"Lv. {_gameManager.PlayerLevel()}";
                 // User Info UI 업데이트
@@ -303,7 +308,7 @@ namespace DogGuns_Games.vamsir
             UpdatePlayerLevelUI();
             
             // 디버그 로그 (선택사항)
-            Debug.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)");
+          //  Debug.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)");
         }
 
         /// <summary>

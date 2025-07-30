@@ -1845,7 +1845,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6190367988336517830
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4254,7 +4254,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inGameObjectParent: {fileID: 3904192412624442642}
   optionPopupManager: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
-  settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
 --- !u!114 &4441102585319734577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11166,7 +11165,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 795.0909, y: 0}
+  m_SizeDelta: {x: 795.0909, y: 428.08502}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6924151926583565521
 MonoBehaviour:
