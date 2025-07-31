@@ -4,16 +4,11 @@ using UnityEngine.UI;
 
 public class JoyStickPosDragandDrop : MonoBehaviour, IDragHandler, IEndDragHandler, IPointerDownHandler
 {
-  [SerializeField]  float offsetY = 1000f;
+    [SerializeField]  float offsetY = 1000f;
     private RectTransform rectTransform;
     private Canvas canvas;
     private CanvasScaler canvasScaler;
-    private Vector2 originalLocalPointerPosition;
     private Vector2 dragOffset;
-    private float minX;
-    private float maxX;
-    private float minY;
-    private float maxY;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -60,10 +55,10 @@ public class JoyStickPosDragandDrop : MonoBehaviour, IDragHandler, IEndDragHandl
         RectTransform canvasRect = canvas.GetComponent<RectTransform>();
         if (canvasRect == null) return position;
 
-        minX = -canvasRect.rect.width * canvasRect.pivot.x + rectTransform.rect.width * rectTransform.pivot.x;
-        maxX = canvasRect.rect.width * canvasRect.pivot.x - rectTransform.rect.width * rectTransform.pivot.x;
-        minY = -canvasRect.rect.height * canvasRect.pivot.y + rectTransform.rect.height * rectTransform.pivot.y + offsetY;
-        maxY = canvasRect.rect.height * canvasRect.pivot.y - rectTransform.rect.height * rectTransform.pivot.y + offsetY;
+        float minX = -canvasRect.rect.width * canvasRect.pivot.x + rectTransform.rect.width * rectTransform.pivot.x;
+        float maxX = canvasRect.rect.width * (1 - canvasRect.pivot.x) - rectTransform.rect.width * (1 - rectTransform.pivot.x);
+        float minY = -canvasRect.rect.height * canvasRect.pivot.y + rectTransform.rect.height * rectTransform.pivot.y;
+        float maxY = canvasRect.rect.height * (1 - canvasRect.pivot.y) - rectTransform.rect.height * (1 - rectTransform.pivot.y);
         position.x = Mathf.Clamp(position.x, minX, maxX);
         position.y = Mathf.Clamp(position.y, minY, maxY);
         return position;

@@ -21,7 +21,7 @@ public class SoundManager : MonoBehaviour
                 // SoundManager는 씬에 미리 배치하고 SoundData를 할당해야 합니다.
                 if (_instance == null)
                 {
-                    Debug.LogError(
+                    LogManager.LogError(
                         "SoundManager instance not found in the scene. Please add SoundManager to your scene and assign SoundData.");
                 }
             }
@@ -75,12 +75,13 @@ public class SoundManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void Init()
+    private void Init()
     {
         if (_audioSources[0] != null) return; // 이미 초기화된 경우 중복 방지
 
         GameObject root = new GameObject { name = "Sound" };
-        root.transform.parent = transform; // SoundManager의 자식으로 관리
+        root.hideFlags = HideFlags.None; 
+        root.transform.parent = transform;
 
         string[] SoundNames = System.Enum.GetNames(typeof(Sound));
         for (int i = 0; i < SoundNames.Length - 1; i++)
@@ -105,7 +106,7 @@ public class SoundManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("SoundData가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
+            LogManager.LogError("SoundData가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
         }
 
         LoadSoundSetting();
@@ -119,7 +120,7 @@ public class SoundManager : MonoBehaviour
         
         if (settingsData == null)
         {
-            Debug.LogError("SettingsData_oBJ가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
+            LogManager.LogError("SettingsData_oBJ가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
             return;
         }
         // 배경음과 효과음 볼륨 설정
@@ -166,7 +167,7 @@ public class SoundManager : MonoBehaviour
             audioSource.clip = audioClip;
             audioSource.Play();
             //성공 로그 출력 
-            Debug.Log($"Playing BGM: {audioClip.name} with volume: {_bgmSoundVolum}");
+            LogManager.Log($"Playing BGM: {audioClip.name} with volume: {_bgmSoundVolum}");
         }
         else // Effect
         {
@@ -191,23 +192,20 @@ public class SoundManager : MonoBehaviour
         if (type == Sound.BGM)
         {
             _bgmSoundVolum = volum;
-            // 현재 재생 중인 BGM의 볼륨을 즉시 업데이트
             if (_audioSources[(int)Sound.BGM] != null)
             {
                 _audioSources[(int)Sound.BGM].volume = _bgmSoundVolum;
             }
+            LogManager.Log($"BGM volume updated to: {_bgmSoundVolum}");
         }
         else if (type == Sound.SFX)
         {
             _effectsoundVolum = volum;
-            // SFX는 PlayOneShot을 사용하므로 다음 재생부터 적용됨
-
             if (_audioSources[(int)Sound.SFX] != null)
             {
                 _audioSources[(int)Sound.SFX].volume = _effectsoundVolum;
             }
-
-            //Debug.Log($"SFX volume updated to: {_effectsoundVolum}");
+            LogManager.Log($"SFX volume updated to: {_effectsoundVolum}");
         }
     }
 
@@ -218,7 +216,7 @@ public class SoundManager : MonoBehaviour
             return audioClip;
         }
 
-        Debug.LogWarning($"AudioClip not found: {key}");
+        LogManager.LogWarning($"AudioClip not found: {key}");
         return null;
     }
 

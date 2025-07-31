@@ -1,9 +1,7 @@
 using System;
 using System.IO;
 using BackEnd;
-using LitJson;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace DogGuns_Games
 {
@@ -48,14 +46,14 @@ namespace DogGuns_Games
         {
             get
             {
-                if (IsNullOrEmpty(instance))
+                if (instance == null)
                 {
-                    lock (LockObject) // 스레드 안전성 보장
+                    lock (LockObject)
                     {
-                        if (IsNullOrEmpty(instance))
+                        if (instance == null)
                         {
                             instance = FindAnyObjectByType<PlayerDataManagerDontdesytoy>();
-                            if (IsNullOrEmpty(instance))
+                            if (instance == null)
                             {
                                 var container = new GameObject("PlayerDataManager");
                                 instance = container.AddComponent<PlayerDataManagerDontdesytoy>();
@@ -64,7 +62,6 @@ namespace DogGuns_Games
                         }
                     }
                 }
-
                 return instance;
             }
         }
@@ -102,38 +99,29 @@ namespace DogGuns_Games
         {
             try
             {
-                // 로컬에 저장된 키 파일 경로
                 var keyPath = Path.Combine(Application.persistentDataPath, "rsakeys.json");
-
                 if (File.Exists(keyPath))
                 {
-                    // 파일에서 키 로드
                     string keyJson = File.ReadAllText(keyPath);
                     var keyContainer = JsonUtility.FromJson<KeyContainer>(keyJson);
                     _rsaPublicKey = keyContainer.publicKey;
                     _rsaPrivateKey = keyContainer.privateKey;
-                    Debug.Log("로컬 파일에서 RSA 키 쌍을 로드했습니다.");
+                    LogManager.Log("로컬 파일에서 RSA 키 쌍을 로드했습니다.", LogManager.LogCategory.PlayerManager);
                 }
                 else
                 {
-                    // 새 키 생성
                     _encryption.GenerateRsaKeys(out _rsaPublicKey, out _rsaPrivateKey);
-            
-                    // 파일에 키 저장
                     var keyContainer = new KeyContainer { publicKey = _rsaPublicKey, privateKey = _rsaPrivateKey };
                     string keyJson = JsonUtility.ToJson(keyContainer);
                     File.WriteAllText(keyPath, keyJson);
-
-                    Debug.Log("새로운 RSA 키 쌍을 생성하고 로컬 파일에 저장했습니다.");
+                    LogManager.Log("새로운 RSA 키 쌍을 생성하고 로컬 파일에 저장했습니다.", LogManager.LogCategory.PlayerManager);
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"RSA 키 관리 중 오류 발생: {ex.Message}");
-        
-                // 키 생성 및 복구
+                LogManager.LogError($"RSA 키 관리 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerManager);
                 _encryption.GenerateRsaKeys(out _rsaPublicKey, out _rsaPrivateKey);
-                Debug.Log("RSA 키 오류로 인해 새로운 키 쌍을 생성했습니다.");
+                LogManager.Log("RSA 키 오류로 인해 새로운 키 쌍을 생성했습니다.", LogManager.LogCategory.PlayerManager);
             }
         }
 
@@ -141,37 +129,29 @@ namespace DogGuns_Games
         /// 플레이어 데이터를 암호화하여 로컬에 저장합니다.
         /// </summary>
         public void SavePlayerData()
-        {    
+        {
             try
             {
                 var savePath = Path.Combine(Application.persistentDataPath, "playerData.encrypted");
-                
                 if (scritpableobjPlayerData == null)
                 {
-                    Debug.LogWarning("저장할 플레이어 데이터가 null입니다.");
+                    LogManager.LogWarning("저장할 플레이어 데이터가 null입니다.", LogManager.LogCategory.PlayerManager);
                     return;
                 }
-                
                 var jsonData = JsonUtility.ToJson(scritpableobjPlayerData, true);
-    
-                // 데이터 암호화
                 EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, _rsaPublicKey);
-    
-                // byte[] 배열을 Base64 문자열로 변환
                 SerializableEncryptedPacket serializablePacket = new SerializableEncryptedPacket
                 {
                     EncryptedSessionKeyBase64 = Convert.ToBase64String(encryptedPacket.EncryptedSessionKey),
                     EncryptedDataBase64 = Convert.ToBase64String(encryptedPacket.EncryptedData)
                 };
-    
-                // 암호화된 데이터 저장
                 string packetJson = JsonUtility.ToJson(serializablePacket);
                 File.WriteAllText(savePath, packetJson);
-                Debug.Log($"플레이어 데이터가 암호화되어 {savePath}에 저장되었습니다.");
+                LogManager.Log($"플레이어 데이터가 암호화되어 {savePath}에 저장되었습니다.", LogManager.LogCategory.PlayerManager);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"플레이어 데이터 저장 중 오류 발생: {ex.Message}");
+                LogManager.LogError($"플레이어 데이터 저장 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerManager);
             }
         }
 
@@ -183,35 +163,27 @@ namespace DogGuns_Games
             try
             {
                 var savePath = Path.Combine(Application.persistentDataPath, "playerData.encrypted");
-    
                 if (File.Exists(savePath))
                 {
-                    // 암호화된 데이터 로드
                     string packetJson = File.ReadAllText(savePath);
                     SerializableEncryptedPacket serializablePacket = JsonUtility.FromJson<SerializableEncryptedPacket>(packetJson);
-            
-                    // Base64 문자열을 byte[] 배열로 변환
                     EncryptedPacket encryptedPacket = new EncryptedPacket
                     {
                         EncryptedSessionKey = Convert.FromBase64String(serializablePacket.EncryptedSessionKeyBase64),
                         EncryptedData = Convert.FromBase64String(serializablePacket.EncryptedDataBase64)
                     };
-            
-                    // 데이터 복호화
                     string decryptedJson = _encryption.Decrypt(encryptedPacket, _rsaPrivateKey);
-            
-                    // 복호화된 JSON을 PlayerData 객체로 변환
                     JsonUtility.FromJsonOverwrite(decryptedJson, scritpableobjPlayerData);
-                    Debug.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.");
+                    LogManager.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.PlayerManager);
                 }
                 else
                 {
-                    Debug.LogWarning("저장된 플레이어 데이터 파일이 없습니다. 새 데이터를 생성합니다.");
+                    LogManager.LogWarning("저장된 플레이어 데이터 파일이 없습니다. 새 데이터를 생성합니다.", LogManager.LogCategory.PlayerManager);
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"플레이어 데이터 로드 중 오류 발생: {ex.Message}");
+                LogManager.LogError($"플레이어 데이터 로드 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerManager);
             }
         }
         
@@ -222,7 +194,7 @@ namespace DogGuns_Games
         public void UpdatePlayerData(PlayerData playerData)
         {
             scritpableobjPlayerData = playerData;
-            Debug.Log("플레이어 데이터가 업데이트되었습니다.");
+            LogManager.Log("플레이어 데이터가 업데이트되었습니다.", LogManager.LogCategory.PlayerManager);
         }
         
         #endregion
@@ -245,23 +217,21 @@ namespace DogGuns_Games
         {
             if (!bro.IsSuccess())
             {
-                Debug.LogError("게임 정보 조회에 실패했습니다. : " + bro);
-                if (bro.GetStatusCode() == "404") // 데이터가 없는 경우
+                LogManager.LogError($"게임 정보 조회에 실패했습니다. : {bro}", LogManager.LogCategory.PlayerManager);
+                if (bro.GetStatusCode() == "404")
                 {
                     onDataNotExist?.Invoke();
                 }
                 return;
             }
-
             var gameDataJson = bro.FlattenRows();
             if (gameDataJson.Count <= 0)
             {
-                Debug.LogWarning("서버에 데이터가 존재하지 않습니다.");
+                LogManager.LogWarning("서버에 데이터가 존재하지 않습니다.");
                 onDataNotExist?.Invoke();
                 return;
             }
-
-            Debug.Log("서버에서 게임 정보를 성공적으로 조회했습니다.");
+            LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.");
             var serverDataJson = gameDataJson[0];
             
             // 서버 데이터 파싱
@@ -292,15 +262,13 @@ namespace DogGuns_Games
         
         private PlayerData ResolveDataConflict(PlayerData serverData, PlayerData localData)
         {
-            // 간단한 비교 로직: 레벨과 경험치가 높은 쪽을 최신 데이터로 간주
             if (localData.level > serverData.level || 
                 (localData.level == serverData.level && localData.experience > serverData.experience))
             {
-                Debug.Log("로컬 데이터가 더 최신이므로 사용합니다.");
+                LogManager.Log("로컬 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerManager);
                 return localData;
             }
-            
-            Debug.Log("서버 데이터가 더 최신이므로 사용합니다.");
+            LogManager.Log("서버 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerManager);
             return serverData;
         }
 
@@ -321,11 +289,11 @@ namespace DogGuns_Games
             {
                 if (bro.IsSuccess())
                 {
-                    Debug.Log("플레이어 데이터를 서버에 성공적으로 업로드했습니다.");
+                    LogManager.Log("플레이어 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.PlayerManager);
                 }
                 else
                 {
-                    Debug.LogError($"플레이어 데이터 업로드 실패: {bro}");
+                    LogManager.LogError($"플레이어 데이터 업로드 실패: {bro}", LogManager.LogCategory.PlayerManager);
                 }
             });
         }
@@ -334,14 +302,7 @@ namespace DogGuns_Games
 
         #region 유틸리티
 
-        /// <summary>
-        /// Unity Object가 null인지 확인합니다. (== 연산자 오버로딩 대응)
-        /// </summary>
-        private static bool IsNullOrEmpty(Object value)
-        {
-            return ReferenceEquals(value, null);
-        }
-        
+
         /// <summary>
         /// RSA 키 저장을 위한 헬퍼 클래스
         /// </summary>

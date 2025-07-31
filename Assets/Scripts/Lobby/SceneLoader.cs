@@ -121,7 +121,7 @@ namespace DogGuns_Games
             // 씬이 빌드에 포함되어 있는지 확인
             if (!IsSceneInBuild(SceneName))
             {
-                Debug.LogError($"씬 '{SceneName}'이 빌드 설정에 포함되어 있지 않습니다!");
+                LogManager.LogError($"씬 '{SceneName}'이 빌드 설정에 포함되어 있지 않습니다!");
                 return;
             }
 
@@ -129,7 +129,7 @@ namespace DogGuns_Games
             SceneManager.sceneLoaded += LoadSceneEnd;
             loadSceneName = SceneName;
             StartCoroutine(Load(SceneName));
-            Debug.Log($"씬 변경 시작: {SceneName}");
+            LogManager.Log($"씬 변경 시작: {SceneName}");
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace DogGuns_Games
             }
             else
             {
-                Debug.LogError("SceneReference가 유효하지 않습니다!");
+                LogManager.LogError("SceneReference가 유효하지 않습니다!");
             }
         }
 

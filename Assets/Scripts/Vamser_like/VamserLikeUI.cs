@@ -11,12 +11,7 @@ namespace DogGuns_Games.vamsir
 {
     public class VamserLikeUI : MonoBehaviour
     {
-        
-        //TODO: 게임 오버시 플레이어 이동 완전정지 및 조이스틱 비활성화 
-        //게임오버시 획득 코인 플레이어 데이터에 저장후 동기화 
-        
         #region 필드 및 변수
-        //TODO 플레이어 레벨 플레이어 데이터에 동기화 
         [Header("<color=green>User Info UI")] [SerializeField]
         private TMP_Text LevelText;
         [SerializeField] private Slider playerLevelSlider;
@@ -130,20 +125,21 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
             if (SoundManager.Instance == null)
             {
-                Debug.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.");
+                LogManager.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.");
                 return;
             }
             var settingsData = SoundManager.Instance.settingsData;
             if (settingsData == null)
             {
-                Debug.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.");
+                LogManager.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.");
                 return;
             }
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
             variableJoystick.SetMode((JoystickType)settingsData.joystickType);
-            joystickTransform.position = new Vector3(settingsData.joystickPos.x,
-                settingsData.joystickPos.y, 0);
+            var rectTransform = joystickTransform as RectTransform;
+            if (rectTransform != null)
+                rectTransform.anchoredPosition = settingsData.joystickPos;
         }
 
 
@@ -224,6 +220,8 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
                    variableJoystick.OnPointerUp(null); // 입력 해제
             }
 
+            
+            
             // UI 업데이트 중지
             _cancellationTokenSource?.Cancel();
         }
@@ -306,9 +304,8 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
         {
             // 실시간으로 경험치 UI 업데이트
             UpdatePlayerLevelUI();
-            
             // 디버그 로그 (선택사항)
-          //  Debug.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)");
+            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)");
         }
 
         /// <summary>
@@ -318,11 +315,9 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
         {
             // 레벨업 시 UI 업데이트
             UpdatePlayerLevelUI();
-            
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
-            
-            Debug.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}");
+            LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}");
         }
 
         /// <summary>

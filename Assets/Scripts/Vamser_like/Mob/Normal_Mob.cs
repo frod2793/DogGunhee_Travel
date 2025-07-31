@@ -110,7 +110,7 @@ namespace DogGuns_Games.vamsir
             if (!Mob_IsHit && other.gameObject.CompareTag("Player_Attack"))
             {
                 HitCooltime(other).Forget();
-                Debug.Log("_isHitByShoot: "+_isHitByShoot);
+                LogManager.Log("_isHitByShoot: "+_isHitByShoot);
             }
         }
 
@@ -139,7 +139,7 @@ namespace DogGuns_Games.vamsir
 
         protected override void Mob_Idle()
         {
-        //    Debug.Log("Idle");
+            LogManager.Log("Idle");
         }
 
         protected override void Mob_Move()
@@ -149,10 +149,8 @@ namespace DogGuns_Games.vamsir
 
         protected override void Mob_Stun()
         {
-         //   Debug.Log("Stun");
-
+            LogManager.Log("Stun");
             ismove = false;
-
             DOVirtual.DelayedCall(Mob_StunTime, () => { SetMobState(MobState.Move); });
         }
 
@@ -163,14 +161,14 @@ namespace DogGuns_Games.vamsir
 
         protected override void Mob_Attack()
         {
-        //    Debug.Log("Attack");
+            LogManager.Log("Attack");
         }
 
         protected override void Mob_Die()
         {
             base.Mob_Die();
             transform.DOKill();
-        //    Debug.Log("Die");
+            LogManager.Log("Die");
         }
     }
 }

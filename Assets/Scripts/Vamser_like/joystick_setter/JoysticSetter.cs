@@ -62,10 +62,11 @@ public class JoysticSetter : MonoBehaviour
             rectTransform.anchoredPosition = settingsData.joystickPos;
     }
 
-
     private void SetJoystickPos()
     {
-        settingsData.joystickPos = joystickTransform.position;
+        var rectTransform = joystickTransform as RectTransform;
+        if (rectTransform != null)
+            settingsData.joystickPos = rectTransform.anchoredPosition;
     }
 
 

@@ -1,4 +1,3 @@
-
 using System.IO;
 using UnityEngine;
 
@@ -22,7 +21,7 @@ public class SettingsData_oBJ : ScriptableObject
     {
         string jsonData = JsonUtility.ToJson(this, true); // ScriptableObject 데이터를 JSON으로 직렬화
         File.WriteAllText(FilePath, jsonData); // 파일에 저장
-        Debug.Log("Settings saved to: " + FilePath);
+        LogManager.Log("Settings saved to: " + FilePath);
     }
 
     // JSON 파일에서 데이터 불러오기
@@ -33,12 +32,12 @@ public class SettingsData_oBJ : ScriptableObject
             // JSON 데이터를 읽어와 ScriptableObject에 덮어쓰기
             string jsonData = File.ReadAllText(FilePath);
             JsonUtility.FromJsonOverwrite(jsonData, this); // ScriptableObject에 불러온 JSON 데이터 덮어쓰기
-            Debug.Log("Settings loaded from: " + FilePath);
+            LogManager.Log("Settings loaded from: " + FilePath);
         }
         else
         {
             // 파일이 없으면 기본값으로 저장
-            Debug.LogWarning("No settings file found. Saving default settings.");
+            LogManager.LogWarning("No settings file found. Saving default settings.");
             SaveSettings(); // 기본값을 사용하여 JSON 파일로 저장
         }
     }

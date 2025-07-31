@@ -2597,6 +2597,7 @@ Transform:
   - {fileID: 1690165583}
   - {fileID: 1479499486}
   - {fileID: 1733847517}
+  - {fileID: 1956663258}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &968750569
@@ -6163,6 +6164,86 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1953828013}
   m_CullTransparentMesh: 1
+--- !u!1 &1956663257
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1956663258}
+  - component: {fileID: 1956663259}
+  m_Layer: 0
+  m_Name: '[ - Logmanager - ]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1956663258
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956663257}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 111.95867, y: 263.98102, z: -4.8481636}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 968750568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1956663259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956663257}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8fa75bb2f23b2345a07f23985742f6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableDebugLog: 1
+  enableErrorLog: 1
+  enableWarningLog: 1
+  logCategorySettings:
+  - category: 0
+    enableLog: 1
+  - category: 1
+    enableLog: 1
+  - category: 2
+    enableLog: 1
+  - category: 3
+    enableLog: 1
+  - category: 4
+    enableLog: 1
+  - category: 5
+    enableLog: 1
+  - category: 6
+    enableLog: 1
+  - category: 7
+    enableLog: 1
+  - category: 8
+    enableLog: 1
+  - category: 9
+    enableLog: 1
+  - category: 10
+    enableLog: 1
+  - category: 11
+    enableLog: 1
+  - category: 12
+    enableLog: 1
+  - category: 13
+    enableLog: 1
+  - category: 14
+    enableLog: 0
+  - category: 15
+    enableLog: 0
 --- !u!1 &1963566707
 GameObject:
   m_ObjectHideFlags: 0

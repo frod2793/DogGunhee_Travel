@@ -137,7 +137,7 @@ namespace DogGuns_Games.vamsir
             _player = player;
             if (_player == null)
             {
-                Debug.LogError("플레이어 참조가 null입니다. 몹 스폰을 시작할 수 없습니다.");
+                LogManager.LogError("플레이어 참조가 null입니다. 몹 스폰을 시작할 수 없습니다.");
                 return;
             }
 
@@ -146,14 +146,14 @@ namespace DogGuns_Games.vamsir
 
             if (!ArePrefabsLoaded())
             {
-                Debug.LogError("필수 프리팹 로드에 실패했습니다. 스폰을 시작할 수 없습니다.");
+                LogManager.LogError("필수 프리팹 로드에 실패했습니다. 스폰을 시작할 수 없습니다.");
                 return;
             }
             
             // 프리팹 로드 후 풀 초기화
             InitializePools();
             
-            Debug.Log("ObjectPoolSpawner가 플레이어 참조를 받고 스폰을 시작합니다.");
+            LogManager.Log("ObjectPoolSpawner가 플레이어 참조를 받고 스폰을 시작합니다.");
             
             // GameStart 로직
             if (PlayStateManager.instance.isPlay)
@@ -183,7 +183,7 @@ namespace DogGuns_Games.vamsir
         private void Pause()
         {
             _isSpawningAllowed = false;
-            Debug.Log("오브젝트 스폰 일시 중지됨");
+            LogManager.Log("오브젝트 스폰 일시 중지됨");
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace DogGuns_Games.vamsir
         private void Resume()
         {
             _isSpawningAllowed = true;
-            Debug.Log("오브젝트 스폰 재개됨");
+            LogManager.Log("오브젝트 스폰 재개됨");
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace DogGuns_Games.vamsir
             ExpObjectPool?.Clear();
             CoinObjectPool?.Clear();
             
-            Debug.Log("게임 종료: 모든 오브젝트 풀 정리됨");
+            LogManager.Log("게임 종료: 모든 오브젝트 풀 정리됨");
         }
 
         #endregion
@@ -251,7 +251,7 @@ namespace DogGuns_Games.vamsir
             _mobSpawnWave++;
             poolSizeMobCount += 5;
             
-            Debug.Log($"Wave: {_mobSpawnWave}, 몹 스폰 수: {poolSizeMobCount}");
+            LogManager.Log($"Wave: {_mobSpawnWave}, 몹 스폰 수: {poolSizeMobCount}");
             
             for (int i = 0; i < poolSizeMobCount; i++)
             {
@@ -364,7 +364,7 @@ namespace DogGuns_Games.vamsir
         {
             if (!_loadedPrefabs.TryGetValue(prefabRef, out var prefab) || prefab == null)
             {
-                Debug.LogError($"{typeof(T).Name}의 프리팹이 로드되지 않았습니다.");
+                LogManager.LogError($"{typeof(T).Name}의 프리팹이 로드되지 않았습니다.");
                 return null;
             }
             
@@ -441,7 +441,7 @@ namespace DogGuns_Games.vamsir
             }
             else
             {
-                Debug.LogError($"에셋 로드 실패: {reference.AssetGUID}");
+                LogManager.LogError($"에셋 로드 실패: {reference.AssetGUID}");
             }
         }
 
@@ -462,7 +462,7 @@ namespace DogGuns_Games.vamsir
         {
             if (_mainCamera == null)
             {
-                Debug.LogWarning("Main Camera가 설정되지 않았습니다.");
+                LogManager.LogWarning("Main Camera가 설정되지 않았습니다.");
                 return;
             }
             

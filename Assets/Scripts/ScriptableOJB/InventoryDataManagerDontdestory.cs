@@ -24,40 +24,40 @@ namespace DogGuns_Games.Lobby
         private string _localSavePath;
 
         // 캐시 필드
-        private Item_Data _currentItemData;
         private Dictionary<int, Item_Data> _itemDataCache = new Dictionary<int, Item_Data>();
-        private bool _isDataLoaded = false;
+        // private Item_Data _currentItemData; // 사용되지 않으므로 제거
+        private bool _isDataLoaded;
 
         #endregion
 
         #region 싱글톤 패턴
 
-        private static InventoryDataManagerDontdestory _instance;
+        private static InventoryDataManagerDontdestory instance;
         private static readonly object LockObject = new object();
 
         public static InventoryDataManagerDontdestory Instance
         {
             get
             {
-                if (_instance == null)
+                if (instance == null)
                 {
                     lock (LockObject) // 스레드 안전성 보장
                     {
-                        if (_instance == null)
+                        if (instance == null)
                         {
-                            _instance = FindAnyObjectByType<InventoryDataManagerDontdestory>();
-                            if (_instance == null)
+                            instance = FindAnyObjectByType<InventoryDataManagerDontdestory>();
+                            if (instance == null)
                             {
                                 var container = new GameObject("InventoryDataManager");
-                                _instance = container.AddComponent<InventoryDataManagerDontdestory>();
+                                instance = container.AddComponent<InventoryDataManagerDontdestory>();
                                 DontDestroyOnLoad(container);
-                                Debug.Log("인벤토리 데이터 매니저 인스턴스가 생성되었습니다.");
+                                LogManager.Log("인벤토리 데이터 매니저 인스턴스가 생성되었습니다.", LogManager.LogCategory.InventoryManager);
                             }
                         }
                     }
                 }
 
-                return _instance;
+                return instance;
             }
         }
 
@@ -91,7 +91,7 @@ namespace DogGuns_Games.Lobby
 
             if (!_isDataLoaded)
             {
-                Debug.LogWarning("JSON에서 아이템 데이터를 불러오지 못했습니다.");
+                LogManager.LogWarning("JSON에서 아이템 데이터를 불러오지 못했습니다.", LogManager.LogCategory.InventoryManager);
             }
 
             // 서버에서 인벤토리 데이터 로드
@@ -109,7 +109,7 @@ namespace DogGuns_Games.Lobby
         {
             try
             {
-                Debug.Log("새 인벤토리 데이터를 생성합니다.");
+                LogManager.Log("새 인벤토리 데이터를 생성합니다.", LogManager.LogCategory.InventoryManager);
                 
                 // 인벤토리 데이터가 이미 초기화되어 있는지 확인
                 if (scritpableobjInventoryData == null)
@@ -130,7 +130,7 @@ namespace DogGuns_Games.Lobby
                     var defaultItem = _itemDataCache[defaultItemCode];
                     
                     scritpableobjInventoryData.AddItem(defaultItem);
-                    Debug.Log($"기본 아이템 추가: {defaultItem.itemName} (코드: {defaultItem.itemCode})");
+                    LogManager.Log($"기본 아이템 추가: {defaultItem.itemName} (코드: {defaultItem.itemCode})", LogManager.LogCategory.InventoryManager);
                 }
                 
                 // 인벤토리 JSON 문자열 생성
@@ -144,7 +144,7 @@ namespace DogGuns_Games.Lobby
             }
             catch (Exception ex)
             {
-                Debug.LogError($"기본 인벤토리 생성 중 오류 발생: {ex.Message}");
+                LogManager.LogError($"기본 인벤토리 생성 중 오류 발생: {ex.Message}", LogManager.LogCategory.InventoryManager);
             }
         }
 
@@ -155,7 +155,7 @@ namespace DogGuns_Games.Lobby
         {
             if (itemDataJsonFile == null)
             {
-                Debug.LogError("아이템 데이터 JSON 파일이 인스펙터에서 할당되지 않았습니다.");
+                LogManager.LogError("아이템 데이터 JSON 파일이 인스펙터에서 할당되지 않았습니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
 
@@ -165,7 +165,7 @@ namespace DogGuns_Games.Lobby
 
                 if (jsonItems == null || jsonItems.Length == 0)
                 {
-                    Debug.LogWarning("JSON 데이터에서 아이템을 찾을 수 없습니다.");
+                    LogManager.LogWarning("JSON 데이터에서 아이템을 찾을 수 없습니다.", LogManager.LogCategory.InventoryManager);
                     return;
                 }
 
@@ -185,11 +185,11 @@ namespace DogGuns_Games.Lobby
                 }
 
                 _isDataLoaded = true;
-                Debug.Log($"JSON 데이터에서 {_itemDataCache.Count}개의 아이템을 성공적으로 로드했습니다.");
+                LogManager.Log($"JSON 데이터에서 {_itemDataCache.Count}개의 아이템을 성공적으로 로드했습니다.", LogManager.LogCategory.InventoryManager);
             }
             catch (Exception e)
             {
-                Debug.LogError($"JSON 데이터 파싱 오류: {e.Message}");
+                LogManager.LogError($"JSON 데이터 파싱 오류: {e.Message}", LogManager.LogCategory.InventoryManager);
             }
         }
 
@@ -206,17 +206,17 @@ namespace DogGuns_Games.Lobby
         {
             if (!_isDataLoaded)
             {
-                Debug.LogWarning("아이템 데이터가 아직 로드되지 않았습니다.");
+                LogManager.LogWarning("아이템 데이터가 아직 로드되지 않았습니다.", LogManager.LogCategory.InventoryManager);
                 return null;
             }
 
             if (_itemDataCache.TryGetValue(itemCode, out Item_Data item))
             {
-                _currentItemData = item;
+                // _currentItemData = item; // 사용하지 않으므로 제거
                 return item;
             }
 
-            Debug.LogWarning($"코드 {itemCode}를 가진 아이템을 찾을 수 없습니다.");
+            LogManager.LogWarning($"코드 {itemCode}를 가진 아이템을 찾을 수 없습니다.", LogManager.LogCategory.InventoryManager);
             return null;
         }
 
@@ -228,28 +228,22 @@ namespace DogGuns_Games.Lobby
         {
             if (inventoryData == null)
             {
-                Debug.LogWarning("업데이트할 인벤토리 데이터가 null입니다.");
+                LogManager.LogWarning("업데이트할 인벤토리 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
-            
             scritpableobjInventoryData = inventoryData;
-            
-            // 직렬화된 JSON 문자열 생성 (디버깅용)
             try
             {
                 inventorydataString = JsonConvert.SerializeObject(scritpableobjInventoryData, Formatting.Indented);
-                #if UNITY_EDITOR
-                Debug.Log("<color=green>인벤토리 데이터 업데이트 완료</color>");
-                    // joson데이터 로그 출력 
-                Debug.Log($"인벤토리 데이터: {inventorydataString}");
-                #endif
+#if UNITY_EDITOR
+                LogManager.Log("<color=green>인벤토리 데이터 업데이트 완료</color>", LogManager.LogCategory.InventoryManager);
+                LogManager.Log($"인벤토리 데이터: {inventorydataString}", LogManager.LogCategory.InventoryManager);
+#endif
             }
             catch (Exception ex)
             {
-                Debug.LogError($"인벤토리 데이터 직렬화 중 오류: {ex.Message}");
+                LogManager.LogError($"인벤토리 데이터 직렬화 중 오류: {ex.Message}", LogManager.LogCategory.InventoryManager);
             }
-            
-            // 로컬에 자동 저장
             SaveInventoryData();
         }
 
@@ -261,21 +255,11 @@ namespace DogGuns_Games.Lobby
         {
             if (itemData == null)
             {
-                Debug.LogWarning("업데이트할 아이템 데이터가 null입니다.");
+                LogManager.LogWarning("업데이트할 아이템 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
-            
-            _currentItemData = itemData;
-            
-            // 캐시 업데이트
-            if (_itemDataCache.ContainsKey(itemData.itemCode))
-            {
-                _itemDataCache[itemData.itemCode] = itemData;
-            }
-            else
-            {
-                _itemDataCache.Add(itemData.itemCode, itemData);
-            }
+            // _currentItemData = itemData; // 사용하지 않으므로 제거
+            _itemDataCache[itemData.itemCode] = itemData;
         }
 
         #endregion
@@ -289,47 +273,34 @@ namespace DogGuns_Games.Lobby
         {
             if (scritpableobjInventoryData == null)
             {
-                Debug.LogWarning("저장할 인벤토리 데이터가 null입니다.");
+                LogManager.LogWarning("저장할 인벤토리 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
-
             try
             {
-                // 암호화 객체가 초기화되지 않았다면 초기화
                 if (_encryption == null)
                     _encryption = new HybridEncryption();
-
-                // 인벤토리 데이터를 JSON으로 변환
                 string jsonData = JsonUtility.ToJson(scritpableobjInventoryData, true);
-
-                // 암호화 키 확인
                 string rsaPublicKey = PlayerDataManagerDontdesytoy.Instance.RsaPublicKey;
                 if (string.IsNullOrEmpty(rsaPublicKey))
                 {
-                    Debug.LogError("RSA 공개키를 찾을 수 없습니다. 암호화 없이 저장합니다.");
+                    LogManager.LogError("RSA 공개키를 찾을 수 없습니다. 암호화 없이 저장합니다.", LogManager.LogCategory.InventoryManager);
                     File.WriteAllText(_localSavePath.Replace(".encrypted", ".json"), jsonData);
                     return;
                 }
-
-                // 데이터 암호화
                 EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, rsaPublicKey);
-
-                // 바이트 배열을 Base64 문자열로 변환 (JSON 직렬화를 위해)
                 SerializableEncryptedPacket serializablePacket = new SerializableEncryptedPacket
                 {
                     EncryptedSessionKeyBase64 = Convert.ToBase64String(encryptedPacket.EncryptedSessionKey),
                     EncryptedDataBase64 = Convert.ToBase64String(encryptedPacket.EncryptedData)
                 };
-
-                // 암호화된 패킷을 JSON으로 변환하여 저장
                 string packetJson = JsonUtility.ToJson(serializablePacket);
                 File.WriteAllText(_localSavePath, packetJson);
-
-                Debug.Log($"인벤토리 데이터를 암호화하여 {_localSavePath}에 저장했습니다.");
+                LogManager.Log($"인벤토리 데이터를 암호화하여 {_localSavePath}에 저장했습니다.", LogManager.LogCategory.InventoryManager);
             }
             catch (Exception e)
             {
-                Debug.LogError($"인벤토리 데이터 암호화 저장 실패: {e.Message}");
+                LogManager.LogError($"인벤토리 데이터 암호화 저장 실패: {e.Message}", LogManager.LogCategory.InventoryManager);
             }
         }
 
@@ -362,7 +333,7 @@ namespace DogGuns_Games.Lobby
                     string rsaPrivateKey = PlayerDataManagerDontdesytoy.Instance.RsaPrivateKey;
                     if (string.IsNullOrEmpty(rsaPrivateKey))
                     {
-                        Debug.LogError("RSA 개인키를 찾을 수 없습니다. 데이터를 복호화할 수 없습니다.");
+                        LogManager.LogError("RSA 개인키를 찾을 수 없습니다. 데이터를 복호화할 수 없습니다.", LogManager.LogCategory.InventoryManager);
                         return;
                     }
 
@@ -372,16 +343,21 @@ namespace DogGuns_Games.Lobby
                     // 복호화된 JSON을 Inventory_Data 객체로 변환
                     JsonUtility.FromJsonOverwrite(decryptedJson, scritpableobjInventoryData);
 
-                    Debug.Log("암호화된 인벤토리 데이터를 성공적으로 로드했습니다.");
+                    LogManager.Log("암호화된 인벤토리 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"packetJson: {packetJson}", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"serializablePacket: {JsonUtility.ToJson(serializablePacket)}", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"encryptedPacket.EncryptedSessionKey: {serializablePacket.EncryptedSessionKeyBase64}", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"encryptedPacket.EncryptedData: {serializablePacket.EncryptedDataBase64}", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"decryptedJson: {decryptedJson}", LogManager.LogCategory.InventoryManager);
                 }
                 else
                 {
-                    Debug.Log("저장된 암호화 인벤토리 데이터 파일이 없습니다.");
+                    LogManager.Log("저장된 암호화 인벤토리 데이터 파일이 없습니다.", LogManager.LogCategory.InventoryManager);
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError($"인벤토리 데이터 복호화 중 오류 발생: {e.Message}");
+                LogManager.LogError($"인벤토리 데이터 복호화 중 오류 발생: {e.Message}", LogManager.LogCategory.InventoryManager);
             }
         }
 
@@ -404,10 +380,10 @@ namespace DogGuns_Games.Lobby
         {
             if (!bro.IsSuccess())
             {
-                Debug.LogError($"인벤토리 데이터 조회 실패: {bro}");
+                LogManager.LogError($"인벤토리 데이터 조회 실패: {bro}", LogManager.LogCategory.InventoryManager);
                 if (bro.GetStatusCode() == "404")
                 {
-                    Debug.Log("서버에 인벤토리 데이터가 없어 새로 생성합니다.");
+                    LogManager.Log("서버에 인벤토리 데이터가 없어 새로 생성합니다.", LogManager.LogCategory.InventoryManager);
                     CreateDefaultInventory();
                 }
                 else
@@ -421,7 +397,7 @@ namespace DogGuns_Games.Lobby
             var gameDataJson = bro.FlattenRows();
             if (gameDataJson.Count <= 0)
             {
-                Debug.LogWarning("서버에 인벤토리 데이터가 없습니다. 새로 생성합니다.");
+                LogManager.LogWarning("서버에 인벤토리 데이터가 없습니다. 새로 생성합니다.", LogManager.LogCategory.InventoryManager);
                 CreateDefaultInventory();
                 return;
             }
@@ -435,17 +411,17 @@ namespace DogGuns_Games.Lobby
                 {
                     Update_Inventory_Data(serverData);
                     SaveInventoryData(); // 로컬에도 저장
-                    Debug.Log("서버로부터 인벤토리 데이터를 성공적으로 로드하고 업데이트했습니다.");
+                    LogManager.Log("서버로부터 인벤토리 데이터를 성공적으로 로드하고 업데이트했습니다.", LogManager.LogCategory.InventoryManager);
                 }
                 else
                 {
-                    Debug.LogWarning("서버 인벤토리 데이터 파싱에 실패했습니다. 새 인벤토리를 생성합니다.");
+                    LogManager.LogWarning("서버 인벤토리 데이터 파싱에 실패했습니다. 새 인벤토리를 생성합니다.", LogManager.LogCategory.InventoryManager);
                     CreateDefaultInventory();
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"서버 인벤토리 데이터 처리 중 오류 발생: {ex.Message}");
+                LogManager.LogError($"서버 인벤토리 데이터 처리 중 오류 발생: {ex.Message}", LogManager.LogCategory.InventoryManager);
                 // 오류 발생 시 로컬 데이터 로드 또는 새 데이터 생성
                 LoadEncryptedInventoryData();
             }
@@ -467,11 +443,11 @@ namespace DogGuns_Games.Lobby
             {
                 if (bro.IsSuccess())
                 {
-                    Debug.Log("인벤토리 데이터를 서버에 성공적으로 업로드했습니다.");
+                    LogManager.Log("인벤토리 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.InventoryManager);
                 }
                 else
                 {
-                    Debug.LogError($"인벤토리 데이터 업로드 실패: {bro}");
+                    LogManager.LogError($"인벤토리 데이터 업로드 실패: {bro}", LogManager.LogCategory.InventoryManager);
                 }
             });
         }
@@ -493,11 +469,11 @@ namespace DogGuns_Games.Lobby
                 string savePath = Path.Combine(Application.persistentDataPath, "inventory_debug_export.json");
                 string jsonData = JsonConvert.SerializeObject(scritpableobjInventoryData, Formatting.Indented);
                 File.WriteAllText(savePath, jsonData);
-                Debug.Log($"인벤토리 데이터를 {savePath}에 내보냈습니다.");
+                LogManager.Log($"인벤토리 데이터를 {savePath}에 내보냈습니다.", LogManager.LogCategory.InventoryManager);
             }
             catch (Exception e)
             {
-                Debug.LogError($"인벤토리 데이터 내보내기 실패: {e.Message}");
+                LogManager.LogError($"인벤토리 데이터 내보내기 실패: {e.Message}", LogManager.LogCategory.InventoryManager);
             }
         }
 
@@ -527,4 +503,3 @@ namespace DogGuns_Games.Lobby
         #endregion
     }
 }
-

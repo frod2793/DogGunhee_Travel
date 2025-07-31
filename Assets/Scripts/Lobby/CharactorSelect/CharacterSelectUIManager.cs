@@ -75,7 +75,7 @@ namespace DogGuns_Games.Lobby
         {
             // TODO: 캐릭터 및 스킨 데이터 로드 구현
             // 예: ScriptableObject, PlayerPrefs, 서버 등에서 불러오기
-            Debug.Log("캐릭터 데이터 로드");
+            LogManager.Log("캐릭터 데이터 로드");
             
             // 이전에 선택된 캐릭터/스킨 인덱스 복원
             _currentCharacterIndex = PlayerDataManagerDontdesytoy.Instance?.SelectCharacterIndex ?? 0;
@@ -96,7 +96,7 @@ namespace DogGuns_Games.Lobby
             // 스킨 선택 UI 생성
             CreateSkinSelectItems(_currentCharacterIndex);
             
-            Debug.Log($"캐릭터 UI 초기화 완료: 선택된 캐릭터 {_currentCharacterIndex}, 선택된 스킨 {_currentSkinIndex}");
+            LogManager.Log($"캐릭터 UI 초기화 완료: 선택된 캐릭터 {_currentCharacterIndex}, 선택된 스킨 {_currentSkinIndex}");
         }
         
         /// <summary>
@@ -126,7 +126,7 @@ namespace DogGuns_Games.Lobby
         {
             if (characterSelectIndexPrefab == null || characterSelectIndexParent == null)
             {
-                Debug.LogError("캐릭터 선택 프리팹 또는 부모 트랜스폼이 설정되지 않았습니다.");
+                LogManager.LogError("캐릭터 선택 프리팹 또는 부모 트랜스폼이 설정되지 않았습니다.");
                 return;
             }
 
@@ -160,7 +160,7 @@ namespace DogGuns_Games.Lobby
         {
             if (characterSkinIndexPrefab == null || characterSkinIndexParent == null)
             {
-                Debug.LogError("스킨 선택 프리팹 또는 부모 트랜스폼이 설정되지 않았습니다.");
+                LogManager.LogError("스킨 선택 프리팹 또는 부모 트랜스폼이 설정되지 않았습니다.");
                 return;
             }
             
@@ -206,7 +206,7 @@ namespace DogGuns_Games.Lobby
             // 스킨 UI 업데이트
             UpdateSkinUI(characterIndex);
             
-            Debug.Log($"캐릭터 선택: {characterIndex}");
+            LogManager.Log($"캐릭터 선택: {characterIndex}");
         }
         
         /// <summary>
@@ -220,7 +220,7 @@ namespace DogGuns_Games.Lobby
             PlayerPrefs.SetInt("SelectedSkinIndex", skinIndex);
             PlayerPrefs.Save();
             
-            Debug.Log($"스킨 선택: {skinIndex}");
+            LogManager.Log($"스킨 선택: {skinIndex}");
         }
         
         /// <summary>
@@ -313,7 +313,7 @@ namespace DogGuns_Games.Lobby
             if (obj != null)
                 obj.SetActive(isActive);
             else
-                Debug.LogWarning("활성화하려는 게임 오브젝트가 null입니다.");
+                LogManager.LogWarning("활성화하려는 게임 오브젝트가 null입니다.");
         }
 
         #endregion

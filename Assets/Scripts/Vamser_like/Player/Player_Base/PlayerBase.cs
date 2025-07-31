@@ -230,11 +230,9 @@ namespace DogGuns_Games.vamsir
             {
                 // 경험치 획득 처리 추가
                 float expAmount = 1 * ExpGain; // 기본 경험치에 획득 보너스 적용
-                Debug.Log($"경험치 {expAmount} 획득");
-                
+                LogManager.Log($"경험치 {expAmount} 획득");
                 // 경험치 증가 및 UI 업데이트
                 AddExperience(expAmount);
-                
                 // 오브젝트 풀로 반환
                 expObj.objectPoolSpawner.ExpObjectPool.Release(expObj);
             }
@@ -251,11 +249,9 @@ namespace DogGuns_Games.vamsir
                 // 코인 획득량에 골드 획득 보너스 적용 가능
                 float goldBonus = GoldGain > 0 ? GoldGain : 1;
                 int coinsToAdd = Mathf.RoundToInt(1 * goldBonus);
-                
                 // 실제 코인 증가
                 PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.ingameCoin += coinsToAdd;
-                Debug.Log($"코인 {coinsToAdd}개 획득");
-                
+                LogManager.Log($"코인 {coinsToAdd}개 획득");
                 // 오브젝트 풀로 반환
                 coinObj.objectPoolSpawner.CoinObjectPool.Release(coinObj);
             }
@@ -279,14 +275,12 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void Player_Die()
         {
-            Debug.Log("플레이어 사망 - 게임 오버 처리 시작");
-            
+            LogManager.Log("플레이어 사망 - 게임 오버 처리 시작");
             // 게임 오버 상태로 변경
             if (PlayStateManager.instance != null)
             {
                 PlayStateManager.instance.PlayState = PlayStateManager.GameState.GameOver;
             }
-            
             // 플레이어 비활성화 (선택사항)
             gameObject.SetActive(false);
         }
@@ -310,7 +304,7 @@ namespace DogGuns_Games.vamsir
         {
             // 애니메이션 효과, 사운드 효과 등 구현
             // AudioManager.Instance.PlaySound("PlayerHit");
-            Debug.Log("피격 효과 재생");
+            LogManager.Log("피격 효과 재생");
         }
 
         /// <summary>
@@ -365,7 +359,7 @@ namespace DogGuns_Games.vamsir
                 OnLevelUp?.Invoke(Level);
                 // 레벨업 효과 처리
                 HandleLevelUp();
-                Debug.Log($"레벨업! 현재 레벨: {Level}, 필요 경험치: {MaxExp}");
+                LogManager.Log($"레벨업! 현재 레벨: {Level}, 필요 경험치: {MaxExp}");
                 // 경험치 변경 이벤트를 레벨업마다 호출하여 UI가 즉시 반영되도록 함
                 OnExpChanged?.Invoke(CurrentExp, MaxExp);
             }
