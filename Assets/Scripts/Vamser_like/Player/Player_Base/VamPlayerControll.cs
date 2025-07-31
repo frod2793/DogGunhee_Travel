@@ -1,3 +1,4 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using DG.Tweening;
@@ -8,7 +9,7 @@ namespace DogGuns_Games.vamsir
     public class VamPlayerControll : MonoBehaviour
     {
         
-        //todo: 플레이어의 HP가 O 이하로 떨어지면 게임 오버 처리
+        //todo 아직 맵안에 들어오지 않은 적은 자동공격에 탐색되지않게 
         
         #region 필드 및 변수
 
@@ -45,6 +46,23 @@ namespace DogGuns_Games.vamsir
 
         bool _isAttack = false;
 
+        [Header("<color=green>자동 공격 설정")] 
+        [Tooltip("자동 공격 시 플레이어가 멈추는 거리(공격 사거리)")]
+        public float autoAttackStopDistance = 1.5f;
+        [Tooltip("자동 공격 시 이동 속도 배율")]
+        public float autoAttackMoveSpeedMultiplier = 1.0f;
+
+        private bool _isJoystickActive = false;
+        private bool _autoAttackEnabledByToggle = true;
+
+        private float joystickInputThreshold = 0.1f;
+        private float joystickIdleTime = 0.2f; // 입력이 없을 때 자동공격 재활성화까지 대기 시간
+        private float joystickIdleTimer = 0f;
+        private bool _autoAttackActive = false;
+
+        private bool _isAutoMoveAttackEnabled = false;
+        
+        
         #endregion
 
         #region Unity 라이프사이클
@@ -54,6 +72,7 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameStart += PlayerInit;
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
+            PlayStateManager.OnGameOver += OnGameOver;
         }
 
         private void OnDestroy()
@@ -61,6 +80,38 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameStart -= PlayerInit;
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
+            PlayStateManager.OnGameOver -= OnGameOver;
+        }
+
+        private void OnGameOver()
+        {
+            DisableAutoMoveAttack();
+            _autoAttackActive = false;
+        }
+
+        private void OnJoystickDown()
+        {
+            _isJoystickActive = true;
+            if (_autoAttackEnabledByToggle)
+                DisableAutoMoveAttack();
+        }
+
+        private void OnJoystickUp()
+        {
+            _isJoystickActive = false;
+            if (_autoAttackEnabledByToggle)
+                EnableAutoMoveAttack();
+        }
+
+        public void SetAutoAttackToggle(bool isOn)
+        {
+            _autoAttackEnabledByToggle = isOn;
+            if (!isOn && _autoAttackActive)
+            {
+                DisableAutoMoveAttack();
+                _autoAttackActive = false;
+            }
+            joystickIdleTimer = 0f;
         }
 
         private void FixedUpdate()
@@ -70,6 +121,40 @@ namespace DogGuns_Games.vamsir
                 PlayerMovement();
                 FallowCamera();
                 UpdatePlayerHpSlider();
+
+                // VariableJoystick 수정 없이 입력값 감지
+                float inputMagnitude = Mathf.Abs(variableJoystick.Horizontal) + Mathf.Abs(variableJoystick.Vertical);
+                if (_autoAttackEnabledByToggle)
+                {
+                    if (inputMagnitude > joystickInputThreshold)
+                    {
+                        // 조이스틱 조작 중: 자동공격 비활성화
+                        joystickIdleTimer = 0f;
+                        if (_autoAttackActive)
+                        {
+                            DisableAutoMoveAttack();
+                            _autoAttackActive = false;
+                        }
+                    }
+                    else
+                    {
+                        
+                        // 조이스틱 입력 없음: 일정 시간 후 자동공격 재활성화
+                        joystickIdleTimer += Time.fixedDeltaTime;
+                        if (_autoAttackActive && joystickIdleTimer > joystickIdleTime)
+                        {
+                            EnableAutoMoveAttack();
+                        }
+                    }
+                }
+                else
+                {
+                    if (_autoAttackActive)
+                    {
+                        DisableAutoMoveAttack();
+                        _autoAttackActive = false;
+                    }
+                }
             }
         }
 
@@ -297,6 +382,133 @@ namespace DogGuns_Games.vamsir
             cameraTransform.transform.DOMove(cameraPosition, moveDuration);
         }
 
+        #endregion
+
+        #region 자동 이동 및 공격 설정
+
+        
+        
+        public bool AutoAttackEnabledByToggle
+        {
+            get => _autoAttackEnabledByToggle;
+            set
+            {
+                _autoAttackEnabledByToggle = value;
+                if (value)
+                {
+                    EnableAutoMoveAttack();
+                }
+                else
+                {
+                    DisableAutoMoveAttack();
+                }
+            }
+        }
+        
+        // 플레이어 자동 이동 및 공격 루프
+        private CancellationTokenSource _autoMoveAttackCTS;
+        public void EnableAutoMoveAttack()
+        {
+            if (_autoMoveAttackCTS != null)
+            {
+                _autoMoveAttackCTS.Cancel();
+                _autoMoveAttackCTS.Dispose();
+            }
+            _autoMoveAttackCTS = new CancellationTokenSource();
+            AutoMoveAttackLoop(_autoMoveAttackCTS.Token).Forget();
+        }
+
+        public void DisableAutoMoveAttack()
+        {
+            if (_autoMoveAttackCTS != null)
+            {
+                _autoMoveAttackCTS.Cancel();
+                _autoMoveAttackCTS.Dispose();
+                _autoMoveAttackCTS = null;
+            }
+        }
+
+        private async UniTaskVoid AutoMoveAttackLoop(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                if (!_isGameStart || playerCharactor == null)
+                {
+                    await UniTask.Yield();
+                    continue;
+                }
+
+                // 가장 가까운 적 찾기
+                GameObject closestEnemy = FindClosestEnemy();
+                if (closestEnemy != null)
+                {
+                    Vector3 enemyPos = closestEnemy.transform.position;
+                    Vector3 playerPos = player.transform.position;
+                    Vector3 dir = (enemyPos - playerPos).normalized;
+                    float distance = Vector3.Distance(playerPos, enemyPos);
+                    float stopDistance = autoAttackStopDistance; // 인스펙터에서 설정
+
+                    // 사거리 밖이면 적 방향으로 이동
+                    if (distance > stopDistance)
+                    {
+                        Vector3 targetPosition = player.transform.position + dir * (playerCharactor.MoveSpeed * autoAttackMoveSpeedMultiplier * Time.deltaTime);
+                        // 맵 경계 확인 및 클램프
+                        Bounds mapBounds = mapRange.bounds;
+                        targetPosition = new Vector3(
+                            Mathf.Clamp(targetPosition.x, mapBounds.min.x, mapBounds.max.x),
+                            Mathf.Clamp(targetPosition.y, mapBounds.min.y, mapBounds.max.y),
+                            targetPosition.z
+                        );
+                        MovePlayer(targetPosition);
+                        UpdateAnimationState(dir.magnitude);
+                        UpdateCharacterRotation(dir);
+                    }
+                    else
+                    {
+                        // 사거리 안이면 공격
+                        if (!_isAttack)
+                        {
+                            await PlayerAttack(dir);
+                        }
+                        UpdateAnimationState(0f);
+                    }
+                }
+                else
+                {
+                    // 적이 없으면 Idle
+                    UpdateAnimationState(0f);
+                }
+
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+        }
+
+        private GameObject FindClosestEnemy()
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Mob");
+            GameObject closest = null;
+            float minDist = float.MaxValue;
+            Vector3 playerPos = player.transform.position;
+            Bounds mapBounds = mapRange != null ? mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 9999f);
+            foreach (var enemy in enemies)
+            {
+                Vector3 enemyPos = enemy.transform.position;
+                // 맵 안에 있는 적만 탐색
+                if (enemyPos.x < mapBounds.min.x || enemyPos.x > mapBounds.max.x ||
+                    enemyPos.y < mapBounds.min.y || enemyPos.y > mapBounds.max.y)
+                {
+                    continue;
+                }
+                float dist = Vector3.Distance(playerPos, enemyPos);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closest = enemy;
+                }
+            }
+            return closest;
+        }
+        
         #endregion
     }
 }

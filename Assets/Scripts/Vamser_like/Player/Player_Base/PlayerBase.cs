@@ -41,7 +41,8 @@ namespace DogGuns_Games.vamsir
         [Header("경험치 시스템")]
         public float CurrentExp { get; set; } = 0f;
         public float MaxExp { get; set; } = 100f;
-
+    
+        
         // 레벨업 이벤트
         public static event Action<float> OnLevelUp;
         public static event Action<float, float> OnExpChanged; // currentExp, maxExp
@@ -109,7 +110,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void OnEnable()
         {
-        //    InitializeWeapon();
+            //    InitializeWeapon();
             Level = 0f;
             PlayStateManager.OnGameOver += OnGameOver;
         }
@@ -428,112 +429,7 @@ namespace DogGuns_Games.vamsir
         }
 
         #endregion
-
-        #region 플레이어 자동 이동 및 공격 로직
-
-        public bool IsAutoMoveAttack = false;
-        private CancellationTokenSource autoMoveAttackCTS;
-        private Transform currentTarget;
-        private float autoAttackTimer = 0f;
-        private SpriteRenderer mapRange;
-
-        /// <summary>
-        /// 자동 이동/공격 활성화
-        /// </summary>
-        public void EnableAutoMoveAttack()
-        {
-            if (IsAutoMoveAttack) return;
-            IsAutoMoveAttack = true;
-            autoMoveAttackCTS = new CancellationTokenSource();
-            AutoMoveAttackLoop(autoMoveAttackCTS.Token).Forget();
-        }
-
-        /// <summary>
-        /// 자동 이동/공격 비활성화
-        /// </summary>
-        public void DisableAutoMoveAttack()
-        {
-            IsAutoMoveAttack = false;
-            autoMoveAttackCTS?.Cancel();
-            currentTarget = null;
-        }
-
-        /// <summary>
-        /// 맵 범위 설정
-        /// </summary>
-        /// <param name="map">설정할 맵 범위 스프라이트 렌더러</param>
-        public void SetMapRange(SpriteRenderer map)
-        {
-            mapRange = map;
-        }
-
-        private async UniTaskVoid AutoMoveAttackLoop(CancellationToken token)
-        {
-            while (IsAutoMoveAttack && !token.IsCancellationRequested)
-            {
-                currentTarget = FindClosestEnemy();
-                if (currentTarget != null && mapRange != null && transform.parent != null)
-                {
-                    Vector3 dir = (currentTarget.position - transform.parent.position).normalized;
-                    float distance = Vector3.Distance(transform.parent.position, currentTarget.position);
-                    bool isRanged = WeaphonBase != null && WeaphonBase.isShooting;
-                    float stopDistance = isRanged ? 2.5f : 0.5f;
-
-                    // 이동: 무기 타입에 따라 멈추는 거리 다름, 항상 MoveSpeed 적용
-                    if (distance > stopDistance)
-                    {
-                        float deltaSpeed = MoveSpeed * Time.deltaTime;
-                        Vector3 rawTargetPosition = transform.parent.position + dir * deltaSpeed;
-                        Bounds mapBounds = mapRange.bounds;
-                        Vector3 clampedPosition = new Vector3(
-                            Mathf.Clamp(rawTargetPosition.x, mapBounds.min.x, mapBounds.max.x),
-                            Mathf.Clamp(rawTargetPosition.y, mapBounds.min.y, mapBounds.max.y),
-                            rawTargetPosition.z
-                        );
-                        transform.parent.position = clampedPosition;
-                    }
-                    // 공격: 멈추는 거리 이내일 때만 공격
-                    if (distance <= stopDistance)
-                    {
-                        autoAttackTimer += Time.deltaTime;
-                        if (autoAttackTimer >= CoolTime)
-                        {
-                            autoAttackTimer = 0f;
-                            AttackAngle = dir;
-                            PlayState = PlayerState.Attack;
-                        }
-                    }
-                    // 타겟이 사라졌거나 처치되었는지 체크
-                    if (!currentTarget.gameObject.activeInHierarchy)
-                    {
-                        currentTarget = null;
-                    }
-                }
-                await UniTask.Yield(PlayerLoopTiming.Update);
-            }
-        }
-
-        /// <summary>
-        /// 맵 내에서 가장 가까운 적을 탐색
-        /// </summary>
-        private Transform FindClosestEnemy()
-        {
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Mob");
-            Transform closest = null;
-            float minDist = float.MaxValue;
-            foreach (var enemy in enemies)
-            {
-                float dist = Vector3.Distance(transform.position, enemy.transform.position);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    closest = enemy.transform;
-                }
-            }
-            return closest;
-        }
-
-        #endregion
+        
         
     }
 }

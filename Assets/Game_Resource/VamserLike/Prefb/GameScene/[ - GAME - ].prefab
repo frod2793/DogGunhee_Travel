@@ -1260,7 +1260,7 @@ GameObject:
   - component: {fileID: 8077927615935069407}
   m_Layer: 0
   m_Name: Back_ground
-  m_TagString: Untagged
+  m_TagString: Map
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4330,6 +4330,8 @@ MonoBehaviour:
   spawnedPlayer: {fileID: 0}
   inGameObjectParent: {fileID: 3904192412624442642}
   optionPopupManager: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
+  objectPoolSpawner: {fileID: 0}
+  vamPlayerControll: {fileID: 0}
 --- !u!114 &4441102585319734577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7741,6 +7743,7 @@ MonoBehaviour:
   initialAttackSpeed: 1
   initialAttackRange: 1
   initialStunTime: 0.1
+  searchRange: 0
 --- !u!61 &6024610064113227362
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -9238,6 +9241,8 @@ MonoBehaviour:
   cameraTransform: {fileID: 0}
   moveDuration: 0.25
   mapRange: {fileID: 6380052682920689255}
+  autoAttackStopDistance: 3
+  autoAttackMoveSpeedMultiplier: 3
 --- !u!1 &6729624359695587028
 GameObject:
   m_ObjectHideFlags: 0
@@ -9941,7 +9946,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 1
+  m_IsOn: 0
 --- !u!1 &6956527907533129138
 GameObject:
   m_ObjectHideFlags: 0

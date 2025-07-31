@@ -3,7 +3,6 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace DogGuns_Games.vamsir
 {
@@ -12,22 +11,19 @@ namespace DogGuns_Games.vamsir
     /// </summary>
     public class VamserLikeGameManager : MonoBehaviour
     {
-        
         #region 필드 및 변수
 
-        [HideInInspector]
-        public PlayerBase spawnedPlayer;
-        
-        [Header("캐릭터 및 무기가 스폰 될시 부모 오브젝트")]
-        [SerializeField] private GameObject inGameObjectParent;
+        [HideInInspector] public PlayerBase spawnedPlayer;
+
+        [Header("캐릭터 및 무기가 스폰 될시 부모 오브젝트")] [SerializeField]
+        private GameObject inGameObjectParent;
 
         private readonly Vector3 _spawnPosition = Vector3.zero;
 
-        [Header("옵션 팝업 매니저")]
-        [SerializeField] private OptionPopupManager optionPopupManager;
+        [Header("옵션 팝업 매니저")] [SerializeField] private OptionPopupManager optionPopupManager;
+        [HideInInspector] public ObjectPoolSpawner objectPoolSpawner;
+        [HideInInspector] public VamPlayerControll vamPlayerControll;
 
-        private ObjectPoolSpawner _objectPoolSpawner;
-        private VamPlayerControll _vamPlayerControll;
         #endregion
 
         #region Unity 라이프사이클
@@ -40,8 +36,8 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void Awake()
         {
-            _objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
-            _vamPlayerControll = FindFirstObjectByType<VamPlayerControll>();
+            objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
+            vamPlayerControll = FindFirstObjectByType<VamPlayerControll>();
 
             PlayStateManager.OnGameStart += GameStart;
             PlayStateManager.OnGamePause += Pause;
@@ -60,7 +56,6 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameOver -= OnGameOver;
         }
 
-
         #endregion
 
         #region 게임 상태 관리
@@ -72,16 +67,16 @@ namespace DogGuns_Games.vamsir
         {
             PlayStateManager.instance.isPlay = true;
             PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt = 0;
-            
+
             SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
             // 플레이어와 무기 스폰이 완료될 때까지 기다립니다.
-            
+
             await SpawnPlayer();
-            
+
             // 플레이어 스폰이 성공적으로 완료된 후에 몹 스포너를 활성화합니다.
-            if (spawnedPlayer != null && _objectPoolSpawner != null)
+            if (spawnedPlayer != null && objectPoolSpawner != null)
             {
-                await _objectPoolSpawner.InitializeAndStartSpawning(spawnedPlayer);
+                await objectPoolSpawner.InitializeAndStartSpawning(spawnedPlayer);
                 LogManager.Log("게임 시작: 플레이어 스폰 완료 후 몹 스포너 활성화", LogManager.LogCategory.VamserLikeGameManager);
             }
             else
@@ -111,7 +106,7 @@ namespace DogGuns_Games.vamsir
         private async void OnGameOver()
         {
             PlayStateManager.instance.isPlay = false;
-            
+
             spawnedPlayer = null; // 게임 오버 시 플레이어 참조 초기화
 
             // 게임 내에 획득한 코인 합산
@@ -120,7 +115,8 @@ namespace DogGuns_Games.vamsir
             {
                 playerData.currency1 += playerData.ingameCoin; // ingameCoin을 totalCoin에 합산
                 playerData.ingameCoin = 0; // 인게임 코인 초기화
-                LogManager.Log($"게임 오버: 코인 합산 완료 (총 코인: {playerData.currency1})", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.Log($"게임 오버: 코인 합산 완료 (총 코인: {playerData.currency1})",
+                    LogManager.LogCategory.VamserLikeGameManager);
 
                 // 서버 업로드는 반드시 메인 스레드에서 실행
                 await UniTask.SwitchToMainThread();
@@ -140,21 +136,21 @@ namespace DogGuns_Games.vamsir
             }
             else
             {
-                LogManager.LogWarning("PlayerDataManagerDontdesytoy 또는 scritpableobjPlayerData가 null입니다. 코인 합산 실패", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.LogWarning("PlayerDataManagerDontdesytoy 또는 scritpableobjPlayerData가 null입니다. 코인 합산 실패",
+                    LogManager.LogCategory.VamserLikeGameManager);
             }
 
             LogManager.Log("게임 오버", LogManager.LogCategory.VamserLikeGameManager);
         }
-        
+
         /// <summary>
         /// 메뉴 팝업 열기와 게임 상태 변경
         /// </summary>
         public void Open_MenuPopUp(bool isPause)
         {
-            PlayStateManager.instance.PlayState = isPause ? 
-                PlayStateManager.GameState.Pause : 
-                PlayStateManager.GameState.Resume;
-            
+            PlayStateManager.instance.PlayState =
+                isPause ? PlayStateManager.GameState.Pause : PlayStateManager.GameState.Resume;
+
             LogManager.Log($"메뉴 팝업 {(isPause ? "열림" : "닫힘")}", LogManager.LogCategory.VamserLikeGameManager);
         }
 
@@ -178,7 +174,6 @@ namespace DogGuns_Games.vamsir
 
         #region 플레이어/무기 스폰 관리
 
-       
         /// <summary>
         /// 현재 선택된 플레이어와 무기를 비동기적으로 스폰합니다. (반환 타입을 UniTask로 변경)
         /// </summary>
@@ -186,7 +181,8 @@ namespace DogGuns_Games.vamsir
         {
             if (!PlayStateManager.instance.isPlay || inGameObjectParent == null)
             {
-                LogManager.LogWarning("게임이 플레이 상태가 아니거나 부모 오브젝트가 설정되지 않았습니다.", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.LogWarning("게임이 플레이 상태가 아니거나 부모 오브젝트가 설정되지 않았습니다.",
+                    LogManager.LogCategory.VamserLikeGameManager);
                 return;
             }
 
@@ -203,7 +199,8 @@ namespace DogGuns_Games.vamsir
             }
             catch (System.Exception ex)
             {
-                LogManager.LogError($"플레이어 또는 무기 스폰 중 예외 발생: {ex.Message}", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.LogError($"플레이어 또는 무기 스폰 중 예외 발생: {ex.Message}",
+                    LogManager.LogCategory.VamserLikeGameManager);
                 spawnedPlayer = null; // 실패 시 참조를 null로 설정
             }
         }
@@ -218,21 +215,24 @@ namespace DogGuns_Games.vamsir
 
             try
             {
-                GameObject weaponInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition, Quaternion.identity, inGameObjectParent.transform).ToUniTask();
+                GameObject weaponInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition,
+                    Quaternion.identity, inGameObjectParent.transform).ToUniTask();
                 if (weaponInstance != null)
                 {
                     LogManager.Log($"무기 스폰 성공: {addressableKey}", LogManager.LogCategory.VamserLikeGameManager);
                     return weaponInstance.GetComponent<Weaphon_base>();
                 }
+
                 return null;
             }
             catch (System.Exception ex)
             {
-                LogManager.LogError($"Addressable 키 '{addressableKey}'를 가진 무기 스폰 중 예외 발생: {ex.Message}", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.LogError($"Addressable 키 '{addressableKey}'를 가진 무기 스폰 중 예외 발생: {ex.Message}",
+                    LogManager.LogCategory.VamserLikeGameManager);
                 return null;
             }
         }
-      
+
         /// <summary>
         /// 선택된 캐릭터를 스폰하고 무기를 설정합니다.
         /// </summary>
@@ -243,7 +243,8 @@ namespace DogGuns_Games.vamsir
 
             try
             {
-                GameObject characterInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition, Quaternion.identity, inGameObjectParent.transform).ToUniTask();
+                GameObject characterInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition,
+                    Quaternion.identity, inGameObjectParent.transform).ToUniTask();
                 if (characterInstance != null)
                 {
                     LogManager.Log($"캐릭터 스폰 성공: {addressableKey}", LogManager.LogCategory.VamserLikeGameManager);
@@ -251,24 +252,27 @@ namespace DogGuns_Games.vamsir
                     if (spawnedPlayer != null)
                     {
                         spawnedPlayer.InitializeWeapon(weaponToAssign);
-                        if (_vamPlayerControll != null)
+                        if (vamPlayerControll != null)
                         {
-                            _vamPlayerControll.AssignCharacter(spawnedPlayer);
+                            vamPlayerControll.AssignCharacter(spawnedPlayer);
                         }
                         else
                         {
-                            LogManager.LogError("VamPlayerControll을 찾을 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
+                            LogManager.LogError("VamPlayerControll을 찾을 수 없습니다.",
+                                LogManager.LogCategory.VamserLikeGameManager);
                         }
                     }
                     else
                     {
-                        LogManager.LogError("스폰된 캐릭터에서 PlayerBase 컴포넌트를 찾을 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
+                        LogManager.LogError("스폰된 캐릭터에서 PlayerBase 컴포넌트를 찾을 수 없습니다.",
+                            LogManager.LogCategory.VamserLikeGameManager);
                     }
                 }
             }
             catch (System.Exception ex)
             {
-                LogManager.LogError($"Addressable 키 '{addressableKey}'를 가진 캐릭터 스폰 중 예외 발생: {ex.Message}", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.LogError($"Addressable 키 '{addressableKey}'를 가진 캐릭터 스폰 중 예외 발생: {ex.Message}",
+                    LogManager.LogCategory.VamserLikeGameManager);
                 // 실패 시 _spawnedPlayer를 null로 설정
                 spawnedPlayer = null;
             }
@@ -293,6 +297,7 @@ namespace DogGuns_Games.vamsir
                 // Addressables로 생성된 오브젝트는 Addressables.ReleaseInstance로 해제��는 것이 좋습니다.
                 Addressables.ReleaseInstance(child.gameObject);
             }
+
             spawnedPlayer = null; // 참조 제거
 
             // 새 캐릭터와 무기 스폰 (비동기 호출 및 대기)
@@ -314,7 +319,7 @@ namespace DogGuns_Games.vamsir
                 LogManager.LogError("웨이브 텍스트가 null입니다.", LogManager.LogCategory.VamserLikeGameManager);
                 return;
             }
-            
+
             // 페이드 인 효과
             mobWaveText.DOFade(1, 1)
                 .SetEase(Ease.Linear)
@@ -340,10 +345,10 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public int MobSpawnWave()
         {
-            return _objectPoolSpawner?.MobSpawnWave ?? 0;
+            return objectPoolSpawner?.MobSpawnWave ?? 0;
         }
 
-     
+
         /// <summary>
         /// 현재 플레이어 레벨 반환
         /// </summary>
@@ -353,7 +358,7 @@ namespace DogGuns_Games.vamsir
             {
                 return spawnedPlayer.Level;
             }
-            
+
             LogManager.LogWarning("스폰된 플레이어가 없어 레벨을 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
             return 1; // 기본값 반환
         }
@@ -367,7 +372,7 @@ namespace DogGuns_Games.vamsir
             {
                 return spawnedPlayer.CurrentExp;
             }
-            
+
             return 0f;
         }
 
@@ -380,7 +385,7 @@ namespace DogGuns_Games.vamsir
             {
                 return spawnedPlayer.MaxExp;
             }
-            
+
             return 100f; // 기본값
         }
 
@@ -393,7 +398,7 @@ namespace DogGuns_Games.vamsir
             {
                 return spawnedPlayer.GetExpProgress();
             }
-            
+
             return 0f;
         }
 

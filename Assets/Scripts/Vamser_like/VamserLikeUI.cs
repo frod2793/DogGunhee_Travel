@@ -12,8 +12,10 @@ namespace DogGuns_Games.vamsir
     public class VamserLikeUI : MonoBehaviour
     {
         #region 필드 및 변수
+
         [Header("<color=green>User Info UI")] [SerializeField]
         private TMP_Text LevelText;
+
         [SerializeField] private Slider playerLevelSlider;
 
         [Header("<color=green>Text UI")] [SerializeField]
@@ -23,7 +25,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private TMP_Text mobCountText;
         [SerializeField] private TMP_Text playerLevelText;
         [SerializeField] private Slider expSlider;
-private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
+        private int getcoinCount = 0; // 초기화 전 코인 정보를 담을 변수
 
         [Header("<color=green>Menu UI")] [SerializeField]
         private Button menuBtn;
@@ -47,15 +49,14 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
         [Header("<color=green>조이스틱")] [SerializeField]
         private VariableJoystick variableJoystick;
-        [Header("<color=green>플레이어 자동 공격 활성화 토글 ")]
-        [SerializeField] private Toggle autoAttackToggle;
+
+        [Header("<color=green>플레이어 자동 공격 활성화 토글 ")] [SerializeField]
+        private Toggle autoAttackToggle;
 
         [SerializeField] private Transform joystickTransform;
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
-
-        private PlayerBase playerBase => _gameManager != null ? _gameManager.spawnedPlayer : null;
-
+        
         #endregion
 
         #region Unity 라이프사이클
@@ -77,10 +78,15 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
             _gameManager = FindFirstObjectByType<VamserLikeGameManager>();
             // 자동 공격 토글 이벤트 연결
-            if (autoAttackToggle != null)
+            autoAttackToggle.onValueChanged.AddListener(isOn =>
             {
-                autoAttackToggle.onValueChanged.AddListener(OnAutoAttackToggleChanged);
-            }
+                // VamPlayerControll의 AutoAttackEnabledByToggle 프로퍼티에 값 전달
+                var playerController = FindFirstObjectByType<VamPlayerControll>();
+                if (playerController != null)
+                {
+                    playerController.AutoAttackEnabledByToggle = isOn;
+                }
+            });
         }
 
         private void OnDestroy()
@@ -92,7 +98,7 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
             PlayStateManager.OnGameOver -= ShowGameOverPopup;
-            
+
             // 플레이어 경험치 이벤트 구독 해제
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
@@ -135,15 +141,19 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
             if (SoundManager.Instance == null)
             {
-                LogManager.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
+                LogManager.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.",
+                    LogManager.LogCategory.VamserLikeUI);
                 return;
             }
+
             var settingsData = SoundManager.Instance.settingsData;
             if (settingsData == null)
             {
-                LogManager.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
+                LogManager.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.",
+                    LogManager.LogCategory.VamserLikeUI);
                 return;
             }
+
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
             variableJoystick.SetMode((JoystickType)settingsData.joystickType);
@@ -165,10 +175,7 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
             exitBtn.onClick.AddListener(PausePopUp);
 
-            settingBtn.onClick.AddListener(() =>
-            {
-                _gameManager.Open_OptionPopUp();
-            });
+            settingBtn.onClick.AddListener(() => { _gameManager.Open_OptionPopUp(); });
 
             // 게임 오버 버튼 설정
             gameOverExitBtn.onClick.AddListener(GameOverExit);
@@ -227,12 +234,12 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
             joystickTransform.gameObject.SetActive(false);
             if (variableJoystick != null)
             {
-                   variableJoystick.OnPointerUp(null); // 입력 해제
+                variableJoystick.OnPointerUp(null); // 입력 해제
             }
 
-            
-            
-            // UI 업데이��� 중지
+            autoAttackToggle.isOn = false; // 자동 공격 토글 비활성화
+
+            // 취소 토큰 소스가 있다면 취소합니다.
             _cancellationTokenSource?.Cancel();
         }
 
@@ -262,6 +269,7 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
                     await WaveTextFadeEffect(currentWaveText);
                     lastWaveText = currentWaveText;
                 }
+
                 coinText.text = $"{_gameManager.CoinCount()}";
                 getcoinCount = _gameManager.CoinCount();
                 mobCountText.text = $"{_gameManager.Mob_Count()}";
@@ -291,11 +299,11 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
         {
             float currentLevel = _gameManager.PlayerLevel();
             LevelText.text = $"Lv. {currentLevel:F0}";
-            
+
             // 실제 경험치 시스템 사용
             float expProgress = _gameManager.GetPlayerExpProgress();
             playerLevelSlider.value = expProgress;
-            
+
             // 기존 expSlider도 같은 값으로 업데이트 (중복 슬라이더가 있는 경우)
             if (expSlider != null)
             {
@@ -315,7 +323,8 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
             // 실시간으로 경험치 UI 업데이트
             UpdatePlayerLevelUI();
             // 디버그 로그 (선택사항)
-            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)", LogManager.LogCategory.VamserLikeUI);
+            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp / maxExp) * 100:F1}%)",
+                LogManager.LogCategory.VamserLikeUI);
         }
 
         /// <summary>
@@ -342,24 +351,11 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
                 LevelText.transform.localScale = Vector3.one * 1.2f;
                 LevelText.transform.DOScale(Vector3.one, 0.3f)
                     .SetEase(Ease.OutBack);
-                
+
                 // 색상 변화 효과 (DOTween 사용)
                 Color originalColor = LevelText.color;
                 LevelText.color = Color.yellow;
                 LevelText.DOColor(originalColor, 1f);
-            }
-        }
-
-        private void OnAutoAttackToggleChanged(bool isOn)
-        {
-            if (playerBase == null) return;
-            if (isOn)
-            {
-                playerBase.EnableAutoMoveAttack(); // 매개변수 없이 호출
-            }
-            else
-            {
-                playerBase.DisableAutoMoveAttack();
             }
         }
 

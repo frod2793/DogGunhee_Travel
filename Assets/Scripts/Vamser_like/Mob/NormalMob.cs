@@ -20,6 +20,9 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private float initialAttackSpeed = 1f;
         [SerializeField] private float initialAttackRange = 1f;
         [SerializeField] private float initialStunTime = 0.1f;
+
+        [Header("<color=green>탐색 범위")]
+        [SerializeField] private float searchRange = 8f;
         
         private void Awake()
         {
@@ -62,19 +65,28 @@ namespace DogGuns_Games.vamsir
         public override void OnEnable()
         {
             base.OnEnable();
-            // Init() 호출을 SetTarget으로 이동하여 player 참조가 보장되도록 합니다.
+            MoveInsideMapIfOutside(); // 스폰 시 맵 밖이면 맵 안으로 이동
             SetMobState(MobState.Move);
         }
 
 
         private void FixedUpdate()
         {
-            if (!ismove || player == null) // player가 null이면 이동 로직을 실행하지 않습니다.
+            
+            // todo 스폰시 맵 밖이면 맵 안까지 이동
+            
+            // 플레이어 탐색 범위 내에 있을 때만 추적 및 공격
+            if (!ismove || player == null)
             {
                 if (ismove) transform.DOKill();
                 return;
             }
-            
+            float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+            if (distanceToPlayer > searchRange)
+            {
+                // 플레이어가 탐색 범위 밖에 있으면 추적하지 않음
+                return;
+            }
             // 플레이어를 추적하는 로직
             Vector3 direction = (player.transform.position - transform.position).normalized;
             transform.position += direction * Mob_Speed * Time.fixedDeltaTime;
@@ -169,6 +181,21 @@ namespace DogGuns_Games.vamsir
             base.Mob_Die();
             transform.DOKill();
             LogManager.Log("Die", LogManager.LogCategory.NormalMob);
+        }
+
+        private void MoveInsideMapIfOutside()
+        {
+            // 맵 오브젝트를 "Map" 태그로 찾고, SpriteRenderer의 bounds를 사용
+            var mapObj = GameObject.FindGameObjectWithTag("Map");
+            if (mapObj == null) return;
+            var mapRenderer = mapObj.GetComponent<SpriteRenderer>();
+            if (mapRenderer == null) return;
+            var bounds = mapRenderer.bounds;
+            Vector3 pos = transform.position;
+            // x, y 좌표를 맵 영역 내로 클램프
+            pos.x = Mathf.Clamp(pos.x, bounds.min.x, bounds.max.x);
+            pos.y = Mathf.Clamp(pos.y, bounds.min.y, bounds.max.y);
+            transform.position = pos;
         }
     }
 }
