@@ -47,10 +47,14 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
         [Header("<color=green>조이스틱")] [SerializeField]
         private VariableJoystick variableJoystick;
+        [Header("<color=green>플레이어 자동 공격 활성화 토글 ")]
+        [SerializeField] private Toggle autoAttackToggle;
 
         [SerializeField] private Transform joystickTransform;
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
+
+        private PlayerBase playerBase => _gameManager != null ? _gameManager.spawnedPlayer : null;
 
         #endregion
 
@@ -67,10 +71,16 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
             PlayStateManager.OnGameOver += ShowGameOverPopup;
-            
             // 플레이어 경험치 이벤트 구독
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
+
+            _gameManager = FindFirstObjectByType<VamserLikeGameManager>();
+            // 자동 공격 토글 이벤트 연결
+            if (autoAttackToggle != null)
+            {
+                autoAttackToggle.onValueChanged.AddListener(OnAutoAttackToggleChanged);
+            }
         }
 
         private void OnDestroy()
@@ -125,13 +135,13 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
             if (SoundManager.Instance == null)
             {
-                LogManager.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.");
+                LogManager.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
                 return;
             }
             var settingsData = SoundManager.Instance.settingsData;
             if (settingsData == null)
             {
-                LogManager.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.");
+                LogManager.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
                 return;
             }
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
@@ -222,7 +232,7 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
 
             
             
-            // UI 업데이트 중지
+            // UI 업데이��� 중지
             _cancellationTokenSource?.Cancel();
         }
 
@@ -298,14 +308,14 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
         #region 플레이어 경험치 및 레벨 이벤트
 
         /// <summary>
-        /// 플레이어 경험치가 변경되었을 때 호출되는 메서드입니다.
+        /// 플레이어 경험치가 변경되었을 때 호출되는 메서��입니다.
         /// </summary>
         private void OnPlayerExpChanged(float currentExp, float maxExp)
         {
             // 실시간으로 경험치 UI 업데이트
             UpdatePlayerLevelUI();
             // 디버그 로그 (선택사항)
-            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)");
+            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp/maxExp)*100:F1}%)", LogManager.LogCategory.VamserLikeUI);
         }
 
         /// <summary>
@@ -317,7 +327,7 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
             UpdatePlayerLevelUI();
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
-            LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}");
+            LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}", LogManager.LogCategory.VamserLikeUI);
         }
 
         /// <summary>
@@ -337,6 +347,19 @@ private int getcoinCount = 0;// 초기화 전 코인 정보를 담을 변수
                 Color originalColor = LevelText.color;
                 LevelText.color = Color.yellow;
                 LevelText.DOColor(originalColor, 1f);
+            }
+        }
+
+        private void OnAutoAttackToggleChanged(bool isOn)
+        {
+            if (playerBase == null) return;
+            if (isOn)
+            {
+                playerBase.EnableAutoMoveAttack(); // 매개변수 없이 호출
+            }
+            else
+            {
+                playerBase.DisableAutoMoveAttack();
             }
         }
 

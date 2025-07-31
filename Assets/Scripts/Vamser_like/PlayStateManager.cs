@@ -67,19 +67,19 @@ namespace DogGuns_Games.vamsir
             {
                 case GameState.Play:
                     OnGameStart?.Invoke();
-                    LogManager.Log("OnGameStart");
+                    LogManager.Log("OnGameStart", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.Pause:
                     OnGamePause?.Invoke();
-                    LogManager.Log("OnGamePause");
+                    LogManager.Log("OnGamePause", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.Resume:
                     OnGameResume?.Invoke();
-                    LogManager.Log("OnGameResume");
+                    LogManager.Log("OnGameResume", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.GameOver:
                     OnGameOver?.Invoke();
-                    LogManager.Log("OnGameOver");
+                    LogManager.Log("OnGameOver", LogManager.LogCategory.PlayStateManager);
                     break;
             }
         }

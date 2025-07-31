@@ -106,7 +106,7 @@ namespace DogGuns_Games
                     var keyContainer = JsonUtility.FromJson<KeyContainer>(keyJson);
                     _rsaPublicKey = keyContainer.publicKey;
                     _rsaPrivateKey = keyContainer.privateKey;
-                    LogManager.Log("로컬 파일에서 RSA 키 쌍을 로드했습니다.", LogManager.LogCategory.PlayerManager);
+                    LogManager.Log("로컬 파일에서 RSA 키 쌍을 로드했습니다.", LogManager.LogCategory.PlayerDataManager);
                 }
                 else
                 {
@@ -114,14 +114,14 @@ namespace DogGuns_Games
                     var keyContainer = new KeyContainer { publicKey = _rsaPublicKey, privateKey = _rsaPrivateKey };
                     string keyJson = JsonUtility.ToJson(keyContainer);
                     File.WriteAllText(keyPath, keyJson);
-                    LogManager.Log("새로운 RSA 키 쌍을 생성하고 로컬 파일에 저장했습니다.", LogManager.LogCategory.PlayerManager);
+                    LogManager.Log("새로운 RSA 키 쌍을 생성하고 로컬 파일에 저장했습니다.", LogManager.LogCategory.PlayerDataManager);
                 }
             }
             catch (Exception ex)
             {
-                LogManager.LogError($"RSA 키 관리 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerManager);
+                LogManager.LogError($"RSA 키 관리 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerDataManager);
                 _encryption.GenerateRsaKeys(out _rsaPublicKey, out _rsaPrivateKey);
-                LogManager.Log("RSA 키 오류로 인해 새로운 키 쌍을 생성했습니다.", LogManager.LogCategory.PlayerManager);
+                LogManager.Log("RSA 키 오류로 인해 새로운 키 쌍을 생성했습니다.", LogManager.LogCategory.PlayerDataManager);
             }
         }
 
@@ -135,7 +135,7 @@ namespace DogGuns_Games
                 var savePath = Path.Combine(Application.persistentDataPath, "playerData.encrypted");
                 if (scritpableobjPlayerData == null)
                 {
-                    LogManager.LogWarning("저장할 플레이어 데이터가 null입니다.", LogManager.LogCategory.PlayerManager);
+                    LogManager.LogWarning("저장할 플레이어 데이터가 null입니다.", LogManager.LogCategory.PlayerDataManager);
                     return;
                 }
                 var jsonData = JsonUtility.ToJson(scritpableobjPlayerData, true);
@@ -147,11 +147,11 @@ namespace DogGuns_Games
                 };
                 string packetJson = JsonUtility.ToJson(serializablePacket);
                 File.WriteAllText(savePath, packetJson);
-                LogManager.Log($"플레이어 데이터가 암호화되어 {savePath}에 저장되었습니다.", LogManager.LogCategory.PlayerManager);
+                LogManager.Log($"플레이어 데이터가 암호화되어 {savePath}에 저장되었습니다.", LogManager.LogCategory.PlayerDataManager);
             }
             catch (Exception ex)
             {
-                LogManager.LogError($"플레이어 데이터 저장 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerManager);
+                LogManager.LogError($"플레이어 데이터 저장 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerDataManager);
             }
         }
 
@@ -174,16 +174,16 @@ namespace DogGuns_Games
                     };
                     string decryptedJson = _encryption.Decrypt(encryptedPacket, _rsaPrivateKey);
                     JsonUtility.FromJsonOverwrite(decryptedJson, scritpableobjPlayerData);
-                    LogManager.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.PlayerManager);
+                    LogManager.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.PlayerDataManager);
                 }
                 else
                 {
-                    LogManager.LogWarning("저장된 플레이어 데이터 파일이 없습니다. 새 데이터를 생성합니다.", LogManager.LogCategory.PlayerManager);
+                    LogManager.LogWarning("저장된 플레이어 데이터 파일이 없습니다. 새 데이터를 생성합니다.", LogManager.LogCategory.PlayerDataManager);
                 }
             }
             catch (Exception ex)
             {
-                LogManager.LogError($"플레이어 데이터 로드 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerManager);
+                LogManager.LogError($"플레이어 데이터 로드 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerDataManager);
             }
         }
         
@@ -194,7 +194,7 @@ namespace DogGuns_Games
         public void UpdatePlayerData(PlayerData playerData)
         {
             scritpableobjPlayerData = playerData;
-            LogManager.Log("플레이어 데이터가 업데이트되었습니다.", LogManager.LogCategory.PlayerManager);
+            LogManager.Log("플레이어 데이터가 업데이트되었습니다.", LogManager.LogCategory.PlayerDataManager);
         }
         
         #endregion
@@ -217,7 +217,7 @@ namespace DogGuns_Games
         {
             if (!bro.IsSuccess())
             {
-                LogManager.LogError($"게임 정보 조회에 실패했습니다. : {bro}", LogManager.LogCategory.PlayerManager);
+                LogManager.LogError($"게임 정보 조회에 실패했습니다. : {bro}", LogManager.LogCategory.PlayerDataManager);
                 if (bro.GetStatusCode() == "404")
                 {
                     onDataNotExist?.Invoke();
@@ -227,11 +227,11 @@ namespace DogGuns_Games
             var gameDataJson = bro.FlattenRows();
             if (gameDataJson.Count <= 0)
             {
-                LogManager.LogWarning("서버에 데이터가 존재하지 않습니다.");
+                LogManager.LogWarning("서버에 데이터가 존재하지 않습니다.", LogManager.LogCategory.PlayerDataManager);
                 onDataNotExist?.Invoke();
                 return;
             }
-            LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.");
+            LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.", LogManager.LogCategory.PlayerDataManager);
             var serverDataJson = gameDataJson[0];
             
             // 서버 데이터 파싱
@@ -265,10 +265,10 @@ namespace DogGuns_Games
             if (localData.level > serverData.level || 
                 (localData.level == serverData.level && localData.experience > serverData.experience))
             {
-                LogManager.Log("로컬 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerManager);
+                LogManager.Log("로컬 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerDataManager);
                 return localData;
             }
-            LogManager.Log("서버 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerManager);
+            LogManager.Log("서버 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerDataManager);
             return serverData;
         }
 
@@ -289,11 +289,11 @@ namespace DogGuns_Games
             {
                 if (bro.IsSuccess())
                 {
-                    LogManager.Log("플레이어 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.PlayerManager);
+                    LogManager.Log("플레이어 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.PlayerDataManager);
                 }
                 else
                 {
-                    LogManager.LogError($"플레이어 데이터 업로드 실패: {bro}", LogManager.LogCategory.PlayerManager);
+                    LogManager.LogError($"플레이어 데이터 업로드 실패: {bro}", LogManager.LogCategory.PlayerDataManager);
                 }
             });
         }

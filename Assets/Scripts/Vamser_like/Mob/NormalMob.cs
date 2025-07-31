@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace DogGuns_Games.vamsir
 {
-    public class Normal_Mob : VamserMobBase
+    public class NormalMob : VamserMobBase
     {
         [Header("<color=green>플레이어 무기")] 
         private Weaphon_base player_Weaphon;
@@ -110,7 +110,7 @@ namespace DogGuns_Games.vamsir
             if (!Mob_IsHit && other.gameObject.CompareTag("Player_Attack"))
             {
                 HitCooltime(other).Forget();
-                LogManager.Log("_isHitByShoot: "+_isHitByShoot);
+                LogManager.Log("_isHitByShoot: "+_isHitByShoot,LogManager.LogCategory.NormalMob);
             }
         }
 
@@ -139,7 +139,7 @@ namespace DogGuns_Games.vamsir
 
         protected override void Mob_Idle()
         {
-            LogManager.Log("Idle");
+            LogManager.Log("Idle", LogManager.LogCategory.NormalMob);
         }
 
         protected override void Mob_Move()
@@ -149,7 +149,7 @@ namespace DogGuns_Games.vamsir
 
         protected override void Mob_Stun()
         {
-            LogManager.Log("Stun");
+            LogManager.Log("Stun", LogManager.LogCategory.NormalMob);
             ismove = false;
             DOVirtual.DelayedCall(Mob_StunTime, () => { SetMobState(MobState.Move); });
         }
@@ -161,14 +161,14 @@ namespace DogGuns_Games.vamsir
 
         protected override void Mob_Attack()
         {
-            LogManager.Log("Attack");
+            LogManager.Log("Attack", LogManager.LogCategory.NormalMob);
         }
 
         protected override void Mob_Die()
         {
             base.Mob_Die();
             transform.DOKill();
-            LogManager.Log("Die");
+            LogManager.Log("Die", LogManager.LogCategory.NormalMob);
         }
     }
 }

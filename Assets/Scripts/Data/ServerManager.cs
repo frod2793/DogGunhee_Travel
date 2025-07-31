@@ -74,11 +74,11 @@ namespace DogGuns_Games
             var bro = Backend.Initialize();
             if (bro.IsSuccess())
             {
-                LogManager.Log("뒤끝 초기화 성공");
+                LogManager.Log("뒤끝 초기화 성공", LogManager.LogCategory.ServerManager);
             }
             else
             {
-                LogManager.LogError("뒤끝 초기화 실패: " + bro);
+                LogManager.LogError("뒤끝 초기화 실패: " + bro, LogManager.LogCategory.ServerManager);
             }
         }
 
@@ -98,17 +98,17 @@ namespace DogGuns_Games
             {
                 if (bro.IsSuccess())
                 {
-                    LogManager.Log("로그인 성공");
-                    LogManager.Log(bro.ToString());
+                    LogManager.Log("로그인 성공", LogManager.LogCategory.ServerManager);
+                    LogManager.Log(bro.ToString(), LogManager.LogCategory.ServerManager);
 
                     uuid = Backend.UID;
                     nickName = Backend.UserNickName;
-                    LogManager.Log("uuid: " + uuid);
-                    LogManager.Log("nickName: " + nickName);
+                    LogManager.Log("uuid: " + uuid, LogManager.LogCategory.ServerManager);
+                    LogManager.Log("nickName: " + nickName, LogManager.LogCategory.ServerManager);
                     bro = Backend.BMember.IsAccessTokenAlive();
                     if (bro.IsSuccess())
                     {
-                        LogManager.Log("액세스 토큰이 살아있습니다");
+                        LogManager.Log("액세스 토큰이 살아있습니다", LogManager.LogCategory.ServerManager);
                         Backend.BMember.RefreshTheBackendToken();
                     }
 
@@ -117,7 +117,7 @@ namespace DogGuns_Games
                 }
                 else
                 {
-                    LogManager.LogError("로그인 실패: " + bro);
+                    LogManager.LogError("로그인 실패: " + bro, LogManager.LogCategory.ServerManager);
                 }
             });
         }
@@ -132,22 +132,22 @@ namespace DogGuns_Games
             {
                 if (bro.IsSuccess())
                 {
-                    LogManager.Log("게스트 로그인에 성공했습니다: " + bro);
+                    LogManager.Log("게스트 로그인에 성공했습니다: " + bro, LogManager.LogCategory.ServerManager);
                     uuid = Backend.UID;
                     nickName = Backend.UserNickName;
-                    LogManager.Log("uuid: " + uuid);
-                    LogManager.Log("nickName: " + nickName);
+                    LogManager.Log("uuid: " + uuid, LogManager.LogCategory.ServerManager);
+                    LogManager.Log("nickName: " + nickName, LogManager.LogCategory.ServerManager);
                     action.Invoke();
                     bro = Backend.BMember.IsAccessTokenAlive();
                     if (bro.IsSuccess())
                     {
-                        LogManager.Log("액세스 토큰이 살아있습니다");
+                        LogManager.Log("액세스 토큰이 살아있습니다", LogManager.LogCategory.ServerManager);
                         Backend.BMember.RefreshTheBackendToken();
                     }
                 }
                 else
                 {
-                    LogManager.LogError("게스트 로그인 실패: " + bro);
+                    LogManager.LogError("게스트 로그인 실패: " + bro, LogManager.LogCategory.ServerManager);
                     Backend.BMember.DeleteGuestInfo();
                 }
             });
@@ -162,8 +162,8 @@ namespace DogGuns_Games
             var bro = Backend.BMember.LoginWithTheBackendToken();
             if (bro.IsSuccess())
             {
-                LogManager.Log("자동 로그인에 성공했습니다");
-                LogManager.Log(bro.ToString());
+                LogManager.Log("자동 로그인에 성공했습니다", LogManager.LogCategory.ServerManager);
+                LogManager.Log(bro.ToString(), LogManager.LogCategory.ServerManager);
                 
                 uuid = Backend.UID;
                 nickName = Backend.UserNickName;
@@ -171,14 +171,14 @@ namespace DogGuns_Games
                 bro = Backend.BMember.IsAccessTokenAlive();
                 if (bro.IsSuccess())
                 {
-                    LogManager.Log("액세스 토큰이 살아있습니다");
+                    LogManager.Log("액세스 토큰이 살아있습니다", LogManager.LogCategory.ServerManager);
                     Backend.BMember.RefreshTheBackendToken();
                     onSuccess.Invoke();
                 }
             }
             else
             {
-                LogManager.LogError("자동 로그인에 실패했습니다");
+                LogManager.LogError("자동 로그인에 실패했습니다", LogManager.LogCategory.ServerManager);
                 ErroDebug(bro);
                 onFailure.Invoke();
             }
@@ -197,22 +197,22 @@ namespace DogGuns_Games
             {
                 if (bro.IsSuccess())
                 {
-                    LogManager.Log("회원가입 성공: " + bro);
+                    LogManager.Log("회원가입 성공: " + bro, LogManager.LogCategory.ServerManager);
                     bro = Backend.BMember.UpdateNickname(nickname);
                     if (bro.IsSuccess())
                     {
-                        LogManager.Log("닉네임 변경 성공: " + bro);
+                        LogManager.Log("닉네임 변경 성공: " + bro, LogManager.LogCategory.ServerManager);
                         action.Invoke();
                     }
                     else
                     {
-                        LogManager.LogError("닉네임 변경 실패: " + bro);
+                        LogManager.LogError("닉네임 변경 실패: " + bro, LogManager.LogCategory.ServerManager);
                         ErroDebug(bro);
                     }
                 }
                 else
                 {
-                    LogManager.LogError("회원가입 실패: " + bro);
+                    LogManager.LogError("회원가입 실패: " + bro, LogManager.LogCategory.ServerManager);
                     ErroDebug(bro);
                 }
             });
@@ -235,7 +235,7 @@ namespace DogGuns_Games
             {
                 // 데이터 수정
                 string inDate = _tableInDate[tableName];
-                LogManager.Log($"{tableName} 테이블의 데이터 수정을 요청합니다. (inDate: {inDate})");
+                LogManager.Log($"{tableName} 테이블의 데이터 수정을 요청합니다. (inDate: {inDate})", LogManager.LogCategory.ServerManager);
                 Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, bro => callback?.Invoke(bro));
             }
             else
@@ -261,7 +261,7 @@ namespace DogGuns_Games
         /// <param name="callback">완료 시 콜백</param>
         public void DownloadData(string tableName, Action<BackendReturnObject> callback)
         {
-            LogManager.Log($"{tableName} 테이블의 데이터 조회를 요청합니다.");
+            LogManager.Log($"{tableName} 테이블의 데이터 조회를 요청합니다.", LogManager.LogCategory.ServerManager);
             Backend.GameData.GetMyData(tableName, new Where(), bro =>
             {
                 if (bro.IsSuccess())
@@ -291,8 +291,8 @@ namespace DogGuns_Games
 
             for (var i = 0; i < json.Count; i++)
             {
-                LogManager.Log("제목 : " + json[i]["title"]);
-                LogManager.Log("inDate : " + json[i]["inDate"]);
+                LogManager.Log("제목 : " + json[i]["title"], LogManager.LogCategory.ServerManager);
+                LogManager.Log("inDate : " + json[i]["inDate"], LogManager.LogCategory.ServerManager);
             }
         }
 
@@ -309,8 +309,8 @@ namespace DogGuns_Games
 
                     for (var i = 0; i < json.Count; i++)
                     {
-                        LogManager.Log("제목 : " + json[i]["title"]);
-                        LogManager.Log("inDate : " + json[i]["inDate"]);
+                        LogManager.Log("제목 : " + json[i]["title"], LogManager.LogCategory.ServerManager);
+                        LogManager.Log("inDate : " + json[i]["inDate"], LogManager.LogCategory.ServerManager);
                     }
                 });
             });
@@ -339,7 +339,7 @@ namespace DogGuns_Games
             var receiveBro = Backend.UPost.ReceivePostItemAll(PostType.Admin);
             if (receiveBro.IsSuccess() == false)
             {
-                LogManager.LogError($"우편 모두 수령하기 중 에러가 발생하였습니다. : {receiveBro}");
+                LogManager.LogError($"우편 모두 수령하기 중 에러가 발생하였습니다. : {receiveBro}", LogManager.LogCategory.ServerManager);
                 return;
             }
 
@@ -360,9 +360,9 @@ namespace DogGuns_Games
         /// <param name="bro"></param>
         private void ErroDebug(BackendReturnObject bro)
         {
-            LogManager.LogError($"StatusCode: {bro.GetStatusCode()}");
-            LogManager.LogError($"ErrorCode: {bro.GetErrorCode()}");
-            LogManager.LogError($"Message: {bro.GetMessage()}");
+            LogManager.LogError($"StatusCode: {bro.GetStatusCode()}", LogManager.LogCategory.ServerManager);
+            LogManager.LogError($"ErrorCode: {bro.GetErrorCode()}", LogManager.LogCategory.ServerManager);
+            LogManager.LogError($"Message: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
         }
 
         #endregion

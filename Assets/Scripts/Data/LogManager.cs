@@ -8,7 +8,6 @@ public class LogManager : MonoBehaviour
     {
         Default,
         ServerManager,
-        PlayerManager,
         UIManager,
         SoundManager,
         SettingsManager,
@@ -22,7 +21,9 @@ public class LogManager : MonoBehaviour
         PlayerBase,
         SceneLoader,
         InventoryManager,
-        PlayerDataManager
+        PlayerDataManager,
+        VamserLikeUI,
+        mobBase
     }
     public static LogManager Instance { get; private set; }
     [SerializeField] private bool enableDebugLog = true;
@@ -49,7 +50,6 @@ public class LogManager : MonoBehaviour
     private List<LogCategorySetting> logCategorySettings = new List<LogCategorySetting> {
         new LogCategorySetting { category = LogCategory.Default, enableLog = true },
         new LogCategorySetting { category = LogCategory.ServerManager, enableLog = true },
-        new LogCategorySetting { category = LogCategory.PlayerManager, enableLog = true },
         new LogCategorySetting { category = LogCategory.UIManager, enableLog = true },
         new LogCategorySetting { category = LogCategory.SoundManager, enableLog = true },
         new LogCategorySetting { category = LogCategory.SettingsManager, enableLog = true },
@@ -63,6 +63,8 @@ public class LogManager : MonoBehaviour
         new LogCategorySetting { category = LogCategory.PlayerBase, enableLog = true },
         new LogCategorySetting { category = LogCategory.SceneLoader, enableLog = true },
         new LogCategorySetting { category = LogCategory.InventoryManager, enableLog = true },
+        new LogCategorySetting { category = LogCategory.PlayerDataManager, enableLog = true }
+        
         // 필요에 따라 추가
     };
 

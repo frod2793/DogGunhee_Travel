@@ -32,12 +32,14 @@ public class SettingsData_oBJ : ScriptableObject
             // JSON 데이터를 읽어와 ScriptableObject에 덮어쓰기
             string jsonData = File.ReadAllText(FilePath);
             JsonUtility.FromJsonOverwrite(jsonData, this); // ScriptableObject에 불러온 JSON 데이터 덮어쓰기
-            LogManager.Log("Settings loaded from: " + FilePath);
+            LogManager.Log("Settings loaded from: " + FilePath, LogManager.LogCategory.SettingsManager);
+
+
         }
         else
         {
             // 파일이 없으면 기본값으로 저장
-            LogManager.LogWarning("No settings file found. Saving default settings.");
+            LogManager.LogWarning("설정 파일이 없습니다. 기본 설정을 저장합니다.", LogManager.LogCategory.SettingsManager);
             SaveSettings(); // 기본값을 사용하여 JSON 파일로 저장
         }
     }

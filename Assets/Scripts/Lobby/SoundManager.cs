@@ -167,7 +167,7 @@ public class SoundManager : MonoBehaviour
             audioSource.clip = audioClip;
             audioSource.Play();
             //성공 로그 출력 
-            LogManager.Log($"Playing BGM: {audioClip.name} with volume: {_bgmSoundVolum}");
+            LogManager.Log($"Playing BGM: {audioClip.name} with volume: {_bgmSoundVolum}", LogManager.LogCategory.SoundManager);
         }
         else // Effect
         {
@@ -196,7 +196,7 @@ public class SoundManager : MonoBehaviour
             {
                 _audioSources[(int)Sound.BGM].volume = _bgmSoundVolum;
             }
-            LogManager.Log($"BGM volume updated to: {_bgmSoundVolum}");
+            LogManager.Log($"BGM volume updated to: {_bgmSoundVolum}", LogManager.LogCategory.SoundManager);
         }
         else if (type == Sound.SFX)
         {
@@ -205,7 +205,7 @@ public class SoundManager : MonoBehaviour
             {
                 _audioSources[(int)Sound.SFX].volume = _effectsoundVolum;
             }
-            LogManager.Log($"SFX volume updated to: {_effectsoundVolum}");
+            LogManager.Log($"SFX volume updated to: {_effectsoundVolum}", LogManager.LogCategory.SoundManager);
         }
     }
 
@@ -216,7 +216,7 @@ public class SoundManager : MonoBehaviour
             return audioClip;
         }
 
-        LogManager.LogWarning($"AudioClip not found: {key}");
+        LogManager.LogWarning($"AudioClip not found: {key}", LogManager.LogCategory.SoundManager);
         return null;
     }
 

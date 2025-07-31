@@ -96,13 +96,13 @@ namespace DogGuns_Games.Lobby
         {
             if (postBoxPanel == null)
             {
-                LogManager.LogError("우편함 패널이 설정되지 않았습니다.");
+                LogManager.LogError("우편함 패널이 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
                 return;
             }
 
             postBoxPanel.SetActive(true);
             LobbyUIManager.AddClosePopUpAction(ClosePostBoxPanel);
-            LogManager.Log("우편함 패널 열림");
+            LogManager.Log("우편함 패널 열림", LogManager.LogCategory.PostManager);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace DogGuns_Games.Lobby
         {
             if (postBoxPanel == null) return;
             postBoxPanel.SetActive(false);
-            LogManager.Log("우편함 패널 닫힘");
+            LogManager.Log("우편함 패널 닫힘", LogManager.LogCategory.PostManager);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace DogGuns_Games.Lobby
         {
             if (postBoxPanelExtension == null)
             {
-                LogManager.LogError("우편함 상세 패널이 설정되지 않았습니다.");
+                LogManager.LogError("우편함 상세 패널이 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
                 return;
             }
 
@@ -135,7 +135,7 @@ namespace DogGuns_Games.Lobby
                 rewardItemNameText.text = rewardItemName;
             _currentItemCode = itemCode;
             LobbyUIManager.AddClosePopUpAction(ClosePostBoxPanel_Extension);
-            LogManager.Log($"우편 상세 열림: {sender}로부터의 메시지, 아이템 코드: {itemCode}");
+            LogManager.Log($"우편 상세 열림: {sender}로부터의 메시지, 아이템 코드: {itemCode}", LogManager.LogCategory.PostManager);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace DogGuns_Games.Lobby
         {
             if (postBoxPanelExtension == null) return;
             postBoxPanelExtension.SetActive(false);
-            LogManager.Log("우편 상세 패널 닫힘");
+            LogManager.Log("우편 상세 패널 닫힘", LogManager.LogCategory.PostManager);
         }
 
         #endregion
@@ -164,14 +164,14 @@ namespace DogGuns_Games.Lobby
         {
             if (postboxPrefab == null || postboxContainer == null)
             {
-                LogManager.LogError("우편함 프리팹 또는 컨테이너가 설정되지 않았습니다.");
+                LogManager.LogError("우편함 프리팹 또는 컨테이너가 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
                 return;
             }
 
             PostIndex postIndex = Instantiate(postboxPrefab, postboxContainer.transform);
             if (postIndex == null)
             {
-                LogManager.LogError("우편함 프리팹 생성 실패!");
+                LogManager.LogError("우편함 프리팹 생성 실패!", LogManager.LogCategory.PostManager);
                 return;
             }
 
@@ -185,7 +185,7 @@ namespace DogGuns_Games.Lobby
             // 우편 인덱스 초기화
             postIndex.SetPostIndex(sender, message, date, rewardEvent, clickEvent);
     
-            LogManager.Log($"우편 추가됨: {sender}로부터 {date}에 받은 메시지, 보상: {rewardItemName}");
+            LogManager.Log($"우편 추가됨: {sender}로부터 {date}에 받은 메시지, 보상: {rewardItemName}", LogManager.LogCategory.PostManager);
         }
 
         /// <summary>
@@ -195,12 +195,12 @@ namespace DogGuns_Games.Lobby
         {
             if (_currentItemCode <= 0)
             {
-                LogManager.LogWarning("유효하지 않은 아이템 코드입니다.");
+                LogManager.LogWarning("유효하지 않은 아이템 코드입니다.", LogManager.LogCategory.PostManager);
                 return;
             }
 
             ConfiromReword(_currentItemCode);
-            LogManager.Log($"보상 수령: 아이템 코드 {_currentItemCode}");
+            LogManager.Log($"보상 수령: 아이템 코드 {_currentItemCode}", LogManager.LogCategory.PostManager);
         }
 
         /// <summary>
@@ -211,12 +211,12 @@ namespace DogGuns_Games.Lobby
         {
             if (InventoryDataManagerDontdestory.Instance == null)
             {
-                LogManager.LogError("인벤토리 데이터 매니저가 설정되지 않았습니다.");
+                LogManager.LogError("인벤토리 데이터 매니저가 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
                 return;
             }
 
             InventoryDataManagerDontdestory.Instance.GetItemByItemCode(itemCode);
-            LogManager.Log($"아이템 코드 {itemCode} 아이템이 인벤토리에 추가되었습니다.");
+            LogManager.Log($"아이템 코드 {itemCode} 아이템이 인벤토리에 추가되었습니다.", LogManager.LogCategory.PostManager);
         }
 
         #endregion

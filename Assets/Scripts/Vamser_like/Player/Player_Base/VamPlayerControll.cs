@@ -255,7 +255,7 @@ namespace DogGuns_Games.vamsir
         {
             _isAttack = true;
             playerCharactor.AttackAngle = attackAngle;
-            playerCharactor.PlayState = PlayerBase.playerState.Attack;
+            playerCharactor.PlayState = PlayerBase.PlayerState.Attack;
 
             await UniTask.Delay(100);
             _isAttack = false;

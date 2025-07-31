@@ -4944,7 +4944,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3.015
+  orthographic size: 3.2
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -6215,34 +6215,38 @@ MonoBehaviour:
   - category: 0
     enableLog: 1
   - category: 1
-    enableLog: 1
+    enableLog: 0
   - category: 2
-    enableLog: 1
+    enableLog: 0
   - category: 3
-    enableLog: 1
+    enableLog: 0
   - category: 4
-    enableLog: 1
+    enableLog: 0
   - category: 5
-    enableLog: 1
+    enableLog: 0
   - category: 6
-    enableLog: 1
+    enableLog: 0
   - category: 7
-    enableLog: 1
+    enableLog: 0
   - category: 8
-    enableLog: 1
+    enableLog: 0
   - category: 9
-    enableLog: 1
+    enableLog: 0
   - category: 10
-    enableLog: 1
+    enableLog: 0
   - category: 11
-    enableLog: 1
+    enableLog: 0
   - category: 12
-    enableLog: 1
+    enableLog: 0
   - category: 13
-    enableLog: 1
+    enableLog: 0
   - category: 14
     enableLog: 0
   - category: 15
+    enableLog: 0
+  - category: 16
+    enableLog: 0
+  - category: 17
     enableLog: 0
 --- !u!1 &1963566707
 GameObject:

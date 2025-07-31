@@ -62,7 +62,7 @@ namespace DogGuns_Games.Lobby
             if (itemSelectExtension != null)
                 itemSelectExtension.SetActive(false);
 
-            LogManager.Log("아이템 패널 초기화 완료");
+            LogManager.Log("아이템 패널 초기화 완료", LogManager.LogCategory.ItemManager);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace DogGuns_Games.Lobby
                 itemSprite = null
             });
 
-            LogManager.Log($"아이템 데이터 {_itemDataList.Count}개 로드 완료");
+            LogManager.Log($"아이템 데이터 {_itemDataList.Count}개 로드 완료", LogManager.LogCategory.ItemManager);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace DogGuns_Games.Lobby
         {
             if (itemSelectPrefab == null || itemSelectContainer == null)
             {
-                LogManager.LogError("아이템 선택 프리팹 또는 컨테이너가 null입니다.");
+                LogManager.LogError("아이템 선택 프리팹 또는 컨테이너가 null입니다.", LogManager.LogCategory.ItemManager);
                 return;
             }
 
@@ -154,11 +154,11 @@ namespace DogGuns_Games.Lobby
                     int index = itemData.itemIndex; // 클로저를 위한 변수
                     itemIndex.openCharacterSelectButton.onClick.RemoveAllListeners(); // 기존 리스너 제거
                     itemIndex.openCharacterSelectButton.onClick.AddListener(() => SelectItem(index));
-                    LogManager.Log($"아이템 {itemData.itemName}에 클릭 이벤트 등록 완료");
+                    LogManager.Log($"아이템 {itemData.itemName}에 클릭 이벤트 등록 완료", LogManager.LogCategory.ItemManager);
                 }
                 else
                 {
-                    LogManager.LogError($"아이템 {itemData.itemName}의 버튼이 null입니다");
+                    LogManager.LogError($"아이템 {itemData.itemName}의 버튼이 null입니다", LogManager.LogCategory.ItemManager);
                 }
 
                 _itemIndexList.Add(itemIndex);
@@ -179,7 +179,7 @@ namespace DogGuns_Games.Lobby
         {
             if (itemIndex < 0 || itemIndex >= _itemDataList.Count)
             {
-                LogManager.LogError($"유효하지 않은 아이템 인덱스: {itemIndex}");
+                LogManager.LogError($"유효하지 않은 아이템 인덱스: {itemIndex}", LogManager.LogCategory.ItemManager);
                 return;
             }
 
@@ -189,7 +189,7 @@ namespace DogGuns_Games.Lobby
             UpdateItemInfoPanel(itemIndex);
             OpenItemExtensionPanel();
 
-            LogManager.Log($"아이템 {itemIndex}번 선택됨: {_itemDataList[itemIndex].itemName}");
+            LogManager.Log($"아이템 {itemIndex}번 선택됨: {_itemDataList[itemIndex].itemName}", LogManager.LogCategory.ItemManager);
         }
 
         /// <summary>
@@ -210,11 +210,11 @@ namespace DogGuns_Games.Lobby
                 CloseItemExtensionPanel();
                 CloseItemSelectPanel();
 
-                LogManager.Log($"아이템 선택 완료: {_itemDataList[_currentSelectedItemIndex].itemName}");
+                LogManager.Log($"아이템 선택 완료: {_itemDataList[_currentSelectedItemIndex].itemName}", LogManager.LogCategory.ItemManager);
             }
             else
             {
-                LogManager.LogWarning("선택된 아이템이 없습니다.");
+                LogManager.LogWarning("선택된 아이템이 없습니다.", LogManager.LogCategory.ItemManager);
             }
         }
 
@@ -225,7 +225,7 @@ namespace DogGuns_Games.Lobby
         {
             if (itemIndex < 0 || itemIndex >= _itemDataList.Count)
             {
-                LogManager.LogError($"유효하지 않은 아이템 인덱스: {itemIndex}");
+                LogManager.LogError($"유효하지 않은 아이템 인덱스: {itemIndex}", LogManager.LogCategory.ItemManager);
                 return;
             }
 
@@ -268,7 +268,7 @@ namespace DogGuns_Games.Lobby
             // 팝업 액션 등록
             LobbyUIManager.AddClosePopUpAction(CloseItemSelectPanel);
 
-            LogManager.Log("아이템 선택 패널 열림");
+            LogManager.Log("아이템 선택 패널 열림", LogManager.LogCategory.ItemManager);
         }
 
         /// <summary>
@@ -283,11 +283,11 @@ namespace DogGuns_Games.Lobby
                 // 팝업 액션 등록
                 LobbyUIManager.AddClosePopUpAction(CloseItemExtensionPanel);
 
-                LogManager.Log("아이템 확장 패널 열림");
+                LogManager.Log("아이템 확장 패널 열림", LogManager.LogCategory.ItemManager);
             }
             else
             {
-                LogManager.LogError("아이템 확장 패널이 null입니다");
+                LogManager.LogError("아이템 확장 패널이 null입니다", LogManager.LogCategory.ItemManager);
             }
         }
 
@@ -297,7 +297,7 @@ namespace DogGuns_Games.Lobby
         public void CloseItemSelectPanel()
         {
             SetGameObjectActive(itemSelectPanel, false);
-            LogManager.Log("아이템 선택 패널 닫힘");
+            LogManager.Log("아이템 선택 패널 닫힘", LogManager.LogCategory.ItemManager);
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace DogGuns_Games.Lobby
         private void CloseItemExtensionPanel()
         {
             SetGameObjectActive(itemSelectExtension, false);
-            LogManager.Log("아이템 확장 패널 닫힘");
+            LogManager.Log("아이템 확장 패널 닫힘", LogManager.LogCategory.ItemManager);
         }
 
         #endregion
@@ -321,7 +321,7 @@ namespace DogGuns_Games.Lobby
             if (obj != null)
                 obj.SetActive(isActive);
             else
-                LogManager.LogWarning("활성화하려는 게임 오브젝트가 null입니다.");
+                LogManager.LogWarning("활성화하려는 게임 오브젝트가 null입니다.", LogManager.LogCategory.ItemManager);
         }
 
         #endregion

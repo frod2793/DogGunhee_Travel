@@ -43,8 +43,8 @@ namespace DogGuns_Games.vamsir
         public float MaxExp { get; set; } = 100f;
 
         // 레벨업 이벤트
-        public static event System.Action<float> OnLevelUp;
-        public static event System.Action<float, float> OnExpChanged; // currentExp, maxExp
+        public static event Action<float> OnLevelUp;
+        public static event Action<float, float> OnExpChanged; // currentExp, maxExp
 
         #endregion
 
@@ -53,7 +53,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 플레이어의 상태를 정의하는 열거형
         /// </summary>
-        public enum playerState
+        public enum PlayerState
         {
             Idle,
             Move,
@@ -61,14 +61,14 @@ namespace DogGuns_Games.vamsir
             Attack
         }
 
-        private playerState _playState;
+        private PlayerState _playState;
         public bool ishit = false;
         public Weaphon_base WeaphonBase { get; set; }
 
         /// <summary>
         /// 플레이어 상태 프로퍼티 - 상태 변경시 SetPlayerState 메서드 호출
         /// </summary>
-        public playerState PlayState
+        public PlayerState PlayState
         {
             get => _playState;
             set
@@ -81,20 +81,20 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 플레이어의 상태에 따른 동작 분기 처리
         /// </summary>
-        private void SetPlayerState(playerState state)
+        private void SetPlayerState(PlayerState state)
         {
             switch (state)
             {
-                case playerState.Idle:
+                case PlayerState.Idle:
                     Player_Idle();
                     break;
-                case playerState.Move:
+                case PlayerState.Move:
                     PlayerMovement();
                     break;
-                case playerState.Hit:
+                case PlayerState.Hit:
                     Player_Hit();
                     break;
-                case playerState.Attack:
+                case PlayerState.Attack:
                     Player_attack(AttackAngle);
                     break;
             }
@@ -122,7 +122,7 @@ namespace DogGuns_Games.vamsir
         private void OnGameOver()
         {
             // 플레이어 이동 정지: 상태를 Idle로 변경하거나, 이동 관련 변수/컨트롤러 비활성화
-            PlayState = playerState.Idle;
+            PlayState = PlayerState.Idle;
             // 필요시 이동 관련 추가 변수/컨트롤러도 비활성화
         }
 
@@ -186,7 +186,7 @@ namespace DogGuns_Games.vamsir
             DelayAction(1f, () => ishit = false, cts.Token).Forget();
     
             // 피격 상태로 변경
-            PlayState = playerState.Hit;
+            PlayState = PlayerState.Hit;
     
             // 몹으로부터 피해 계산
             VamserMobBase mob = mobObject.GetComponent<VamserMobBase>();
@@ -214,7 +214,8 @@ namespace DogGuns_Games.vamsir
             Health -= damageAmount;
             
             // 피해량 디버그 로그
-         //   Debug.Log($"플레이어가 {damageAmount:F1} 데미지를 받음 (남은 체력: {Health:F1})");
+            LogManager.Log($"플레이어가 <color=#FF0000>{damageAmount:F1}</color> 데미지를 받음 (남은 체력: {Health:F1})", LogManager.LogCategory.PlayerBase);
+           
     
             // 피격 효과 재생
             PlayHitEffect();
@@ -230,7 +231,7 @@ namespace DogGuns_Games.vamsir
             {
                 // 경험치 획득 처리 추가
                 float expAmount = 1 * ExpGain; // 기본 경험치에 획득 보너스 적용
-                LogManager.Log($"경험치 {expAmount} 획득");
+                LogManager.Log($"경험치 {expAmount} 획득", LogManager.LogCategory.PlayerBase);
                 // 경험치 증가 및 UI 업데이트
                 AddExperience(expAmount);
                 // 오브젝트 풀로 반환
@@ -251,7 +252,7 @@ namespace DogGuns_Games.vamsir
                 int coinsToAdd = Mathf.RoundToInt(1 * goldBonus);
                 // 실제 코인 증가
                 PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.ingameCoin += coinsToAdd;
-                LogManager.Log($"코인 {coinsToAdd}개 획득");
+                LogManager.Log($"코인 {coinsToAdd}개 획득", LogManager.LogCategory.PlayerBase);
                 // 오브젝트 풀로 반환
                 coinObj.objectPoolSpawner.CoinObjectPool.Release(coinObj);
             }
@@ -275,7 +276,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void Player_Die()
         {
-            LogManager.Log("플레이어 사망 - 게임 오버 처리 시작");
+            LogManager.Log("플레이어 사망 - 게임 오버 처리 시작", LogManager.LogCategory.PlayerBase);
             // 게임 오버 상태로 변경
             if (PlayStateManager.instance != null)
             {
@@ -304,7 +305,7 @@ namespace DogGuns_Games.vamsir
         {
             // 애니메이션 효과, 사운드 효과 등 구현
             // AudioManager.Instance.PlaySound("PlayerHit");
-            LogManager.Log("피격 효과 재생");
+            LogManager.Log("피격 효과 재생", LogManager.LogCategory.PlayerBase);
         }
 
         /// <summary>
@@ -359,7 +360,7 @@ namespace DogGuns_Games.vamsir
                 OnLevelUp?.Invoke(Level);
                 // 레벨업 효과 처리
                 HandleLevelUp();
-                LogManager.Log($"레벨업! 현재 레벨: {Level}, 필요 경험치: {MaxExp}");
+                LogManager.Log($"레벨업! 현재 레벨: {Level}, 필요 경험치: {MaxExp}", LogManager.LogCategory.PlayerBase);
                 // 경험치 변경 이벤트를 레벨업마다 호출하여 UI가 즉시 반영되도록 함
                 OnExpChanged?.Invoke(CurrentExp, MaxExp);
             }
@@ -427,5 +428,112 @@ namespace DogGuns_Games.vamsir
         }
 
         #endregion
+
+        #region 플레이어 자동 이동 및 공격 로직
+
+        public bool IsAutoMoveAttack = false;
+        private CancellationTokenSource autoMoveAttackCTS;
+        private Transform currentTarget;
+        private float autoAttackTimer = 0f;
+        private SpriteRenderer mapRange;
+
+        /// <summary>
+        /// 자동 이동/공격 활성화
+        /// </summary>
+        public void EnableAutoMoveAttack()
+        {
+            if (IsAutoMoveAttack) return;
+            IsAutoMoveAttack = true;
+            autoMoveAttackCTS = new CancellationTokenSource();
+            AutoMoveAttackLoop(autoMoveAttackCTS.Token).Forget();
+        }
+
+        /// <summary>
+        /// 자동 이동/공격 비활성화
+        /// </summary>
+        public void DisableAutoMoveAttack()
+        {
+            IsAutoMoveAttack = false;
+            autoMoveAttackCTS?.Cancel();
+            currentTarget = null;
+        }
+
+        /// <summary>
+        /// 맵 범위 설정
+        /// </summary>
+        /// <param name="map">설정할 맵 범위 스프라이트 렌더러</param>
+        public void SetMapRange(SpriteRenderer map)
+        {
+            mapRange = map;
+        }
+
+        private async UniTaskVoid AutoMoveAttackLoop(CancellationToken token)
+        {
+            while (IsAutoMoveAttack && !token.IsCancellationRequested)
+            {
+                currentTarget = FindClosestEnemy();
+                if (currentTarget != null && mapRange != null && transform.parent != null)
+                {
+                    Vector3 dir = (currentTarget.position - transform.parent.position).normalized;
+                    float distance = Vector3.Distance(transform.parent.position, currentTarget.position);
+                    bool isRanged = WeaphonBase != null && WeaphonBase.isShooting;
+                    float stopDistance = isRanged ? 2.5f : 0.5f;
+
+                    // 이동: 무기 타입에 따라 멈추는 거리 다름, 항상 MoveSpeed 적용
+                    if (distance > stopDistance)
+                    {
+                        float deltaSpeed = MoveSpeed * Time.deltaTime;
+                        Vector3 rawTargetPosition = transform.parent.position + dir * deltaSpeed;
+                        Bounds mapBounds = mapRange.bounds;
+                        Vector3 clampedPosition = new Vector3(
+                            Mathf.Clamp(rawTargetPosition.x, mapBounds.min.x, mapBounds.max.x),
+                            Mathf.Clamp(rawTargetPosition.y, mapBounds.min.y, mapBounds.max.y),
+                            rawTargetPosition.z
+                        );
+                        transform.parent.position = clampedPosition;
+                    }
+                    // 공격: 멈추는 거리 이내일 때만 공격
+                    if (distance <= stopDistance)
+                    {
+                        autoAttackTimer += Time.deltaTime;
+                        if (autoAttackTimer >= CoolTime)
+                        {
+                            autoAttackTimer = 0f;
+                            AttackAngle = dir;
+                            PlayState = PlayerState.Attack;
+                        }
+                    }
+                    // 타겟이 사라졌거나 처치되었는지 체크
+                    if (!currentTarget.gameObject.activeInHierarchy)
+                    {
+                        currentTarget = null;
+                    }
+                }
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+        }
+
+        /// <summary>
+        /// 맵 내에서 가장 가까운 적을 탐색
+        /// </summary>
+        private Transform FindClosestEnemy()
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Mob");
+            Transform closest = null;
+            float minDist = float.MaxValue;
+            foreach (var enemy in enemies)
+            {
+                float dist = Vector3.Distance(transform.position, enemy.transform.position);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closest = enemy.transform;
+                }
+            }
+            return closest;
+        }
+
+        #endregion
+        
     }
 }
