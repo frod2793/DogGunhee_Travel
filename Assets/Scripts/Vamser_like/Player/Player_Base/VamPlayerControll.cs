@@ -47,21 +47,21 @@ namespace DogGuns_Games.vamsir
         bool _isAttack = false;
 
         [Header("<color=green>자동 공격 설정")] 
+        [Tooltip("자동 공격 시 탐지할 적의 레이어")]
+        [SerializeField] private LayerMask enemyLayer;
+        [Tooltip("자동 공격 시 적을 탐지하는 최대 반경")]
+        public float detectionRadius = 10f;
         [Tooltip("자동 공격 시 플레이어가 멈추는 거리(공격 사거리)")]
-        public float autoAttackStopDistance = 1.5f;
+        public float attackRadius = 1.5f;
         [Tooltip("자동 공격 시 이동 속도 배율")]
         public float autoAttackMoveSpeedMultiplier = 1.0f;
 
         private bool _isJoystickActive = false;
-        private bool _autoAttackEnabledByToggle = true;
 
         private float joystickInputThreshold = 0.1f;
         private float joystickIdleTime = 0.2f; // 입력이 없을 때 자동공격 재활성화까지 대기 시간
         private float joystickIdleTimer = 0f;
         private bool _autoAttackActive = false;
-
-        private bool _isAutoMoveAttackEnabled = false;
-        
         
         #endregion
 
@@ -89,31 +89,6 @@ namespace DogGuns_Games.vamsir
             _autoAttackActive = false;
         }
 
-        private void OnJoystickDown()
-        {
-            _isJoystickActive = true;
-            if (_autoAttackEnabledByToggle)
-                DisableAutoMoveAttack();
-        }
-
-        private void OnJoystickUp()
-        {
-            _isJoystickActive = false;
-            if (_autoAttackEnabledByToggle)
-                EnableAutoMoveAttack();
-        }
-
-        public void SetAutoAttackToggle(bool isOn)
-        {
-            _autoAttackEnabledByToggle = isOn;
-            if (!isOn && _autoAttackActive)
-            {
-                DisableAutoMoveAttack();
-                _autoAttackActive = false;
-            }
-            joystickIdleTimer = 0f;
-        }
-
         private void FixedUpdate()
         {
             if (_isGameStart)
@@ -122,39 +97,32 @@ namespace DogGuns_Games.vamsir
                 FallowCamera();
                 UpdatePlayerHpSlider();
 
-                // VariableJoystick 수정 없이 입력값 감지
-                float inputMagnitude = Mathf.Abs(variableJoystick.Horizontal) + Mathf.Abs(variableJoystick.Vertical);
-                if (_autoAttackEnabledByToggle)
+                // 자동 공격 로직 처리
+                HandleAutoAttackByInput();
+            }
+        }
+
+        private void HandleAutoAttackByInput()
+        {
+            if (AutoAttackEnabledByToggle)
+            {
+                float inputMagnitude = new Vector2(variableJoystick.Horizontal, variableJoystick.Vertical).magnitude;
+                if (inputMagnitude > joystickInputThreshold)
                 {
-                    if (inputMagnitude > joystickInputThreshold)
-                    {
-                        // 조이스틱 조작 중: 자동공격 비활성화
-                        joystickIdleTimer = 0f;
-                        if (_autoAttackActive)
-                        {
-                            DisableAutoMoveAttack();
-                            _autoAttackActive = false;
-                        }
-                    }
-                    else
-                    {
-                        
-                        // 조이스틱 입력 없음: 일정 시간 후 자동공격 재활성화
-                        joystickIdleTimer += Time.fixedDeltaTime;
-                        if (_autoAttackActive && joystickIdleTimer > joystickIdleTime)
-                        {
-                            EnableAutoMoveAttack();
-                        }
-                    }
+                    // 조이스틱 조작 중: 자동공격 비활성화
+                    joystickIdleTimer = 0f;
+                    if (_autoAttackActive) DisableAutoMoveAttack();
                 }
                 else
                 {
-                    if (_autoAttackActive)
-                    {
-                        DisableAutoMoveAttack();
-                        _autoAttackActive = false;
-                    }
+                    // 조이스틱 입력 없음: 일정 시간 후 자동공격 재활성화
+                    joystickIdleTimer += Time.fixedDeltaTime;
+                    if (!_autoAttackActive && joystickIdleTimer >= joystickIdleTime) EnableAutoMoveAttack();
                 }
+            }
+            else
+            {
+                if (_autoAttackActive) DisableAutoMoveAttack();
             }
         }
 
@@ -386,22 +354,29 @@ namespace DogGuns_Games.vamsir
 
         #region 자동 이동 및 공격 설정
 
-        
-        
+        private bool _autoAttackEnabledByToggle = true;
         public bool AutoAttackEnabledByToggle
         {
             get => _autoAttackEnabledByToggle;
             set
             {
                 _autoAttackEnabledByToggle = value;
-                if (value)
+                if (_autoAttackEnabledByToggle)
                 {
-                    EnableAutoMoveAttack();
+                    // 토글을 켰을 때, 조이스틱을 사용하고 있지 않다면 바로 자동공격을 활성화합니다.
+                    float inputMagnitude = new Vector2(variableJoystick.Horizontal, variableJoystick.Vertical).magnitude;
+                    if (inputMagnitude <= joystickInputThreshold)
+                    {
+                        EnableAutoMoveAttack();
+                    }
                 }
                 else
                 {
                     DisableAutoMoveAttack();
                 }
+
+                // 타이머 리셋
+                joystickIdleTimer = 0f;
             }
         }
         
@@ -409,6 +384,9 @@ namespace DogGuns_Games.vamsir
         private CancellationTokenSource _autoMoveAttackCTS;
         public void EnableAutoMoveAttack()
         {
+            if (_autoAttackActive) return;
+            _autoAttackActive = true;
+            
             if (_autoMoveAttackCTS != null)
             {
                 _autoMoveAttackCTS.Cancel();
@@ -416,23 +394,28 @@ namespace DogGuns_Games.vamsir
             }
             _autoMoveAttackCTS = new CancellationTokenSource();
             AutoMoveAttackLoop(_autoMoveAttackCTS.Token).Forget();
+            LogManager.Log("자동 공격 활성화됨.", LogManager.LogCategory.PlayerBase);
         }
 
         public void DisableAutoMoveAttack()
         {
+            if (!_autoAttackActive) return;
+            _autoAttackActive = false;
+            
             if (_autoMoveAttackCTS != null)
             {
                 _autoMoveAttackCTS.Cancel();
                 _autoMoveAttackCTS.Dispose();
                 _autoMoveAttackCTS = null;
             }
+            LogManager.Log("자동 공격 비활성화됨.", LogManager.LogCategory.PlayerBase);
         }
 
         private async UniTaskVoid AutoMoveAttackLoop(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                if (!_isGameStart || playerCharactor == null)
+                if (!_isGameStart || playerCharactor == null || !_autoAttackActive)
                 {
                     await UniTask.Yield();
                     continue;
@@ -446,7 +429,7 @@ namespace DogGuns_Games.vamsir
                     Vector3 playerPos = player.transform.position;
                     Vector3 dir = (enemyPos - playerPos).normalized;
                     float distance = Vector3.Distance(playerPos, enemyPos);
-                    float stopDistance = autoAttackStopDistance; // 인스펙터에서 설정
+                    float stopDistance = attackRadius; // 인스펙터에서 설정
 
                     // 사거리 밖이면 적 방향으로 이동
                     if (distance > stopDistance)
@@ -485,17 +468,27 @@ namespace DogGuns_Games.vamsir
 
         private GameObject FindClosestEnemy()
         {
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Mob");
+            // 탐지 반경 내의 모든 적 콜라이더를 찾습니다. (성능 최적화)
+            Collider2D[] enemiesInRange = Physics2D.OverlapCircleAll(player.transform.position, detectionRadius, enemyLayer);
+            
+            // --- 진단용 로그 추가 ---
+            if (_autoAttackActive && enemiesInRange.Length == 0)
+            {
+                // 이 경고가 계속 표시된다면, LayerMask 또는 적 오브젝트의 Layer/Collider2D 설정에 문제가 있는 것입니다.
+                LogManager.LogWarning("자동 공격이 활성화되었으나 탐지된 적이 없습니다. Layer 또는 Collider 설정을 확인하세요.", LogManager.LogCategory.PlayerBase, this);
+            }
+            
             GameObject closest = null;
             float minDist = float.MaxValue;
             Vector3 playerPos = player.transform.position;
             Bounds mapBounds = mapRange != null ? mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 9999f);
-            foreach (var enemy in enemies)
+            
+            // LayerMask로 1차 필터링이 되었으므로, 태그 검사는 생략 가능합니다.
+            foreach (var enemyCollider in enemiesInRange)
             {
-                Vector3 enemyPos = enemy.transform.position;
-                // 맵 안에 있는 적만 탐색
-                if (enemyPos.x < mapBounds.min.x || enemyPos.x > mapBounds.max.x ||
-                    enemyPos.y < mapBounds.min.y || enemyPos.y > mapBounds.max.y)
+                Vector3 enemyPos = enemyCollider.transform.position;
+                // 맵 안에 있는 적만 탐색 (todo에 따라)
+                if (!mapBounds.Contains(enemyPos))
                 {
                     continue;
                 }
@@ -503,11 +496,26 @@ namespace DogGuns_Games.vamsir
                 if (dist < minDist)
                 {
                     minDist = dist;
-                    closest = enemy;
+                    closest = enemyCollider.gameObject;
                 }
             }
             return closest;
         }
+        
+        #if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            if (player == null) return;
+
+            // 탐지 반경 (노란색)
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(player.transform.position, detectionRadius);
+
+            // 공격 반경 (빨간색)
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(player.transform.position, attackRadius);
+        }
+        #endif
         
         #endregion
     }
