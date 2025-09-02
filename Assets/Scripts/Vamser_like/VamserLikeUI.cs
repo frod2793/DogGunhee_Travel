@@ -80,11 +80,15 @@ namespace DogGuns_Games.vamsir
             // 자동 공격 토글 이벤트 연결
             autoAttackToggle.onValueChanged.AddListener(isOn =>
             {
-                // VamPlayerControll의 AutoAttackEnabledByToggle 프로퍼티에 값 전달
                 var playerController = FindFirstObjectByType<VamPlayerControll>();
                 if (playerController != null)
                 {
+                    LogManager.Log($"VamPlayerControll을 찾았습니다. 자동 공격 상태를 {isOn}(으)로 변경합니다.", LogManager.LogCategory.VamserLikeUI);
                     playerController.AutoAttackEnabledByToggle = isOn;
+                }
+                else
+                {
+                    LogManager.LogError("VamPlayerControll을 찾을 수 없습니다! 플레이어 오브젝트가 활성화되어 있고 VamPlayerControll 컴포넌트가 추가되었는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
                 }
             });
         }
@@ -316,7 +320,7 @@ namespace DogGuns_Games.vamsir
         #region 플레이어 경험치 및 레벨 이벤트
 
         /// <summary>
-        /// 플레이어 경험치가 변경되었을 때 호출되는 메서��입니다.
+        /// 플레이어 경험치가 변경되었을 때 호출되는 메서입니다.
         /// </summary>
         private void OnPlayerExpChanged(float currentExp, float maxExp)
         {

@@ -9,15 +9,13 @@ namespace DogGuns_Games.vamsir
     public class VamPlayerControll : MonoBehaviour
     {
         
-        //todo 아직 맵안에 들어오지 않은 적은 자동공격에 탐색되지않게 
+        #region 필드 및 변수 
         
-        #region 필드 및 변수
-
         [Header("<color=green>Player Object")] [SerializeField]
-        private GameObject player;
-
+        private GameObject player; // 플레이어 오브젝트 (움직일 대상 )
+        
         [Header("<color=green>Player charactor Object")] [SerializeField]
-        private PlayerBase playerCharactor;
+        private PlayerBase playerCharactor; // 플레이어 캐릭터
 
         [Header("<color=green>Player HP_IU")] [SerializeField]
         private Slider playerHpSliderPrefab;
@@ -50,18 +48,15 @@ namespace DogGuns_Games.vamsir
         [Tooltip("자동 공격 시 탐지할 적의 레이어")]
         [SerializeField] private LayerMask enemyLayer;
         [Tooltip("자동 공격 시 적을 탐지하는 최대 반경")]
-        public float detectionRadius = 10f;
+        public float detectionRadius = 30f; 
         [Tooltip("자동 공격 시 플레이어가 멈추는 거리(공격 사거리)")]
         public float attackRadius = 1.5f;
         [Tooltip("자동 공격 시 이동 속도 배율")]
         public float autoAttackMoveSpeedMultiplier = 1.0f;
 
-        private bool _isJoystickActive = false;
-
         private float joystickInputThreshold = 0.1f;
-        private float joystickIdleTime = 0.2f; // 입력이 없을 때 자동공격 재활성화까지 대기 시간
-        private float joystickIdleTimer = 0f;
         private bool _autoAttackActive = false;
+        private GameObject _currentTarget;
         
         #endregion
 
@@ -93,60 +88,27 @@ namespace DogGuns_Games.vamsir
         {
             if (_isGameStart)
             {
-                PlayerMovement();
+                HandleMovement();
                 FallowCamera();
                 UpdatePlayerHpSlider();
-
-                // 자동 공격 로직 처리
-                HandleAutoAttackByInput();
-            }
-        }
-
-        private void HandleAutoAttackByInput()
-        {
-            if (AutoAttackEnabledByToggle)
-            {
-                float inputMagnitude = new Vector2(variableJoystick.Horizontal, variableJoystick.Vertical).magnitude;
-                if (inputMagnitude > joystickInputThreshold)
-                {
-                    // 조이스틱 조작 중: 자동공격 비활성화
-                    joystickIdleTimer = 0f;
-                    if (_autoAttackActive) DisableAutoMoveAttack();
-                }
-                else
-                {
-                    // 조이스틱 입력 없음: 일정 시간 후 자동공격 재활성화
-                    joystickIdleTimer += Time.fixedDeltaTime;
-                    if (!_autoAttackActive && joystickIdleTimer >= joystickIdleTime) EnableAutoMoveAttack();
-                }
-            }
-            else
-            {
-                if (_autoAttackActive) DisableAutoMoveAttack();
             }
         }
 
         #endregion
-
+        
         #region 게임 상태 관리
 
         private void PlayerInit()
         {
-            // 캐릭터 스폰과의 레이스 컨디션을 피하기 위해 초기화 로직을 AssignCharacter로 이동했습니다.
-            // OnGameStart 이벤트에서는 게임 시작 플래그만 설정합니다.
             _isGameStart = true;
         }
 
-        /// <summary>
-        /// VamserLikeGameManager가 플레이어 스폰 후 호출하여 캐릭터를 설정합니다.
-        /// </summary>
-        /// <param name="character">스폰된 플레이어 캐릭터</param>
         public void AssignCharacter(PlayerBase character)
         {
             if (playerCharactor == null && character != null)
             {
                 playerCharactor = character;
-                playerCharactor.transform.SetParent(player.gameObject.transform);
+                playerCharactor.transform.SetParent(player.transform, false);
                 _playerAnimator = playerCharactor.GetComponent<Animator>();
                 cameraTransform = Camera.main;
                 Set_playerHpSlider();
@@ -178,96 +140,76 @@ namespace DogGuns_Games.vamsir
 
         private void UpdatePlayerHpSlider()
         {
-            if (playerCharactor == null)
-            {
-                PlayerInit();
-                return;
-            }
+            if (player == null || playerCharactor == null) return;
 
-            // 현재 체력 값이 이전 값과 다를 때만 슬라이더 업데이트
             if (_playerHpSlider != null && Mathf.Abs(_playerHpSliderValue - playerCharactor.Health) > 0.001f)
             {
                 _playerHpSliderValue = playerCharactor.Health;
                 _playerHpSlider.value = _playerHpSliderValue;
-                
-                // 게임 오버 처리는 PlayerBase의 Player_Hit에서 담당하므로 여기서는 제거
-                // PlayerBase에서 Health <= 0일 때 자동으로 게임 오버 처리됨
             }
         }
 
         #endregion
 
         #region 플레이어 제어
-
-        /// <summary>
-        /// 플레이어 이동을 처리하는 메서드
-        /// </summary>
-        private void PlayerMovement()
+        
+        private void HandleMovement()
         {
-            // 플레이어 객체 유효성 검사
-            if (player == null || playerCharactor == null)
+            Vector3 joystickDirection = GetJoystickInputDirection();
+            bool isJoystickActive = joystickDirection.magnitude > joystickInputThreshold;
+
+            if (isJoystickActive)
             {
-                // PlayerInit(); // 재귀 호출 및 로직 문제로 제거
-                return;
+                if (_autoAttackActive)
+                {
+                    DisableAutoMoveAttack();
+                }
+                ManualPlayerMovement(joystickDirection);
+                TryAttack(joystickDirection);
             }
+            else
+            {
+                if (AutoAttackEnabledByToggle && !_autoAttackActive)
+                {
+                    EnableAutoMoveAttack();
+                }
+                
+                if (!isJoystickActive && !_autoAttackActive)
+                {
+                    UpdateAnimationState(0f);
+                }
+            }
+        }
 
-            // 이동 입력 및 위치 계산
-            Vector3 moveDirection = GetJoystickInputDirection();
-            Vector3 targetPosition = CalculateTargetPosition(moveDirection);
+        private void ManualPlayerMovement(Vector3 moveDirection)
+        {
+            if (player == null || playerCharactor == null) return;
 
-            // 실제 이동 처리
-            MovePlayer(targetPosition);
+            float deltaSpeed = playerCharactor.MoveSpeed * Time.deltaTime;
+            Vector3 targetPosition = player.transform.position + moveDirection * deltaSpeed;
 
-            // 애니메이션 및 회전 처리
+            player.transform.position = ClampPositionToMap(targetPosition);
             UpdateAnimationState(moveDirection.magnitude);
-
-            // 공격 처리
-            TryAttack(moveDirection);
-
-            // 캐릭터 회전 처리
             UpdateCharacterRotation(moveDirection);
         }
 
-        /// <summary>
-        /// 조이스틱 입력을 방향 벡터로 변환
-        /// </summary>
         private Vector3 GetJoystickInputDirection()
         {
             return (Vector3.right * variableJoystick.Horizontal + Vector3.up * variableJoystick.Vertical);
         }
 
-        /// <summary>
-        /// 맵 범위를 고려한 목표 위치 계산
-        /// </summary>
-        private Vector3 CalculateTargetPosition(Vector3 moveDirection)
+        private Vector3 ClampPositionToMap(Vector3 position)
         {
-            float deltaSpeed = playerCharactor.MoveSpeed * Time.deltaTime;
-            Vector3 rawTargetPosition = player.transform.position + moveDirection * deltaSpeed;
+            if (mapRange == null) return position;
 
-            // 맵 경계 확인
             Bounds mapBounds = mapRange.bounds;
-
-            // 맵 범위 내로 제한
-            Vector3 clampedPosition = new Vector3(
-                Mathf.Clamp(rawTargetPosition.x, mapBounds.min.x, mapBounds.max.x),
-                Mathf.Clamp(rawTargetPosition.y, mapBounds.min.y, mapBounds.max.y),
-                rawTargetPosition.z
+            return new Vector3(
+                Mathf.Clamp(position.x, mapBounds.min.x, mapBounds.max.x),
+                Mathf.Clamp(position.y, mapBounds.min.y, mapBounds.max.y),
+                position.z
             );
-
-            return clampedPosition;
         }
 
-        /// <summary>
-        /// 플레이어를 목표 위치로 이동
-        /// </summary>
-        private void MovePlayer(Vector3 targetPosition)
-        {
-            player.transform.DOMove(targetPosition, moveDuration);
-        }
-
-        /// <summary>
-        /// 플레이어 애니메이션 상태 업데이트
-        /// </summary>
         private void UpdateAnimationState(float moveMagnitude)
         {
             if (_playerAnimator != null)
@@ -276,9 +218,6 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// 이동 중 공격 시도
-        /// </summary>
         private void TryAttack(Vector3 moveDirection)
         {
             if (moveDirection.magnitude > 0.1f && !_isAttack)
@@ -287,9 +226,6 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// 이동 방향에 따른 캐릭터 회전 처리
-        /// </summary>
         private void UpdateCharacterRotation(Vector3 moveDirection)
         {
             if (moveDirection != Vector3.zero && playerCharactor != null)
@@ -300,16 +236,11 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// 플레이어 공격 호출 
-        /// </summary>
-        /// <param name="attackAngle">공격 방향</param>
         private async UniTask PlayerAttack(Vector3 attackAngle)
         {
             _isAttack = true;
             playerCharactor.AttackAngle = attackAngle;
             playerCharactor.PlayState = PlayerBase.PlayerState.Attack;
-
             await UniTask.Delay(100);
             _isAttack = false;
         }
@@ -318,69 +249,42 @@ namespace DogGuns_Games.vamsir
 
         #region 카메라 제어
 
-        /// <summary>
-        /// 카메라 추적 
-        /// </summary>
         private void FallowCamera()
         {
-            // playerCharactor, cameraTransform, mapRange가 모두 할당되었는지 확인
-            if (playerCharactor == null || cameraTransform == null || mapRange == null)
-            {
-                // 필수 컴포넌트가 없으면 카메라 추적을 시도하지 않음
-                return;
-            }
+            if (player == null || cameraTransform == null || mapRange == null) return;
             
-            // 카메라가 맵 경계를 벗어나지 않도록 설정
-            Vector3 cameraPosition = new Vector3(playerCharactor.transform.position.x,
-                playerCharactor.transform.position.y, cameraTransform.transform.position.z);
-
-            // 맵 범위의 경계를 가져옴
+            Vector3 cameraPosition = new Vector3(player.transform.position.x, player.transform.position.y, cameraTransform.transform.position.z);
             Bounds mapBounds = mapRange.bounds;
-
-            // 카메라의 절반 크기를 계산
             float cameraHalfWidth = cameraTransform.orthographicSize * cameraTransform.aspect;
             float cameraHalfHeight = cameraTransform.orthographicSize;
 
-            // 맵 범위 내에서 카메라 위치를 클램프
-            cameraPosition.x = Mathf.Clamp(cameraPosition.x, mapBounds.min.x + cameraHalfWidth,
-                mapBounds.max.x - cameraHalfWidth);
-            cameraPosition.y = Mathf.Clamp(cameraPosition.y, mapBounds.min.y + cameraHalfHeight,
-                mapBounds.max.y - cameraHalfHeight);
+            cameraPosition.x = Mathf.Clamp(cameraPosition.x, mapBounds.min.x + cameraHalfWidth, mapBounds.max.x - cameraHalfWidth);
+            cameraPosition.y = Mathf.Clamp(cameraPosition.y, mapBounds.min.y + cameraHalfHeight, mapBounds.max.y - cameraHalfHeight);
 
-            cameraTransform.transform.DOMove(cameraPosition, moveDuration);
+            float smoothSpeed = 1f - Mathf.Exp(-Time.fixedDeltaTime / Mathf.Max(0.001f, moveDuration));
+            cameraTransform.transform.position = Vector3.Lerp(cameraTransform.transform.position, cameraPosition, smoothSpeed);
         }
 
         #endregion
 
         #region 자동 이동 및 공격 설정
 
-        private bool _autoAttackEnabledByToggle = true;
+        private bool _autoAttackEnabledByToggle = false;
         public bool AutoAttackEnabledByToggle
         {
             get => _autoAttackEnabledByToggle;
             set
             {
+                if (_autoAttackEnabledByToggle == value) return;
                 _autoAttackEnabledByToggle = value;
-                if (_autoAttackEnabledByToggle)
-                {
-                    // 토글을 켰을 때, 조이스틱을 사용하고 있지 않다면 바로 자동공격을 활성화합니다.
-                    float inputMagnitude = new Vector2(variableJoystick.Horizontal, variableJoystick.Vertical).magnitude;
-                    if (inputMagnitude <= joystickInputThreshold)
-                    {
-                        EnableAutoMoveAttack();
-                    }
-                }
-                else
+
+                if (!_autoAttackEnabledByToggle && _autoAttackActive)
                 {
                     DisableAutoMoveAttack();
                 }
-
-                // 타이머 리셋
-                joystickIdleTimer = 0f;
             }
         }
         
-        // 플레이어 자동 이동 및 공격 루프
         private CancellationTokenSource _autoMoveAttackCTS;
         public void EnableAutoMoveAttack()
         {
@@ -394,7 +298,6 @@ namespace DogGuns_Games.vamsir
             }
             _autoMoveAttackCTS = new CancellationTokenSource();
             AutoMoveAttackLoop(_autoMoveAttackCTS.Token).Forget();
-            LogManager.Log("자동 공격 활성화됨.", LogManager.LogCategory.PlayerBase);
         }
 
         public void DisableAutoMoveAttack()
@@ -408,6 +311,7 @@ namespace DogGuns_Games.vamsir
                 _autoMoveAttackCTS.Dispose();
                 _autoMoveAttackCTS = null;
             }
+            _currentTarget = null;
             LogManager.Log("자동 공격 비활성화됨.", LogManager.LogCategory.PlayerBase);
         }
 
@@ -421,78 +325,62 @@ namespace DogGuns_Games.vamsir
                     continue;
                 }
 
-                // 가장 가까운 적 찾기
                 GameObject closestEnemy = FindClosestEnemy();
                 if (closestEnemy != null)
                 {
+                    if (closestEnemy != _currentTarget)
+                    {
+                        _currentTarget = closestEnemy;
+                        LogManager.Log($"자동 공격, 새 타겟 지정: {closestEnemy.name}", LogManager.LogCategory.PlayerBase);
+                    }
+
                     Vector3 enemyPos = closestEnemy.transform.position;
                     Vector3 playerPos = player.transform.position;
                     Vector3 dir = (enemyPos - playerPos).normalized;
-                    float distance = Vector3.Distance(playerPos, enemyPos);
-                    float stopDistance = attackRadius; // 인스펙터에서 설정
 
-                    // 사거리 밖이면 적 방향으로 이동
-                    if (distance > stopDistance)
+                    // 1. 이동: 항상 이상적인 공격 위치로 부드럽게 이동합니다.
+                    Vector3 destination = enemyPos - dir * attackRadius;
+                    float step = playerCharactor.MoveSpeed * autoAttackMoveSpeedMultiplier * Time.deltaTime;
+                    Vector3 newPosition = Vector3.MoveTowards(playerPos, destination, step);
+                    player.transform.position = ClampPositionToMap(newPosition);
+
+                    // 2. 애니메이션 및 회전
+                    Vector3 movedVector = newPosition - playerPos;
+                    UpdateAnimationState(movedVector.magnitude > 0.001f ? 1f : 0f);
+                    UpdateCharacterRotation(dir);
+
+                    // 3. 공격: 사거리 내에 들어오면 공격을 시작합니다.
+                    float distance = Vector3.Distance(player.transform.position, enemyPos);
+                    if (distance <= attackRadius * 1.1f) // 약간의 버퍼를 주어 안정적으로 공격하게 함
                     {
-                        Vector3 targetPosition = player.transform.position + dir * (playerCharactor.MoveSpeed * autoAttackMoveSpeedMultiplier * Time.deltaTime);
-                        // 맵 경계 확인 및 클램프
-                        Bounds mapBounds = mapRange.bounds;
-                        targetPosition = new Vector3(
-                            Mathf.Clamp(targetPosition.x, mapBounds.min.x, mapBounds.max.x),
-                            Mathf.Clamp(targetPosition.y, mapBounds.min.y, mapBounds.max.y),
-                            targetPosition.z
-                        );
-                        MovePlayer(targetPosition);
-                        UpdateAnimationState(dir.magnitude);
-                        UpdateCharacterRotation(dir);
-                    }
-                    else
-                    {
-                        // 사거리 안이면 공격
                         if (!_isAttack)
                         {
                             await PlayerAttack(dir);
                         }
-                        UpdateAnimationState(0f);
                     }
                 }
                 else
                 {
-                    // 적이 없으면 Idle
+                    if (_currentTarget != null) _currentTarget = null;
                     UpdateAnimationState(0f);
                 }
 
-                await UniTask.Yield(PlayerLoopTiming.Update);
+                await UniTask.Yield(PlayerLoopTiming.FixedUpdate);
             }
         }
 
         private GameObject FindClosestEnemy()
         {
-            // 탐지 반경 내의 모든 적 콜라이더를 찾습니다. (성능 최적화)
-            Collider2D[] enemiesInRange = Physics2D.OverlapCircleAll(player.transform.position, detectionRadius, enemyLayer);
-            
-            // --- 진단용 로그 추가 ---
-            if (_autoAttackActive && enemiesInRange.Length == 0)
-            {
-                // 이 경고가 계속 표시된다면, LayerMask 또는 적 오브젝트의 Layer/Collider2D 설정에 문제가 있는 것입니다.
-                LogManager.LogWarning("자동 공격이 활성화되었으나 탐지된 적이 없습니다. Layer 또는 Collider 설정을 확인하세요.", LogManager.LogCategory.PlayerBase, this);
-            }
+            Vector2 searchPosition = player.transform.position;
+            Collider2D[] enemiesInRange = Physics2D.OverlapCircleAll(searchPosition, detectionRadius, enemyLayer);
             
             GameObject closest = null;
             float minDist = float.MaxValue;
-            Vector3 playerPos = player.transform.position;
-            Bounds mapBounds = mapRange != null ? mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 9999f);
             
-            // LayerMask로 1차 필터링이 되었으므로, 태그 검사는 생략 가능합니다.
             foreach (var enemyCollider in enemiesInRange)
             {
                 Vector3 enemyPos = enemyCollider.transform.position;
-                // 맵 안에 있는 적만 탐색 (todo에 따라)
-                if (!mapBounds.Contains(enemyPos))
-                {
-                    continue;
-                }
-                float dist = Vector3.Distance(playerPos, enemyPos);
+                float dist = Vector2.Distance(searchPosition, enemyPos);
                 if (dist < minDist)
                 {
                     minDist = dist;
@@ -507,11 +395,9 @@ namespace DogGuns_Games.vamsir
         {
             if (player == null) return;
 
-            // 탐지 반경 (노란색)
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(player.transform.position, detectionRadius);
 
-            // 공격 반경 (빨간색)
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(player.transform.position, attackRadius);
         }

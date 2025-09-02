@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2752415986043711644}
   - component: {fileID: 6867104784603527472}
   - component: {fileID: 2080499839996863037}
-  m_Layer: 1
+  m_Layer: 6
   m_Name: normal_mob
   m_TagString: Mob
   m_Icon: {fileID: 0}
@@ -102,7 +102,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 639ebc134cdc4c44cac9bd90dd711e7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPoolSpawner: {fileID: 0}
   ismove: 0
   mobState: 0
   initialHp: 100
@@ -111,6 +110,7 @@ MonoBehaviour:
   initialAttackSpeed: 1
   initialAttackRange: 1
   initialStunTime: 0.1
+  searchRange: 8
 --- !u!61 &6867104784603527472
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -172,7 +172,7 @@ Rigidbody2D:
   m_Mass: 0.1472
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

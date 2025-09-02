@@ -13,25 +13,40 @@ namespace DogGuns_Games.vamsir
         #region 플레이어 스탯
 
         [Header("공격 관련 스탯")]
-        public float AttackPower { get; set; }
-        public float CoolTime { get; set; }
-        public float AttackSpeed { get; set; }
-        public float WeaponSize { get; set; }
-        public float ProjectileCount { get; set; }
-        public float CriticalChance { get; set; }
-        public float CriticalDamage { get; set; }
+        [field: Tooltip("기본 공격력")]
+        [field: SerializeField] public float AttackPower { get; set; } = 10f;
+        [field: Tooltip("공격 쿨타임")]
+        [field: SerializeField] public float CoolTime { get; set; } = 1f;
+        [field: Tooltip("공격 속도 (투사체 속도 등)")]
+        [field: SerializeField] public float AttackSpeed { get; set; } = 1f;
+        [field: Tooltip("무기 크기 배율")]
+        [field: SerializeField] public float WeaponSize { get; set; } = 1f;
+        [field: Tooltip("투사체 개수")]
+        [field: SerializeField] public float ProjectileCount { get; set; } = 1f;
+        [field: Tooltip("치명타 확률 (%)")]
+        [field: SerializeField] public float CriticalChance { get; set; } = 5f;
+        [field: Tooltip("치명타 피해량 배율")]
+        [field: SerializeField] public float CriticalDamage { get; set; } = 1.5f;
 
         [Header("방어 및 생존 관련 스탯")]
-        public float Health { get; set; }
-        public float HealthRegen { get; set; }
-        public float Defense { get; set; }
-        public float MoveSpeed { get; set; }
+        [field: Tooltip("최대 체력")]
+        [field: SerializeField] public float Health { get; set; } = 100f;
+        [field: Tooltip("초당 체력 재생량")]
+        [field: SerializeField] public float HealthRegen { get; set; } = 0f;
+        [field: Tooltip("방어력")]
+        [field: SerializeField] public float Defense { get; set; } = 0f;
+        [field: Tooltip("이동 속도")]
+        [field: SerializeField] public float MoveSpeed { get; set; } = 5f;
 
         [Header("자원 획득 관련 스탯")]
-        public float ExpGain { get; set; }
-        public float GoldGain { get; set; }
-        public float ItemGainRange { get; set; }
-        public float Reroll { get; set; }
+        [field: Tooltip("경험치 획득량 배율")]
+        [field: SerializeField] public float ExpGain { get; set; } = 1f;
+        [field: Tooltip("골드 획득량 배율")]
+        [field: SerializeField] public float GoldGain { get; set; } = 1f;
+        [field: Tooltip("아이템 획득 범위")]
+        [field: SerializeField] public float ItemGainRange { get; set; } = 1f;
+        [field: Tooltip("리롤 횟수")]
+        [field: SerializeField] public float Reroll { get; set; } = 1f;
 
         [Header("캐릭터 정보")]
         public float Level { get; set; } = 0f;

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8995850725629666990}
   - component: {fileID: 6735505719767251672}
   - component: {fileID: 3357545769698321406}
-  m_Layer: 1
+  m_Layer: 0
   m_Name: player_DogGun
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -103,6 +103,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e8002305a577734b9aabec3b7e18685, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <AttackPower>k__BackingField: 10
+  <CoolTime>k__BackingField: 1
+  <AttackSpeed>k__BackingField: 1
+  <WeaponSize>k__BackingField: 1
+  <ProjectileCount>k__BackingField: 1
+  <CriticalChance>k__BackingField: 5
+  <CriticalDamage>k__BackingField: 1.5
+  <Health>k__BackingField: 100
+  <HealthRegen>k__BackingField: 0
+  <Defense>k__BackingField: 0
+  <MoveSpeed>k__BackingField: 2
+  <ExpGain>k__BackingField: 1
+  <GoldGain>k__BackingField: 1
+  <ItemGainRange>k__BackingField: 1
+  <Reroll>k__BackingField: 1
   characterIndex: 0
   ishit: 0
 --- !u!95 &8995850725629666990
