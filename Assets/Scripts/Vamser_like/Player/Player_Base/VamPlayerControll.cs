@@ -206,7 +206,7 @@ namespace DogGuns_Games.vamsir
             return new Vector3(
                 Mathf.Clamp(position.x, mapBounds.min.x, mapBounds.max.x),
                 Mathf.Clamp(position.y, mapBounds.min.y, mapBounds.max.y),
-                position.z
+                0f // 플레이어의 z 위치를 항상 0으로 고정합니다.
             );
         }
 

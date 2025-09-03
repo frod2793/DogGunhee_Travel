@@ -608,11 +608,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: attackRadius
-      value: 1.14
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: detectionRadius
-      value: 26.1
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: enemyLayer.m_Bits
@@ -620,7 +620,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: autoAttackMoveSpeedMultiplier
-      value: 1.5
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 6713757303475557523, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_Layer

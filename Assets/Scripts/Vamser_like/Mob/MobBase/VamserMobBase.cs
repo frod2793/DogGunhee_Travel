@@ -16,6 +16,7 @@ namespace DogGuns_Games.vamsir
         protected bool  Mob_IsHit { get; set; }
         
         protected PlayerBase player; // 플레이어 참조를 저장할 필드
+        protected Transform playerTransform; // 실제 움직이는 플레이어 부모 객체의 Transform
 
         public bool ismove;
         public enum MobState
@@ -64,6 +65,15 @@ namespace DogGuns_Games.vamsir
         public virtual void SetTarget(PlayerBase target)
         {
             player = target;
+            if (player != null)
+            {
+                // 플레이어 캐릭터의 부모 객체가 실제 움직임을 담당하므로, 부모의 Transform을 추적 대상으로 설정합니다.
+                playerTransform = player.transform.parent;
+            }
+            else
+            {
+                playerTransform = null;
+            }
         }
         private void Pause()
         {

@@ -110,7 +110,7 @@ MonoBehaviour:
   initialAttackSpeed: 1
   initialAttackRange: 1
   initialStunTime: 0.1
-  searchRange: 8
+  searchRange: 2
 --- !u!61 &6867104784603527472
 BoxCollider2D:
   m_ObjectHideFlags: 0
