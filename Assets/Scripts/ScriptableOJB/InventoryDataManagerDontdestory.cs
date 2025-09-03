@@ -5,6 +5,7 @@ using BackEnd.BackndNewtonsoft.Json;
 using UnityEngine;
 using System;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 
 namespace DogGuns_Games.Lobby
 {
@@ -25,7 +26,6 @@ namespace DogGuns_Games.Lobby
 
         // 캐시 필드
         private Dictionary<int, Item_Data> _itemDataCache = new Dictionary<int, Item_Data>();
-        // private Item_Data _currentItemData; // 사용되지 않으므로 제거
         private bool _isDataLoaded;
 
         #endregion
@@ -95,7 +95,7 @@ namespace DogGuns_Games.Lobby
             }
 
             // 서버에서 인벤토리 데이터 로드
-            LoadDataFromServer();
+            LoadDataFromServerAsync().Forget();
         }
         
         #endregion
@@ -105,7 +105,7 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 기본 인벤토리 데이터를 생성합니다.
         /// </summary>
-        private void CreateDefaultInventory()
+        private async UniTask CreateDefaultInventoryAsync()
         {
             try
             {
@@ -140,7 +140,7 @@ namespace DogGuns_Games.Lobby
                 SaveInventoryData();
                 
                 // 서버에 저장
-                UploadDataToServer();
+                await UploadDataToServerAsync();
             }
             catch (Exception ex)
             {
@@ -212,7 +212,6 @@ namespace DogGuns_Games.Lobby
 
             if (_itemDataCache.TryGetValue(itemCode, out Item_Data item))
             {
-                // _currentItemData = item; // 사용하지 않으므로 제거
                 return item;
             }
 
@@ -258,7 +257,6 @@ namespace DogGuns_Games.Lobby
                 LogManager.LogWarning("업데이트할 아이템 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
-            // _currentItemData = itemData; // 사용하지 않으므로 제거
             _itemDataCache[itemData.itemCode] = itemData;
         }
 
@@ -368,43 +366,22 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 서버에서 인벤토리 데이터를 가져옵니다.
         /// </summary>
-        public void LoadDataFromServer()
+        public async UniTask LoadDataFromServerAsync()
         {
-            ServerManager.Instance.DownloadData("Inventory_Data", (bro) =>
-            {
-                OnServerDataReceived(bro);
-            });
-        }
-
-        private void OnServerDataReceived(BackendReturnObject bro)
-        {
-            if (!bro.IsSuccess())
-            {
-                LogManager.LogError($"인벤토리 데이터 조회 실패: {bro}", LogManager.LogCategory.InventoryManager);
-                if (bro.GetStatusCode() == "404")
-                {
-                    LogManager.Log("서버에 인벤토리 데이터가 없어 새로 생성합니다.", LogManager.LogCategory.InventoryManager);
-                    CreateDefaultInventory();
-                }
-                else
-                {
-                    // 서버 조회 실패 시 로컬 데이터 로드 시도
-                    LoadEncryptedInventoryData();
-                }
-                return;
-            }
-
-            var gameDataJson = bro.FlattenRows();
-            if (gameDataJson.Count <= 0)
-            {
-                LogManager.LogWarning("서버에 인벤토리 데이터가 없습니다. 새로 생성합니다.", LogManager.LogCategory.InventoryManager);
-                CreateDefaultInventory();
-                return;
-            }
-
             try
             {
-                string inventoryJsonString = gameDataJson[0]["Inventory"].ToString();
+                var serverDataJson = await ServerManager.Instance.DownloadDataAsync("Inventory_Data");
+
+                // 서버에 데이터가 없는 경우
+                if (serverDataJson == null)
+                {
+                    LogManager.Log("서버에 인벤토리 데이터가 없어 새로 생성합니다.", LogManager.LogCategory.InventoryManager);
+                    await CreateDefaultInventoryAsync();
+                    return;
+                }
+
+                // 서버 데이터 파싱 및 업데이트
+                string inventoryJsonString = serverDataJson["Inventory"].ToString();
                 Inventory_Data serverData = JsonConvert.DeserializeObject<Inventory_Data>(inventoryJsonString);
 
                 if (serverData != null)
@@ -416,13 +393,13 @@ namespace DogGuns_Games.Lobby
                 else
                 {
                     LogManager.LogWarning("서버 인벤토리 데이터 파싱에 실패했습니다. 새 인벤토리를 생성합니다.", LogManager.LogCategory.InventoryManager);
-                    CreateDefaultInventory();
+                    await CreateDefaultInventoryAsync();
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                LogManager.LogError($"서버 인벤토리 데이터 처리 중 오류 발생: {ex.Message}", LogManager.LogCategory.InventoryManager);
-                // 오류 발생 시 로컬 데이터 로드 또는 새 데이터 생성
+                LogManager.LogError($"인벤토리 데이터 조회 실패: {e.Message}", LogManager.LogCategory.InventoryManager);
+                // 서버 조회 실패 시 로컬 데이터 로드 시도
                 LoadEncryptedInventoryData();
             }
         }
@@ -430,7 +407,7 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 현재 인벤토리 데이터를 서버에 업로드합니다.
         /// </summary>
-        public void UploadDataToServer()
+        public async UniTask UploadDataToServerAsync()
         {
             if (scritpableobjInventoryData == null) return;
 
@@ -439,17 +416,15 @@ namespace DogGuns_Games.Lobby
             Param param = new Param();
             param.Add("Inventory", inventorydataString);
 
-            ServerManager.Instance.UploadData("Inventory_Data", param, (bro) =>
+            try
             {
-                if (bro.IsSuccess())
-                {
-                    LogManager.Log("인벤토리 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.InventoryManager);
-                }
-                else
-                {
-                    LogManager.LogError($"인벤토리 데이터 업로드 실패: {bro}", LogManager.LogCategory.InventoryManager);
-                }
-            });
+                await ServerManager.Instance.UploadDataAsync("Inventory_Data", param);
+                LogManager.Log("인벤토리 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.InventoryManager);
+            }
+            catch (Exception e)
+            {
+                LogManager.LogError($"인벤토리 데이터 업로드 실패: {e.Message}", LogManager.LogCategory.InventoryManager);
+            }
         }
 
         #endregion

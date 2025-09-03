@@ -121,18 +121,16 @@ namespace DogGuns_Games.vamsir
                 // 서버 업로드는 반드시 메인 스레드에서 실행
                 await UniTask.SwitchToMainThread();
                 var param = new BackEnd.Param();
-                param.Add("Money1", playerData.currency1);
-                ServerManager.Instance.UploadData("User_Data", param, bro =>
+                param.Add("Money1", playerData.currency1); // OnGameOver에서는 코인만 업데이트
+                try
                 {
-                    if (bro.IsSuccess())
-                    {
-                        LogManager.Log("서버에 코인 데이터 업로드 성공", LogManager.LogCategory.VamserLikeGameManager);
-                    }
-                    else
-                    {
-                        LogManager.LogError($"서버에 코인 데이터 업로드 실패: {bro}", LogManager.LogCategory.VamserLikeGameManager);
-                    }
-                });
+                    await ServerManager.Instance.UploadDataAsync("User_Data", param);
+                    LogManager.Log("서버에 코인 데이터 업로드 성공", LogManager.LogCategory.VamserLikeGameManager);
+                }
+                catch (System.Exception e)
+                {
+                    LogManager.LogError($"서버에 코인 데이터 업로드 실패: {e.Message}", LogManager.LogCategory.VamserLikeGameManager);
+                }
             }
             else
             {

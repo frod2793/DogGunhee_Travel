@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using BackEnd;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace DogGuns_Games
 {
@@ -202,64 +203,58 @@ namespace DogGuns_Games
         #region 서버 데이터 처리
 
         /// <summary>
-        /// 서버에서 플레이어 데이터를 가져옵니다.
+        /// 서버에서 플레이어 데이터를 비동기적으로 가져와 로컬 데이터와 병합합니다.
         /// </summary>
-        /// <param name="onDataNotExist">서버에 데이터가 없을 때 실행할 콜백</param>
-        public void LoadDataFromServer(Action onDataNotExist)
+        /// <returns>서버에 데이터가 존재하면 true, 그렇지 않으면 false를 반환합니다.</returns>
+        public async UniTask<bool> LoadDataFromServerAsync()
         {
-            ServerManager.Instance.DownloadData("User_Data", (bro) =>
+            try
             {
-                OnServerDataReceived(bro, onDataNotExist);
-            });
-        }
+                var serverDataJson = await ServerManager.Instance.DownloadDataAsync("User_Data");
 
-        private void OnServerDataReceived(BackendReturnObject bro, Action onDataNotExist)
-        {
-            if (!bro.IsSuccess())
-            {
-                LogManager.LogError($"게임 정보 조회에 실패했습니다. : {bro}", LogManager.LogCategory.PlayerDataManager);
-                if (bro.GetStatusCode() == "404")
+                if (serverDataJson == null)
                 {
-                    onDataNotExist?.Invoke();
+                    LogManager.LogWarning("서버에 데이터가 존재하지 않습니다.", LogManager.LogCategory.PlayerDataManager);
+                    return false;
                 }
-                return;
-            }
-            var gameDataJson = bro.FlattenRows();
-            if (gameDataJson.Count <= 0)
-            {
-                LogManager.LogWarning("서버에 데이터가 존재하지 않습니다.", LogManager.LogCategory.PlayerDataManager);
-                onDataNotExist?.Invoke();
-                return;
-            }
-            LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.", LogManager.LogCategory.PlayerDataManager);
-            var serverDataJson = gameDataJson[0];
-            
-            // 서버 데이터 파싱
-            PlayerData serverData = ScriptableObject.CreateInstance<PlayerData>();
-            serverData.level = int.Parse(serverDataJson["level"].ToString());
-            serverData.currency1 = int.Parse(serverDataJson["Money1"].ToString());
-            serverData.currency2 = int.Parse(serverDataJson["Money2"].ToString());
-            serverData.experience = float.Parse(serverDataJson["experience"].ToString());
-            serverData.UID = serverDataJson["uid"].ToString();
-            serverData.nickname = serverDataJson["nickname"].ToString();
 
-            // 로컬 데이터 로드
-            LoadPlayerData();
-            PlayerData localData = scritpableobjPlayerData;
+                LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.", LogManager.LogCategory.PlayerDataManager);
 
-            // 데이터 비교 및 최종 데이터 결정
-            PlayerData finalData = ResolveDataConflict(serverData, localData);
-            
-            UpdatePlayerData(finalData);
-            SavePlayerData(); // 최종 데이터를 로컬에 저장
-            
-            // 필요한 경우 서버 데이터 업데이트
-            if (finalData == localData)
+                // 서버 데이터 파싱
+                PlayerData serverData = ScriptableObject.CreateInstance<PlayerData>();
+                serverData.level = int.Parse(serverDataJson["level"].ToString());
+                serverData.currency1 = int.Parse(serverDataJson["Money1"].ToString());
+                serverData.currency2 = int.Parse(serverDataJson["Money2"].ToString());
+                serverData.experience = float.Parse(serverDataJson["experience"].ToString());
+                serverData.UID = serverDataJson["uid"].ToString();
+                serverData.nickname = serverDataJson["nickname"].ToString();
+
+                // 로컬 데이터 로드
+                LoadPlayerData();
+                PlayerData localData = scritpableobjPlayerData;
+
+                // 데이터 비교 및 최종 데이터 결정
+                PlayerData finalData = ResolveDataConflict(serverData, localData);
+
+                UpdatePlayerData(finalData);
+                SavePlayerData(); // 최종 데이터를 로컬에 저장
+
+                // 필요한 경우 서버 데이터 업데이트
+                if (finalData == localData)
+                {
+                    await UploadDataToServerAsync();
+                }
+
+                return true;
+            }
+            catch (Exception e)
             {
-                UploadDataToServer();
+                LogManager.LogError($"서버 데이터 로드 중 오류 발생: {e.Message}", LogManager.LogCategory.PlayerDataManager);
+                // 404 Not Found (데이터 없음) 에러는 LoginManager에서 처리하므로 여기서는 false만 반환
+                return false;
             }
         }
-        
+
         private PlayerData ResolveDataConflict(PlayerData serverData, PlayerData localData)
         {
             if (localData.level > serverData.level || 
@@ -273,9 +268,9 @@ namespace DogGuns_Games
         }
 
         /// <summary>
-        /// 현재 플레이어 데이터를 서버에 업로드(Insert or Update)합니다.
+        /// 현재 플레이어 데이터를 서버에 비동기적으로 업로드(Insert or Update)합니다.
         /// </summary>
-        public void UploadDataToServer()
+        public async UniTask UploadDataToServerAsync()
         {
             Param param = new Param();
             param.Add("nickname", scritpableobjPlayerData.nickname);
@@ -285,17 +280,15 @@ namespace DogGuns_Games
             param.Add("experience", scritpableobjPlayerData.experience);
             param.Add("level", scritpableobjPlayerData.level);
 
-            ServerManager.Instance.UploadData("User_Data", param, (bro) =>
+            try
             {
-                if (bro.IsSuccess())
-                {
-                    LogManager.Log("플레이어 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.PlayerDataManager);
-                }
-                else
-                {
-                    LogManager.LogError($"플레이어 데이터 업로드 실패: {bro}", LogManager.LogCategory.PlayerDataManager);
-                }
-            });
+                await ServerManager.Instance.UploadDataAsync("User_Data", param);
+                LogManager.Log("플레이어 데이터를 서버에 성공적으로 업로드했습니다.", LogManager.LogCategory.PlayerDataManager);
+            }
+            catch (Exception e)
+            {
+                LogManager.LogError($"플레이어 데이터 업로드 실패: {e.Message}", LogManager.LogCategory.PlayerDataManager);
+            }
         }
 
         #endregion

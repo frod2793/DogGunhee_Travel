@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using BackEnd;
-using DogGuns_Games.Lobby;
+using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
@@ -84,197 +83,167 @@ namespace DogGuns_Games
 
         #endregion
 
-        #region 로그인 및 회원 가입
+        #region 로그인 및 회원 가입 (비동기)
 
         /// <summary>
         ///     로그인
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="pw"></param>
-        /// <param name="action">로그인 성공시 실행할액션 </param>
-        public void Login(string id, string pw, Action action)
+        public async UniTask<(string nickname, string uuid)> LoginAsync(string id, string pw)
         {
-            Backend.BMember.CustomLogin(id, pw, bro =>
+            var bro = await BackendAsync(callback => Backend.BMember.CustomLogin(id, pw, callback));
+
+            if (bro.IsSuccess())
             {
-                if (bro.IsSuccess())
-                {
-                    LogManager.Log("로그인 성공", LogManager.LogCategory.ServerManager);
-                    LogManager.Log(bro.ToString(), LogManager.LogCategory.ServerManager);
-
-                    uuid = Backend.UID;
-                    nickName = Backend.UserNickName;
-                    LogManager.Log("uuid: " + uuid, LogManager.LogCategory.ServerManager);
-                    LogManager.Log("nickName: " + nickName, LogManager.LogCategory.ServerManager);
-                    bro = Backend.BMember.IsAccessTokenAlive();
-                    if (bro.IsSuccess())
-                    {
-                        LogManager.Log("액세스 토큰이 살아있습니다", LogManager.LogCategory.ServerManager);
-                        Backend.BMember.RefreshTheBackendToken();
-                    }
-
-
-                    action.Invoke();
-                }
-                else
-                {
-                    LogManager.LogError("로그인 실패: " + bro, LogManager.LogCategory.ServerManager);
-                }
-            });
+                LogManager.Log("로그인 성공", LogManager.LogCategory.ServerManager);
+                uuid = Backend.UID;
+                nickName = Backend.UserNickName;
+                RefreshTokenIfAlive();
+                return (nickName, uuid);
+            }
+            else
+            {
+                ErroDebug(bro);
+                throw new Exception($"로그인 실패: {bro.GetMessage()}");
+            }
         }
 
         /// <summary>
         ///     게스트 로그인
         /// </summary>
-        /// <param name="action">게스트 로그인이 성공 할때 실행할 엑션</param>
-        public void GuestLogin(Action action)
+        public async UniTask<(string nickname, string uuid)> GuestLoginAsync()
         {
-            Backend.BMember.GuestLogin(bro =>
+            var bro = await BackendAsync(callback => Backend.BMember.GuestLogin(callback));
+
+            if (bro.IsSuccess())
             {
-                if (bro.IsSuccess())
-                {
-                    LogManager.Log("게스트 로그인에 성공했습니다: " + bro, LogManager.LogCategory.ServerManager);
-                    uuid = Backend.UID;
-                    nickName = Backend.UserNickName;
-                    LogManager.Log("uuid: " + uuid, LogManager.LogCategory.ServerManager);
-                    LogManager.Log("nickName: " + nickName, LogManager.LogCategory.ServerManager);
-                    action.Invoke();
-                    bro = Backend.BMember.IsAccessTokenAlive();
-                    if (bro.IsSuccess())
-                    {
-                        LogManager.Log("액세스 토큰이 살아있습니다", LogManager.LogCategory.ServerManager);
-                        Backend.BMember.RefreshTheBackendToken();
-                    }
-                }
-                else
-                {
-                    LogManager.LogError("게스트 로그인 실패: " + bro, LogManager.LogCategory.ServerManager);
-                    Backend.BMember.DeleteGuestInfo();
-                }
-            });
+                LogManager.Log("게스트 로그인 성공", LogManager.LogCategory.ServerManager);
+                uuid = Backend.UID;
+                nickName = Backend.UserNickName;
+                RefreshTokenIfAlive();
+                return (nickName, uuid);
+            }
+            else
+            {
+                Backend.BMember.DeleteGuestInfo();
+                ErroDebug(bro);
+                throw new Exception($"게스트 로그인 실패: {bro.GetMessage()}");
+            }
         }
 
         /// <summary>
         ///     토큰 로그인
         /// </summary>
-        /// <param name="action">로그인 성공할때 액션</param>
-        public void TokenLogin(Action onSuccess, Action onFailure)
+        public async UniTask<(bool success, string nickname, string uuid)> TokenLoginAsync()
         {
-            var bro = Backend.BMember.LoginWithTheBackendToken();
+            var bro = await BackendAsync(callback => Backend.BMember.LoginWithTheBackendToken(callback));
+
             if (bro.IsSuccess())
             {
-                LogManager.Log("자동 로그인에 성공했습니다", LogManager.LogCategory.ServerManager);
-                LogManager.Log(bro.ToString(), LogManager.LogCategory.ServerManager);
-                
+                LogManager.Log("토큰 로그인 성공", LogManager.LogCategory.ServerManager);
                 uuid = Backend.UID;
                 nickName = Backend.UserNickName;
-
-                bro = Backend.BMember.IsAccessTokenAlive();
-                if (bro.IsSuccess())
-                {
-                    LogManager.Log("액세스 토큰이 살아있습니다", LogManager.LogCategory.ServerManager);
-                    Backend.BMember.RefreshTheBackendToken();
-                    onSuccess.Invoke();
-                }
+                RefreshTokenIfAlive();
+                return (true, nickName, uuid);
             }
             else
             {
-                LogManager.LogError("자동 로그인에 실패했습니다", LogManager.LogCategory.ServerManager);
-                ErroDebug(bro);
-                onFailure.Invoke();
+                LogManager.LogWarning($"토큰 로그인 실패: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
+                return (false, null, null);
             }
         }
 
         /// <summary>
         ///     회원 가입
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="pw"></param>
-        /// <param name="nickname"></param>
-        /// <param name="action">회원가입 성공할때 액션</param>
-        public void SignUp(string id, string pw, string nickname, Action action)
+        public async UniTask SignUpAsync(string id, string pw, string nickname)
         {
-            Backend.BMember.CustomSignUp(id, pw, bro =>
+            var signUpBro = await BackendAsync(callback => Backend.BMember.CustomSignUp(id, pw, callback));
+            if (!signUpBro.IsSuccess())
             {
-                if (bro.IsSuccess())
-                {
-                    LogManager.Log("회원가입 성공: " + bro, LogManager.LogCategory.ServerManager);
-                    bro = Backend.BMember.UpdateNickname(nickname);
-                    if (bro.IsSuccess())
-                    {
-                        LogManager.Log("닉네임 변경 성공: " + bro, LogManager.LogCategory.ServerManager);
-                        action.Invoke();
-                    }
-                    else
-                    {
-                        LogManager.LogError("닉네임 변경 실패: " + bro, LogManager.LogCategory.ServerManager);
-                        ErroDebug(bro);
-                    }
-                }
-                else
-                {
-                    LogManager.LogError("회원가입 실패: " + bro, LogManager.LogCategory.ServerManager);
-                    ErroDebug(bro);
-                }
-            });
+                ErroDebug(signUpBro);
+                throw new Exception($"회원가입 실패: {signUpBro.GetMessage()}");
+            }
+            LogManager.Log("회원가입 성공", LogManager.LogCategory.ServerManager);
+
+            var updateBro = await BackendAsync(callback => Backend.BMember.UpdateNickname(nickname, callback));
+            if (!updateBro.IsSuccess())
+            {
+                ErroDebug(updateBro);
+                throw new Exception($"닉네임 설정 실패: {updateBro.GetMessage()}");
+            }
+            LogManager.Log("닉네임 설정 성공", LogManager.LogCategory.ServerManager);
+        }
+
+        private void RefreshTokenIfAlive()
+        {
+            var bro = Backend.BMember.IsAccessTokenAlive();
+            if (bro.IsSuccess())
+            {
+                LogManager.Log("액세스 토큰 유효, 갱신을 시도합니다.", LogManager.LogCategory.ServerManager);
+                Backend.BMember.RefreshTheBackendToken();
+            }
         }
 
         #endregion
 
-        #region 게임 데이터 저장 및 불러오기 (범용)
+        #region 게임 데이터 저장 및 불러오기 (비동기)
 
         /// <summary>
         /// 지정된 테이블의 데이터를 서버에 업로드합니다. (Insert or Update)
         /// </summary>
-        /// <param name="tableName">테이블 이름</param>
-        /// <param name="param">업로드할 데이터</param>
-        /// <param name="callback">완료 시 콜백</param>
-        public void UploadData(string tableName, Param param, Action<BackendReturnObject> callback = null)
+        public async UniTask UploadDataAsync(string tableName, Param param)
         {
-            // 이전에 해당 테이블의 데이터를 불러온 적이 있는지 확인
+            BackendReturnObject bro;
             if (_tableInDate.ContainsKey(tableName))
             {
-                // 데이터 수정
                 string inDate = _tableInDate[tableName];
                 LogManager.Log($"{tableName} 테이블의 데이터 수정을 요청합니다. (inDate: {inDate})", LogManager.LogCategory.ServerManager);
-                Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, bro => callback?.Invoke(bro));
+                bro = await BackendAsync(callback => Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, callback));
             }
             else
             {
-                // 데이터 삽입
                 LogManager.Log($"{tableName} 테이블에 새 데이터 삽입을 요청합니다.");
-                Backend.GameData.Insert(tableName, param, bro =>
+                bro = await BackendAsync(callback => Backend.GameData.Insert(tableName, param, callback));
+                if (bro.IsSuccess())
                 {
-                    if (bro.IsSuccess())
-                    {
-                        // 삽입 성공 시, 다음부터는 Update를 할 수 있도록 inDate 저장
-                        _tableInDate[tableName] = bro.GetInDate();
-                    }
-                    callback?.Invoke(bro);
-                });
+                    _tableInDate[tableName] = bro.GetInDate();
+                }
             }
+
+            if (!bro.IsSuccess())
+            {
+                ErroDebug(bro);
+                throw new Exception($"데이터 업로드 실패 ({tableName}): {bro.GetMessage()}");
+            }
+            LogManager.Log($"{tableName} 테이블 데이터 업로드 성공", LogManager.LogCategory.ServerManager);
         }
 
         /// <summary>
         /// 지정된 테이블에서 내 데이터를 다운로드합니다.
         /// </summary>
-        /// <param name="tableName">테이블 이름</param>
-        /// <param name="callback">완료 시 콜백</param>
-        public void DownloadData(string tableName, Action<BackendReturnObject> callback)
+        public async UniTask<JsonData> DownloadDataAsync(string tableName)
         {
-            LogManager.Log($"{tableName} 테이블의 데이터 조회를 요청합니다.", LogManager.LogCategory.ServerManager);
-            Backend.GameData.GetMyData(tableName, new Where(), bro =>
+            var bro = await BackendAsync(callback => Backend.GameData.GetMyData(tableName, new Where(), callback));
+            if (bro.IsSuccess())
             {
-                if (bro.IsSuccess())
+                var gameDataJson = bro.FlattenRows();
+                if (gameDataJson.Count > 0)
                 {
-                    var gameDataJson = bro.FlattenRows();
-                    if (gameDataJson.Count > 0)
-                    {
-                        // 데이터 조회 성공 시, 다음부터는 Update를 할 수 있도록 inDate 저장
-                        _tableInDate[tableName] = gameDataJson[0]["inDate"].ToString();
-                    }
+                    _tableInDate[tableName] = gameDataJson[0]["inDate"].ToString();
+                    LogManager.Log($"{tableName} 테이블 데이터 다운로드 성공", LogManager.LogCategory.ServerManager);
+                    return gameDataJson[0];
                 }
-                callback?.Invoke(bro);
-            });
+                else
+                {
+                    LogManager.Log($"{tableName} 테이블에 데이터가 없습니다.", LogManager.LogCategory.ServerManager);
+                    return null;
+                }
+            }
+            else
+            {
+                ErroDebug(bro);
+                throw new Exception($"데이터 다운로드 실패 ({tableName}): {bro.GetMessage()}");
+            }
         }
 
         #endregion
@@ -299,21 +268,18 @@ namespace DogGuns_Games
         /// <summary>
         ///     우편함 불러오기 (비동기)
         /// </summary>
-        public async void LoadMessage2()
+        public async UniTask LoadMessageAsync()
         {
-            await Task.Run(() =>
+            var bro = await BackendAsync(callback => Backend.UPost.GetPostList(PostType.Coupon, 10, callback));
+            if (bro.IsSuccess())
             {
-                Backend.UPost.GetPostList(PostType.Coupon, 10, callback =>
+                var json = bro.GetReturnValuetoJSON()["postList"];
+                for (var i = 0; i < json.Count; i++)
                 {
-                    var json = callback.GetReturnValuetoJSON()["postList"];
-
-                    for (var i = 0; i < json.Count; i++)
-                    {
-                        LogManager.Log("제목 : " + json[i]["title"], LogManager.LogCategory.ServerManager);
-                        LogManager.Log("inDate : " + json[i]["inDate"], LogManager.LogCategory.ServerManager);
-                    }
-                });
-            });
+                    LogManager.Log("제목 : " + json[i]["title"], LogManager.LogCategory.ServerManager);
+                    LogManager.Log("inDate : " + json[i]["inDate"], LogManager.LogCategory.ServerManager);
+                }
+            }
         }
 
         /// <summary>
@@ -353,6 +319,17 @@ namespace DogGuns_Games
         #endregion
 
         #region 유틸리티 메서드
+
+        /// <summary>
+        /// 뒤끝 SDK의 콜백 기반 비동기 메서드를 UniTask로 변환하는 헬퍼 메서드입니다.
+        /// </summary>
+        private UniTask<BackendReturnObject> BackendAsync(Action<Backend.BackendCallback> backendCall)
+        {
+            var tcs = new UniTaskCompletionSource<BackendReturnObject>();
+            // 뒤끝 SDK 메서드를 실행하고, 콜백이 호출되면 UniTask를 완료시킵니다.
+            backendCall(bro => tcs.TrySetResult(bro));
+            return tcs.Task;
+        }
 
         /// <summary>
         ///     오류 디버그
