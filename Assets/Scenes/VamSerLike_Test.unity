@@ -173,10 +173,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: logCategorySettings.Array.data[11].enableLog
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: logCategorySettings.Array.data[12].enableLog
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
+      propertyPath: logCategorySettings.Array.data[16].enableLog
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -590,40 +594,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3904192412624442642, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_Layer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3904192412624442642, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 4118066900603023746, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 5707357700545301199, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: attackRadius
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: detectionRadius
-      value: 30
-      objectReference: {fileID: 0}
-    - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: enemyLayer.m_Bits
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: autoAttackMoveSpeedMultiplier
-      value: 1.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6713757303475557523, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

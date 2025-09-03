@@ -49,7 +49,7 @@ namespace DogGuns_Games.vamsir
         [field: SerializeField] public float Reroll { get; set; } = 1f;
 
         [Header("캐릭터 정보")]
-        public float Level { get; set; } = 0f;
+        public float Level { get; set; } = 1f;
         public Vector3 AttackAngle { get; set; }
         public int characterIndex; // 현재 캐릭터 인덱스
 
@@ -126,8 +126,16 @@ namespace DogGuns_Games.vamsir
         public virtual void OnEnable()
         {
             //    InitializeWeapon();
-            Level = 0f;
+            // 스폰 또는 풀에서 재사용될 때 스탯을 초기화합니다.
+            Level = 1f;
+            CurrentExp = 0f;
+            MaxExp = CalculateMaxExpForLevel(Level);
+            
             PlayStateManager.OnGameOver += OnGameOver;
+            
+            // UI 등 다른 리스너들에게 초기 상태를 통지합니다.
+            OnLevelUp?.Invoke(Level);
+            OnExpChanged?.Invoke(CurrentExp, MaxExp);
         }
 
         protected virtual void OnDisable()
@@ -246,7 +254,7 @@ namespace DogGuns_Games.vamsir
             if (expObj != null && expObj.objectPoolSpawner != null)
             {
                 // 경험치 획득 처리 추가
-                float expAmount = 1 * ExpGain; // 기본 경험치에 획득 보너스 적용
+                float expAmount = expObj.ExpValue * ExpGain; // 아이템의 경험치 값에 획득 보너스 적용
                 LogManager.Log($"경험치 {expAmount} 획득", LogManager.LogCategory.PlayerBase);
                 // 경험치 증가 및 UI 업데이트
                 AddExperience(expAmount);
@@ -351,47 +359,38 @@ namespace DogGuns_Games.vamsir
         public void AddExperience(float expAmount)
         {
             CurrentExp += expAmount;
-            
-            // 경험치 변경 이벤트 발생
-            OnExpChanged?.Invoke(CurrentExp, MaxExp);
-            
             // 레벨업 체크
             CheckLevelUp();
         }
 
         /// <summary>
-        /// 레벨업 조건을 체크하고 레벨업을 처리합니다.
+        /// 경험치를 확인하여 필요 시 레벨업을 처리하고, 최종 상태를 이벤트로 알립니다.
         /// </summary>
         private void CheckLevelUp()
         {
             while (CurrentExp >= MaxExp)
             {
-                // 경험치 차감
                 CurrentExp -= MaxExp;
-                // 레벨 증가
                 Level++;
-                // 다음 레벨 필요 경험치 계산
                 MaxExp = CalculateMaxExpForLevel(Level);
-                // 레벨업 이벤트 발생
+                
                 OnLevelUp?.Invoke(Level);
-                // 레벨업 효과 처리
                 HandleLevelUp();
                 LogManager.Log($"레벨업! 현재 레벨: {Level}, 필요 경험치: {MaxExp}", LogManager.LogCategory.PlayerBase);
-                // 경험치 변경 이벤트를 레벨업마다 호출하여 UI가 즉시 반영되도록 함
-                OnExpChanged?.Invoke(CurrentExp, MaxExp);
             }
-            // 경험치 변경 이벤트 재발생 (레벨업 후 UI 업데이트용)
+            
+            // 경험치 획득 또는 레벨업 처리가 모두 끝난 후, 최종 상태를 한 번만 알립니다.
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
         }
 
         /// <summary>
         /// 레벨에 따른 최대 경험치를 계산합니다.
         /// </summary>
-        /// <param name="level">현재 레벨</param>
+        /// <param name="level">다음 레벨업에 필요한 경험치를 계산할 현재 레벨</param>
         /// <returns>해당 레벨에서 필요한 최대 경험치</returns>
         private float CalculateMaxExpForLevel(float level)
         {
-            // 레벨 0→1: 10, 레벨 1→2: 20, ...
+            // 레벨 1->2: 20, 레벨 2->3: 30, ...
             return (level + 1) * 10f;
         }
 

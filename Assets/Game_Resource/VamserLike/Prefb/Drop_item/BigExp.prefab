@@ -101,7 +101,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2709c06c63540654aac063bc3fe1bf8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPoolSpawner: {fileID: 0}
+  floatHeight: 0.5
+  floatDuration: 1.5
+  rotationAngle: 10
+  rotationDuration: 2
+  <ExpValue>k__BackingField: 10
 --- !u!61 &7277039563286419475
 BoxCollider2D:
   m_ObjectHideFlags: 0

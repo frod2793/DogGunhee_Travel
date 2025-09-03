@@ -5625,7 +5625,7 @@ GameObject:
   - component: {fileID: 6488801475886781776}
   m_Layer: 0
   m_Name: Player_Parent
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5792,7 +5792,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3963251007470096304}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Mob_Pool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9241,8 +9241,12 @@ MonoBehaviour:
   cameraTransform: {fileID: 0}
   moveDuration: 0.25
   mapRange: {fileID: 6380052682920689255}
-  autoAttackStopDistance: 3
-  autoAttackMoveSpeedMultiplier: 3
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  detectionRadius: 30
+  attackRadius: 1.5
+  autoAttackMoveSpeedMultiplier: 1.2
 --- !u!1 &6729624359695587028
 GameObject:
   m_ObjectHideFlags: 0

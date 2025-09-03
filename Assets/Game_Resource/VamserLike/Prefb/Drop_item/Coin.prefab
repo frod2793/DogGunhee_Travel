@@ -147,4 +147,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a725d9be5ab1f47dd9b14f11fb975b09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPoolSpawner: {fileID: 0}
+  floatHeight: 0.5
+  floatDuration: 1.5
+  rotationAngle: 10
+  rotationDuration: 2
+  <CoinValue>k__BackingField: 1

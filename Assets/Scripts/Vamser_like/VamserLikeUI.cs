@@ -56,6 +56,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private Transform joystickTransform;
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
+        private Tween _expSliderTween;
         
         #endregion
 
@@ -96,6 +97,7 @@ namespace DogGuns_Games.vamsir
         private void OnDestroy()
         {
             _cancellationTokenSource?.Cancel();
+            _expSliderTween?.Kill();
 
             // 이벤트 구독 해제 추가
             PlayStateManager.OnGameStart -= GameStart;
@@ -118,6 +120,16 @@ namespace DogGuns_Games.vamsir
             JoystickSetting();
             SoundSetting(); // 사운드 설정 추가
             _cancellationTokenSource = new CancellationTokenSource();
+            
+            // UI 초기 상태 설정
+            // 레벨 텍스트 초기화
+            string initialLevelText = $"Lv. {_gameManager.PlayerLevel():F0}";
+            LevelText.text = initialLevelText;
+            playerLevelText.text = initialLevelText;
+            // 경험치 슬라이더 초기화
+            playerLevelSlider.value = _gameManager.GetPlayerExpProgress();
+            if (expSlider != null) expSlider.value = _gameManager.GetPlayerExpProgress();
+            
             UpdateUI(_cancellationTokenSource.Token).Forget();
         }
 
@@ -277,9 +289,6 @@ namespace DogGuns_Games.vamsir
                 coinText.text = $"{_gameManager.CoinCount()}";
                 getcoinCount = _gameManager.CoinCount();
                 mobCountText.text = $"{_gameManager.Mob_Count()}";
-                playerLevelText.text = $"Lv. {_gameManager.PlayerLevel()}";
-                // User Info UI 업데이트
-                UpdatePlayerLevelUI();
                 await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate, cancellationToken);
             }
         }
@@ -296,25 +305,6 @@ namespace DogGuns_Games.vamsir
             mobWaveText.gameObject.SetActive(false);
         }
 
-        /// <summary>
-        /// 플레이어 레벨 UI를 업데이트합니다.
-        /// </summary>
-        private void UpdatePlayerLevelUI()
-        {
-            float currentLevel = _gameManager.PlayerLevel();
-            LevelText.text = $"Lv. {currentLevel:F0}";
-
-            // 실제 경험치 시스템 사용
-            float expProgress = _gameManager.GetPlayerExpProgress();
-            playerLevelSlider.value = expProgress;
-
-            // 기존 expSlider도 같은 값으로 업데이트 (중복 슬라이더가 있는 경우)
-            if (expSlider != null)
-            {
-                expSlider.value = expProgress;
-            }
-        }
-
         #endregion
 
         #region 플레이어 경험치 및 레벨 이벤트
@@ -324,10 +314,21 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void OnPlayerExpChanged(float currentExp, float maxExp)
         {
-            // 실시간으로 경험치 UI 업데이트
-            UpdatePlayerLevelUI();
+            float progress = (maxExp > 0) ? currentExp / maxExp : 0;
+
+            // 기존 트윈을 중지하고 새 애니메이션 시작
+            _expSliderTween?.Kill();
+            _expSliderTween = playerLevelSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
+
+            // 중복 슬라이더가 있는 경우 함께 업데이트
+            if (expSlider != null)
+            {
+                // 이 슬라이더는 별도의 트윈으로 관리할 필요가 거의 없으므로, Kill 없이 바로 실행합니다.
+                expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
+            }
+            
             // 디버그 로그 (선택사항)
-            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({(currentExp / maxExp) * 100:F1}%)",
+            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({progress * 100:F1}%)",
                 LogManager.LogCategory.VamserLikeUI);
         }
 
@@ -336,8 +337,11 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void OnPlayerLevelUp(float newLevel)
         {
-            // 레벨업 시 UI 업데이트
-            UpdatePlayerLevelUI();
+            // 레벨 텍스트 업데이트
+            string levelString = $"Lv. {newLevel:F0}";
+            LevelText.text = levelString;
+            playerLevelText.text = levelString;
+            
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
             LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}", LogManager.LogCategory.VamserLikeUI);
