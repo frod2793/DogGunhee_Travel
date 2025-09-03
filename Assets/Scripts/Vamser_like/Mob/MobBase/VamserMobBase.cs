@@ -12,8 +12,8 @@ namespace DogGuns_Games.vamsir
         public float Mob_AttackSpeed { get; set; }
         public float Mob_AttackRange { get; set; }
         public float Mob_StunTime { get; set; }
-        protected bool  Mob_IsDie { get; set; }
-        protected bool  Mob_IsHit { get; set; }
+        public bool IsDead { get; protected set; }
+        public bool IsHit { get; protected set; }
         
         protected PlayerBase player; // 플레이어 참조를 저장할 필드
         protected Transform playerTransform; // 실제 움직이는 플레이어 부모 객체의 Transform
@@ -33,7 +33,7 @@ namespace DogGuns_Games.vamsir
         public virtual void OnEnable()
         {
             // objectPoolSpawner는 풀에서 생성될 때 외부에서 할당해 주므로 Find는 불필요합니다.
-            Mob_IsDie = false;
+            IsDead = false;
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
             PlayStateManager.OnGameOver += OnGameOver;
@@ -127,13 +127,32 @@ namespace DogGuns_Games.vamsir
 
         protected virtual void Mob_Die()
         {
-            if (!Mob_IsDie)
+            if (!IsDead)
             {
-                Mob_IsDie = true;
+                IsDead = true;
                 objectPoolSpawner.MobObjectPool.Release(this);
                 PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt++;
                 LogManager.Log("Die : " + name, LogManager.LogCategory.mobBase);
             }
+        }
+
+        /// <summary>
+        /// 외부(틱 데미지 등)에서 몹에게 데미지를 입히는 공용 메서드입니다.
+        /// </summary>
+        /// <param name="damage">입힐 데미지 양</param>
+        public virtual void TakeDamage(float damage)
+        {
+            // 하위 클래스에서 구체적인 로직을 구현합니다.
+        }
+
+        /// <summary>
+        /// 몹에게 슬로우 효과를 적용하는 공용 메서드입니다.
+        /// </summary>
+        /// <param name="slowMultiplier">속도 감소 배율 (0.0 ~ 1.0). 0.3은 30% 감소.</param>
+        /// <param name="duration">슬로우 지속 시간(초).</param>
+        public virtual void ApplySlow(float slowMultiplier, float duration)
+        {
+            // 하위 클래스에서 구체적인 로직을 구현합니다.
         }
     }
 }

@@ -60,11 +60,15 @@ MonoBehaviour:
   weaphonState: 0
   shield: {fileID: 4152132807508348180}
   shieldCollider: {fileID: 6276148643301183331}
+  shieldAnimDuration: 0.5
+  shockwaveDuration: 0.1
   isUpgradelv1: 1
-  boomerangPrefab: {fileID: 2029326127143702795, guid: dd047f8d2e80dca43b400823b5c14539, type: 3}
+  boomerangPrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
+  boomerangCount: 5
   boomerangSpeed: 10
   boomerangDistance: 3
   returnDelay: 0.01
+  boomerangRotationsPerSecond: 2.5
 --- !u!1 &1929210761387709798
 GameObject:
   m_ObjectHideFlags: 0

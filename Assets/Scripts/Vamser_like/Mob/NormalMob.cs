@@ -35,6 +35,7 @@ namespace DogGuns_Games.vamsir
         }
         private AIState _currentState;
         private SpriteRenderer _spriteRenderer;
+        private Tween _slowTween;
         
         private void Awake()
         {
@@ -77,9 +78,9 @@ namespace DogGuns_Games.vamsir
             Mob_AttackRange = initialAttackRange;
             Mob_StunTime = initialStunTime;
             
-            // 상태 플래그 초기화
-            Mob_IsDie = false;
-            Mob_IsHit = false;
+            // 상태 플래그 초기화 (부모 클래스의 프로퍼티 사용)
+            IsDead = false;
+            IsHit = false;
             ismove = false;
 
             // AI 상태 초기화
@@ -111,7 +112,7 @@ namespace DogGuns_Games.vamsir
         {
             // ismove는 Mob_Move, Mob_Stun 등 상태 변경 메서드에서 관리
             // playerTransform은 StartAIBehavior에서 유효성이 보장되므로, null 체크만으로 충분합니다.
-            if (!ismove || playerTransform == null || Mob_IsDie)
+            if (!ismove || playerTransform == null || IsDead)
             {
                 return;
             }
@@ -293,7 +294,7 @@ namespace DogGuns_Games.vamsir
 
         private void HandleCollision(Collision2D other)
         {
-            if (!Mob_IsHit && other.gameObject.CompareTag("Player_Attack"))
+            if (!IsHit && other.gameObject.CompareTag("Player_Attack"))
             {
                 HitCooltime(other).Forget();
                 LogManager.Log("_isHitByShoot: "+_isHitByShoot,LogManager.LogCategory.NormalMob);
@@ -302,7 +303,7 @@ namespace DogGuns_Games.vamsir
 
         private async UniTask HitCooltime(Collision2D other)
         {
-            Mob_IsHit = true;
+            IsHit = true;
 
             // 피격 이펙트: 붉은색으로 점멸
             if (_spriteRenderer != null)
@@ -322,7 +323,7 @@ namespace DogGuns_Games.vamsir
             await UniTask.Yield();
             Mob_Hp -= attackPower;
 
-            if (Mob_Hp <= 0)
+            if (Mob_Hp <= 0 && !IsDead)
             {
                 SetMobState(MobState.Die);
             }
@@ -332,7 +333,54 @@ namespace DogGuns_Games.vamsir
                 SetMobState(MobState.Stun);
             }
 
-            Mob_IsHit = false;
+            IsHit = false;
+        }
+
+        /// <summary>
+        /// 외부(틱 데미지 등)에서 몹에게 데미지를 입히는 공용 메서드입니다.
+        /// </summary>
+        /// <param name="damage">입힐 데미지 양</param>
+        public override void TakeDamage(float damage)
+        {
+            if (IsDead || IsHit) return;
+
+            Mob_Hp -= damage;
+
+            // 피격 이펙트 재생
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.DOKill();
+                _spriteRenderer.color = Color.white;
+                DOTween.Sequence()
+                    .Append(_spriteRenderer.DOColor(Color.red, 0.1f))
+                    .Append(_spriteRenderer.DOColor(Color.white, 0.1f))
+                    .SetTarget(transform);
+            }
+
+            if (Mob_Hp <= 0 && !IsDead)
+            {
+                SetMobState(MobState.Die);
+            }
+        }
+
+        /// <summary>
+        /// 몹에게 슬로우 효과를 적용합니다.
+        /// </summary>
+        /// <param name="slowMultiplier">속도 감소 배율 (0.0 ~ 1.0). 0.3은 30% 감소.</param>
+        /// <param name="duration">슬로우 지속 시간(초).</param>
+        public override void ApplySlow(float slowMultiplier, float duration)
+        {
+            // 기존 슬로우 효과가 있다면 현재 트윈을 완료하고 새 트윈 시작
+            _slowTween?.Kill(true);
+
+            // 슬로우 효과는 기본 속도(initialSpeed)를 기준으로 계산해야 중첩 시 문제가 없습니다.
+            // 여기서는 간단하게 현재 속도를 기준으로 처리합니다.
+            float currentSpeed = Mob_Speed;
+            Mob_Speed *= (1f - slowMultiplier);
+
+            // 지정된 시간 후에 원래 속도로 복구
+            _slowTween = DOVirtual.DelayedCall(duration, () => { Mob_Speed = currentSpeed; })
+                .SetTarget(this); // 오브젝트가 파괴될 때 트윈도 함께 정리
         }
 
         protected override void Mob_Idle()
@@ -367,6 +415,7 @@ namespace DogGuns_Games.vamsir
         protected override void Mob_Die()
         {
             // 오브젝트 풀로 돌아가기 전, 모든 동작(Tween)을 확실히 정지시킵니다.
+            _slowTween?.Kill();
             transform.DOKill();
             base.Mob_Die();
             LogManager.Log("Die", LogManager.LogCategory.NormalMob);
