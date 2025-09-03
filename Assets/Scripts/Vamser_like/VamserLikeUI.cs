@@ -64,7 +64,8 @@ namespace DogGuns_Games.vamsir
 
         private void Awake()
         {
-            _gameManager = FindFirstObjectByType<VamserLikeGameManager>();
+            // 싱글톤 인스턴스를 사용하여 더 효율적이고 안정적으로 참조를 가져옵니다.
+            _gameManager = VamserLikeGameManager.Instance; // Instance 프로퍼티가 null 체크를 담당합니다.
         }
 
         private void Start()
@@ -77,7 +78,6 @@ namespace DogGuns_Games.vamsir
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
 
-            _gameManager = FindFirstObjectByType<VamserLikeGameManager>();
             // 자동 공격 토글 이벤트 연결
             autoAttackToggle.onValueChanged.AddListener(isOn =>
             {
@@ -191,7 +191,7 @@ namespace DogGuns_Games.vamsir
 
             exitBtn.onClick.AddListener(PausePopUp);
 
-            settingBtn.onClick.AddListener(() => { _gameManager.Open_OptionPopUp(); });
+            settingBtn.onClick.AddListener(() => { _gameManager.OpenOptionPopup(); });
 
             // 게임 오버 버튼 설정
             gameOverExitBtn.onClick.AddListener(GameOverExit);
@@ -209,7 +209,7 @@ namespace DogGuns_Games.vamsir
             menuPanel.SetActive(isMenuPanelBecomingActive);
 
             // isMenuPanelBecomingActive 값에 따라 게임의 Pause/Resume 상태를 설정합니다.
-            _gameManager.Open_MenuPopUp(isMenuPanelBecomingActive);
+            _gameManager.SetMenuPopupState(isMenuPanelBecomingActive);
 
             // 메뉴 패널이 활성화되면 조이스틱을 비활성화하고, 그 반대의 경우도 마찬가지입니다.
             joystickTransform.gameObject.SetActive(!isMenuPanelBecomingActive);

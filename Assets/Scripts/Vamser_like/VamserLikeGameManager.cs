@@ -1,6 +1,4 @@
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
-using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -12,6 +10,24 @@ namespace DogGuns_Games.vamsir
     public class VamserLikeGameManager : MonoBehaviour
     {
         #region 필드 및 변수
+        
+        private static VamserLikeGameManager _instance;
+        public static VamserLikeGameManager Instance
+        {
+            get
+            {
+                // 인스턴스가 아직 없는 경우 씬에서 찾아봅니다.
+                if (_instance == null)
+                {
+                    _instance = FindFirstObjectByType<VamserLikeGameManager>();
+                    if (_instance == null)
+                    {
+                        LogManager.LogError("씬에 VamserLikeGameManager 인스턴스가 존재하지 않습니다.");
+                    }
+                }
+                return _instance;
+            }
+        }
 
         [HideInInspector] public PlayerBase spawnedPlayer;
 
@@ -31,13 +47,17 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 컴포넌트 초기화 및 이벤트 구독
         /// </summary>
-        /// <summary>
-        /// 컴포넌트 초기화 및 이벤트 구독
-        /// </summary>
         private void Awake()
         {
-            objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
-            vamPlayerControll = FindFirstObjectByType<VamPlayerControll>();
+            if (_instance != null && _instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            _instance = this;
+            
+            objectPoolSpawner ??= FindFirstObjectByType<ObjectPoolSpawner>();
+            vamPlayerControll ??= FindFirstObjectByType<VamPlayerControll>();
 
             PlayStateManager.OnGameStart += GameStart;
             PlayStateManager.OnGamePause += Pause;
@@ -65,23 +85,30 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private async void GameStart()
         {
-            PlayStateManager.instance.isPlay = true;
-            PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt = 0;
-
-            SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
-            // 플레이어와 무기 스폰이 완료될 때까지 기다립니다.
-
-            await SpawnPlayer();
-
-            // 플레이어 스폰이 성공적으로 완료된 후에 몹 스포너를 활성화합니다.
-            if (spawnedPlayer != null && objectPoolSpawner != null)
+            try
             {
-                await objectPoolSpawner.InitializeAndStartSpawning(spawnedPlayer);
-                LogManager.Log("게임 시작: 플레이어 스폰 완료 후 몹 스포너 활성화", LogManager.LogCategory.VamserLikeGameManager);
+                PlayStateManager.instance.isPlay = true;
+                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt = 0;
+
+                SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
+                // 플레이어와 무기 스폰이 완료될 때까지 기다립니다.
+
+                await SpawnPlayer();
+
+                // 플레이어 스폰이 성공적으로 완료된 후에 몹 스포너를 활성화합니다.
+                if (spawnedPlayer != null && objectPoolSpawner != null)
+                {
+                    await objectPoolSpawner.InitializeAndStartSpawning(spawnedPlayer);
+                    LogManager.Log("게임 시작: 플레이어 스폰 완료 후 몹 스포너 활성화", LogManager.LogCategory.VamserLikeGameManager);
+                }
+                else
+                {
+                    LogManager.LogError("플레이어 스폰에 실패했거나 ObjectPoolSpawner를 찾을 수 없어 게임을 시작할 수 없습니다.");
+                }
             }
-            else
+            catch (System.Exception e)
             {
-                LogManager.LogError("플레이어 스폰에 실패했거나 ObjectPoolSpawner를 찾을 수 없어 게임을 시작할 수 없습니다.");
+                LogManager.LogError($"게임 시작 중 심각한 오류 발생: {e.Message}", LogManager.LogCategory.VamserLikeGameManager);
             }
         }
 
@@ -144,7 +171,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 메뉴 팝업 열기와 게임 상태 변경
         /// </summary>
-        public void Open_MenuPopUp(bool isPause)
+        public void SetMenuPopupState(bool isPause)
         {
             PlayStateManager.instance.PlayState =
                 isPause ? PlayStateManager.GameState.Pause : PlayStateManager.GameState.Resume;
@@ -155,7 +182,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 옵션 팝업 열기
         /// </summary>
-        public void Open_OptionPopUp()
+        public void OpenOptionPopup()
         {
             if (optionPopupManager == null)
             {
@@ -163,8 +190,10 @@ namespace DogGuns_Games.vamsir
                 return;
             }
 
-            Instantiate(optionPopupManager);
-            optionPopupManager.gameObject.SetActive(true);
+            // Instantiate는 프리팹의 복제본을 생성합니다.
+            // 생성된 인스턴스를 변수에 저장하여 사용해야 합니다.
+            var popupInstance = Instantiate(optionPopupManager);
+            popupInstance.gameObject.SetActive(true); // 프리팹이 비활성화 상태일 경우를 대비해 명시적으로 활성화
             LogManager.Log("옵션 팝업 열림", LogManager.LogCategory.VamserLikeGameManager);
         }
 
@@ -209,7 +238,7 @@ namespace DogGuns_Games.vamsir
         private async UniTask<Weaphon_base> SpawnSelectedWeapon()
         {
             int weaponIndex = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
-            string addressableKey = $"Weapon_{weaponIndex}"; // ��기 Addressable 주소 규칙
+            string addressableKey = $"Weapon_{weaponIndex}"; // 무기 Addressable 주소 규칙
 
             try
             {
@@ -280,7 +309,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 현재 스폰된 캐릭터와 무기를 변경
         /// </summary>
-        public async void ChangeCharacterAndWeapon_Spawn()
+        public async UniTask ChangeCharacterAndWeapon_Spawn()
         {
             if (inGameObjectParent == null)
             {
@@ -305,31 +334,8 @@ namespace DogGuns_Games.vamsir
 
         #endregion
 
-        #region UI 효과 및 데이터 접근
-
-        /// <summary>
-        /// 웨이브 텍스트에 페이드 효과 적용
-        /// </summary>
-        public void WaveTextFadeEffect(TMP_Text mobWaveText)
-        {
-            if (mobWaveText == null)
-            {
-                LogManager.LogError("웨이브 텍스트가 null입니다.", LogManager.LogCategory.VamserLikeGameManager);
-                return;
-            }
-
-            // 페이드 인 효과
-            mobWaveText.DOFade(1, 1)
-                .SetEase(Ease.Linear)
-                .OnComplete(() =>
-                {
-                    // 페이드 아웃 효과
-                    mobWaveText.DOFade(0, 1)
-                        .SetEase(Ease.Linear)
-                        .SetDelay(1f);
-                });
-        }
-
+        #region 데이터 접근자 (Data Accessors)
+        
         /// <summary>
         /// 현재 처치한 몹 수 반환
         /// </summary>

@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: c0218446462d6b744bc070f0277a6ea3
   m_currentHash:
     serializedVersion: 2
-    Hash: 356d47d449ac62c1f73d2470923e83b1
+    Hash: 87ceff3b84ebd58ec68c56e7341c8dbc
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 1
   m_CatalogRequestsTimeout: 0
@@ -96,7 +96,21 @@ MonoBehaviour:
       - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
-        m_Value: https://console.cloud.google.com/storage/browser/unity_addressableasset/bit_travel_bundle/Android
+        m_Value: https://console.cloud.gogle.com/stoorage/browser/unity_addressableasset/bit_travel_bundle/Android
+    - m_InheritedParent: 
+      m_Id: 2b4a95c355fe04ce088eceadeccacde0
+      m_ProfileName: TestWebGl
+      m_Values:
+      - m_Id: 2b136268c4103534ab9b88b1952e78a8
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 2b6d97230360f3c4db941d8f6734ff3b
+        m_Value: 'ServerData/[BuildTarget]'
+      - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
+        m_Value: unity_addressableasset/bit_travel_bundle/WebGL
     - m_InheritedParent: 
       m_Id: 4b1b7a828bb56af47a25ae4fff7281cc
       m_ProfileName: Pc_test
@@ -144,7 +158,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6efcef9100589a94d8bb1fcf5916984b, type: 2}
   - {fileID: 11400000, guid: 45299f25834eebe43a1c265d68fb0912, type: 2}
   - {fileID: 11400000, guid: f0101f86a336f2647876f7bfad988b57, type: 2}
-  m_ActiveProfileId: 4b1b7a828bb56af47a25ae4fff7281cc
+  m_ActiveProfileId: 2b4a95c355fe04ce088eceadeccacde0
   m_CcdManagedData:
     EnvironmentId: 
     EnvironmentName: 
