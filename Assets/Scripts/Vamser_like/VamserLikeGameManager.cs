@@ -246,6 +246,7 @@ namespace DogGuns_Games.vamsir
                     Quaternion.identity, inGameObjectParent.transform).ToUniTask();
                 if (weaponInstance != null)
                 {
+                    weaponInstance.transform.localPosition = Vector3.zero; // 스폰 후 로컬 좌표를 0으로 초기화
                     LogManager.Log($"무기 스폰 성공: {addressableKey}", LogManager.LogCategory.VamserLikeGameManager);
                     return weaponInstance.GetComponent<Weaphon_base>();
                 }
@@ -274,6 +275,7 @@ namespace DogGuns_Games.vamsir
                     Quaternion.identity, inGameObjectParent.transform).ToUniTask();
                 if (characterInstance != null)
                 {
+                    characterInstance.transform.localPosition = Vector3.zero; // 스폰 후 로컬 좌표를 0으로 초기화
                     LogManager.Log($"캐릭터 스폰 성공: {addressableKey}", LogManager.LogCategory.VamserLikeGameManager);
                     spawnedPlayer = characterInstance.GetComponent<PlayerBase>();
                     if (spawnedPlayer != null)

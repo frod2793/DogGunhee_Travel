@@ -19,6 +19,9 @@ namespace DogGuns_Games.vamsir
         public IObjectPool<VamserMobBase> MobObjectPool { get; private set; }
         public IObjectPool<EXP_Obj> ExpObjectPool { get; private set; }
         public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
+        // 제네릭 오브젝트 풀을 관리하기 위한 딕셔너리
+        private readonly Dictionary<GameObject, IObjectPool<GameObject>> _genericObjectPools = new Dictionary<GameObject, IObjectPool<GameObject>>();
+        private readonly Dictionary<GameObject, GameObject> _instanceToPrefabMap = new Dictionary<GameObject, GameObject>();
         
         [Header("<color=green>몹 오브젝트</color>")]
         [SerializeField] private int poolSizeMobCount = 20;
@@ -403,6 +406,69 @@ namespace DogGuns_Games.vamsir
             if (obj != null)
             {
                 Destroy(obj.gameObject);
+            }
+        }
+
+        #endregion
+
+        #region 제네릭 오브젝트 풀링
+
+        /// <summary>
+        /// 지정된 프리팹을 사용하여 오브젝트 풀에서 게임 오브젝트를 스폰합니다.
+        /// 풀이 없으면 새로 생성합니다.
+        /// </summary>
+        /// <param name="prefab">스폰할 프리팹</param>
+        /// <param name="position">스폰 위치</param>
+        /// <param name="rotation">스폰 회전값</param>
+        /// <returns>스폰된 게임 오브젝트</returns>
+        public GameObject SpawnObject(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            if (prefab == null)
+            {
+                LogManager.LogError("스폰하려는 프리팹이 null입니다.", LogManager.LogCategory.ObjectPoolSpawner);
+                return null;
+            }
+
+            if (!_genericObjectPools.TryGetValue(prefab, out var pool))
+            {
+                // 이 프리팹에 대한 풀이 없으면 새로 생성합니다.
+                pool = new ObjectPool<GameObject>(
+                    createFunc: () => Instantiate(prefab),
+                    actionOnGet: (obj) =>
+                    {
+                        obj.transform.position = position;
+                        obj.transform.rotation = rotation;
+                        obj.SetActive(true);
+                    },
+                    actionOnRelease: (obj) => obj.SetActive(false),
+                    actionOnDestroy: (obj) => Destroy(obj),
+                    maxSize: 20 // 기본 풀 사이즈
+                );
+                _genericObjectPools[prefab] = pool;
+            }
+
+            var instance = pool.Get();
+            _instanceToPrefabMap[instance] = prefab; // 반환 시 사용할 수 있도록 인스턴스와 프리팹을 매핑합니다.
+            return instance;
+        }
+
+        /// <summary>
+        /// 사용이 끝난 게임 오브젝트를 원래의 풀로 반환합니다.
+        /// </summary>
+        /// <param name="instance">반환할 게임 오브젝트 인스턴스</param>
+        public void ReturnObject(GameObject instance)
+        {
+            if (instance == null) return;
+
+            if (_instanceToPrefabMap.TryGetValue(instance, out var prefab) && _genericObjectPools.TryGetValue(prefab, out var pool))
+            {
+                pool.Release(instance);
+                _instanceToPrefabMap.Remove(instance);
+            }
+            else
+            {
+                LogManager.LogWarning("풀링되지 않은 오브젝트를 반환하려고 시도했습니다. 오브젝트를 즉시 파괴합니다.", LogManager.LogCategory.ObjectPoolSpawner, instance);
+                Destroy(instance);
             }
         }
 

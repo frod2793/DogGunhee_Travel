@@ -23,7 +23,8 @@ public class LogManager : MonoBehaviour
         InventoryManager,
         PlayerDataManager,
         VamserLikeUI,
-        mobBase
+        mobBase,
+        Weapon
     }
     public static LogManager Instance { get; private set; }
     [SerializeField] private bool enableDebugLog = true;
@@ -64,7 +65,10 @@ public class LogManager : MonoBehaviour
         new LogCategorySetting { category = LogCategory.SceneLoader, enableLog = true },
         new LogCategorySetting { category = LogCategory.InventoryManager, enableLog = true },
         new LogCategorySetting { category = LogCategory.PlayerDataManager, enableLog = true }
-        
+        ,
+        new LogCategorySetting { category = LogCategory.VamserLikeUI, enableLog = true },
+        new LogCategorySetting { category = LogCategory.mobBase, enableLog = true },
+        new LogCategorySetting { category = LogCategory.Weapon, enableLog = true }
         // 필요에 따라 추가
     };
 
