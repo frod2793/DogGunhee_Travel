@@ -83,8 +83,15 @@ namespace DogGuns_Games.vamsir
             IsHit = false;
             ismove = false;
 
-            // AI 상태 초기화
-            transform.DOKill(); // 이전 트윈이 남아있을 경우를 대비해 확실히 제거
+            // AI 상태 초기화 - transform.DOKill()은 드물게 내부 오류를 유발할 수 있습니다.
+            // 더 안전하게, 이 클래스가 직접 관리하는 트윈들만 명시적으로 Kill합니다.
+            _wanderTween?.Kill();
+            _slowTween?.Kill();
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.DOKill();
+            }
+            
             _isWaitingToWander = false;
             _currentState = AIState.Wandering;
 
@@ -305,6 +312,27 @@ namespace DogGuns_Games.vamsir
         {
             IsHit = true;
 
+            // [수정] 무기 변경 등으로 인해 무기 참조가 null이 되었을 경우, 게임 매니저를 통해 다시 획득합니다.
+            if (_playerWeaphon == null)
+            {
+                if (VamserLikeGameManager.Instance != null && VamserLikeGameManager.Instance.spawnedPlayer != null)
+                {
+                    _playerWeaphon = VamserLikeGameManager.Instance.spawnedPlayer.WeaphonBase;
+                    if (_playerWeaphon != null)
+                    {
+                        LogManager.Log("플레이어 무기 참조를 다시 획득했습니다.", LogManager.LogCategory.NormalMob, this);
+                    }
+                }
+            }
+            
+            // 재시도 후에도 null이면, 처리를 중단합니다.
+            if (_playerWeaphon == null)
+            {
+                LogManager.LogError("플레이어 무기를 찾을 수 없어 피격 처리를 할 수 없습니다.", LogManager.LogCategory.NormalMob, this);
+                IsHit = false; // 무적 상태를 해제하여 다음 충돌에서 다시 시도할 수 있도록 합니다.
+                return;
+            }
+
             // 피격 이펙트: 붉은색으로 점멸
             if (_spriteRenderer != null)
             {
@@ -415,8 +443,13 @@ namespace DogGuns_Games.vamsir
         protected override void Mob_Die()
         {
             // 오브젝트 풀로 돌아가기 전, 모든 동작(Tween)을 확실히 정지시킵니다.
+            _wanderTween?.Kill();
             _slowTween?.Kill();
-            transform.DOKill();
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.DOKill();
+            }
+            
             base.Mob_Die();
             LogManager.Log("Die", LogManager.LogCategory.NormalMob);
         }

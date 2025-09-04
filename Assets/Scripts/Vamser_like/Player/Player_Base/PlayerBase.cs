@@ -403,7 +403,7 @@ namespace DogGuns_Games.vamsir
             AttackPower += 5f;
             Health += 20f;
             Defense += 2f;
-            MoveSpeed += 0.1f;
+        //    MoveSpeed += 0.1f;
             
             // 레벨업 사운드 효과 (선택사항)
             // SoundManager.PlaySound(Sound.SFX, "LevelUp");

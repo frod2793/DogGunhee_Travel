@@ -57,8 +57,8 @@ namespace DogGuns_Games.vamsir
         private void OnDisable()
         {
             // 오브젝트 비활성화 시 진행중인 공격 로직을 안전하게 취소합니다.
+            // Dispose는 작업을 시작한 ActivateBlackWater가 담당하므로, 여기서는 Cancel 신호만 보냅니다.
             _attackCts?.Cancel();
-            _attackCts?.Dispose();
             transform.DOKill(); // 스케일 트윈이 있을 경우를 대비
         }
 
@@ -83,33 +83,62 @@ namespace DogGuns_Games.vamsir
         private async UniTask ActivateBlackWater()
         {
             _isAttacking = true;
-            _attackCts = new CancellationTokenSource();
+            
+            // 이 공격 실행의 생명주기를 관리하는 CancellationTokenSource를 생성합니다.
+            var cts = new CancellationTokenSource();
+            _attackCts = cts; // OnDisable에서 참조할 수 있도록 필드에 할당합니다.
 
-            // 업그레이드 시 범위 증가
-            if (isUpgraded)
+            try
             {
-                transform.localScale = _originalScale * rangeMultiplier;
+                // 업그레이드 시 범위 증가
+                if (isUpgraded)
+                {
+                    transform.localScale = _originalScale * rangeMultiplier;
+                }
+
+                _collider2D.enabled = true;
+                // TODO: 웅덩이 생성 비주얼 이펙트 (예: transform.DOScale, DOFade 등)
+
+                // 틱 데미지 루프 시작 (오브젝트 파괴 시 함께 취소되도록 링크)
+                var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, this.GetCancellationTokenOnDestroy()).Token;
+                DealTickDamageLoop(linkedToken).Forget();
+
+                // 공격 지속 시간만큼 대기
+                await UniTask.Delay(TimeSpan.FromSeconds(attackDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
+            }
+            catch (OperationCanceledException)
+            {
+                // UniTask.Delay가 오브젝트 파괴로 인해 취소된 경우. 정상적인 흐름입니다.
+                // finally 블록에서 정리 작업이 수행되므로, 여기서는 아무것도 할 필요가 없습니다.
+                return;
+            }
+            finally
+            {
+                // 성공, 예외, 취소 등 어떤 경우에도 반드시 실행되는 정리 블록입니다.
+                cts.Cancel(); // 틱 데미지 루프 등 이 공격과 관련된 모든 작업을 취소합니다.
+
+                _collider2D.enabled = false;
+                _mobsInRange.Clear(); // 범위 내 몹 리스트 초기화
+                transform.localScale = _originalScale; // 원래 크기로 복원
+                // TODO: 웅덩이 소멸 비주얼 이펙트
+
+                // 이 공격에 사용된 CTS를 정리합니다.
+                if (_attackCts == cts) _attackCts = null;
+                cts.Dispose();
             }
 
-            _collider2D.enabled = true;
-            // TODO: 웅덩이 생성 비주얼 이펙트 (예: transform.DOScale, DOFade 등)
-
-            // 틱 데미지 루프 시작
-            DealTickDamageLoop(_attackCts.Token).Forget();
-
-            // 공격 지속 시간만큼 대기
-            await UniTask.Delay(TimeSpan.FromSeconds(attackDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
-
-            // 공격 종료
-            _collider2D.enabled = false;
-            _attackCts.Cancel(); // 틱 데미지 루프 중단
-            _mobsInRange.Clear(); // 범위 내 몹 리스트 초기화
-            transform.localScale = _originalScale; // 원래 크기로 복원
-            // TODO: 웅덩이 소멸 비주얼 이펙트
-
             // 재공격 쿨타임
-            await UniTask.Delay(TimeSpan.FromSeconds(coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
-            _isAttacking = false;
+            // 공격이 정상적으로 완료된 후, 재공격 쿨타임을 시작합니다.
+            try
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
+                _isAttacking = false;
+            }
+            catch (OperationCanceledException)
+            {
+                // 쿨타임 중 오브젝트가 파괴된 경우
+                _isAttacking = false;
+            }
         }
 
         private async UniTask DealTickDamageLoop(CancellationToken token)

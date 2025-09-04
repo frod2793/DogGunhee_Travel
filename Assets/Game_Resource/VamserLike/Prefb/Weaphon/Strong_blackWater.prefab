@@ -103,13 +103,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackPower: 30
-  coolTime: 0.5
+  coolTime: 0.2
   attackSpeed: 0
   attackRange: 0
   mobStunTime: 1
   weaphonIndex: 1
   isShooting: 0
   weaphonState: 0
+  attackDuration: 0.2
+  damageTickInterval: 0.2
+  isUpgraded: 0
+  rangeMultiplier: 1.5
+  slowAmount: 0.3
+  slowDuration: 1
 --- !u!58 &6130841383784017638
 CircleCollider2D:
   m_ObjectHideFlags: 0

@@ -11,6 +11,8 @@ namespace DogGuns_Games.vamsir
     {
         #region 필드 및 변수
         
+        public static event System.Action<PlayerBase> OnPlayerChanged;
+        
         private static VamserLikeGameManager _instance;
         public static VamserLikeGameManager Instance
         {
@@ -135,6 +137,7 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.instance.isPlay = false;
 
             spawnedPlayer = null; // 게임 오버 시 플레이어 참조 초기화
+            OnPlayerChanged?.Invoke(null); // 플레이어가 사라졌음을 알림
 
             // 게임 내에 획득한 코인 합산
             var playerData = PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData;
@@ -296,6 +299,9 @@ namespace DogGuns_Games.vamsir
                         LogManager.LogError("스폰된 캐릭터에서 PlayerBase 컴포넌트를 찾을 수 없습니다.",
                             LogManager.LogCategory.VamserLikeGameManager);
                     }
+                    
+                    // 새 플레이어가 성공적으로 스폰되었음을 모든 리스너에게 알립니다.
+                    OnPlayerChanged?.Invoke(spawnedPlayer);
                 }
             }
             catch (System.Exception ex)
@@ -327,7 +333,8 @@ namespace DogGuns_Games.vamsir
                 Addressables.ReleaseInstance(child.gameObject);
             }
 
-            spawnedPlayer = null; // 참조 제거
+            spawnedPlayer = null; // 이전 플레이어 참조 제거
+            OnPlayerChanged?.Invoke(null); // 플레이어가 제거되었음을 모든 리스너에게 알립니다.
 
             // 새 캐릭터와 무기 스폰 (비동기 호출 및 대기)
             await SpawnPlayer();

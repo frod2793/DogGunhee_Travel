@@ -114,6 +114,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void SubscribeToEvents()
         {
+            VamserLikeGameManager.OnPlayerChanged += HandlePlayerChanged;
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
             PlayStateManager.OnGameOver -= GameEnd;
@@ -171,6 +172,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void UnsubscribeFromEvents()
         {
+            VamserLikeGameManager.OnPlayerChanged -= HandlePlayerChanged;
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
             PlayStateManager.OnGameOver -= GameEnd;
@@ -211,6 +213,15 @@ namespace DogGuns_Games.vamsir
             CoinObjectPool?.Clear();
             
             LogManager.Log("게임 종료: 모든 오브젝트 풀 정리됨", LogManager.LogCategory.ObjectPoolSpawner);
+        }
+
+        /// <summary>
+        /// 플레이어 변경 이벤트를 수신하여 내부 플레이어 참조를 갱신합니다.
+        /// </summary>
+        private void HandlePlayerChanged(PlayerBase newPlayer)
+        {
+            _player = newPlayer;
+            LogManager.Log($"플레이어 참조가 갱신되었습니다: {(newPlayer != null ? newPlayer.name : "null")}", LogManager.LogCategory.ObjectPoolSpawner);
         }
 
         #endregion

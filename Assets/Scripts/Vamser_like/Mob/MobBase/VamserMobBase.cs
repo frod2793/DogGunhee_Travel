@@ -32,7 +32,6 @@ namespace DogGuns_Games.vamsir
 
         public virtual void OnEnable()
         {
-            // objectPoolSpawner는 풀에서 생성될 때 외부에서 할당해 주므로 Find는 불필요합니다.
             IsDead = false;
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
