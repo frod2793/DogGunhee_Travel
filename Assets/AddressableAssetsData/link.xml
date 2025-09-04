@@ -20,12 +20,14 @@
     <type fullname="DogGuns_Games.vamsir.EXP_Obj" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.NormalMob" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.ObjectPoolSpawner" preserve="all" />
+    <type fullname="DogGuns_Games.vamsir.PearlProjectile" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.Player_Doggun" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.PlayStateManager" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.VamPlayerControll" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.VamserLikeGameManager" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.VamserLikeUI" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.WeaphonBone" preserve="all" />
+    <type fullname="DogGuns_Games.vamsir.WeaphonJinjoo" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.WeaphonShield" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.WeaphonStrongBlackWater" preserve="all" />
     <type fullname="JoyStickPosDragandDrop" preserve="all" />
@@ -36,6 +38,7 @@
     <type fullname="SettingsData_oBJ" preserve="all" />
     <type fullname="SoundData" preserve="all" />
     <type fullname="SoundManager" preserve="all" />
+    <type fullname="TestManager" preserve="all" />
     <type fullname="VariableJoystick" preserve="all" />
     <type fullname="AudioClipInfo" preserve="nothing" serialized="true" />
     <type fullname="LogManager/LogCategorySetting" preserve="nothing" serialized="true" />
@@ -72,6 +75,7 @@
     <type fullname="TMPro.TextMeshProUGUI" preserve="all" />
     <type fullname="TMPro.TMP_Dropdown" preserve="all" />
     <type fullname="TMPro.TMP_FontAsset" preserve="all" />
+    <type fullname="TMPro.TMP_InputField" preserve="all" />
     <type fullname="TMPro.FaceInfo_Legacy" preserve="nothing" serialized="true" />
     <type fullname="TMPro.FontAssetCreationSettings" preserve="nothing" serialized="true" />
     <type fullname="TMPro.KerningTable" preserve="nothing" serialized="true" />
@@ -82,6 +86,11 @@
     <type fullname="TMPro.TMP_FontFeatureTable" preserve="nothing" serialized="true" />
     <type fullname="TMPro.TMP_FontWeightPair" preserve="nothing" serialized="true" />
     <type fullname="TMPro.VertexGradient" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_InputField/OnChangeEvent" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_InputField/SelectionEvent" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_InputField/SubmitEvent" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_InputField/TextSelectionEvent" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_InputField/TouchScreenKeyboardEvent" preserve="nothing" serialized="true" />
   </assembly>
   <assembly fullname="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
     <type fullname="UnityEngine.AnimationClip" preserve="all" />
@@ -133,6 +142,7 @@
     <type fullname="UnityEngine.UI.Image" preserve="all" />
     <type fullname="UnityEngine.UI.LayoutElement" preserve="all" />
     <type fullname="UnityEngine.UI.Mask" preserve="all" />
+    <type fullname="UnityEngine.UI.RectMask2D" preserve="all" />
     <type fullname="UnityEngine.UI.Scrollbar" preserve="all" />
     <type fullname="UnityEngine.UI.ScrollRect" preserve="all" />
     <type fullname="UnityEngine.UI.Slider" preserve="all" />

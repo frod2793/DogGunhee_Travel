@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Cysharp.Threading.Tasks;
@@ -30,6 +31,11 @@ namespace DogGuns_Games.vamsir
         public virtual void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
+        }
+
+        public virtual void OnDisable()
+        {
+            
         }
 
         private void OnValidate()

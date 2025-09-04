@@ -62,7 +62,7 @@ MonoBehaviour:
   shieldCollider: {fileID: 6276148643301183331}
   shieldAnimDuration: 0.5
   shockwaveDuration: 0.1
-  isUpgradelv1: 1
+  isUpgradelv1: 0
   boomerangPrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
   boomerangCount: 5
   boomerangSpeed: 10
