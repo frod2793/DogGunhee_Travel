@@ -58,6 +58,8 @@ namespace DogGuns_Games.vamsir
         private bool _autoAttackActive = false;
         private GameObject _currentTarget;
         
+        public Vector3 MoveDirection { get; private set; } // 현재 조이스틱 입력에 따른 이동 방향
+        
         #endregion
 
         #region Unity 라이프사이클
@@ -155,8 +157,8 @@ namespace DogGuns_Games.vamsir
         
         private void HandleMovement()
         {
-            Vector3 joystickDirection = GetJoystickInputDirection();
-            bool isJoystickActive = joystickDirection.magnitude > joystickInputThreshold;
+            MoveDirection = GetJoystickInputDirection(); // 현재 이동 방향 업데이트
+            bool isJoystickActive = MoveDirection.magnitude > joystickInputThreshold;
 
             if (isJoystickActive)
             {
@@ -164,8 +166,8 @@ namespace DogGuns_Games.vamsir
                 {
                     DisableAutoMoveAttack();
                 }
-                ManualPlayerMovement(joystickDirection);
-                TryAttack(joystickDirection);
+                ManualPlayerMovement(MoveDirection);
+                TryAttack(MoveDirection);
             }
             else
             {
