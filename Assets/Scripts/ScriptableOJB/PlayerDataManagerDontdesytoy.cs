@@ -141,12 +141,7 @@ namespace DogGuns_Games
                 }
                 var jsonData = JsonUtility.ToJson(scritpableobjPlayerData, true);
                 EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, _rsaPublicKey);
-                SerializableEncryptedPacket serializablePacket = new SerializableEncryptedPacket
-                {
-                    EncryptedSessionKeyBase64 = Convert.ToBase64String(encryptedPacket.EncryptedSessionKey),
-                    EncryptedDataBase64 = Convert.ToBase64String(encryptedPacket.EncryptedData)
-                };
-                string packetJson = JsonUtility.ToJson(serializablePacket);
+                string packetJson = JsonUtility.ToJson(encryptedPacket);
                 File.WriteAllText(savePath, packetJson);
                 LogManager.Log($"플레이어 데이터가 암호화되어 {savePath}에 저장되었습니다.", LogManager.LogCategory.PlayerDataManager);
             }
@@ -167,12 +162,7 @@ namespace DogGuns_Games
                 if (File.Exists(savePath))
                 {
                     string packetJson = File.ReadAllText(savePath);
-                    SerializableEncryptedPacket serializablePacket = JsonUtility.FromJson<SerializableEncryptedPacket>(packetJson);
-                    EncryptedPacket encryptedPacket = new EncryptedPacket
-                    {
-                        EncryptedSessionKey = Convert.FromBase64String(serializablePacket.EncryptedSessionKeyBase64),
-                        EncryptedData = Convert.FromBase64String(serializablePacket.EncryptedDataBase64)
-                    };
+                    EncryptedPacket encryptedPacket = JsonUtility.FromJson<EncryptedPacket>(packetJson);
                     string decryptedJson = _encryption.Decrypt(encryptedPacket, _rsaPrivateKey);
                     JsonUtility.FromJsonOverwrite(decryptedJson, scritpableobjPlayerData);
                     LogManager.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.PlayerDataManager);

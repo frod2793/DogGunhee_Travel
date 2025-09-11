@@ -287,12 +287,7 @@ namespace DogGuns_Games.Lobby
                     return;
                 }
                 EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, rsaPublicKey);
-                SerializableEncryptedPacket serializablePacket = new SerializableEncryptedPacket
-                {
-                    EncryptedSessionKeyBase64 = Convert.ToBase64String(encryptedPacket.EncryptedSessionKey),
-                    EncryptedDataBase64 = Convert.ToBase64String(encryptedPacket.EncryptedData)
-                };
-                string packetJson = JsonUtility.ToJson(serializablePacket);
+                string packetJson = JsonUtility.ToJson(encryptedPacket);
                 File.WriteAllText(_localSavePath, packetJson);
                 LogManager.Log($"인벤토리 데이터를 암호화하여 {_localSavePath}에 저장했습니다.", LogManager.LogCategory.InventoryManager);
             }
@@ -317,15 +312,8 @@ namespace DogGuns_Games.Lobby
                 {
                     // 암호화된 데이터 로드
                     string packetJson = File.ReadAllText(_localSavePath);
-                    SerializableEncryptedPacket serializablePacket =
-                        JsonUtility.FromJson<SerializableEncryptedPacket>(packetJson);
-
-                    // Base64 문자열을 바이트 배열로 변환
-                    EncryptedPacket encryptedPacket = new EncryptedPacket
-                    {
-                        EncryptedSessionKey = Convert.FromBase64String(serializablePacket.EncryptedSessionKeyBase64),
-                        EncryptedData = Convert.FromBase64String(serializablePacket.EncryptedDataBase64)
-                    };
+                    EncryptedPacket encryptedPacket =
+                        JsonUtility.FromJson<EncryptedPacket>(packetJson);
 
                     // 복호화에 사용할 개인키 확인
                     string rsaPrivateKey = PlayerDataManagerDontdesytoy.Instance.RsaPrivateKey;
@@ -343,9 +331,8 @@ namespace DogGuns_Games.Lobby
 
                     LogManager.Log("암호화된 인벤토리 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.InventoryManager);
                     LogManager.Log($"packetJson: {packetJson}", LogManager.LogCategory.InventoryManager);
-                    LogManager.Log($"serializablePacket: {JsonUtility.ToJson(serializablePacket)}", LogManager.LogCategory.InventoryManager);
-                    LogManager.Log($"encryptedPacket.EncryptedSessionKey: {serializablePacket.EncryptedSessionKeyBase64}", LogManager.LogCategory.InventoryManager);
-                    LogManager.Log($"encryptedPacket.EncryptedData: {serializablePacket.EncryptedDataBase64}", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"encryptedPacket.EncryptedSessionKey: {encryptedPacket.EncryptedSessionKeyBase64}", LogManager.LogCategory.InventoryManager);
+                    LogManager.Log($"encryptedPacket.EncryptedData: {encryptedPacket.EncryptedDataBase64}", LogManager.LogCategory.InventoryManager);
                     LogManager.Log($"decryptedJson: {decryptedJson}", LogManager.LogCategory.InventoryManager);
                 }
                 else

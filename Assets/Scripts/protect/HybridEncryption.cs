@@ -4,26 +4,62 @@ using System.Security.Cryptography;
 using System.Text;
 
 /// <summary>
-/// 암호화된 결과물을 담는 클래스입니다.
-/// AES로 암호화된 원본 데이터와, RSA로 암호화된 AES 세션 키를 포함합니다.
-/// </summary>
-public class EncryptedPacket
-{
-    // RSA로 암호화된 AES 세션 키 (Key + IV)
-    public byte[] EncryptedSessionKey { get; set; }
-
-    // AES로 암호화된 원본 데이터 (JSON)
-    public byte[] EncryptedData { get; set; }
-}
-
-/// <summary>
-/// JSON 직렬화를 위한 암호화 패킷 클래스
+/// 암호화된 데이터와 세션 키를 포함하며, JSON 직렬화를 지원하는 하이브리드 암호화 패킷 클래스입니다.
+/// Base64 문자열로 데이터를 직렬화하고, 내부적으로 byte[]로 변환하여 사용합니다.
 /// </summary>
 [System.Serializable]
-public class SerializableEncryptedPacket
+public class EncryptedPacket
 {
+    // JSON 직렬화를 위한 Base64 인코딩된 문자열 필드
     public string EncryptedSessionKeyBase64;
     public string EncryptedDataBase64;
+
+    // 내부 로직에서 사용할 byte[] 프로퍼티 (직렬화되지 않음)
+    [System.NonSerialized]
+    private byte[] _encryptedSessionKey;
+    public byte[] EncryptedSessionKey
+    {
+        get
+        {
+            if (_encryptedSessionKey == null && !string.IsNullOrEmpty(EncryptedSessionKeyBase64))
+            {
+                _encryptedSessionKey = Convert.FromBase64String(EncryptedSessionKeyBase64);
+            }
+            return _encryptedSessionKey;
+        }
+        set
+        {
+            _encryptedSessionKey = value;
+            EncryptedSessionKeyBase64 = value != null ? Convert.ToBase64String(value) : null;
+        }
+    }
+
+    [System.NonSerialized]
+    private byte[] _encryptedData;
+    public byte[] EncryptedData
+    {
+        get
+        {
+            if (_encryptedData == null && !string.IsNullOrEmpty(EncryptedDataBase64))
+            {
+                _encryptedData = Convert.FromBase64String(EncryptedDataBase64);
+            }
+            return _encryptedData;
+        }
+        set
+        {
+            _encryptedData = value;
+            EncryptedDataBase64 = value != null ? Convert.ToBase64String(value) : null;
+        }
+    }
+    
+    public EncryptedPacket() { } 
+
+    public EncryptedPacket(byte[] encryptedSessionKey, byte[] encryptedData)
+    {
+        this.EncryptedSessionKey = encryptedSessionKey;
+        this.EncryptedData = encryptedData;
+    }
 }
 
 /// <summary>
@@ -85,11 +121,7 @@ public class HybridEncryption
             }
 
             // 4. 암호화된 데이터와 암호화된 세션키를 하나의 패킷으로 묶어 반환합니다.
-            return new EncryptedPacket
-            {
-                EncryptedData = encryptedData,
-                EncryptedSessionKey = encryptedSessionKey
-            };
+            return new EncryptedPacket(encryptedSessionKey, encryptedData);
         }
     }
 
