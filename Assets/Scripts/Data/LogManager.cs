@@ -24,7 +24,8 @@ public class LogManager : MonoBehaviour
         PlayerDataManager,
         VamserLikeUI,
         mobBase,
-        Weapon
+        Weapon,
+        EffectManager
     }
     public static LogManager Instance { get; private set; }
     [SerializeField] private bool enableDebugLog = true;
