@@ -5,18 +5,21 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/IntroScene.unity
     guid: 7905e388b7f424c71963bef35b91e7d5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/LobbyScene.unity
     guid: 2917fd536eadc4346ba3a9a1d8058c09
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/RunGame.unity
     guid: 45ee4e2d21e66403786be577d941d41d
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/VamSerlike.unity
     guid: 54271c5352bc9f3469adffd87bbdd691
+  - enabled: 1
+    path: Assets/Scenes/VamSerLike_Test.unity
+    guid: b140c0d8da84b964798561de0f898171
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 8149a9a8d3edb8549b9992f33d64ed1f, type: 2}
   m_UseUCBPForAssetBundles: 0
