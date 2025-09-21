@@ -130,7 +130,7 @@ namespace DogGuns_Games.vamsir
                     .Append(transform.DOLocalMove(_originalLocalPosition, pierceDuration / 2).SetEase(Ease.InCubic));
                 
                 cts.Register(() => stabSequence?.Kill());
-                await stabSequence;
+                await UniTask.WaitUntil(() => !stabSequence.IsActive(), cancellationToken: cts);
 
                 if (_collider2D != null) _collider2D.enabled = false;
 
@@ -242,7 +242,7 @@ namespace DogGuns_Games.vamsir
                 sequence.Join(transform.DOLocalRotateQuaternion(Quaternion.identity, slashDuration * 0.2f).SetEase(Ease.InSine));
 
                 cts.Register(() => sequence?.Kill());
-                await sequence;
+                await UniTask.WaitUntil(() => !sequence.IsActive(), cancellationToken: cts);
 
                 // 공격 동작이 끝나면 쿨타임과 궤적 페이드아웃을 동시에 시작합니다.
                 var coolTimeTask = UniTask.Delay(TimeSpan.FromSeconds(coolTime), cancellationToken: cts);
@@ -291,7 +291,7 @@ namespace DogGuns_Games.vamsir
             );
 
             token.Register(() => fadeTween?.Kill());
-            await fadeTween;
+            await UniTask.WaitUntil(() => !fadeTween.IsActive(), cancellationToken: token);
 
             // 페이드아웃이 완료되면 LineRenderer를 비활성화합니다.
             if (this != null && _slashTrailRenderer != null)
