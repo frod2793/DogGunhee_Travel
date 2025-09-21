@@ -102,7 +102,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02d7cc3b6135799448e4fdad74cf3f7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackPower: 10
+  attackPower: 1
   coolTime: 0
   attackSpeed: 0
   attackRange: 0
@@ -111,8 +111,11 @@ MonoBehaviour:
   isShooting: 0
   weaphonState: 0
   maxTrailPoints: 50
-  pointSpacing: 0.5
-  trailWidth: 0.5
+  pointSpacing: 0.1
+  trailWidth: 0.3
+  trailLifetime: 5
+  trailMaterial: {fileID: 2100000, guid: 5935c28b95fa4b5409af993f7f42d77f, type: 2}
+  trailSortingOrder: 0
 --- !u!120 &8371611133464177605
 LineRenderer:
   serializedVersion: 2
@@ -138,7 +141,6 @@ LineRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 2100000, guid: 5935c28b95fa4b5409af993f7f42d77f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

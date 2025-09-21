@@ -1956,7 +1956,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 2.665
+  orthographic size: 3.6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2267,7 +2267,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 166e3d39c9a4d214e99f4e1ba06bc70c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectData: {fileID: 0}
+  effectData: {fileID: 11400000, guid: d95fefdb30d37fa48a9fa7976868a49c, type: 2}
 --- !u!4 &1517472882
 Transform:
   m_ObjectHideFlags: 0
@@ -2516,7 +2516,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8365072899406657265, guid: 440271337e4a6df43a3314571b76e325, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
