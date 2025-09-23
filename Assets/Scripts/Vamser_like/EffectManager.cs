@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
+using DG.Tweening;
 
 namespace DogGuns_Games.vamsir
 {
@@ -16,8 +17,18 @@ namespace DogGuns_Games.vamsir
         [Tooltip("이펙트 종류와 프리팹을 매핑해놓은 ScriptableObject 데이터입니다.")]
         [SerializeField] private EffectData effectData;
 
+        [Header("카메라 흔들림 효과")]
+        [Tooltip("플레이어 피격 시 카메라 흔들림 지속 시간입니다.")]
+        [SerializeField] private float shakeDuration = 0.2f;
+        [Tooltip("플레이어 피격 시 카메라 흔들림 강도입니다.")]
+        [SerializeField] private float shakeStrength = 0.5f;
+        [Tooltip("플레이어 피격 시 카메라 흔들림의 진동수입니다.")]
+        [SerializeField] private int shakeVibrato = 10;
+
         private Dictionary<EffectType, IObjectPool<PooledEffect>> _effectPools;
         private Dictionary<EffectType, GameObject> _effectPrefabs;
+        private Camera _mainCamera;
+        private Tween _cameraShakeTween;
 
         private void Awake()
         {
@@ -27,6 +38,7 @@ namespace DogGuns_Games.vamsir
                 return;
             }
             Instance = this;
+            _mainCamera = Camera.main;
 
             InitializePools();
         }
@@ -112,6 +124,24 @@ namespace DogGuns_Games.vamsir
         private void OnDestroyEffect(PooledEffect effect)
         {
             if (effect != null) Destroy(effect.gameObject);
+        }
+
+        /// <summary>
+        /// 플레이어 피격 시 카메라 흔들림 효과를 재생합니다.
+        /// </summary>
+        public void PlayPlayerHitCameraShake()
+        {
+            if (_mainCamera == null) return;
+
+            // 이미 흔들림 효과가 진행 중이라면, 초기화 후 새로 시작합니다.
+            _cameraShakeTween?.Kill();
+
+            // 카메라 흔들림 효과를 생성하고 트윈을 저장합니다.
+            _cameraShakeTween = _mainCamera.DOShakePosition(
+                shakeDuration,
+                shakeStrength,
+                shakeVibrato
+            ).SetTarget(_mainCamera); // 트윈의 생명주기를 카메라에 연결
         }
     }
 }

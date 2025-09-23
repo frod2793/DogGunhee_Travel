@@ -61,6 +61,7 @@ namespace DogGuns_Games.vamsir
         // 레벨업 이벤트
         public static event Action<float> OnLevelUp;
         public static event Action<float, float> OnExpChanged; // currentExp, maxExp
+        // public static event Action OnDamaged; // EffectManager가 직접 호출되므로 더 이상 필요하지 않습니다.
 
         #endregion
 
@@ -132,15 +133,29 @@ namespace DogGuns_Games.vamsir
             MaxExp = CalculateMaxExpForLevel(Level);
             
             PlayStateManager.OnGameOver += OnGameOver;
-            
+            PlayStateManager.OnGamePause+= OnGamePause;
+            PlayStateManager.OnGameResume+= OnGameResume;
             // UI 등 다른 리스너들에게 초기 상태를 통지합니다.
             OnLevelUp?.Invoke(Level);
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
         }
 
+        private void OnGameResume()
+        {
+            SetPlayerState(PlayState);
+        }
+
+        private void OnGamePause()
+        {
+            SetPlayerState(PlayerState.Idle);
+        }
+
+
         protected virtual void OnDisable()
         {
             PlayStateManager.OnGameOver -= OnGameOver;
+            PlayStateManager.OnGamePause -= OnGamePause;
+            PlayStateManager.OnGameResume -= OnGameResume;
         }
 
         private void OnGameOver()
@@ -240,6 +255,9 @@ namespace DogGuns_Games.vamsir
             // 피해량 디버그 로그
             LogManager.Log($"플레이어가 <color=#FF0000>{damageAmount:F1}</color> 데미지를 받음 (남은 체력: {Health:F1})", LogManager.LogCategory.PlayerBase);
            
+            // 이펙트 매니저를 직접 호출하여 카메라 흔들림 효과를 재생합니다.
+            EffectManager.Instance?.PlayPlayerHitCameraShake();
+            
     
             // 피격 효과 재생
             PlayHitEffect();
