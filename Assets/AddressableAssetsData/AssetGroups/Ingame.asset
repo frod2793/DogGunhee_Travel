@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Ingame
   m_GUID: c0218446462d6b744bc070f0277a6ea3
   m_SerializeEntries:
+  - m_GUID: 06242541335b81f49a2f66a68f92f2c8
+    m_Address: Weapon_6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 130be8c60f147e845ba0247850661c42
     m_Address: Coin
     m_ReadOnly: 0

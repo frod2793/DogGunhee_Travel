@@ -160,6 +160,34 @@ namespace DogGuns_Games.vamsir
             }
         }
 
+        #region Game State Handlers
+
+        /// <summary>
+        /// 게임이 일시정지될 때 호출됩니다.
+        /// </summary>
+        protected override void Pause()
+        {
+            base.Pause(); // ismove = false 설정
+            // 모든 활성 DOTween 애니메이션을 일시정지합니다.
+            _wanderTween?.Pause();
+            _slowTween?.Pause();
+            _spriteRenderer?.DOPause();
+        }
+
+        /// <summary>
+        /// 게임이 재개될 때 호출됩니다.
+        /// </summary>
+        protected override void Resume()
+        {
+            base.Resume(); // ismove = true 설정
+            // 일시정지된 모든 DOTween 애니메이션을 다시 재생합니다.
+            _wanderTween?.Play();
+            _slowTween?.Play();
+            _spriteRenderer?.DOPlay();
+        }
+
+        #endregion
+
         #region AI Logic
         
         // 적 ai 로직 설명 

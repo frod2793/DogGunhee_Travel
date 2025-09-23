@@ -74,12 +74,12 @@ namespace DogGuns_Games.vamsir
                 playerTransform = null;
             }
         }
-        private void Pause()
+        protected virtual void Pause()
         {
             ismove = false;
         }
         
-        private void Resume()
+        protected virtual void Resume()
         {
             ismove = true;
         }
