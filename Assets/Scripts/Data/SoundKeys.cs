@@ -8,4 +8,12 @@ public enum SoundKeys
     Lobby,
     InGame,
     Click,
+    Throwbone,
+    playerHit,
+    Enemyhit,
+    GetCoin,
+    Levelup,
+    GetExp,
+    PlayerDeth,
+    EnemyDeth,
 }

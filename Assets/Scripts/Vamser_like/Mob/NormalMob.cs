@@ -371,6 +371,8 @@ namespace DogGuns_Games.vamsir
                     .Append(_spriteRenderer.DOColor(Color.red, 0.1f))
                     .Append(_spriteRenderer.DOColor(Color.white, 0.1f))
                     .SetTarget(transform); // 오브젝트가 파괴될 때 트윈도 함께 정리되도록 타겟 설정
+                
+                SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
             }
 
             float attackPower = _playerWeaphon.attackPower;
@@ -382,6 +384,8 @@ namespace DogGuns_Games.vamsir
             if (Mob_Hp <= 0 && !IsDead)
             {
                 SetMobState(MobState.Die);
+                SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
+
             }
             else
             {

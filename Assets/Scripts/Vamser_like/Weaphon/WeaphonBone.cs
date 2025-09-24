@@ -64,6 +64,7 @@ namespace DogGuns_Games.vamsir
             // 총알 상태 초기화
             obj.ResetState();
             obj.gameObject.SetActive(true);
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.Throwbone);
         }
 
         private void OnRelease(BoneBullet obj)
@@ -103,7 +104,6 @@ namespace DogGuns_Games.vamsir
         public override void Weaphon_Attack(Vector3 attackAngle)
         {
             base.Weaphon_Attack(attackAngle);
-    
             Throw_Bone(attackAngle).Forget();
         }
 
@@ -141,6 +141,8 @@ namespace DogGuns_Games.vamsir
         
                 await UniTask.Delay(TimeSpan.FromSeconds(coolTime), 
                     cancellationToken: this.GetCancellationTokenOnDestroy());
+                
+              
             }
             catch (Exception ex)
             {

@@ -74,7 +74,6 @@ namespace DogGuns_Games.vamsir
         {
             Idle,
             Move,
-            Hit,
             Attack
         }
 
@@ -107,9 +106,6 @@ namespace DogGuns_Games.vamsir
                     break;
                 case PlayerState.Move:
                     PlayerMovement();
-                    break;
-                case PlayerState.Hit:
-                    Player_Hit();
                     break;
                 case PlayerState.Attack:
                     Player_attack(AttackAngle);
@@ -217,16 +213,9 @@ namespace DogGuns_Games.vamsir
             // 이미 피격 상태면 추가 처리 없음
             if (ishit) return;
 
-            // 피격 상태 설정
             ishit = true;
-    
-            // 무적 시간 후 피격 상태 해제 (캔슬레이션 토큰 추가)
-            CancellationTokenSource cts = new CancellationTokenSource();
-            DelayAction(1f, () => ishit = false, cts.Token).Forget();
-    
-            // 피격 상태로 변경
-            PlayState = PlayerState.Hit;
-    
+            DelayAction(1f, () => ishit = false, this.GetCancellationTokenOnDestroy()).Forget();
+
             // 몹으로부터 피해 계산
             VamserMobBase mob = mobObject.GetComponent<VamserMobBase>();
             if (mob != null)
@@ -253,14 +242,19 @@ namespace DogGuns_Games.vamsir
             Health -= damageAmount;
             
             // 피해량 디버그 로그
-            LogManager.Log($"플레이어가 <color=#FF0000>{damageAmount:F1}</color> 데미지를 받음 (남은 체력: {Health:F1})", LogManager.LogCategory.PlayerBase);
+            LogManager.Log($"플레이어가 <color=#FF0000>{damageAmount:F1}</color> 데미지를 받음 (남은 체력: {Health:F1})", LogManager.LogCategory.PlayerBase, this);
            
             // 이펙트 매니저를 직접 호출하여 카메라 흔들림 효과를 재생합니다.
             EffectManager.Instance?.PlayPlayerHitCameraShake();
             
-    
             // 피격 효과 재생
             PlayHitEffect();
+            
+            // 데미지를 입은 후 체력을 확인하여 사망 처리
+            if (Health <= 0)
+            {
+                Player_Die();
+            }
         }
 
         /// <summary>
@@ -278,6 +272,8 @@ namespace DogGuns_Games.vamsir
                 AddExperience(expAmount);
                 // 오브젝트 풀로 반환
                 expObj.objectPoolSpawner.ExpObjectPool.Release(expObj);
+                SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
+
             }
         }
 
@@ -297,6 +293,7 @@ namespace DogGuns_Games.vamsir
                 LogManager.Log($"코인 {coinsToAdd}개 획득", LogManager.LogCategory.PlayerBase);
                 // 오브젝트 풀로 반환
                 coinObj.objectPoolSpawner.CoinObjectPool.Release(coinObj);
+                SoundManager.PlaySound(Sound.SFX, SoundKeys.GetCoin, false);
             }
         }
 
@@ -326,18 +323,6 @@ namespace DogGuns_Games.vamsir
             }
             // 플레이어 비활성화 (선택사항)
             gameObject.SetActive(false);
-        }
-
-        /// <summary>
-        /// 플레이어 피격 동작
-        /// </summary>
-        public virtual void Player_Hit()
-        {
-            // 체력이 0 이하로 떨어지면 사망 처리
-            if (Health <= 0)
-            {
-                Player_Die();
-            }
         }
 
         /// <summary>
@@ -421,10 +406,11 @@ namespace DogGuns_Games.vamsir
             AttackPower += 5f;
             Health += 20f;
             Defense += 2f;
-        //    MoveSpeed += 0.1f;
+            //MoveSpeed += 0.1f;
             
             // 레벨업 사운드 효과 (선택사항)
-            // SoundManager.PlaySound(Sound.SFX, "LevelUp");
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.Levelup, false);
+            
         }
 
         /// <summary>

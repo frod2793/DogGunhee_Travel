@@ -23,12 +23,7 @@ namespace DogGuns_Games.vamsir
         public override void Player_Die()
         {
             base.Player_Die();
-        }
-
-        public override void Player_Hit()
-        {
-            base.Player_Hit();
- 
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.PlayerDeth, false);
         }
 
         public override void Player_Idle()
@@ -43,11 +38,14 @@ namespace DogGuns_Games.vamsir
                 _playerSpriteRenderer = GetComponent<SpriteRenderer>();
             }
 
-            Color originalColor = Color.white;
-            _playerSpriteRenderer.DOColor(Color.red, 0.1f).OnComplete(() =>
-            {
-                _playerSpriteRenderer.DOColor(originalColor, 0.1f);
-            });
+            // 피격 시 붉은색 점멸 효과
+            _playerSpriteRenderer.DOKill(); // 이전 이펙트가 진행중일 수 있으므로 중지
+            _playerSpriteRenderer.color = Color.white;
+            DOTween.Sequence()
+                .Append(_playerSpriteRenderer.DOColor(Color.red, 0.1f))
+                .Append(_playerSpriteRenderer.DOColor(Color.white, 0.1f));
+            
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.playerHit, false);
         }
     }
 }
