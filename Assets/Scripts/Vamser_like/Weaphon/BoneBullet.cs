@@ -30,6 +30,7 @@ public class BoneBullet : MonoBehaviour
     {
         _isActive = true;
         MoveAndRotateBullet().Forget();
+        SoundManager.PlaySound(Sound.SFX, SoundKeys.Throwbone);
     }
     private void OnDisable()
     {
@@ -123,6 +124,7 @@ public class BoneBullet : MonoBehaviour
     {
         // 필요한 상태 초기화
         _isActive = true;
+        
         // 기타 속성 초기화
     }
 }

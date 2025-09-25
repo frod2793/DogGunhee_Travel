@@ -27,7 +27,7 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 42029e0f325b14852b3b3d01351d19d8, type: 3}
   - key: Throwbone
     Type: 1
-    clip: {fileID: 8300000, guid: 5411d8a7d0e2b4de79b69f3d719ad8fc, type: 3}
+    clip: {fileID: 8300000, guid: 80295864f98424947bda408be0a8b779, type: 3}
   - key: playerHit
     Type: 1
     clip: {fileID: 8300000, guid: a0f0fcfc8e4f94f368e73a82bd13e456, type: 3}
