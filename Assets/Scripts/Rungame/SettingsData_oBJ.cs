@@ -1,4 +1,5 @@
 using System.IO;
+using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SettingsData", menuName = "GameSettings/SettingsData")]
@@ -13,6 +14,7 @@ public class SettingsData_oBJ : ScriptableObject
     public float joystickSize = 1; // 조이스틱 크기 기본값
     public Vector2 joystickPos = new Vector2(0.5f, 0.5f); // 조이스틱 위치 기본값
 
+    public static event Action OnSettingsChanged;
 
     private static string FilePath => Path.Combine(Application.persistentDataPath, "settingsData.json");
 
@@ -22,6 +24,9 @@ public class SettingsData_oBJ : ScriptableObject
         string jsonData = JsonUtility.ToJson(this, true); // ScriptableObject 데이터를 JSON으로 직렬화
         File.WriteAllText(FilePath, jsonData); // 파일에 저장
         LogManager.Log("Settings saved to: " + FilePath);
+        
+        // 설정이 저장되었음을 모든 구독자에게 알립니다.
+        OnSettingsChanged?.Invoke();
     }
 
     // JSON 파일에서 데이터 불러오기

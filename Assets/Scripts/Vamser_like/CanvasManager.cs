@@ -1,7 +1,5 @@
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 using UnityEngine.UI;
-using System.Threading;
 
 /// <summary>
 /// WebGL 환경에서 화면 비율을 9:16으로 강제하여 일관된 게임 플레이 경험을 제공하는 매니저입니다.
@@ -18,7 +16,6 @@ public class CanvasManager : MonoBehaviour
     private CanvasScaler[] _managedCanvasScalers;
     private int _lastScreenWidth;
     private int _lastScreenHeight;
-    private CancellationTokenSource _cts;
 
     void Start()
     {
@@ -32,60 +29,36 @@ public class CanvasManager : MonoBehaviour
             return;
         }
 
-        // 씬에 있는 모든 CanvasScaler를 자동으로 찾아 관리 목록에 추가합니다.
-        _managedCanvasScalers = FindObjectsByType<CanvasScaler>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        if (_managedCanvasScalers.Length == 0)
-        {
-            Debug.LogWarning("No CanvasScalers found in the scene for CanvasManager to manage.", this);
-        }
-
         // DontDestroyOnLoad(gameObject); // 씬 전환 시에도 유지되도록 설정 (필요 시)
         
-        // 초기 화면 비율 설정
-#if UNITY_EDITOR
-        // 에디터에서는 Screen.width/height가 실시간으로 변하지 않으므로, Update에서 폴링하는 것이 더 안정적입니다.
+        // 시작 시 화면 비율을 한 번 설정합니다.
         UpdateCameraRect();
-#elif UNITY_WEBGL
-        _cts = new CancellationTokenSource();
-        CheckScreenSizeLoop(_cts.Token).Forget();
-#endif
 #else
         // WebGL이 아닌 다른 플랫폼에서는 이 스크립트를 비활성화합니다.
         enabled = false;
 #endif
     }
 
-#if UNITY_EDITOR
-    private void Update()
+    // Update 대신 LateUpdate를 사용하여, 해당 프레임의 모든 로직이 끝난 후 마지막에 비율을 조정합니다.
+    // 이는 다른 스크립트나 CanvasScaler의 내부 로직에 의해 설정이 덮어쓰이는 것을 방지하는 가장 안정적인 방법입니다.
+    private void LateUpdate()
     {
-        // 에디터 플레이 모드에서 Game 뷰의 크기가 변경될 때마다 Rect를 다시 계산합니다.
+#if UNITY_WEBGL || UNITY_EDITOR
+        // 화면 해상도가 변경되었을 때만 Rect를 다시 계산하여 성능을 최적화합니다.
         if (Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight)
         {
             UpdateCameraRect();
         }
-    }
 #endif
-
-    private void OnDestroy()
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-    }
-
-    private async UniTaskVoid CheckScreenSizeLoop(CancellationToken token)
-    {
-        // WebGL 빌드에서만 사용되는 비동기 루프입니다.
-        UpdateCameraRect(); // 시작 시 한 번 실행
-        while (!token.IsCancellationRequested)
-        {
-            await UniTask.WaitUntil(() => Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight, cancellationToken: token);
-            UpdateCameraRect();
-        }
     }
 
     private void UpdateCameraRect()
     {
         if (_mainCamera == null) return;
+
+        // [수정] 화면 비율을 업데이트할 때마다 씬의 모든 CanvasScaler를 다시 찾아, 동적으로 로드된 UI도 처리할 수 있도록 합니다.
+        // 이는 실행 순서에 따른 참조 누락 문제를 근본적으로 해결합니다.
+        _managedCanvasScalers = FindObjectsByType<CanvasScaler>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         float screenWidth = Screen.width;
         float screenHeight = Screen.height;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
@@ -53,7 +54,11 @@ namespace DogGuns_Games.vamsir
         [Header("<color=green>플레이어 자동 공격 활성화 토글 ")] [SerializeField]
         private Toggle autoAttackToggle;
 
-        [SerializeField] private Transform joystickTransform;
+        [Header("설정 데이터")]
+        [SerializeField] private SettingsData_oBJ settingsData;
+
+        [Tooltip("조이스틱의 위치와 크기를 제어하는 RectTransform 입니다.")]
+        [SerializeField] private RectTransform joystickTransform;
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
         private Tween _expSliderTween;
@@ -77,6 +82,7 @@ namespace DogGuns_Games.vamsir
             // 플레이어 경험치 이벤트 구독
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
+            SettingsData_oBJ.OnSettingsChanged += JoystickSetting; // 설정 변경 이벤트 구독
 
             // 자동 공격 토글 이벤트 연결
             autoAttackToggle.onValueChanged.AddListener(isOn =>
@@ -108,6 +114,7 @@ namespace DogGuns_Games.vamsir
             // 플레이어 경험치 이벤트 구독 해제
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
+            SettingsData_oBJ.OnSettingsChanged -= JoystickSetting; // 설정 변경 이벤트 구독 해제
         }
 
         #endregion
@@ -155,27 +162,33 @@ namespace DogGuns_Games.vamsir
                 variableJoystick = FindFirstObjectByType<VariableJoystick>();
             }
 
-            if (SoundManager.Instance == null)
-            {
-                LogManager.LogError("SoundManager.Instance가 null입니다. 씬에 SoundManager가 배치되어 있는지 확인하세요.",
-                    LogManager.LogCategory.VamserLikeUI);
-                return;
-            }
-
-            var settingsData = SoundManager.Instance.settingsData;
             if (settingsData == null)
             {
-                LogManager.LogError("SoundManager의 settingsData가 null입니다. 인스펙터에서 할당되어 있는지 확인하세요.",
+                LogManager.LogError("VamserLikeUI에 SettingsData가 할당되지 않았습니다. 인스펙터에서 할당해주세요.",
                     LogManager.LogCategory.VamserLikeUI);
                 return;
             }
-
+            
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
-            variableJoystick.SetMode((JoystickType)settingsData.joystickType);
-            var rectTransform = joystickTransform as RectTransform;
-            if (rectTransform != null)
-                rectTransform.anchoredPosition = settingsData.joystickPos;
+            variableJoystick.SetMode((JoystickType)settingsData.joystickType); 
+            
+            joystickTransform.anchoredPosition = settingsData.joystickPos;
+
+            // 조이스틱이 화면 밖에 있는지 확인하고, 밖에 있다면 기본 위치로 재설정합니다.
+            // Canvas의 Render Mode가 Screen Space - Overlay 라고 가정합니다.
+            Rect screenRect = new Rect(0, 0, Screen.width, Screen.height);
+            Vector3[] joystickCorners = new Vector3[4];
+            joystickTransform.GetWorldCorners(joystickCorners);
+
+            // 조이스틱의 월드 코너 중 하나라도 화면 내에 있는지 확인합니다.
+            bool isVisible = joystickCorners.Any(corner => screenRect.Contains(corner));
+
+            if (!isVisible)
+            {
+                joystickTransform.anchoredPosition = new Vector2(300, 300); // 안전한 기본 위치
+                LogManager.LogWarning("저장된 조이스틱 위치가 화면 밖이라 기본 위치로 재설정합니다.", LogManager.LogCategory.VamserLikeUI);
+            }
         }
 
 
