@@ -43,7 +43,7 @@ class buildEditorScript
             scenes = FindEnabledEditorScenes(),
             locationPathName = "Builds/WebGL",
             target = BuildTarget.WebGL,
-            options = BuildOptions.None
+            options = BuildOptions.CleanBuildCache
         };
         BuildAndReport(options);
     }

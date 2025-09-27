@@ -169,6 +169,10 @@ namespace DogGuns_Games.vamsir
                 return;
             }
             
+            // OnSettingsChanged 이벤트는 이미 메모리의 settingsData가 업데이트된 후에 호출됩니다.
+            // 여기서 LoadSettings()를 다시 호출하면 파일의 이전 데이터로 덮어쓰여 문제가 발생하므로 제거합니다.
+            // settingsData.LoadSettings();
+            
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
             variableJoystick.SetMode((JoystickType)settingsData.joystickType); 

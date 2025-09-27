@@ -27,6 +27,7 @@ namespace DogGuns_Games.vamsir
         private Bounds _mapBounds;
         private Tween _wanderTween;
         private bool _isWaitingToWander; // 추가: 배회 사이의 대기 상태를 추적하는 플래그
+        private bool _isAiPaused; // 추가: AI 동작을 일시정지하는 플래그
 
         private enum AIState
         {
@@ -93,6 +94,7 @@ namespace DogGuns_Games.vamsir
             }
             
             _isWaitingToWander = false;
+            _isAiPaused = false;
             _currentState = AIState.Wandering;
 
             // 플레이어 및 무기 참조 설정
@@ -119,7 +121,7 @@ namespace DogGuns_Games.vamsir
         {
             // ismove는 Mob_Move, Mob_Stun 등 상태 변경 메서드에서 관리
             // playerTransform은 StartAIBehavior에서 유효성이 보장되므로, null 체크만으로 충분합니다.
-            if (!ismove || playerTransform == null || IsDead)
+            if (_isAiPaused || !ismove || playerTransform == null || IsDead)
             {
                 return;
             }
@@ -160,6 +162,24 @@ namespace DogGuns_Games.vamsir
             }
         }
 
+        /// <summary>
+        /// 몬스터의 AI 동작을 일시정지하거나 재개합니다.
+        /// </summary>
+        /// <param name="pause">true이면 일시정지, false이면 재개합니다.</param>
+        public void PauseAI(bool pause)
+        {
+            _isAiPaused = pause;
+
+            if (pause)
+            {
+                _wanderTween?.Pause();
+            }
+            else
+            {
+                _wanderTween?.Play();
+            }
+        }
+
         #region Game State Handlers
 
         /// <summary>
@@ -172,6 +192,7 @@ namespace DogGuns_Games.vamsir
             _wanderTween?.Pause();
             _slowTween?.Pause();
             _spriteRenderer?.DOPause();
+            _isAiPaused = true;
         }
 
         /// <summary>
@@ -184,6 +205,7 @@ namespace DogGuns_Games.vamsir
             _wanderTween?.Play();
             _slowTween?.Play();
             _spriteRenderer?.DOPlay();
+            _isAiPaused = false;
         }
 
         #endregion
@@ -247,6 +269,9 @@ namespace DogGuns_Games.vamsir
 
         private void Wander()
         {
+            // AI가 일시정지 상태이면 새로운 배회 동작을 시작하지 않습니다.
+            if (_isAiPaused) return;
+
             // 맵 내부에서 랜덤한 목적지 설정
             Vector3 randomDestination = GetRandomPositionInMap();
     
@@ -270,6 +295,9 @@ namespace DogGuns_Games.vamsir
         {
             try
             {
+                // AI가 일시정지 상태이면 대기를 시작하지 않습니다.
+                if (_isAiPaused) return;
+
                 _isWaitingToWander = true; // 대기 상태 시작
                 await UniTask.Delay(TimeSpan.FromSeconds(UnityEngine.Random.Range(1f, 3f)), cancellationToken: this.GetCancellationTokenOnDestroy());
                 

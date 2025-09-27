@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class JoysticSetter : MonoBehaviour
 {
     
-    //todo : defaultposBtn 클릭시 조이스틱 위치를 초기화하는 기능 추가
     [Header("<color=green>조이스틱 데이터")] [SerializeField]
     private SettingsData_oBJ settingsData; // ScriptableObject 참조
 
@@ -53,6 +52,9 @@ public class JoysticSetter : MonoBehaviour
 
     private void LoadSettings()
     {
+        // 설정창을 열 때, 파일에 저장된 최신 데이터를 명시적으로 불러옵니다.
+        settingsData.LoadSettings();
+
         joystickSizeSlider.value = settingsData.joystickSize;
         joystickTypeDropdown.value = settingsData.joystickType;
         joystickTransform.localScale = new Vector3(settingsData.joystickSize, settingsData.joystickSize, 1);
@@ -72,11 +74,14 @@ public class JoysticSetter : MonoBehaviour
 
     private void SaveAndExit()
     {
+        // UI 위치는 anchoredPosition으로 저장해야 정확합니다.
+        var rectTransform = joystickTransform as RectTransform;
+        if (rectTransform != null)
+            settingsData.joystickPos = rectTransform.anchoredPosition;
+
         settingsData.joystickType = joystickTypeDropdown.value;
-        settingsData.joystickPos = joystickTransform.position;
         settingsData.joystickSize = joystickSizeSlider.value;
         settingsData.SaveSettings();
-        SetJoystickPos();
         // 리스너 해제 및 최적화
         joystickSizeSlider.onValueChanged.RemoveAllListeners();
         joystickTypeDropdown.onValueChanged.RemoveAllListeners();
