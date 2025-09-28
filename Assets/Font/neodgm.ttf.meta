@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 490325f4738894ee9a29f41252c82ec0
+guid: 5eb8a1e545d3f244c8a50903918d38f1
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Galmuri7
+  - NeoDunggeunmo
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 2

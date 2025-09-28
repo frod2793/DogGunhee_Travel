@@ -27,6 +27,11 @@ namespace DogGuns_Games.Lobby
         // 캐시 필드
         private Dictionary<int, Item_Data> _itemDataCache = new Dictionary<int, Item_Data>();
         private bool _isDataLoaded;
+        
+        /// <summary>
+        /// 인게임 세션 중에만 사용되는 임시 인벤토리. 무기, 장신구 등을 저장합니다.
+        /// </summary>
+        public List<Item_Data> InGameAcquiredItems { get; private set; }
 
         #endregion
 
@@ -83,6 +88,9 @@ namespace DogGuns_Games.Lobby
             // Inventory_Data 초기화
             if (scritpableobjInventoryData == null)
                 scritpableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
+            
+            // 인게임 인벤토리 초기화
+            InGameAcquiredItems = new List<Item_Data>();
         }
 
         private void Start()
@@ -259,6 +267,27 @@ namespace DogGuns_Games.Lobby
             }
             _itemDataCache[itemData.itemCode] = itemData;
         }
+
+        /// <summary>
+        /// 인게임 세션용 인벤토리에 아이템을 추가합니다.
+        /// </summary>
+        /// <param name="itemData">추가할 아이템</param>
+        public void AddInGameItem(Item_Data itemData)
+        {
+            if (itemData == null) return;
+            InGameAcquiredItems.Add(itemData);
+            LogManager.Log($"인게임 인벤토리에 아이템 추가: {itemData.itemName}", LogManager.LogCategory.InventoryManager);
+        }
+
+        /// <summary>
+        /// 인게임 세션용 인벤토리를 초기화합니다.
+        /// </summary>
+        public void ClearInGameInventory()
+        {
+            InGameAcquiredItems.Clear();
+            LogManager.Log("인게임 인벤토리가 초기화되었습니다.", LogManager.LogCategory.InventoryManager);
+        }
+
 
         #endregion
 

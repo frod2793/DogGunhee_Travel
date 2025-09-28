@@ -62,7 +62,26 @@ namespace DogGuns_Games.vamsir
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
         private Tween _expSliderTween;
+
+        /// <summary>
+        /// 레벨업 시 표시되는 스킬 선택 UI입니다.
+        /// 3개의 랜덤 스킬이 제시되며, 선택 시 팝업이 닫힙니다.
+        /// 리프레시 버튼으로 선택지를 다시 뽑을 수 있습니다.
+        /// </summary>
+        [Header("Skill Selection UI")]
+        [Tooltip("스킬 선택 팝업의 최상위 패널입니다.")]
+        [SerializeField] private GameObject skillSelectionPanel;
+        [Tooltip("스킬 선택지를 다시 뽑는 리프레시 버튼입니다.")]
+        [SerializeField] private Button refreshButton;
+        [Tooltip("동적으로 생성될 스킬 선택 버튼의 프리팹입니다.")]
+        [SerializeField] private SelectSkillBtnPrefab skillSelectionButtonPrefab;
+        [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")]
+        [SerializeField] private GameObject skillButtonContainer;
         
+        [Header("Skill Data")]
+        [Tooltip("레벨업 시 선택지로 제공될 모든 스킬의 목록입니다.")]
+        [SerializeField] private List<SkillData> availableSkills;
+
         #endregion
 
         #region Unity 라이프사이클
@@ -98,6 +117,9 @@ namespace DogGuns_Games.vamsir
                     LogManager.LogError("VamPlayerControll을 찾을 수 없습니다! 플레이어 오브젝트가 활성화되어 있고 VamPlayerControll 컴포넌트가 추가되었는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
                 }
             });
+            
+            // 리프레시 버튼 이벤트 연결
+            refreshButton.onClick.AddListener(GenerateSkillChoices);
         }
 
         private void OnDestroy()
@@ -115,6 +137,9 @@ namespace DogGuns_Games.vamsir
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
             SettingsData_oBJ.OnSettingsChanged -= JoystickSetting; // 설정 변경 이벤트 구독 해제
+            
+            // 리프레시 버튼 이벤트 해제
+            refreshButton.onClick.RemoveListener(GenerateSkillChoices);
         }
 
         #endregion
@@ -178,9 +203,6 @@ namespace DogGuns_Games.vamsir
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
             variableJoystick.SetMode((JoystickType)settingsData.joystickType); 
-            
-            Debug.Log("<color=green>"+settingsData.joystickPos);
-            Debug.Log("<color=blue>"+joystickTransform.anchoredPosition);
             
             joystickTransform.anchoredPosition = settingsData.joystickPos;
 
@@ -386,6 +408,9 @@ namespace DogGuns_Games.vamsir
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
             LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}", LogManager.LogCategory.VamserLikeUI);
+            
+            // 스킬 선택 UI 표시
+            ShowSkillSelectionPanel();
         }
 
         /// <summary>
@@ -408,6 +433,72 @@ namespace DogGuns_Games.vamsir
             }
         }
 
+        #endregion
+        
+        #region 스킬 선택 UI
+
+        /// <summary>
+        /// 스킬 선택 패널을 표시하고 게임을 일시정지합니다.
+        /// </summary>
+        private void ShowSkillSelectionPanel()
+        {
+            _gameManager.SetMenuPopupState(true); // 게임 일시정지
+            skillSelectionPanel.SetActive(true);
+            GenerateSkillChoices();
+        }
+
+        /// <summary>
+        /// 랜덤 스킬 선택지를 생성하여 UI에 표시합니다.
+        /// </summary>
+        private void GenerateSkillChoices()
+        {
+            // 1. 기존 버튼들 제거
+            foreach (Transform child in skillButtonContainer.transform)
+            {
+                Destroy(child.gameObject);
+            }
+
+            // 2. 선택 가능한 스킬 목록 필터링
+            var playerAcquiredSkills = DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.InGameAcquiredItems;
+            var learnableSkills = availableSkills
+                .Where(skill => !playerAcquiredSkills.Any(acquired => acquired.itemCode == skill.skillCode))
+                .ToList();
+
+            // 3. 3개의 랜덤 스킬 선택 (중복 없이)
+            var selectedSkills = new List<SkillData>();
+            int count = Mathf.Min(3, learnableSkills.Count); // 선택 가능한 스킬이 3개 미만일 수 있음
+
+            for (int i = 0; i < count; i++)
+            {
+                int randomIndex = Random.Range(0, learnableSkills.Count);
+                selectedSkills.Add(learnableSkills[randomIndex]);
+                learnableSkills.RemoveAt(randomIndex); // 중복 선택 방지
+            }
+
+            // 4. 선택된 스킬들로 버튼 생성
+            foreach (var skill in selectedSkills)
+            {
+                var skillButtonInstance = Instantiate(skillSelectionButtonPrefab, skillButtonContainer.transform);
+                skillButtonInstance.Setup(skill, OnSkillSelected);
+            }
+        }
+
+        /// <summary>
+        /// 스킬 버튼이 클릭되었을 때 호출되는 콜백 메서드입니다.
+        /// </summary>
+        /// <param name="selectedSkill">선택된 스킬 데이터</param>
+        private void OnSkillSelected(SkillData selectedSkill)
+        {
+            // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)
+            // 현재는 인게임 인벤토리에 추가하는 것으로 대체합니다.
+            var itemData = ScriptableObject.CreateInstance<Item_Data>();
+            itemData.itemCode = selectedSkill.skillCode;
+            itemData.itemName = selectedSkill.skillName;
+            DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameItem(itemData);
+
+            skillSelectionPanel.SetActive(false);
+            _gameManager.SetMenuPopupState(false); // 게임 재개
+        }
         #endregion
     }
 }

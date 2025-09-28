@@ -4936,9 +4936,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.113131315
     y: 0
-    width: 1
+    width: 0.7738637
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -4989,12 +4989,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ComponentVersion: 1
-  m_AssetsPPU: 100
-  m_RefResolutionX: 320
-  m_RefResolutionY: 180
-  m_CropFrame: 0
+  m_AssetsPPU: 600
+  m_RefResolutionX: 2160
+  m_RefResolutionY: 3840
+  m_CropFrame: 4
   m_GridSnapping: 0
-  m_FilterMode: 0
+  m_FilterMode: 1
   m_UpscaleRT: 0
   m_PixelSnapping: 0
   m_CropFrameX: 0
@@ -6373,10 +6373,10 @@ Canvas:
   m_GameObject: {fileID: 1968118296}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 1632535766}
   m_PlaneDistance: 100
-  m_PixelPerfect: 0
+  m_PixelPerfect: 1
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
@@ -6851,7 +6851,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 3.8087}
+  m_AnchoredPosition: {x: 0, y: 3.8087006}
   m_SizeDelta: {x: 0, y: -7.6174}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2143912021
