@@ -115,9 +115,10 @@ public class SoundManager : MonoBehaviour
 
     public void LoadSoundSetting()
     {
-        
-        settingsData.LoadSettings();
-        
+        // 데이터 로딩 책임은 OptionPopupManager 또는 게임 시작 시점으로 일원화합니다.
+        // SoundManager는 외부에서 설정된 값을 받아 적용하는 역할만 수행하여 데이터 충돌을 방지합니다.
+        // settingsData.LoadSettings();
+
         if (settingsData == null)
         {
             LogManager.LogError("SettingsData_oBJ가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");

@@ -123,6 +123,9 @@ namespace DogGuns_Games.vamsir
 
         private void GameStart()
         {
+            // 게임 시작 시, 파일에 저장된 최신 설정값을 명시적으로 불러옵니다.
+            settingsData.LoadSettings();
+
             BtnSetting();
             JoystickSetting();
             SoundSetting(); // 사운드 설정 추가
@@ -171,22 +174,44 @@ namespace DogGuns_Games.vamsir
             
             // OnSettingsChanged 이벤트는 이미 메모리의 settingsData가 업데이트된 후에 호출됩니다.
             // 여기서 LoadSettings()를 다시 호출하면 파일의 이전 데이터로 덮어쓰여 문제가 발생하므로 제거합니다.
-            // settingsData.LoadSettings();
-            
+
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
             variableJoystick.SetMode((JoystickType)settingsData.joystickType); 
             
+            Debug.Log("<color=green>"+settingsData.joystickPos);
+            Debug.Log("<color=blue>"+joystickTransform.anchoredPosition);
+            
             joystickTransform.anchoredPosition = settingsData.joystickPos;
 
-            // 조이스틱이 화면 밖에 있는지 확인하고, 밖에 있다면 기본 위치로 재설정합니다.
-            // Canvas의 Render Mode가 Screen Space - Overlay 라고 가정합니다.
+            CheckJoystickVisibilityAndResetIfOutside();
+        }
+
+        /// <summary>
+        /// 조이스틱이 화면 밖에 있는지 확인하고, 밖에 있다면 기본 위치로 재설정합니다.
+        /// Screen Space - Camera 렌더 모드를 기준으로 동작합니다.
+        /// </summary>
+        private void CheckJoystickVisibilityAndResetIfOutside()
+        {
+            var canvas = joystickTransform.GetComponentInParent<Canvas>();
+            if (canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            {
+                // ScreenSpaceOverlay는 이 로직으로 처리할 수 없으므로, 필요 시 별도 구현
+                return;
+            }
+
+            var camera = canvas.worldCamera;
+            if (camera == null)
+            {
+                LogManager.LogWarning("조이스틱 가시성 검사를 위한 렌더 카메라를 찾을 수 없습니다.", LogManager.LogCategory.VamserLikeUI);
+                return;
+            }
+
             Rect screenRect = new Rect(0, 0, Screen.width, Screen.height);
             Vector3[] joystickCorners = new Vector3[4];
             joystickTransform.GetWorldCorners(joystickCorners);
 
-            // 조이스틱의 월드 코너 중 하나라도 화면 내에 있는지 확인합니다.
-            bool isVisible = joystickCorners.Any(corner => screenRect.Contains(corner));
+            bool isVisible = joystickCorners.Any(corner => screenRect.Contains(camera.WorldToScreenPoint(corner)));
 
             if (!isVisible)
             {
@@ -194,7 +219,6 @@ namespace DogGuns_Games.vamsir
                 LogManager.LogWarning("저장된 조이스틱 위치가 화면 밖이라 기본 위치로 재설정합니다.", LogManager.LogCategory.VamserLikeUI);
             }
         }
-
 
         private void SoundSetting()
         {

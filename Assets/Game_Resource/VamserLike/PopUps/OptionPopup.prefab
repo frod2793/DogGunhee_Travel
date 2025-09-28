@@ -1180,7 +1180,7 @@ Canvas:
   m_RenderMode: 1
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
-  m_PixelPerfect: 0
+  m_PixelPerfect: 1
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
@@ -1244,11 +1244,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
+  joysticSetterPopUpPrefb: {fileID: 2074838346871182768, guid: a1ede60227d70fb4793a104174c41039, type: 3}
   effectSoundVolum: {fileID: 4094199760077844147}
   bgMsoundVolum: {fileID: 2491723009259078604}
   exitBtn: {fileID: 1228173860297738752}
   joystickSizeBtn: {fileID: 5429298077428473100}
-  joysticSetterPopUpPrefb: {fileID: 2074838346871182768, guid: a1ede60227d70fb4793a104174c41039, type: 3}
 --- !u!222 &351752149930778173
 CanvasRenderer:
   m_ObjectHideFlags: 0

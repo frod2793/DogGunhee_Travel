@@ -74,19 +74,19 @@ public class JoysticSetter : MonoBehaviour
 
     private void SaveAndExit()
     {
-        // UI 위치는 anchoredPosition으로 저장해야 정확합니다.
-        var rectTransform = joystickTransform as RectTransform;
-        if (rectTransform != null)
-            settingsData.joystickPos = rectTransform.anchoredPosition;
-
+        // 저장하기 직전에 현재 UI의 값을 settingsData에 반영합니다.
+        SetJoystickPos();
         settingsData.joystickType = joystickTypeDropdown.value;
         settingsData.joystickSize = joystickSizeSlider.value;
-        settingsData.SaveSettings();
+
+
         // 리스너 해제 및 최적화
         joystickSizeSlider.onValueChanged.RemoveAllListeners();
         joystickTypeDropdown.onValueChanged.RemoveAllListeners();
         saveandExitBtn.onClick.RemoveAllListeners();
         defaultposBtn.onClick.RemoveAllListeners();
+        
+        settingsData.SaveSettings(); // OnSettingsChanged 이벤트를 발생시킵니다.
         Destroy(gameObject);
     }
 }
