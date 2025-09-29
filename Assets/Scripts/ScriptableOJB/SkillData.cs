@@ -3,10 +3,10 @@ using UnityEngine;
 namespace DogGuns_Games
 {
     /// <summary>
-    /// 레벨업 시 선택 가능한 스킬(무기, 장신구, 업그레이드)의 데이터를 정의하는 ScriptableObject입니다.
+    /// 레벨업 시 선택 가능한 스킬(무기, 장신구, 업그레이드)의 데이터 구조체입니다.
     /// </summary>
-    [CreateAssetMenu(fileName = "SkillData", menuName = "GameData/SkillData")]
-    public class SkillData : ScriptableObject
+    [System.Serializable]
+    public class SkillData
     {
         [Tooltip("스킬을 식별하는 고유 코드입니다.")]
         public int skillCode;

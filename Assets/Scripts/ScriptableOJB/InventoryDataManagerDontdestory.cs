@@ -31,7 +31,7 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 인게임 세션 중에만 사용되는 임시 인벤토리. 무기, 장신구 등을 저장합니다.
         /// </summary>
-        public List<Item_Data> InGameAcquiredItems { get; private set; }
+        public List<SkillData> InGameAcquiredSkills { get; private set; }
 
         #endregion
 
@@ -90,7 +90,7 @@ namespace DogGuns_Games.Lobby
                 scritpableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
             
             // 인게임 인벤토리 초기화
-            InGameAcquiredItems = new List<Item_Data>();
+            InGameAcquiredSkills = new List<SkillData>();
         }
 
         private void Start()
@@ -271,20 +271,20 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 인게임 세션용 인벤토리에 아이템을 추가합니다.
         /// </summary>
-        /// <param name="itemData">추가할 아이템</param>
-        public void AddInGameItem(Item_Data itemData)
+        /// <param name="skillData">추가할 스킬 데이터</param>
+        public void AddInGameSkill(SkillData skillData)
         {
-            if (itemData == null) return;
-            InGameAcquiredItems.Add(itemData);
-            LogManager.Log($"인게임 인벤토리에 아이템 추가: {itemData.itemName}", LogManager.LogCategory.InventoryManager);
+            if (skillData == null) return;
+            InGameAcquiredSkills.Add(skillData);
+            LogManager.Log($"인게임 인벤토리에 스킬 추가: {skillData.skillName}", LogManager.LogCategory.InventoryManager);
         }
 
         /// <summary>
         /// 인게임 세션용 인벤토리를 초기화합니다.
         /// </summary>
-        public void ClearInGameInventory()
+        public void ClearInGameSkills()
         {
-            InGameAcquiredItems.Clear();
+            InGameAcquiredSkills.Clear();
             LogManager.Log("인게임 인벤토리가 초기화되었습니다.", LogManager.LogCategory.InventoryManager);
         }
 

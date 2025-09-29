@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using Random = UnityEngine.Random;
 
 
 namespace DogGuns_Games.vamsir
@@ -77,10 +79,16 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private SelectSkillBtnPrefab skillSelectionButtonPrefab;
         [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")]
         [SerializeField] private GameObject skillButtonContainer;
+        [SerializeField] TMP_Text countdownText;
+        
         
         [Header("Skill Data")]
-        [Tooltip("레벨업 시 선택지로 제공될 모든 스킬의 목록입니다.")]
-        [SerializeField] private List<SkillData> availableSkills;
+        [Tooltip("게임 내 모든 스킬 정보가 담긴 데이터베이스입니다.")]
+        [SerializeField] private SkillDatabase skillDatabase;
+
+        private int _pendingSkillSelections = 0; // 처리 대기 중인 스킬 선택 횟수
+        private bool _isSkillSelectionActive = false; // 스킬 선택 UI가 활성화되어 있는지 여부
+        private CancellationTokenSource _skillSelectionTimerCts; // 자동 스킬 선택 타이머를 위한 CancellationTokenSource
 
         #endregion
 
@@ -126,6 +134,7 @@ namespace DogGuns_Games.vamsir
         {
             _cancellationTokenSource?.Cancel();
             _expSliderTween?.Kill();
+            _skillSelectionTimerCts?.Cancel(); // 컴포넌트 파괴 시 타이머 취소
 
             // 이벤트 구독 해제 추가
             PlayStateManager.OnGameStart -= GameStart;
@@ -401,6 +410,7 @@ namespace DogGuns_Games.vamsir
         private void OnPlayerLevelUp(float newLevel)
         {
             // 레벨 텍스트 업데이트
+            // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
             string levelString = $"Lv. {newLevel:F0}";
             LevelText.text = levelString;
             playerLevelText.text = levelString;
@@ -409,8 +419,18 @@ namespace DogGuns_Games.vamsir
             ShowLevelUpEffect(newLevel);
             LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}", LogManager.LogCategory.VamserLikeUI);
             
-            // 스킬 선택 UI 표시
-            ShowSkillSelectionPanel();
+            // 레벨 2부터 스킬 선택 UI를 표시합니다.
+            if (newLevel >= 2)
+            {
+                _pendingSkillSelections++;
+                LogManager.Log($"레벨업 이벤트 수신. 보류 중인 스킬 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);
+
+                // 스킬 선택이 진행 중이 아닐 때만 새로운 프로세스를 시작합니다.
+                if (!_isSkillSelectionActive)
+                {
+                    ProcessSkillSelectionQueue();
+                }
+            }
         }
 
         /// <summary>
@@ -438,13 +458,99 @@ namespace DogGuns_Games.vamsir
         #region 스킬 선택 UI
 
         /// <summary>
+        /// 보류 중인 스킬 선택 큐를 처리합니다.
+        /// </summary>
+        private void ProcessSkillSelectionQueue()
+        {
+            if (_pendingSkillSelections > 0)
+            {
+                ShowSkillSelectionPanel();
+            }
+        }
+
+        /// <summary>
         /// 스킬 선택 패널을 표시하고 게임을 일시정지합니다.
         /// </summary>
         private void ShowSkillSelectionPanel()
         {
             _gameManager.SetMenuPopupState(true); // 게임 일시정지
+            _isSkillSelectionActive = true;
             skillSelectionPanel.SetActive(true);
             GenerateSkillChoices();
+            StartAutoSelectionTimer(); // 자동 선택 타이머 시작
+        }
+
+        /// <summary>
+        /// 6초 후 랜덤 스킬을 선택하는 타이머를 시작하고, UI에 카운트다운을 표시합니다.
+        /// </summary>
+        private void StartAutoSelectionTimer()
+        {
+            _skillSelectionTimerCts?.Cancel(); // 이전 타이머가 있다면 취소
+            _skillSelectionTimerCts = new CancellationTokenSource();
+
+            CountdownAndAutoSelect(_skillSelectionTimerCts.Token).Forget();
+        }
+
+        /// <summary>
+        /// 카운트다운을 UI에 표시하고, 시간이 다 되면 랜덤 스킬을 선택합니다.
+        /// </summary>
+        private async UniTaskVoid CountdownAndAutoSelect(CancellationToken cancellationToken)
+        {
+            try
+            {
+                const float duration = 6.0f;
+                float timer = duration;
+
+                countdownText.gameObject.SetActive(true);
+
+                while (timer > 0.01f) // 0에 가까워지면 루프 종료
+                {
+                    int seconds = Mathf.CeilToInt(timer);
+                    // 남은 시간에 따라 점(.)의 개수를 조절하여 동적인 느낌을 줍니다.
+                    string dots = new string('.', seconds > 0 ? seconds : 1);
+                    countdownText.text = $"{seconds}{dots}";
+                    
+                    await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+                    timer -= Time.deltaTime;
+                }
+
+                // 시간이 다 되면 0을 표시하고 자동 선택 실행
+                countdownText.text = "0";
+                // 애니메이션이 끝날 때까지 기다린 후 다음 로직을 실행합니다.
+                await SelectRandomSkill();
+            }
+            catch (OperationCanceledException)
+            {
+                // 사용자가 선택하여 타이머가 취소된 경우, 정상적인 동작입니다.
+                LogManager.Log("스킬 선택 타이머가 사용자에 의해 취소되었습니다.", LogManager.LogCategory.VamserLikeUI);
+            }
+            finally
+            {
+                // 타이머가 끝나거나 취소되면 텍스트를 비활성화합니다.
+                if (countdownText != null)
+                {
+                    countdownText.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 표시된 스킬 중 하나를 랜덤으로 선택합니다.
+        /// </summary>
+        private async UniTask SelectRandomSkill()
+        {
+            if (skillButtonContainer.transform.childCount > 0)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, skillButtonContainer.transform.childCount);
+                var randomButton = skillButtonContainer.transform.GetChild(randomIndex).GetComponent<SelectSkillBtnPrefab>();
+                if (randomButton != null)
+                {
+                    LogManager.Log("시간 초과! 랜덤 스킬을 자동으로 선택합니다.", LogManager.LogCategory.VamserLikeUI);
+                    // 선택 애니메이션을 재생하고 끝날 때까지 기다립니다.
+                    await randomButton.PlaySelectionAnimation();
+                    randomButton.TriggerSelectionCallback(); // 애니메이션 후 콜백 호출
+                }
+            }
         }
 
         /// <summary>
@@ -458,24 +564,13 @@ namespace DogGuns_Games.vamsir
                 Destroy(child.gameObject);
             }
 
-            // 2. 선택 가능한 스킬 목록 필터링
-            var playerAcquiredSkills = DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.InGameAcquiredItems;
-            var learnableSkills = availableSkills
-                .Where(skill => !playerAcquiredSkills.Any(acquired => acquired.itemCode == skill.skillCode))
+            // 2. 전체 스킬 목록에서 랜덤으로 3개를 중복 없이 선택합니다.
+            // 이전에 선택한 스킬도 다시 나올 수 있습니다.
+            var selectedSkills = skillDatabase.allSkills
+                .OrderBy(skill => Random.value) // 리스트를 랜덤하게 섞습니다.
+                .Take(3)                        // 상위 3개를 선택합니다.
                 .ToList();
-
-            // 3. 3개의 랜덤 스킬 선택 (중복 없이)
-            var selectedSkills = new List<SkillData>();
-            int count = Mathf.Min(3, learnableSkills.Count); // 선택 가능한 스킬이 3개 미만일 수 있음
-
-            for (int i = 0; i < count; i++)
-            {
-                int randomIndex = Random.Range(0, learnableSkills.Count);
-                selectedSkills.Add(learnableSkills[randomIndex]);
-                learnableSkills.RemoveAt(randomIndex); // 중복 선택 방지
-            }
-
-            // 4. 선택된 스킬들로 버튼 생성
+            // 3. 선택된 스킬들로 버튼 생성
             foreach (var skill in selectedSkills)
             {
                 var skillButtonInstance = Instantiate(skillSelectionButtonPrefab, skillButtonContainer.transform);
@@ -489,15 +584,29 @@ namespace DogGuns_Games.vamsir
         /// <param name="selectedSkill">선택된 스킬 데이터</param>
         private void OnSkillSelected(SkillData selectedSkill)
         {
-            // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)
-            // 현재는 인게임 인벤토리에 추가하는 것으로 대체합니다.
-            var itemData = ScriptableObject.CreateInstance<Item_Data>();
-            itemData.itemCode = selectedSkill.skillCode;
-            itemData.itemName = selectedSkill.skillName;
-            DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameItem(itemData);
+            _skillSelectionTimerCts?.Cancel(); // 사용자가 선택했으므로 타이머 취소
 
-            skillSelectionPanel.SetActive(false);
-            _gameManager.SetMenuPopupState(false); // 게임 재개
+            // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)
+            // 선택된 스킬을 인게임 인벤토리에 직접 추가합니다.
+            DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
+            _pendingSkillSelections--;
+            LogManager.Log($"스킬 선택 완료. 남은 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);
+
+            if (_pendingSkillSelections > 0)
+            {
+                // 아직 선택할 스킬이 남았다면, 목록만 새로고침합니다.
+                GenerateSkillChoices();
+                StartAutoSelectionTimer(); // 다음 선택을 위한 타이머 다시 시작
+            }
+            else
+            {
+                // 모든 선택이 끝났으면, 패널을 닫고 게임을 재개합니다.
+                _skillSelectionTimerCts?.Cancel();
+                _skillSelectionTimerCts = null;
+                skillSelectionPanel.SetActive(false);
+                _isSkillSelectionActive = false;
+                _gameManager.SetMenuPopupState(false); // 게임 재개
+            }
         }
         #endregion
     }

@@ -90,7 +90,7 @@ namespace DogGuns_Games.vamsir
             try
             {
                 // 새 게임 시작 시, 인게임에서 사용된 인벤토리를 초기화합니다.
-                DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameInventory();
+                DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
                 
                 PlayStateManager.instance.isPlay = true;
                 PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt = 0;
