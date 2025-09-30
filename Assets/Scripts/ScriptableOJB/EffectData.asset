@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: EffectData
   m_EditorClassIdentifier: 
   effects:
-  - type: 0
+  - type: 4
     prefab: {fileID: 0}

@@ -80,6 +80,7 @@ namespace DogGuns_Games.vamsir
         [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")]
         [SerializeField] private GameObject skillButtonContainer;
         [SerializeField] TMP_Text countdownText;
+        [SerializeField] private Slider countDownslider;
         
         
         [Header("Skill Data")]
@@ -502,13 +503,13 @@ namespace DogGuns_Games.vamsir
                 float timer = duration;
 
                 countdownText.gameObject.SetActive(true);
+                countDownslider.gameObject.SetActive(true);
+                countDownslider.value = 1f;
 
                 while (timer > 0.01f) // 0에 가까워지면 루프 종료
                 {
-                    int seconds = Mathf.CeilToInt(timer);
-                    // 남은 시간에 따라 점(.)의 개수를 조절하여 동적인 느낌을 줍니다.
-                    string dots = new string('.', seconds > 0 ? seconds : 1);
-                    countdownText.text = $"{seconds}{dots}";
+                    countdownText.text = Mathf.CeilToInt(timer).ToString();
+                    countDownslider.value = timer / duration;
                     
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
                     timer -= Time.deltaTime;
@@ -516,6 +517,7 @@ namespace DogGuns_Games.vamsir
 
                 // 시간이 다 되면 0을 표시하고 자동 선택 실행
                 countdownText.text = "0";
+                countDownslider.value = 0;
                 // 애니메이션이 끝날 때까지 기다린 후 다음 로직을 실행합니다.
                 await SelectRandomSkill();
             }
@@ -530,6 +532,10 @@ namespace DogGuns_Games.vamsir
                 if (countdownText != null)
                 {
                     countdownText.gameObject.SetActive(false);
+                }
+                if (countDownslider != null)
+                {
+                    countDownslider.gameObject.SetActive(false);
                 }
             }
         }
@@ -588,6 +594,12 @@ namespace DogGuns_Games.vamsir
 
             // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)
             // 선택된 스킬을 인게임 인벤토리에 직접 추가합니다.
+            if (_gameManager.spawnedPlayer != null)
+            {
+                var playerRenderer = _gameManager.spawnedPlayer.GetComponent<SpriteRenderer>();
+                EffectManager.Instance.PlayLevelUpEffect(playerRenderer);
+            }
+            
             DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
             _pendingSkillSelections--;
             LogManager.Log($"스킬 선택 완료. 남은 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);

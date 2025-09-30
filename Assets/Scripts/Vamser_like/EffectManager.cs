@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 using UnityEngine.Pool;
 using DG.Tweening;
 
@@ -143,5 +144,103 @@ namespace DogGuns_Games.vamsir
                 shakeVibrato
             ).SetTarget(_mainCamera); // 트윈의 생명주기를 카메라에 연결
         }
+        
+        /// <summary>
+        /// 플레이어 레벨업 또는 스킬 선택 시 성장 이펙트를 재생합니다.
+        /// 이펙트는 플레이어의 위치에서 재생됩니다.
+        /// </summary>
+        /// <param name="targetRenderer">효과를 적용할 플레이어의 SpriteRenderer</param>
+        public void PlayLevelUpEffect(SpriteRenderer targetRenderer)
+        {
+            if (targetRenderer == null) return;
+            
+            // 기존 색상 트윈을 중지하고, 노란색으로 3번 점멸하는 시퀀스를 실행합니다.
+            targetRenderer.DOKill();
+            targetRenderer.color = Color.white; // 기본 색상으로 리셋
+
+            var sequence = DOTween.Sequence();
+            for (int i = 0; i < 3; i++)
+            {
+                sequence.Append(targetRenderer.DOColor(Color.yellow, 0.1f).SetEase(Ease.OutQuad))
+                        .Append(targetRenderer.DOColor(Color.white, 0.1f).SetEase(Ease.InQuad));
+            }
+            sequence.SetTarget(targetRenderer.transform);
+        }
+
+        // 몹 피격 효과를 위한 큐
+        private readonly Queue<(SpriteRenderer renderer, UniTaskCompletionSource completionSource)> _queuedFlashEffects = new();
+        private bool _isProcessingQueuedFlashes = false;
+
+        #region 인라인 이펙트 (Inline Effects)
+
+        /// <summary>
+        /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 즉시 적용합니다.
+        /// (플레이어 피격과 같이 우선순위가 높은 효과에 사용)
+        /// </summary>
+        /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
+        public void PlayImmediateFlashEffect(SpriteRenderer targetRenderer)
+        {
+            if (targetRenderer == null) return;
+
+            // 기존에 진행 중인 색상 관련 트윈을 중지하고, 즉시 흰색으로 리셋 후 새로운 시퀀스 시작
+            targetRenderer.DOKill();
+            targetRenderer.color = Color.white;
+
+            DOTween.Sequence()
+                .Append(targetRenderer.DOColor(Color.red, 0.1f))
+                .Append(targetRenderer.DOColor(Color.white, 0.1f))
+                .SetTarget(targetRenderer.transform); // 트윈의 생명주기를 대상 오브젝트에 연결
+        }
+
+        /// <summary>
+        /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 큐에 추가하여 순차적으로 적용합니다.
+        /// (몹 피격과 같이 동시 발생 시 순서대로 처리될 수 있는 효과에 사용)
+        /// </summary>
+        /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
+        /// <returns>효과 완료를 기다릴 수 있는 UniTask</returns>
+        public UniTask PlayQueuedFlashEffect(SpriteRenderer targetRenderer)
+        {
+            if (targetRenderer == null) return UniTask.CompletedTask;
+
+            var completionSource = new UniTaskCompletionSource();
+            _queuedFlashEffects.Enqueue((targetRenderer, completionSource));
+
+            if (!_isProcessingQueuedFlashes)
+            {
+                ProcessQueuedFlashesAsync().Forget();
+            }
+
+            return completionSource.Task;
+        }
+
+        private async UniTaskVoid ProcessQueuedFlashesAsync()
+        {
+            _isProcessingQueuedFlashes = true;
+            while (_queuedFlashEffects.Count > 0)
+            {
+                var (renderer, completionSource) = _queuedFlashEffects.Dequeue();
+                if (renderer == null || renderer.gameObject == null) { completionSource.TrySetResult(); continue; } // 오브젝트가 파괴된 경우 스킵
+                PlayImmediateFlashEffect(renderer); // 실제 플래시 효과 재생
+                await UniTask.Delay(TimeSpan.FromSeconds(0.2f)); // 플래시 애니메이션 시간만큼 대기
+                completionSource.TrySetResult();
+            }
+            _isProcessingQueuedFlashes = false;
+        }
+
+        /// <summary>
+        /// 대상 Transform에 넉백 효과를 적용합니다.
+        /// </summary>
+        /// <param name="targetTransform">효과를 적용할 Transform</param>
+        /// <param name="direction">밀려날 방향</param>
+        /// <param name="distance">밀려날 거리</param>
+        /// <param name="duration">넉백 지속 시간</param>
+        public void PlayKnockbackEffect(Transform targetTransform, Vector3 direction, float distance, float duration)
+        {
+            if (targetTransform == null) return;
+
+            targetTransform.DOMove(targetTransform.position + direction * distance, duration).SetEase(Ease.OutQuad);
+        }
+
+        #endregion
     }
 }

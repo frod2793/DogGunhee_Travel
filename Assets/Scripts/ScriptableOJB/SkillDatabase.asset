@@ -14,26 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   allSkills:
   - skillCode: 1
-    skillName: 1
-    skillDescription: 
-    skillIcon: {fileID: 0}
+    skillName: "\uBAA9\uC904"
+    skillDescription: "\uBAA9\uC904\uC785\uB2C8\uB2E4 \uC774\uC05C.... \uC0AC\uB78C\uC73C\uB85C\uCE58\uBA74
+      \uAE08\uBAA9\uAC78\uC774 \uACA0\uAD70\uC694."
+    skillIcon: {fileID: 21300000, guid: bd9ceb3996b279b418e0e8ff04234d1a, type: 3}
   - skillCode: 2
-    skillName: 2
-    skillDescription: 
-    skillIcon: {fileID: 0}
+    skillName: "\uD504\uB85C\uD2F4"
+    skillDescription: "\uB2E8\uBC31\uC9C8 \uC644\uBCBD\uD55C \uC601\uC591\uC18C...
+      \uB4DD\uADFC\uD558\uC154\uC57C\uC8E0..."
+    skillIcon: {fileID: 21300000, guid: ec0f03c1decc0444aa03cb2ed79eef07, type: 3}
   - skillCode: 3
-    skillName: 3
-    skillDescription: 
-    skillIcon: {fileID: 0}
-  - skillCode: 0
-    skillName: 
-    skillDescription: 
-    skillIcon: {fileID: 0}
-  - skillCode: 4
-    skillName: 4
-    skillDescription: 
-    skillIcon: {fileID: 0}
-  - skillCode: 5
-    skillName: 5
-    skillDescription: 
-    skillIcon: {fileID: 0}
+    skillName: "\uC2E0\uBE44\uC758 \uAE43\uD138"
+    skillDescription: "\uC544\uC2DC\uB098\uC694? \uAE43\uD138\uC758 \uBC29\uD5A5\uB9CC
+      \uC798 \uB9DE\uCD98\uB2E4\uBA74 \uACF5\uAE30\uC5ED\uD559 \uC801....\uC74D\uC74D
+      !!"
+    skillIcon: {fileID: 21300000, guid: 5f1abd29a5908a24eb32cf867a91aa44, type: 3}

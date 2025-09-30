@@ -389,19 +389,8 @@ namespace DogGuns_Games.vamsir
                 return;
             }
 
-            // 피격 이펙트: 붉은색으로 점멸
-            if (_spriteRenderer != null)
-            {
-                // 진행중인 컬러 트윈을 중지하고 즉시 흰색으로 리셋 후 새로운 시퀀스 시작
-                _spriteRenderer.DOKill();
-                _spriteRenderer.color = Color.white;
-                DOTween.Sequence()
-                    .Append(_spriteRenderer.DOColor(Color.red, 0.1f))
-                    .Append(_spriteRenderer.DOColor(Color.white, 0.1f))
-                    .SetTarget(transform); // 오브젝트가 파괴될 때 트윈도 함께 정리되도록 타겟 설정
-                
-                SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
-            }
+            await EffectManager.Instance.PlayQueuedFlashEffect(_spriteRenderer); // 큐에 추가하고 완료를 기다립니다.
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
 
             float attackPower = _playerWeaphon.attackPower;
             float stunTime = _playerWeaphon.mobStunTime;
@@ -435,15 +424,7 @@ namespace DogGuns_Games.vamsir
             Mob_Hp -= damage;
 
             // 피격 이펙트 재생
-            if (_spriteRenderer != null)
-            {
-                _spriteRenderer.DOKill();
-                _spriteRenderer.color = Color.white;
-                DOTween.Sequence()
-                    .Append(_spriteRenderer.DOColor(Color.red, 0.1f))
-                    .Append(_spriteRenderer.DOColor(Color.white, 0.1f))
-                    .SetTarget(transform);
-            }
+            EffectManager.Instance.PlayQueuedFlashEffect(_spriteRenderer).Forget(); // 큐에 추가하고 기다리지 않습니다.
 
             if (Mob_Hp <= 0 && !IsDead)
             {
