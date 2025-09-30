@@ -35,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20d59de054b734565a75a420e7947e91
+    m_Address: Assets/Game_Resource/VamserLike/VamSer_Like_Image/UI/UIatlas_atlst.spriteatlas
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 267b550d0980d4ffea15208789a0a79c
     m_Address: Weaphon/CatPunch.prefab
     m_ReadOnly: 0
@@ -67,6 +72,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6da3e616afe6e9642a2a6fbe5d363ca8
     m_Address: Player_charactor
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6efa305b409e57449addb4f0370f209d
+    m_Address: Assets/Scripts/ScriptableOJB/SkillDatabase.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -112,6 +122,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cf3e8c61dfbfa344b9ca98f921f02227
     m_Address: BigExp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d95fefdb30d37fa48a9fa7976868a49c
+    m_Address: Assets/Scripts/ScriptableOJB/EffectData.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
