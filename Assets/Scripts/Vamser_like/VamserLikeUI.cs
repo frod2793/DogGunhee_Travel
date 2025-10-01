@@ -64,6 +64,11 @@ namespace DogGuns_Games.vamsir
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
         private Tween _expSliderTween;
+        
+        // WebGL 메모리 최적화를 위한 변수
+        private int _lastWave = -1; // Wave UI 업데이트 최적화를 위한 변수
+        private readonly List<SelectSkillBtnPrefab> _skillButtonPool = new List<SelectSkillBtnPrefab>(); // 스킬 버튼 오브젝트 풀링
+        private readonly List<SkillData> _skillChoices = new List<SkillData>(3); // 스킬 선택 최적화를 위한 리스트
 
         /// <summary>
         /// 레벨업 시 표시되는 스킬 선택 UI입니다.
@@ -167,10 +172,10 @@ namespace DogGuns_Games.vamsir
             _cancellationTokenSource = new CancellationTokenSource();
             
             // UI 초기 상태 설정
-            // 레벨 텍스트 초기화
-            string initialLevelText = $"Lv. {_gameManager.PlayerLevel():F0}";
-            LevelText.text = initialLevelText;
-            playerLevelText.text = initialLevelText;
+            // 레벨 텍스트 초기화 (메모리 최적화)
+            LevelText.SetText("Lv. {0}", (int)_gameManager.PlayerLevel());
+            playerLevelText.SetText("Lv. {0}", (int)_gameManager.PlayerLevel());
+            
             // 경험치 슬라이더 초기화
             playerLevelSlider.value = _gameManager.GetPlayerExpProgress();
             if (expSlider != null) expSlider.value = _gameManager.GetPlayerExpProgress();
@@ -333,14 +338,14 @@ namespace DogGuns_Games.vamsir
         }
 
         /// <summary>
-        /// 게임 오버 UI의 텍스트들을 업데이트합니다.
+        /// 게임 오버 UI의 텍스트들을 업데이트합니다. (메모리 최적화)
         /// </summary>
         private void UpdateGameOverUI()
         {
             gameOverText.text = "Game Over";
-            gameOverCoinText.text = $"Coins: {getcoinCount}";
-            gameOverWaveText.text = $"Wave: {_gameManager.MobSpawnWave()}";
-            gameOverMobCountText.text = $"Kills: {_gameManager.Mob_Count()}";
+            gameOverCoinText.SetText("Coins: {0}", getcoinCount);
+            gameOverWaveText.SetText("Wave: {0}", _gameManager.MobSpawnWave());
+            gameOverMobCountText.SetText("Kills: {0}", _gameManager.Mob_Count());
         }
 
         #endregion
@@ -349,19 +354,20 @@ namespace DogGuns_Games.vamsir
 
         private async UniTask UpdateUI(CancellationToken cancellationToken)
         {
-            string lastWaveText = "";
             while (!cancellationToken.IsCancellationRequested)
             {
-                string currentWaveText = $"Wave {_gameManager.MobSpawnWave()}";
-                if (mobWaveText.text != currentWaveText)
+                int currentWave = _gameManager.MobSpawnWave();
+                if (_lastWave != currentWave)
                 {
-                    await WaveTextFadeEffect(currentWaveText);
-                    lastWaveText = currentWaveText;
+                    _lastWave = currentWave;
+                    // 문자열 할당은 Wave가 변경될 때만 발생하도록 최적화
+                    await WaveTextFadeEffect($"Wave {currentWave}");
                 }
 
-                coinText.text = $"{_gameManager.CoinCount()}";
+                // SetText를 사용하여 숫자 업데이트 시 문자열 할당 방지
+                coinText.SetText("{0}", _gameManager.CoinCount());
                 getcoinCount = _gameManager.CoinCount();
-                mobCountText.text = $"{_gameManager.Mob_Count()}";
+                mobCountText.SetText("{0}", _gameManager.Mob_Count());
                 await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate, cancellationToken);
             }
         }
@@ -400,9 +406,10 @@ namespace DogGuns_Games.vamsir
                 expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
             }
             
-            // 디버그 로그 (선택사항)
-            LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({progress * 100:F1}%)",
-                LogManager.LogCategory.VamserLikeUI);
+            // 디버그 로그 (메모리 최적화)
+            // WebGL 환경에서는 GC 부담을 줄이기 위해 릴리즈 빌드에서 이 로그를 비활성화하는 것이 좋습니다.
+            // LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({progress * 100:F1}%)",
+            //     LogManager.LogCategory.VamserLikeUI);
         }
 
         /// <summary>
@@ -410,11 +417,9 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void OnPlayerLevelUp(float newLevel)
         {
-            // 레벨 텍스트 업데이트
-            // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
-            string levelString = $"Lv. {newLevel:F0}";
-            LevelText.text = levelString;
-            playerLevelText.text = levelString;
+            // 레벨 텍스트 업데이트 (문자열 할당 최적화)
+            LevelText.SetText("Lv. {0}", (int)newLevel);
+            playerLevelText.SetText("Lv. {0}", (int)newLevel);
             
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
@@ -478,7 +483,6 @@ namespace DogGuns_Games.vamsir
             _isSkillSelectionActive = true;
             skillSelectionPanel.SetActive(true);
             GenerateSkillChoices();
-            StartAutoSelectionTimer(); // 자동 선택 타이머 시작
         }
 
         /// <summary>
@@ -523,20 +527,7 @@ namespace DogGuns_Games.vamsir
             }
             catch (OperationCanceledException)
             {
-                // 사용자가 선택하여 타이머가 취소된 경우, 정상적인 동작입니다.
                 LogManager.Log("스킬 선택 타이머가 사용자에 의해 취소되었습니다.", LogManager.LogCategory.VamserLikeUI);
-            }
-            finally
-            {
-                // 타이머가 끝나거나 취소되면 텍스트를 비활성화합니다.
-                if (countdownText != null)
-                {
-                    countdownText.gameObject.SetActive(false);
-                }
-                if (countDownslider != null)
-                {
-                    countDownslider.gameObject.SetActive(false);
-                }
             }
         }
 
@@ -560,28 +551,58 @@ namespace DogGuns_Games.vamsir
         }
 
         /// <summary>
-        /// 랜덤 스킬 선택지를 생성하여 UI에 표시합니다.
+        /// 랜덤 스킬 선택지를 생성하여 UI에 표시하고, 카운트다운을 초기화합니다. (메모리 최적화)
         /// </summary>
         private void GenerateSkillChoices()
         {
-            // 1. 기존 버튼들 제거
-            foreach (Transform child in skillButtonContainer.transform)
+            // 리롤 시 카운트다운을 초기화하기 위해 기존 타이머를 취소합니다.
+            _skillSelectionTimerCts?.Cancel();
+            _skillSelectionTimerCts = null;
+            
+            // 1. 기존 버튼 비활성화 (오브젝트 풀링)
+            foreach (var button in _skillButtonPool)
             {
-                Destroy(child.gameObject);
+                button.gameObject.SetActive(false);
             }
 
-            // 2. 전체 스킬 목록에서 랜덤으로 3개를 중복 없이 선택합니다.
-            // 이전에 선택한 스킬도 다시 나올 수 있습니다.
-            var selectedSkills = skillDatabase.allSkills
-                .OrderBy(skill => Random.value) // 리스트를 랜덤하게 섞습니다.
-                .Take(3)                        // 상위 3개를 선택합니다.
-                .ToList();
-            // 3. 선택된 스킬들로 버튼 생성
-            foreach (var skill in selectedSkills)
+            // 2. LINQ 대신 수동으로 랜덤 스킬 선택 (메모리 최적화)
+            _skillChoices.Clear();
+            int totalSkills = skillDatabase.allSkills.Count;
+            int skillsToSelect = Mathf.Min(3, totalSkills);
+
+            for (int i = 0; i < skillsToSelect; i++)
             {
-                var skillButtonInstance = Instantiate(skillSelectionButtonPrefab, skillButtonContainer.transform);
-                skillButtonInstance.Setup(skill, OnSkillSelected);
+                SkillData selectedSkill;
+                do
+                {
+                    int randomIndex = Random.Range(0, totalSkills);
+                    selectedSkill = skillDatabase.allSkills[randomIndex];
+                } while (_skillChoices.Contains(selectedSkill)); // 중복 방지
+                _skillChoices.Add(selectedSkill);
             }
+
+            // 3. 풀에서 버튼을 가져와 설정
+            for (int i = 0; i < _skillChoices.Count; i++)
+            {
+                SelectSkillBtnPrefab button;
+                if (i < _skillButtonPool.Count)
+                {
+                    // 풀에서 재사용
+                    button = _skillButtonPool[i];
+                }
+                else
+                {
+                    // 풀이 부족하면 새로 생성하고 추가
+                    button = Instantiate(skillSelectionButtonPrefab, skillButtonContainer.transform);
+                    _skillButtonPool.Add(button);
+                }
+                
+                button.gameObject.SetActive(true);
+                button.Setup(_skillChoices[i], OnSkillSelected);
+            }
+            
+            // 4. 카운트다운 타이머 초기화
+            StartAutoSelectionTimer();
         }
 
         /// <summary>
@@ -608,7 +629,6 @@ namespace DogGuns_Games.vamsir
             {
                 // 아직 선택할 스킬이 남았다면, 목록만 새로고침합니다.
                 GenerateSkillChoices();
-                StartAutoSelectionTimer(); // 다음 선택을 위한 타이머 다시 시작
             }
             else
             {
@@ -617,6 +637,16 @@ namespace DogGuns_Games.vamsir
                 _skillSelectionTimerCts = null;
                 skillSelectionPanel.SetActive(false);
                 _isSkillSelectionActive = false;
+                
+                // 패널이 닫힐 때 카운트다운 UI를 비활성화합니다.
+                if (countdownText != null)
+                {
+                    countdownText.gameObject.SetActive(false);
+                }
+                if (countDownslider != null)
+                {
+                    countDownslider.gameObject.SetActive(false);
+                }
                 _gameManager.SetMenuPopupState(false); // 게임 재개
             }
         }
