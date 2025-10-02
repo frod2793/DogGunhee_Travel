@@ -717,10 +717,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 37
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -857,7 +857,7 @@ Canvas:
   m_GameObject: {fileID: 299948191}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 1424236142}
   m_PlaneDistance: 100
   m_PixelPerfect: 1
@@ -1191,10 +1191,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 45.45
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -1301,7 +1301,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: logCategorySettings.Array.data[12].enableLog
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: logCategorySettings.Array.data[16].enableLog
@@ -2295,7 +2295,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1735073661
 Transform:
   m_ObjectHideFlags: 0

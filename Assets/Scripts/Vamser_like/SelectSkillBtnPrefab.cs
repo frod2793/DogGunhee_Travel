@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
+using R3;
 using TMPro;
 using DG.Tweening;
 using UnityEngine;
@@ -22,11 +24,33 @@ namespace DogGuns_Games.vamsir // 네임스페이스를 다른 파일과 일치�
         private SkillData _currentSkillData;
         private Button _button;
         private Action<SkillData> _onSelectedCallback;
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         private void Awake()
         {
             _button = GetComponent<Button>();
-            _button.onClick.AddListener(OnSkillSelected);
+            
+            // R3를 사용하여 버튼 클릭 이벤트를 비동기 스트림으로 처리합니다.
+            _button.OnClickAsObservable()
+                .Where(_ => _currentSkillData != null) // 스킬 데이터가 할당된 경우에만 진행
+                // 버튼 클릭 시 비동기 작업을 수행하고 스트림을 종료하므로, SubscribeAwait가 더 적합합니다.
+                .SubscribeAwait(async (_, ct) =>
+                {
+                    // 애니메이션을 먼저 재생하고, CancellationToken을 전달하여 취소 가능하도록 합니다.
+                    await PlaySelectionAnimation(ct);
+
+                    // 애니메이션이 끝난 후 콜백을 호출합니다.
+                    LogManager.Log($"스킬 선택: {_currentSkillData.skillName} (코드: {_currentSkillData.skillCode})", LogManager.LogCategory.VamserLikeUI);
+                    _onSelectedCallback?.Invoke(_currentSkillData);
+                })
+                .AddTo(_disposables);
+        }
+
+        private void OnDestroy()
+        {
+            // DOTween 애니메이션과 R3 구독을 안전하게 정리합니다.
+            transform.DOKill();
+            _disposables.Dispose();
         }
 
         /// <summary>
@@ -45,44 +69,21 @@ namespace DogGuns_Games.vamsir // 네임스페이스를 다른 파일과 일치�
         }
 
         /// <summary>
-        /// 이 버튼이 클릭되었을 때 호출됩니다.
-        /// </summary>
-        private void OnSkillSelected()
-        {
-            if (_currentSkillData == null) return;
-
-            LogManager.Log($"스킬 선택: {_currentSkillData.skillName} (코드: {_currentSkillData.skillCode})", LogManager.LogCategory.VamserLikeUI);
-
-            // VamserLikeUI에 선택 결과를 알립니다.
-            _onSelectedCallback?.Invoke(_currentSkillData);
-        }
-
-        /// <summary>
-        /// 외부(타이머 등)에서 이 버튼의 선택 로직을 호출하기 위한 메서드입니다.
-        /// </summary>
-        [Obsolete("Use PlaySelectionAnimation and TriggerSelectionCallback instead.")]
-        public void InvokeSelection()
-        {
-            OnSkillSelected();
-        }
-
-        /// <summary>
         /// 이 버튼이 선택되었음을 시각적으로 보여주는 애니메이션을 재생합니다.
         /// </summary>
-        public async UniTask PlaySelectionAnimation()
+        public async UniTask PlaySelectionAnimation(CancellationToken cancellationToken = default)
         {
             // DOTween을 사용하여 버튼이 커졌다가 원래 크기로 돌아오는 애니메이션을 비동기적으로 실행합니다.
-            await transform.DOScale(1.2f, 0.2f).SetEase(Ease.OutQuad).AsyncWaitForCompletion();
-            await transform.DOScale(1.0f, 0.1f).SetEase(Ease.InQuad).AsyncWaitForCompletion();
+            await transform.DOScale(1.2f, 0.2f).SetEase(Ease.OutQuad).WithCancellation(cancellationToken);
+            await transform.DOScale(1.0f, 0.1f).SetEase(Ease.InQuad).WithCancellation(cancellationToken);
         }
 
         /// <summary>
-        /// VamserLikeUI에 설정된 선택 콜백을 호출합니다.
+        /// 이 버튼에 설정된 현재 SkillData를 반환합니다.
         /// </summary>
-        public void TriggerSelectionCallback()
+        public SkillData GetCurrentSkillData()
         {
-            // OnSkillSelected와 동일한 로직이지만, 이름으로 역할을 명확히 합니다.
-            _onSelectedCallback?.Invoke(_currentSkillData);
+            return _currentSkillData;
         }
     }
 }

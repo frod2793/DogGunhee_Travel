@@ -79,6 +79,7 @@ namespace DogGuns_Games.vamsir
 
         private PlayerState _playState;
         public bool ishit = false;
+        private bool _activeColider = true;
         public Weaphon_base WeaphonBase { get; set; }
 
         /// <summary>
@@ -139,11 +140,13 @@ namespace DogGuns_Games.vamsir
         private void OnGameResume()
         {
             SetPlayerState(PlayState);
+            _activeColider = true;
         }
 
         private void OnGamePause()
         {
             SetPlayerState(PlayerState.Idle);
+            _activeColider = false;
         }
 
 
@@ -187,20 +190,23 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public virtual void OnCollisionStay2D(Collision2D other)
         {
-            GameObject colliderObject = other.gameObject;
-            string objectTag = colliderObject.tag;
-
-            switch (objectTag)
+            if (_activeColider)
             {
-                case "Mob":
-                    HandleMobCollision(colliderObject);
-                    break;
-                case "Exp":
-                    HandleExpCollision(colliderObject);
-                    break;
-                case "Coin":
-                    HandleCoinCollision(colliderObject);
-                    break;
+                GameObject colliderObject = other.gameObject;
+                string objectTag = colliderObject.tag;
+
+                switch (objectTag)
+                {
+                    case "Mob":
+                        HandleMobCollision(colliderObject);
+                        break;
+                    case "Exp":
+                        HandleExpCollision(colliderObject);
+                        break;
+                    case "Coin":
+                        HandleCoinCollision(colliderObject);
+                        break;
+                }
             }
         }
 
@@ -210,6 +216,7 @@ namespace DogGuns_Games.vamsir
         /// <param name="mobObject">충돌한 몹 게임오브젝트</param>
         private void HandleMobCollision(GameObject mobObject)
         {
+            
             // 이미 피격 상태면 추가 처리 없음
             if (ishit) return;
 

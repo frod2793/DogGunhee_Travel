@@ -51,14 +51,14 @@ class buildEditorScript
     [MenuItem("Build/Build Windows")]
     static void PerformWindowsBuild()
     {
-        if (!BuildAddressables()) ExitWithFailure();
+        if (!SetActiveProfileAndBuildAddressables("Pc_test")) ExitWithFailure();
 
         BuildPlayerOptions options = new BuildPlayerOptions
         {
             scenes = FindEnabledEditorScenes(),
             locationPathName = "Builds/Windows/DogGunhee.exe",
             target = BuildTarget.StandaloneWindows,
-            options = BuildOptions.None
+            options = BuildOptions.CleanBuildCache
         };
         BuildAndReport(options);
     }

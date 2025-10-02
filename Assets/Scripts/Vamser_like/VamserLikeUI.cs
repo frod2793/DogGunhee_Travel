@@ -501,31 +501,38 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private async UniTaskVoid CountdownAndAutoSelect(CancellationToken cancellationToken)
         {
-            try
+            LogManager.Log("카운트다운 시작.", LogManager.LogCategory.VamserLikeUI);
+            const float duration = 6.0f;
+            float timer = duration;
+
+            countdownText.gameObject.SetActive(true);
+            countDownslider.gameObject.SetActive(true);
+            countDownslider.value = 1f;
+
+            // 타이머가 진행 중이고, 취소 요청이 없을 때만 루프를 실행합니다.
+            while (timer > 0.01f && !cancellationToken.IsCancellationRequested)
             {
-                const float duration = 6.0f;
-                float timer = duration;
-
-                countdownText.gameObject.SetActive(true);
-                countDownslider.gameObject.SetActive(true);
-                countDownslider.value = 1f;
-
-                while (timer > 0.01f) // 0에 가까워지면 루프 종료
-                {
-                    countdownText.text = Mathf.CeilToInt(timer).ToString();
-                    countDownslider.value = timer / duration;
-                    
-                    await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
-                    timer -= Time.deltaTime;
-                }
-
+                countdownText.text = Mathf.CeilToInt(timer).ToString();
+                countDownslider.value = timer / duration;
+                
+                // await UniTask.Yield()는 취소 시 예외를 던지므로, 안전하게 다음 프레임까지 기다립니다.
+                await UniTask.NextFrame(cancellationToken);
+                timer -= Time.deltaTime;
+            }
+            
+            LogManager.Log($"카운트다운 루프 종료. 취소 상태: {cancellationToken.IsCancellationRequested}", LogManager.LogCategory.VamserLikeUI);
+            
+            // 타이머가 취소되지 않고 정상적으로 완료되었을 때만 자동 선택을 실행합니다.
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                LogManager.Log("카운트다운 정상 완료. 자동 선택을 시작합니다.", LogManager.LogCategory.VamserLikeUI);
                 // 시간이 다 되면 0을 표시하고 자동 선택 실행
                 countdownText.text = "0";
                 countDownslider.value = 0;
                 // 애니메이션이 끝날 때까지 기다린 후 다음 로직을 실행합니다.
                 await SelectRandomSkill();
             }
-            catch (OperationCanceledException)
+            else
             {
                 LogManager.Log("스킬 선택 타이머가 사용자에 의해 취소되었습니다.", LogManager.LogCategory.VamserLikeUI);
             }
@@ -536,17 +543,28 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private async UniTask SelectRandomSkill()
         {
-            if (skillButtonContainer.transform.childCount > 0)
+            LogManager.Log("SelectRandomSkill 진입.", LogManager.LogCategory.VamserLikeUI);
+            // UI의 childCount 대신, 현재 선택지로 채워진 데이터 리스트를 직접 확인하여 안정성을 높입니다.
+            if (_skillChoices.Count > 0)
             {
-                int randomIndex = UnityEngine.Random.Range(0, skillButtonContainer.transform.childCount);
-                var randomButton = skillButtonContainer.transform.GetChild(randomIndex).GetComponent<SelectSkillBtnPrefab>();
-                if (randomButton != null)
+                int randomIndex = UnityEngine.Random.Range(0, _skillChoices.Count);
+                SkillData randomSkill = _skillChoices[randomIndex];
+
+                LogManager.Log("시간 초과! 랜덤 스킬을 자동으로 선택합니다.", LogManager.LogCategory.VamserLikeUI);
+                LogManager.Log($"자동 선택될 스킬: {randomSkill.skillName}", LogManager.LogCategory.VamserLikeUI);
+
+                // 데이터와 일치하는 활성화된 버튼을 찾아서 애니메이션을 재생합니다.
+                var targetButton = _skillButtonPool.FirstOrDefault(btn =>
+                    btn.gameObject.activeSelf && btn.GetCurrentSkillData() == randomSkill);
+
+                if (targetButton != null)
                 {
-                    LogManager.Log("시간 초과! 랜덤 스킬을 자동으로 선택합니다.", LogManager.LogCategory.VamserLikeUI);
                     // 선택 애니메이션을 재생하고 끝날 때까지 기다립니다.
-                    await randomButton.PlaySelectionAnimation();
-                    randomButton.TriggerSelectionCallback(); // 애니메이션 후 콜백 호출
+                    await targetButton.PlaySelectionAnimation();
                 }
+
+                // OnSkillSelected를 호출하여 사용자 선택과 동일한 흐름을 타도록 합니다.
+                OnSkillSelected(randomSkill); // 애니메이션 후 콜백 호출
             }
         }
 
@@ -555,11 +573,11 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void GenerateSkillChoices()
         {
-            // 리롤 시 카운트다운을 초기화하기 위해 기존 타이머를 취소합니다.
-            _skillSelectionTimerCts?.Cancel();
-            _skillSelectionTimerCts = null;
+            LogManager.Log("새로운 스킬 선택지 생성 및 타이머 재시작.", LogManager.LogCategory.VamserLikeUI);
+            // 1. 새로운 선택지를 생성하기 전에, 카운트다운 타이머를 먼저 재시작합니다.
+            StartAutoSelectionTimer();
             
-            // 1. 기존 버튼 비활성화 (오브젝트 풀링)
+            // 2. 기존 버튼 비활성화 (오브젝트 풀링)
             foreach (var button in _skillButtonPool)
             {
                 button.gameObject.SetActive(false);
@@ -567,7 +585,7 @@ namespace DogGuns_Games.vamsir
 
             // 2. LINQ 대신 수동으로 랜덤 스킬 선택 (메모리 최적화)
             _skillChoices.Clear();
-            int totalSkills = skillDatabase.allSkills.Count;
+            var totalSkills = skillDatabase.allSkills.Count;
             int skillsToSelect = Mathf.Min(3, totalSkills);
 
             for (int i = 0; i < skillsToSelect; i++)
@@ -581,7 +599,7 @@ namespace DogGuns_Games.vamsir
                 _skillChoices.Add(selectedSkill);
             }
 
-            // 3. 풀에서 버튼을 가져와 설정
+            // 3. 풀에서 버튼을 가져와 UI를 설정합니다.
             for (int i = 0; i < _skillChoices.Count; i++)
             {
                 SelectSkillBtnPrefab button;
@@ -589,6 +607,8 @@ namespace DogGuns_Games.vamsir
                 {
                     // 풀에서 재사용
                     button = _skillButtonPool[i];
+                    // 버튼을 재사용할 때, 부모를 다시 설정하여 childCount 문제를 방지합니다.
+                    button.transform.SetParent(skillButtonContainer.transform, false);
                 }
                 else
                 {
@@ -600,9 +620,6 @@ namespace DogGuns_Games.vamsir
                 button.gameObject.SetActive(true);
                 button.Setup(_skillChoices[i], OnSkillSelected);
             }
-            
-            // 4. 카운트다운 타이머 초기화
-            StartAutoSelectionTimer();
         }
 
         /// <summary>
@@ -611,6 +628,7 @@ namespace DogGuns_Games.vamsir
         /// <param name="selectedSkill">선택된 스킬 데이터</param>
         private void OnSkillSelected(SkillData selectedSkill)
         {
+            LogManager.Log($"OnSkillSelected 호출됨: {selectedSkill.skillName}. 타이머를 취소합니다.", LogManager.LogCategory.VamserLikeUI);
             _skillSelectionTimerCts?.Cancel(); // 사용자가 선택했으므로 타이머 취소
 
             // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)

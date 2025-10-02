@@ -94,7 +94,7 @@ public class OptionPopupManager : MonoBehaviour
         }
         
         // Canvas의 렌더 모드를 ScreenSpaceCamera로 설정하고, 렌더 카메라를 Main Camera로 지정합니다.
-        _canvas.renderMode = RenderMode.ScreenSpaceCamera;
+        _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         _canvas.worldCamera = Camera.main;
 
         // Camera.main이 null일 경우 (씬에 MainCamera 태그가 없는 경우) 경고를 출력합니다.

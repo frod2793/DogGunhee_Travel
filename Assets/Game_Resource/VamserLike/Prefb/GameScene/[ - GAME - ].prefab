@@ -162,7 +162,7 @@ GameObject:
   - component: {fileID: 8165719466856526586}
   - component: {fileID: 8536590884035391404}
   - component: {fileID: 4737861082234672941}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -184,7 +184,7 @@ RectTransform:
   m_Father: {fileID: 7697636445473959071}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1608,7 +1608,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 17.2, y: 22}
+    oldSize: {x: 17.199999, y: 22.015999}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -3302,8 +3302,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.3762, y: -0.59}
-  m_SizeDelta: {x: 172.16, y: 65.13}
+  m_AnchoredPosition: {x: 0.16, y: -0.59}
+  m_SizeDelta: {x: 143.08, y: 59.69}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7814067622152260739
 CanvasRenderer:
@@ -3360,7 +3360,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 59.2
+  m_fontSize: 54.25
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3665,7 +3665,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6061194965502686599}
   - component: {fileID: 5711089526905010961}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: CountDown_slider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3680,9 +3680,9 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1927144434420091601}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4000}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.81600004, y: 0.81600004, z: 0.81600004}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4120247739606275002}
   m_Father: {fileID: 7160100120067064201}
@@ -3732,7 +3732,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 2596507906674178647}
   m_FillRect: {fileID: 8165719466856526586}
   m_HandleRect: {fileID: 0}
   m_Direction: 0
@@ -5726,7 +5726,7 @@ Canvas:
   m_GameObject: {fileID: 3190327082587488039}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 1
@@ -6867,7 +6867,7 @@ GameObject:
   - component: {fileID: 4120247739606275002}
   - component: {fileID: 881686156970039559}
   - component: {fileID: 2596507906674178647}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7980,7 +7980,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7697636445473959071}
   - component: {fileID: 2846068172307275146}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12215,7 +12215,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a5c7db7f299b242b18e2c886886ee0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  poolSizeMobCount: 10
+  initialMobCount: 20
+  mobsPerWave: 20
+  maxPoolSize: 100
   mobPrefabReference:
     m_AssetGUID: c471a13dad9b00644acffbffcbad0eb4
     m_SubObjectName: 
