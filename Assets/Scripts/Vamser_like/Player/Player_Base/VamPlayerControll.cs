@@ -373,14 +373,16 @@ namespace DogGuns_Games.vamsir
 
         private GameObject FindClosestEnemy()
         {
+            // GC Alloc을 피하기 위해 OverlapCircleNonAlloc 사용
             Vector2 searchPosition = player.transform.position;
-            Collider2D[] enemiesInRange = Physics2D.OverlapCircleAll(searchPosition, detectionRadius, enemyLayer);
+            int count = Physics2D.OverlapCircleNonAlloc(searchPosition, detectionRadius, _enemyColliders, enemyLayer);
             
             GameObject closest = null;
             float minDist = float.MaxValue;
             
-            foreach (var enemyCollider in enemiesInRange)
+            for (int i = 0; i < count; i++)
             {
+                var enemyCollider = _enemyColliders[i];
                 Vector3 enemyPos = enemyCollider.transform.position;
                 float dist = Vector2.Distance(searchPosition, enemyPos);
                 if (dist < minDist)
@@ -392,6 +394,9 @@ namespace DogGuns_Games.vamsir
             return closest;
         }
         
+        // GC Alloc을 피하기 위해 배열을 캐싱합니다.
+        private readonly Collider2D[] _enemyColliders = new Collider2D[50]; // 예상되는 최대 적 수보다 넉넉하게 설정
+
         #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {

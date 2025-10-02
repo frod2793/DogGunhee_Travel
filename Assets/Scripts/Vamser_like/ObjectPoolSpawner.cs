@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -24,7 +25,9 @@ namespace DogGuns_Games.vamsir
         private readonly Dictionary<GameObject, GameObject> _instanceToPrefabMap = new Dictionary<GameObject, GameObject>();
         
         [Header("<color=green>몹 오브젝트</color>")]
-        [SerializeField] private int poolSizeMobCount = 20;
+        [SerializeField] private int initialMobCount = 20;
+        [SerializeField] private int mobsPerWave = 20;
+        [SerializeField] private int maxPoolSize = 100; // WebGL 환경을 위해 최대 풀 크기 제한
         
         [Header("<color=green>몹 프리팹</color>")]
         [SerializeField] private AssetReferenceGameObject mobPrefabReference;
@@ -33,8 +36,8 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private Transform mobParent;
         
         // 몹 카운트 관련
-        private int _mobCount;
-        public int MobCount => _mobCount;
+        private int _activeMobCount;
+        public int MobCount => _activeMobCount;
         
         private int _mobSpawnWave;
         public int MobSpawnWave => _mobSpawnWave;
@@ -52,6 +55,7 @@ namespace DogGuns_Games.vamsir
         
         // 스폰 제어 변수
         private bool _isSpawningAllowed = true;
+        private CancellationTokenSource _respawnCts;
         
         // 기타 참조
         private Camera _mainCamera;
@@ -79,7 +83,7 @@ namespace DogGuns_Games.vamsir
                 OnGet_Mob,
                 OnRelease_Mob,
                 OnDestroy_PoolObject,
-                maxSize: poolSizeMobCount
+                maxSize: maxPoolSize
             );
 
             // 경험치 오브젝트 풀 초기화
@@ -88,7 +92,7 @@ namespace DogGuns_Games.vamsir
                 OnGet_PoolObject,
                 OnRelease_PoolObject,
                 OnDestroy_PoolObject,
-                maxSize: poolSizeMobCount
+                maxSize: maxPoolSize
             );
 
             // 코인 오브젝트 풀 초기화
@@ -97,7 +101,7 @@ namespace DogGuns_Games.vamsir
                 OnGet_PoolObject,
                 OnRelease_PoolObject,
                 OnDestroy_PoolObject,
-                maxSize: poolSizeMobCount
+                maxSize: maxPoolSize
             );
         }
 
@@ -130,6 +134,9 @@ namespace DogGuns_Games.vamsir
         private void OnDisable()
         {
             UnsubscribeFromEvents();
+            _respawnCts?.Cancel();
+            _respawnCts?.Dispose();
+            _respawnCts = null;
         }
 
         /// <summary>
@@ -176,6 +183,9 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGamePause -= Pause;
             PlayStateManager.OnGameResume -= Resume;
             PlayStateManager.OnGameOver -= GameEnd;
+            _respawnCts?.Cancel();
+            _respawnCts?.Dispose();
+            _respawnCts = null;
         }
 
         #endregion
@@ -206,6 +216,9 @@ namespace DogGuns_Games.vamsir
         private void GameEnd()
         {
             _isSpawningAllowed = false;
+            _respawnCts?.Cancel();
+            _respawnCts?.Dispose();
+            _respawnCts = null;
             
             // 모든 오브젝트 풀 정리
             MobObjectPool?.Clear();
@@ -233,46 +246,57 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void SpawnInitialMobs()
         {
-            for (int i = 0; i < poolSizeMobCount; i++)
+            mobsPerWave = initialMobCount;
+            for (int i = 0; i < mobsPerWave; i++)
             {
                 if (_isSpawningAllowed)
                 {
                     MobObjectPool.Get();
-                    _mobCount++;
                 }
             }
         }
 
         /// <summary>
         /// 남은 몹이 있는지 체크하고 없으면 리스폰 예약
+        /// WebGL 최적화를 위해 Invoke 대신 UniTask.Delay 사용
         /// </summary>
         private void CheckMob()
         {
-            if (_mobCount <= 0)
+            if (_activeMobCount <= 0 && _isSpawningAllowed)
             {   
-                // 몹이 모두 죽었을때 3초후 리스폰
-                Invoke(nameof(ReSpawn), 3);
+                _respawnCts?.Cancel();
+                _respawnCts = new CancellationTokenSource();
+                ReSpawnAfterDelay(_respawnCts.Token).Forget();
             }
         }
 
         /// <summary>
         /// 다음 웨이브 몹 리스폰
         /// </summary>
+        private async UniTaskVoid ReSpawnAfterDelay(CancellationToken token)
+        {
+            try
+            {
+                await UniTask.Delay(System.TimeSpan.FromSeconds(3), cancellationToken: token);
+                if (token.IsCancellationRequested || !_isSpawningAllowed) return;
+                
+                ReSpawn();
+            }
+            catch (System.OperationCanceledException) { }
+        }
         private void ReSpawn()
         {
-            if (!_isSpawningAllowed) return;
             
             _mobSpawnWave++;
-            poolSizeMobCount += 5;
+            mobsPerWave = Mathf.Min(mobsPerWave + 5, maxPoolSize); // 최대 풀 크기를 넘지 않도록 제한
             
-            LogManager.Log($"Wave: {_mobSpawnWave}, 몹 스폰 수: {poolSizeMobCount}", LogManager.LogCategory.ObjectPoolSpawner);
+            LogManager.Log($"Wave: {_mobSpawnWave}, 몹 스폰 수: {mobsPerWave}", LogManager.LogCategory.ObjectPoolSpawner);
             
-            for (int i = 0; i < poolSizeMobCount; i++)
+            for (int i = 0; i < mobsPerWave; i++)
             {
                 if (_isSpawningAllowed)
                 {
                     MobObjectPool.Get();
-                    _mobCount++;
                 }
             }
         }
@@ -321,6 +345,7 @@ namespace DogGuns_Games.vamsir
         {
             OnGet_PoolObject(mob);
             MoveObjectOffScreen(mob);
+            _activeMobCount++;
             mob.SetTarget(_player);
         }
 
@@ -330,7 +355,7 @@ namespace DogGuns_Games.vamsir
         private void OnRelease_Mob(VamserMobBase obj)
         {
             OnRelease_PoolObject(obj);
-            _mobCount--;
+            _activeMobCount--;
             
             // 남은 몹 수 체크
             CheckMob();
