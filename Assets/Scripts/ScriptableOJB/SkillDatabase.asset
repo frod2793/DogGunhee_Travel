@@ -43,21 +43,21 @@ MonoBehaviour:
       \uD558\uC9C0\uB9CC \uC544\uD504\uC9C0 \uC54A\uC73C\uB824\uBA74 \uC5B4\uCA54\uC218
       \uC5C6\uC9C0\uC694."
     skillIcon: {fileID: 21300000, guid: b04a5c6bc25114fcd8e8314ae6e52ace, type: 3}
-  - skillCode: 5
+  - skillCode: 6
     skillName: "\uADF8\uBB3C"
     skillDescription: "\uC774 \uADF8\uBB3C\uC5D0 \uC7A1\uD78C\uAC74 \uBB34\uC5C7\uB3C4
       \uBE60\uC838\uB098\uAC08\uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uC774\uB7F0! \uC628\uD1B5
       \uC4F0\uB808\uAE30\uB9CC \uC7A1\uD788\uB124\uC694."
     skillIcon: {fileID: 21300000, guid: d4681c6ed4a22eb4f8f5bebb5dc3a4f7, type: 3}
-  - skillCode: 6
+  - skillCode: 7
     skillName: "\uACE0\uC591\uC774 \uB09A\uC2EF\uB300"
     skillDescription: "\uACE0\uC591\uC774\uAC00 \uC88B\uC544\uD558\uB294 \uBC29\uC6B8\uACFC
       \uAE43\uD138\uC774 \uB2EC\uB824 \uC788\uC2B5\uB2C8\uB2E4! \uBC8C\uC368 \uC8FC\uBCC0\uC5D0\uC11C
       \uD638\uAE30\uC2EC\uC758 \uB208\uBE5B\uC774 \uB290\uAEF4\uC9C0\uB124\uC694."
-    skillIcon: {fileID: 21300000, guid: d4681c6ed4a22eb4f8f5bebb5dc3a4f7, type: 3}
-  - skillCode: 6
-    skillName: "\uACE0\uC591\uC774 \uB09A\uC2EF\uB300"
+    skillIcon: {fileID: 21300000, guid: 104c13d23f0d8814a828c290cd7664f8, type: 3}
+  - skillCode: 8
+    skillName: "\uB0A1\uC740 \uBC29\uD328"
     skillDescription: "\uB0A1\uC740 \uBC29\uD328\uC785\uB2C8\uB2E4. \uD558\uC9C0\uB9CC
       \uB204\uAD70\uAC00\uAC00 \uC5F4\uC2EC\uD788 \uAD00\uB9AC\uD55C\uB4EF, \uBC18\uC9DD\uBC18\uC9DD
       \uAD11\uC774 \uB098\uB294 \uAD70\uC694."
-    skillIcon: {fileID: 21300000, guid: d4681c6ed4a22eb4f8f5bebb5dc3a4f7, type: 3}
+    skillIcon: {fileID: 21300000, guid: bdecb23fa8d5fc744b7c1d5f9154028a, type: 3}

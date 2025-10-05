@@ -30,16 +30,15 @@ namespace DogGuns_Games.vamsir // 네임스페이스를 다른 파일과 일치�
         {
             _button = GetComponent<Button>();
             
-            // R3를 사용하여 버튼 클릭 이벤트를 비동기 스트림으로 처리합니다.
+            // R3를 사용하여 버튼 클릭 이벤트를 처리합니다.
+            // SubscribeAwait 대신 Subscribe를 사용하여 콜백이 즉시 실행되도록 보장합니다.
             _button.OnClickAsObservable()
                 .Where(_ => _currentSkillData != null) // 스킬 데이터가 할당된 경우에만 진행
-                // 버튼 클릭 시 비동기 작업을 수행하고 스트림을 종료하므로, SubscribeAwait가 더 적합합니다.
-                .SubscribeAwait(async (_, ct) =>
+                .Subscribe(_ =>
                 {
-                    // 애니메이션을 먼저 재생하고, CancellationToken을 전달하여 취소 가능하도록 합니다.
-                    await PlaySelectionAnimation(ct);
+                    // 애니메이션은 비동기적으로 재생하고, 콜백은 즉시 호출합니다.
+                    PlaySelectionAnimation().Forget();
 
-                    // 애니메이션이 끝난 후 콜백을 호출합니다.
                     LogManager.Log($"스킬 선택: {_currentSkillData.skillName} (코드: {_currentSkillData.skillCode})", LogManager.LogCategory.VamserLikeUI);
                     _onSelectedCallback?.Invoke(_currentSkillData);
                 })

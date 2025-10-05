@@ -70,6 +70,8 @@ namespace DogGuns_Games.vamsir
         private readonly List<SelectSkillBtnPrefab> _skillButtonPool = new List<SelectSkillBtnPrefab>(); // 스킬 버튼 오브젝트 풀링
         private readonly List<SkillData> _skillChoices = new List<SkillData>(3); // 스킬 선택 최적화를 위한 리스트
 
+        private readonly List<SkillData> _acquiredAccessorySkills = new List<SkillData>(); // 획득한 장신구 스킬 목록
+        private int _nextJuListSlotIndex = 0; // 장신구 UI 슬롯 업데이트 최적화를 위한 인덱스
         /// <summary>
         /// 레벨업 시 표시되는 스킬 선택 UI입니다.
         /// 3개의 랜덤 스킬이 제시되며, 선택 시 팝업이 닫힙니다.
@@ -170,6 +172,7 @@ namespace DogGuns_Games.vamsir
             JoystickSetting();
             SoundSetting(); // 사운드 설정 추가
             InitializeJuListUI(); // 스킬 UI 리스트 초기화
+            _acquiredAccessorySkills.Clear(); // 게임 시작 시 획득한 스킬 목록 초기화
             _cancellationTokenSource = new CancellationTokenSource();
             
             // UI 초기 상태 설정
@@ -274,7 +277,10 @@ namespace DogGuns_Games.vamsir
                 var color = image.color;
                 color.a = 0f;
                 image.color = color;
+                // 아이콘도 초기화하여 이전 게임의 잔상이 남지 않도록 합니다.
+                image.sprite = null; 
             }
+            _nextJuListSlotIndex = 0; // 인덱스 초기화
         }
 
         private void BtnSetting()
@@ -305,6 +311,9 @@ namespace DogGuns_Games.vamsir
 
             // 메뉴 패널이 활성화되면 조이스틱을 비활성화하고, 그 반대의 경우도 마찬가지입니다.
             joystickTransform.gameObject.SetActive(!isMenuPanelBecomingActive);
+            
+            // 메뉴 패널이 활성화될 때만 장신구 UI를 업데이트합니다.
+            if (isMenuPanelBecomingActive) RefreshJuListDisplay();
         }
 
         private void GameOverExit()
@@ -654,8 +663,10 @@ namespace DogGuns_Games.vamsir
             }
             
             DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
-            UpdateJuListUI(selectedSkill); // 모든 스킬 선택 시 장신구 UI 업데이트
-            
+            // UpdateJuListUI(selectedSkill); // 모든 스킬 선택 시 장신구 UI 업데이트
+            _acquiredAccessorySkills.Add(selectedSkill); // 선택한 스킬을 리스트에 저장
+            LogManager.Log($"장신구 '{selectedSkill.skillName}' 획득. 메뉴 오픈 시 UI에 반영됩니다.", LogManager.LogCategory.VamserLikeUI);
+
             _pendingSkillSelections--;
             LogManager.Log($"스킬 선택 완료. 남은 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);
 
@@ -686,23 +697,40 @@ namespace DogGuns_Games.vamsir
         }
         
         /// <summary>
-        /// 보조무기 UI 리스트에 선택된 스킬의 썸네일을 추가합니다.
+        /// 현재까지 획득한 장신구 목록을 기반으로 UI 디스플레이를 새로 고칩니다.
         /// </summary>
-        /// <param name="skillData">선택된 스킬 데이터</param>
-        private void UpdateJuListUI(SkillData skillData)
+        private void RefreshJuListDisplay()
         {
-            // 비어있는(투명한) 첫 번째 슬롯을 찾습니다.
-            var emptySlot = juListUIList.FirstOrDefault(image => image != null && image.color.a < 0.1f);
+            LogManager.Log("장신구 UI 목록을 새로 고칩니다.", LogManager.LogCategory.VamserLikeUI);
+            // juListUIList와 _acquiredAccessorySkills 중 더 작은 크기를 기준으로 반복합니다.
+            int displayCount = Mathf.Min(juListUIList.Count, _acquiredAccessorySkills.Count);
 
-            if (emptySlot != null)
+            for (int i = 0; i < juListUIList.Count; i++)
             {
-                // 찾은 슬롯에 스킬 썸네일을 설정하고 불투명하게 만듭니다.
-                emptySlot.sprite = skillData.skillIcon;
-                var color = emptySlot.color;
-                color.a = 1f;
-                emptySlot.color = color;
-                
-                LogManager.Log($"보조무기 UI 업데이트: '{skillData.skillName}' 추가됨", LogManager.LogCategory.VamserLikeUI);
+                var targetSlot = juListUIList[i];
+                if (targetSlot == null)
+                {
+                    LogManager.LogWarning("항목이 비어있음 ");
+                    continue;
+                }
+
+                if (i < displayCount)
+                {
+                    // 획득한 스킬이 있으면 Image 컴포넌트를 활성화하고 아이콘을 설정합니다.
+                    targetSlot.enabled = true;
+                    targetSlot.sprite = _acquiredAccessorySkills[i].skillIcon;
+                    var color = targetSlot.color;
+                    color.a = 1f;
+                    targetSlot.color = color;
+                }
+                else
+                {
+                    // 획득한 스킬이 없는 슬롯은 투명하게 처리하고, Image 컴포넌트를 비활성화하여 렌더링을 막습니다.
+                    var color = targetSlot.color;
+                    color.a = 0f;
+                    targetSlot.color = color;
+                    targetSlot.enabled = false;
+                }
             }
         }
 
