@@ -37,7 +37,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private Button settingBtn;
         [SerializeField] private Button exitBtn;
         public List<GameObject> weaponUIList = new List<GameObject>();
-        public List<GameObject> juListUIList = new List<GameObject>();
+        public List<Image> juListUIList = new List<Image>();
 
         [Header("<color=green>GameOver UI")] [SerializeField]
         private GameObject gameOverPanel;
@@ -169,6 +169,7 @@ namespace DogGuns_Games.vamsir
             BtnSetting();
             JoystickSetting();
             SoundSetting(); // 사운드 설정 추가
+            InitializeJuListUI(); // 스킬 UI 리스트 초기화
             _cancellationTokenSource = new CancellationTokenSource();
             
             // UI 초기 상태 설정
@@ -262,6 +263,19 @@ namespace DogGuns_Games.vamsir
             SoundManager.Instance.LoadSoundSetting();
         }
 
+        /// <summary>
+        /// 보조무기 UI 리스트를 초기화하여 모든 슬롯을 투명하게 만듭니다.
+        /// </summary>
+        private void InitializeJuListUI()
+        {
+            foreach (var image in juListUIList)
+            {
+                if (image == null) continue;
+                var color = image.color;
+                color.a = 0f;
+                image.color = color;
+            }
+        }
 
         private void BtnSetting()
         {
@@ -640,6 +654,8 @@ namespace DogGuns_Games.vamsir
             }
             
             DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
+            UpdateJuListUI(selectedSkill); // 모든 스킬 선택 시 장신구 UI 업데이트
+            
             _pendingSkillSelections--;
             LogManager.Log($"스킬 선택 완료. 남은 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);
 
@@ -668,6 +684,28 @@ namespace DogGuns_Games.vamsir
                 _gameManager.SetMenuPopupState(false); // 게임 재개
             }
         }
+        
+        /// <summary>
+        /// 보조무기 UI 리스트에 선택된 스킬의 썸네일을 추가합니다.
+        /// </summary>
+        /// <param name="skillData">선택된 스킬 데이터</param>
+        private void UpdateJuListUI(SkillData skillData)
+        {
+            // 비어있는(투명한) 첫 번째 슬롯을 찾습니다.
+            var emptySlot = juListUIList.FirstOrDefault(image => image != null && image.color.a < 0.1f);
+
+            if (emptySlot != null)
+            {
+                // 찾은 슬롯에 스킬 썸네일을 설정하고 불투명하게 만듭니다.
+                emptySlot.sprite = skillData.skillIcon;
+                var color = emptySlot.color;
+                color.a = 1f;
+                emptySlot.color = color;
+                
+                LogManager.Log($"보조무기 UI 업데이트: '{skillData.skillName}' 추가됨", LogManager.LogCategory.VamserLikeUI);
+            }
+        }
+
         #endregion
     }
 }
