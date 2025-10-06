@@ -305,11 +305,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemCode: 332
-  itemName: test
   itemDescription: fsefes
-  itemType: 
-  itemCoinType: gold
-  itemCoinCount: 123
   itemName_text: {fileID: 6424518148657456285}
   itemCoinCount_text: {fileID: 6846125138592470023}
   itemDescription_text: {fileID: 3641214974550642428}

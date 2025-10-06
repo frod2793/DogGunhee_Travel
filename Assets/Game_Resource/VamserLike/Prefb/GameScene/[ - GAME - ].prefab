@@ -1608,7 +1608,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 17.199999, y: 22.015999}
+    oldSize: {x: 17.208984, y: 22}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -5155,6 +5155,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a947f548df8967459641a63baf7aaa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pixelPerfectCamera: {fileID: 0}
   LevelText: {fileID: 9201628983834539402}
   playerLevelSlider: {fileID: 3688871088709051694}
   mobWaveText: {fileID: 3097138278563862329}

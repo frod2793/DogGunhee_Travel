@@ -5,8 +5,8 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 
@@ -56,43 +56,49 @@ namespace DogGuns_Games.vamsir
         [Header("<color=green>플레이어 자동 공격 활성화 토글 ")] [SerializeField]
         private Toggle autoAttackToggle;
 
-        [Header("설정 데이터")]
-        [SerializeField] private SettingsData_oBJ settingsData;
+        [Header("설정 데이터")] [SerializeField] private SettingsData_oBJ settingsData;
 
-        [Tooltip("조이스틱의 위치와 크기를 제어하는 RectTransform 입니다.")]
-        [SerializeField] private RectTransform joystickTransform;
+        [Tooltip("조이스틱의 위치와 크기를 제어하는 RectTransform 입니다.")] [SerializeField]
+        private RectTransform joystickTransform;
+
         VamserLikeGameManager _gameManager;
         private CancellationTokenSource _cancellationTokenSource;
         private Tween _expSliderTween;
-        
+
         // WebGL 메모리 최적화를 위한 변수
         private int _lastWave = -1; // Wave UI 업데이트 최적화를 위한 변수
-        private readonly List<SelectSkillBtnPrefab> _skillButtonPool = new List<SelectSkillBtnPrefab>(); // 스킬 버튼 오브젝트 풀링
+
+        private readonly List<SelectSkillBtnPrefab>
+            _skillButtonPool = new List<SelectSkillBtnPrefab>(); // 스킬 버튼 오브젝트 풀링
+
         private readonly List<SkillData> _skillChoices = new List<SkillData>(3); // 스킬 선택 최적화를 위한 리스트
 
         private readonly List<SkillData> _acquiredAccessorySkills = new List<SkillData>(); // 획득한 장신구 스킬 목록
         private int _nextJuListSlotIndex = 0; // 장신구 UI 슬롯 업데이트 최적화를 위한 인덱스
+
         /// <summary>
         /// 레벨업 시 표시되는 스킬 선택 UI입니다.
         /// 3개의 랜덤 스킬이 제시되며, 선택 시 팝업이 닫힙니다.
         /// 리프레시 버튼으로 선택지를 다시 뽑을 수 있습니다.
         /// </summary>
-        [Header("Skill Selection UI")]
-        [Tooltip("스킬 선택 팝업의 최상위 패널입니다.")]
-        [SerializeField] private GameObject skillSelectionPanel;
-        [Tooltip("스킬 선택지를 다시 뽑는 리프레시 버튼입니다.")]
-        [SerializeField] private Button refreshButton;
-        [Tooltip("동적으로 생성될 스킬 선택 버튼의 프리팹입니다.")]
-        [SerializeField] private SelectSkillBtnPrefab skillSelectionButtonPrefab;
-        [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")]
-        [SerializeField] private GameObject skillButtonContainer;
+        [Header("Skill Selection UI")] [Tooltip("스킬 선택 팝업의 최상위 패널입니다.")] [SerializeField]
+        private GameObject skillSelectionPanel;
+
+        [Tooltip("스킬 선택지를 다시 뽑는 리프레시 버튼입니다.")] [SerializeField]
+        private Button refreshButton;
+
+        [Tooltip("동적으로 생성될 스킬 선택 버튼의 프리팹입니다.")] [SerializeField]
+        private SelectSkillBtnPrefab skillSelectionButtonPrefab;
+
+        [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")] [SerializeField]
+        private GameObject skillButtonContainer;
+
         [SerializeField] TMP_Text countdownText;
         [SerializeField] private Slider countDownslider;
-        
-        
-        [Header("Skill Data")]
-        [Tooltip("게임 내 모든 스킬 정보가 담긴 데이터베이스입니다.")]
-        [SerializeField] private SkillDatabase skillDatabase;
+
+
+        [Header("Skill Data")] [Tooltip("게임 내 모든 스킬 정보가 담긴 데이터베이스입니다.")] [SerializeField]
+        private SkillDatabase skillDatabase;
 
         private int _pendingSkillSelections = 0; // 처리 대기 중인 스킬 선택 횟수
         private bool _isSkillSelectionActive = false; // 스킬 선택 UI가 활성화되어 있는지 여부
@@ -106,6 +112,12 @@ namespace DogGuns_Games.vamsir
         {
             // 싱글톤 인스턴스를 사용하여 더 효율적이고 안정적으로 참조를 가져옵니다.
             _gameManager = VamserLikeGameManager.Instance; // Instance 프로퍼티가 null 체크를 담당합니다.
+
+#if UNITY_STANDALONE || UNITY_WEBGL|| UNITY_STANDALONE_OSX
+            // PC 및 WebGL 환경에서 창 크기를 720x1280으로 고정합니다.
+            Screen.SetResolution(720, 1280, false);
+            LogManager.Log("PC/WebGL 환경으로 감지되어 화면 크기를 720x1280으로 설정합니다.", LogManager.LogCategory.VamserLikeUI);
+#endif
         }
 
         private void Start()
@@ -125,15 +137,18 @@ namespace DogGuns_Games.vamsir
                 var playerController = FindFirstObjectByType<VamPlayerControll>();
                 if (playerController != null)
                 {
-                    LogManager.Log($"VamPlayerControll을 찾았습니다. 자동 공격 상태를 {isOn}(으)로 변경합니다.", LogManager.LogCategory.VamserLikeUI);
+                    LogManager.Log($"VamPlayerControll을 찾았습니다. 자동 공격 상태를 {isOn}(으)로 변경합니다.",
+                        LogManager.LogCategory.VamserLikeUI);
                     playerController.AutoAttackEnabledByToggle = isOn;
                 }
                 else
                 {
-                    LogManager.LogError("VamPlayerControll을 찾을 수 없습니다! 플레이어 오브젝트가 활성화되어 있고 VamPlayerControll 컴포넌트가 추가되었는지 확인하세요.", LogManager.LogCategory.VamserLikeUI);
+                    LogManager.LogError(
+                        "VamPlayerControll을 찾을 수 없습니다! 플레이어 오브젝트가 활성화되어 있고 VamPlayerControll 컴포넌트가 추가되었는지 확인하세요.",
+                        LogManager.LogCategory.VamserLikeUI);
                 }
             });
-            
+
             // 리프레시 버튼 이벤트 연결
             refreshButton.onClick.AddListener(GenerateSkillChoices);
         }
@@ -154,7 +169,7 @@ namespace DogGuns_Games.vamsir
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
             SettingsData_oBJ.OnSettingsChanged -= JoystickSetting; // 설정 변경 이벤트 구독 해제
-            
+
             // 리프레시 버튼 이벤트 해제
             refreshButton.onClick.RemoveListener(GenerateSkillChoices);
         }
@@ -174,16 +189,16 @@ namespace DogGuns_Games.vamsir
             InitializeJuListUI(); // 스킬 UI 리스트 초기화
             _acquiredAccessorySkills.Clear(); // 게임 시작 시 획득한 스킬 목록 초기화
             _cancellationTokenSource = new CancellationTokenSource();
-            
+
             // UI 초기 상태 설정
             // 레벨 텍스트 초기화 (메모리 최적화)
             LevelText.SetText("Lv. {0}", (int)_gameManager.PlayerLevel());
             playerLevelText.SetText("Lv. {0}", (int)_gameManager.PlayerLevel());
-            
+
             // 경험치 슬라이더 초기화
             playerLevelSlider.value = _gameManager.GetPlayerExpProgress();
             if (expSlider != null) expSlider.value = _gameManager.GetPlayerExpProgress();
-            
+
             UpdateUI(_cancellationTokenSource.Token).Forget();
         }
 
@@ -215,14 +230,14 @@ namespace DogGuns_Games.vamsir
                     LogManager.LogCategory.VamserLikeUI);
                 return;
             }
-            
+
             // OnSettingsChanged 이벤트는 이미 메모리의 settingsData가 업데이트된 후에 호출됩니다.
             // 여기서 LoadSettings()를 다시 호출하면 파일의 이전 데이터로 덮어쓰여 문제가 발생하므로 제거합니다.
 
             joystickTransform.localScale = new Vector3(settingsData.joystickSize,
                 settingsData.joystickSize, 1);
-            variableJoystick.SetMode((JoystickType)settingsData.joystickType); 
-            
+            variableJoystick.SetMode((JoystickType)settingsData.joystickType);
+
             joystickTransform.anchoredPosition = settingsData.joystickPos;
 
             CheckJoystickVisibilityAndResetIfOutside();
@@ -278,8 +293,9 @@ namespace DogGuns_Games.vamsir
                 color.a = 0f;
                 image.color = color;
                 // 아이콘도 초기화하여 이전 게임의 잔상이 남지 않도록 합니다.
-                image.sprite = null; 
+                image.sprite = null;
             }
+
             _nextJuListSlotIndex = 0; // 인덱스 초기화
         }
 
@@ -311,7 +327,7 @@ namespace DogGuns_Games.vamsir
 
             // 메뉴 패널이 활성화되면 조이스틱을 비활성화하고, 그 반대의 경우도 마찬가지입니다.
             joystickTransform.gameObject.SetActive(!isMenuPanelBecomingActive);
-            
+
             // 메뉴 패널이 활성화될 때만 장신구 UI를 업데이트합니다.
             if (isMenuPanelBecomingActive) RefreshJuListDisplay();
         }
@@ -428,7 +444,7 @@ namespace DogGuns_Games.vamsir
                 // 이 슬라이더는 별도의 트윈으로 관리할 필요가 거의 없으므로, Kill 없이 바로 실행합니다.
                 expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
             }
-            
+
             // 디버그 로그 (메모리 최적화)
             // WebGL 환경에서는 GC 부담을 줄이기 위해 릴리즈 빌드에서 이 로그를 비활성화하는 것이 좋습니다.
             // LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({progress * 100:F1}%)",
@@ -443,16 +459,17 @@ namespace DogGuns_Games.vamsir
             // 레벨 텍스트 업데이트 (문자열 할당 최적화)
             LevelText.SetText("Lv. {0}", (int)newLevel);
             playerLevelText.SetText("Lv. {0}", (int)newLevel);
-            
+
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
             LogManager.Log($"레벨업 UI 업데이트: 새 레벨 {newLevel}", LogManager.LogCategory.VamserLikeUI);
-            
+
             // 레벨 2부터 스킬 선택 UI를 표시합니다.
             if (newLevel >= 2)
             {
                 _pendingSkillSelections++;
-                LogManager.Log($"레벨업 이벤트 수신. 보류 중인 스킬 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);
+                LogManager.Log($"레벨업 이벤트 수신. 보류 중인 스킬 선택: {_pendingSkillSelections}",
+                    LogManager.LogCategory.VamserLikeUI);
 
                 // 스킬 선택이 진행 중이 아닐 때만 새로운 프로세스를 시작합니다.
                 if (!_isSkillSelectionActive)
@@ -483,7 +500,7 @@ namespace DogGuns_Games.vamsir
         }
 
         #endregion
-        
+
         #region 스킬 선택 UI
 
         /// <summary>
@@ -537,14 +554,15 @@ namespace DogGuns_Games.vamsir
             {
                 countdownText.text = Mathf.CeilToInt(timer).ToString();
                 countDownslider.value = timer / duration;
-                
+
                 // await UniTask.Yield()는 취소 시 예외를 던지므로, 안전하게 다음 프레임까지 기다립니다.
                 await UniTask.NextFrame(cancellationToken);
                 timer -= Time.deltaTime;
             }
-            
-            LogManager.Log($"카운트다운 루프 종료. 취소 상태: {cancellationToken.IsCancellationRequested}", LogManager.LogCategory.VamserLikeUI);
-            
+
+            LogManager.Log($"카운트다운 루프 종료. 취소 상태: {cancellationToken.IsCancellationRequested}",
+                LogManager.LogCategory.VamserLikeUI);
+
             // 타이머가 취소되지 않고 정상적으로 완료되었을 때만 자동 선택을 실행합니다.
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -599,7 +617,7 @@ namespace DogGuns_Games.vamsir
             LogManager.Log("새로운 스킬 선택지 생성 및 타이머 재시작.", LogManager.LogCategory.VamserLikeUI);
             // 1. 새로운 선택지를 생성하기 전에, 카운트다운 타이머를 먼저 재시작합니다.
             StartAutoSelectionTimer();
-            
+
             // 2. 기존 버튼 비활성화 (오브젝트 풀링)
             foreach (var button in _skillButtonPool)
             {
@@ -619,6 +637,7 @@ namespace DogGuns_Games.vamsir
                     int randomIndex = Random.Range(0, totalSkills);
                     selectedSkill = skillDatabase.allSkills[randomIndex];
                 } while (_skillChoices.Contains(selectedSkill)); // 중복 방지
+
                 _skillChoices.Add(selectedSkill);
             }
 
@@ -639,7 +658,7 @@ namespace DogGuns_Games.vamsir
                     button = Instantiate(skillSelectionButtonPrefab, skillButtonContainer.transform);
                     _skillButtonPool.Add(button);
                 }
-                
+
                 button.gameObject.SetActive(true);
                 button.Setup(_skillChoices[i], OnSkillSelected);
             }
@@ -651,7 +670,8 @@ namespace DogGuns_Games.vamsir
         /// <param name="selectedSkill">선택된 스킬 데이터</param>
         private void OnSkillSelected(SkillData selectedSkill)
         {
-            LogManager.Log($"OnSkillSelected 호출됨: {selectedSkill.skillName}. 타이머를 취소합니다.", LogManager.LogCategory.VamserLikeUI);
+            LogManager.Log($"OnSkillSelected 호출됨: {selectedSkill.skillName}. 타이머를 취소합니다.",
+                LogManager.LogCategory.VamserLikeUI);
             _skillSelectionTimerCts?.Cancel(); // 사용자가 선택했으므로 타이머 취소
 
             // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)
@@ -661,11 +681,12 @@ namespace DogGuns_Games.vamsir
                 var playerRenderer = _gameManager.spawnedPlayer.GetComponent<SpriteRenderer>();
                 EffectManager.Instance.PlayLevelUpEffect(playerRenderer);
             }
-            
+
             DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
             // UpdateJuListUI(selectedSkill); // 모든 스킬 선택 시 장신구 UI 업데이트
             _acquiredAccessorySkills.Add(selectedSkill); // 선택한 스킬을 리스트에 저장
-            LogManager.Log($"장신구 '{selectedSkill.skillName}' 획득. 메뉴 오픈 시 UI에 반영됩니다.", LogManager.LogCategory.VamserLikeUI);
+            LogManager.Log($"장신구 '{selectedSkill.skillName}' 획득. 메뉴 오픈 시 UI에 반영됩니다.",
+                LogManager.LogCategory.VamserLikeUI);
 
             _pendingSkillSelections--;
             LogManager.Log($"스킬 선택 완료. 남은 선택: {_pendingSkillSelections}", LogManager.LogCategory.VamserLikeUI);
@@ -682,20 +703,22 @@ namespace DogGuns_Games.vamsir
                 _skillSelectionTimerCts = null;
                 skillSelectionPanel.SetActive(false);
                 _isSkillSelectionActive = false;
-                
+
                 // 패널이 닫힐 때 카운트다운 UI를 비활성화합니다.
                 if (countdownText != null)
                 {
                     countdownText.gameObject.SetActive(false);
                 }
+
                 if (countDownslider != null)
                 {
                     countDownslider.gameObject.SetActive(false);
                 }
+
                 _gameManager.SetMenuPopupState(false); // 게임 재개
             }
         }
-        
+
         /// <summary>
         /// 현재까지 획득한 장신구 목록을 기반으로 UI 디스플레이를 새로 고칩니다.
         /// </summary>
