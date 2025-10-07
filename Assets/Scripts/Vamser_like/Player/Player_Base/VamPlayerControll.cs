@@ -34,6 +34,7 @@ namespace DogGuns_Games.vamsir
         private float moveDuration = 0.1f;
 
 
+        private VamserLikeGameManager _gameManager;
         private Slider _playerHpSlider; // 인스턴스화된 슬라이더 참조 추가
 
         [Header("<color=green>Map Range")] [SerializeField]
@@ -66,6 +67,7 @@ namespace DogGuns_Games.vamsir
 
         private void Start()
         {
+            _gameManager = VamserLikeGameManager.Instance;
             PlayStateManager.OnGameStart += PlayerInit;
             PlayStateManager.OnGamePause += Pause;
             PlayStateManager.OnGameResume += Resume;
@@ -188,9 +190,10 @@ namespace DogGuns_Games.vamsir
             if (player == null || playerCharactor == null) return;
 
             float deltaSpeed = playerCharactor.MoveSpeed * Time.deltaTime;
-            Vector3 targetPosition = player.transform.position + moveDirection * deltaSpeed;
-
-            player.transform.position = ClampPositionToMap(targetPosition);
+            // 이동 주체인 GameManager를 통해 위치를 변경합니다.
+            Vector3 currentPos = _gameManager.PlayerPos();
+            Vector3 targetPosition = currentPos + moveDirection * deltaSpeed;
+            _gameManager.MovePlayer(ClampPositionToMap(targetPosition));
             UpdateAnimationState(moveDirection.magnitude);
             UpdateCharacterRotation(moveDirection);
         }
@@ -337,14 +340,15 @@ namespace DogGuns_Games.vamsir
                     }
 
                     Vector3 enemyPos = closestEnemy.transform.position;
-                    Vector3 playerPos = player.transform.position;
+                    // 이동 주체인 GameManager로부터 현재 위치를 가져옵니다.
+                    Vector3 playerPos = _gameManager.PlayerPos();
                     Vector3 dir = (enemyPos - playerPos).normalized;
 
                     // 1. 이동: 항상 이상적인 공격 위치로 부드럽게 이동합니다.
                     Vector3 destination = enemyPos - dir * attackRadius;
                     float step = playerCharactor.MoveSpeed * autoAttackMoveSpeedMultiplier * Time.deltaTime;
                     Vector3 newPosition = Vector3.MoveTowards(playerPos, destination, step);
-                    player.transform.position = ClampPositionToMap(newPosition);
+                    _gameManager.MovePlayer(ClampPositionToMap(newPosition));
 
                     // 2. 애니메이션 및 회전
                     Vector3 movedVector = newPosition - playerPos;
@@ -352,7 +356,7 @@ namespace DogGuns_Games.vamsir
                     UpdateCharacterRotation(dir);
 
                     // 3. 공격: 사거리 내에 들어오면 공격을 시작합니다.
-                    float distance = Vector3.Distance(player.transform.position, enemyPos);
+                    float distance = Vector3.Distance(_gameManager.PlayerPos(), enemyPos);
                     if (distance <= attackRadius * 1.1f) // 약간의 버퍼를 주어 안정적으로 공격하게 함
                     {
                         if (!_isAttack)

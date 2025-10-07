@@ -470,12 +470,8 @@ namespace DogGuns_Games.vamsir
                 // 이 프리팹에 대한 풀이 없으면 새로 생성합니다.
                 pool = new ObjectPool<GameObject>(
                     createFunc: () => Instantiate(prefab),
-                    actionOnGet: (obj) =>
-                    {
-                        obj.transform.position = position;
-                        obj.transform.rotation = rotation;
-                        obj.SetActive(true);
-                    },
+                    // actionOnGet에서는 활성화만 처리합니다. 위치 설정은 Get() 이후에 수행합니다.
+                    actionOnGet: (obj) => obj.SetActive(true),
                     actionOnRelease: (obj) => obj.SetActive(false),
                     actionOnDestroy: (obj) => Destroy(obj),
                     maxSize: 20 // 기본 풀 사이즈
@@ -483,7 +479,13 @@ namespace DogGuns_Games.vamsir
                 _genericObjectPools[prefab] = pool;
             }
 
+            // 1. 풀에서 인스턴스를 가져옵니다.
             var instance = pool.Get();
+            
+            // 2. 가져온 직후에 최신 위치와 회전값을 설정합니다.
+            instance.transform.position = position;
+            instance.transform.rotation = rotation;
+            
             _instanceToPrefabMap[instance] = prefab; // 반환 시 사용할 수 있도록 인스턴스와 프리팹을 매핑합니다.
             return instance;
         }

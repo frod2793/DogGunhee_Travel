@@ -33,8 +33,9 @@ namespace DogGuns_Games.vamsir
 
         [HideInInspector] public PlayerBase spawnedPlayer;
 
-        [Header("캐릭터 및 무기가 스폰 될시 부모 오브젝트")] [SerializeField]
-        private GameObject inGameObjectParent;
+        [Header("캐릭터 및 무기가 스폰 될시 부모 오브젝트")] 
+        [SerializeField]
+        private GameObject inGameObjectPlayerParent;
 
         private readonly Vector3 _spawnPosition = Vector3.zero;
 
@@ -212,7 +213,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private async UniTask SpawnPlayer()
         {
-            if (!PlayStateManager.instance.isPlay || inGameObjectParent == null)
+            if (!PlayStateManager.instance.isPlay || inGameObjectPlayerParent == null)
             {
                 LogManager.LogWarning("게임이 플레이 상태가 아니거나 부모 오브젝트가 설정되지 않았습니다.",
                     LogManager.LogCategory.VamserLikeGameManager);
@@ -249,7 +250,7 @@ namespace DogGuns_Games.vamsir
             try
             {
                 GameObject weaponInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition,
-                    Quaternion.identity, inGameObjectParent.transform).ToUniTask();
+                    Quaternion.identity, inGameObjectPlayerParent.transform).ToUniTask();
                 if (weaponInstance != null)
                 {
                     weaponInstance.transform.localPosition = Vector3.zero; // 스폰 후 로컬 좌표를 0으로 초기화
@@ -278,7 +279,7 @@ namespace DogGuns_Games.vamsir
             try
             {
                 GameObject characterInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition,
-                    Quaternion.identity, inGameObjectParent.transform).ToUniTask();
+                    Quaternion.identity, inGameObjectPlayerParent.transform).ToUniTask();
                 if (characterInstance != null)
                 {
                     characterInstance.transform.localPosition = Vector3.zero; // 스폰 후 로컬 좌표를 0으로 초기화
@@ -322,16 +323,16 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public async UniTask ChangeCharacterAndWeapon_Spawn()
         {
-            if (inGameObjectParent == null)
+            if (inGameObjectPlayerParent == null)
             {
                 LogManager.LogError("인게임 오브젝트 부모가 설정되지 않았습니다.", LogManager.LogCategory.VamserLikeGameManager);
                 return;
             }
 
             // 현재 캐릭터와 무기 제거
-            for (int i = inGameObjectParent.transform.childCount - 1; i >= 0; i--)
+            for (int i = inGameObjectPlayerParent.transform.childCount - 1; i >= 0; i--)
             {
-                Transform child = inGameObjectParent.transform.GetChild(i);
+                Transform child = inGameObjectPlayerParent.transform.GetChild(i);
                 // Addressables로 생성된 오브젝트는 Addressables.ReleaseInstance로 해제��는 것이 좋습니다.
                 Addressables.ReleaseInstance(child.gameObject);
             }
@@ -426,6 +427,28 @@ namespace DogGuns_Games.vamsir
             return PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData.ingameCoin ?? 0;
         }
 
+        /// <summary>
+        /// 플레이어의 실제 이동 주체인 inGameObjectParent의 현재 월드 위치를 반환합니다.
+        /// </summary>
+        public Vector3 PlayerPos()
+        {
+            if (inGameObjectPlayerParent != null)
+            {
+                return inGameObjectPlayerParent.transform.position;
+            }
+            LogManager.LogWarning("inGameObjectParent가 할당되지 않아 플레이어 위치를 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
+            return Vector3.zero; // 기본값 반환
+        }
+        
+        /// <summary>
+        /// 플레이어(inGameObjectPlayerParent)를 새로운 위치로 이동시킵니다.
+        /// </summary>
+        /// <param name="newPosition">이동할 새로운 월드 위치</param>
+        public void MovePlayer(Vector3 newPosition)
+        {
+            if (inGameObjectPlayerParent != null) inGameObjectPlayerParent.transform.position = newPosition;
+        }
+        
         #endregion
     }
 }

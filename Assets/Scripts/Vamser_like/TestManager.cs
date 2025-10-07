@@ -17,7 +17,8 @@ public class TestManager : MonoBehaviour
     
     [Tooltip("무기 인덱스를 입력할 InputField")]
     [SerializeField] private TMP_InputField weaponIndexInput;
-    
+
+    [SerializeField] private Toggle isWeaponeUPgrade;
     [Tooltip("변경을 실행할 버튼")]
     [SerializeField] private Button changeButton;
 
@@ -172,6 +173,18 @@ public class TestManager : MonoBehaviour
             if (_gameManager != null)
             {
                 await _gameManager.ChangeCharacterAndWeapon_Spawn();
+                
+                // 스폰된 무기의 업그레이드 상태를 토글 값과 동기화합니다.
+                if (_gameManager.spawnedPlayer != null)
+                {
+                    var weapon = _gameManager.spawnedPlayer.GetComponentInChildren<Weaphon_base>();
+                    if (weapon != null)
+                    {
+                        weapon.isUpgradelv2 = isWeaponeUPgrade.isOn;
+                        LogManager.Log($"무기({weapon.name})의 isUpgradelv2 상태를 {isWeaponeUPgrade.isOn}(으)로 설정했습니다.", 
+                            LogManager.LogCategory.VamserLikeGameManager, weapon);
+                    }
+                }
             }
         }
         catch (System.Exception e)
