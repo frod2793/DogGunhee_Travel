@@ -16,8 +16,6 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private GameObject pearlPrefab;
 
         [Header("업그레이드 설정 (장신구)")]
-        [Tooltip("업그레이드 활성화 여부입니다.")]
-        [SerializeField] private bool isUpgraded = false;
         
         private GameObject _activePearlInstance; // 현재 활성화된 진주 인스턴스
 
@@ -76,7 +74,7 @@ namespace DogGuns_Games.vamsir
             {
                 // 진주에 필요한 모든 데이터를 전달하여 초기화합니다. (결합도 감소)
                 // 이제 lifetime은 외부에서 관리하므로 전달하지 않습니다.
-                pearlProjectile.Initialize(attackSpeed, attackPower, isUpgraded, mobStunTime);
+                pearlProjectile.Initialize(attackSpeed, attackPower, isUpgradelv2, mobStunTime);
             }
             else
             {

@@ -24,7 +24,6 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private float rotationOffset = 0f;
 
         [Header("업그레이드: 베기 공격 설정")]
-        [SerializeField] private bool isUpgraded = false;
         [SerializeField] private float slashAngle = 180f; // 베기 공격의 부채꼴 범위(각도)
         [SerializeField] private float slashRange = 1.5f; // 베기 시 앞으로 뻗는 사거리
         [SerializeField] private float slashDuration = 0.4f; // 베기 공격의 지속 시간
@@ -96,7 +95,7 @@ namespace DogGuns_Games.vamsir
         {
             if (_isAttacking) return;
            
-            if (isUpgraded)
+            if (isUpgradelv2)
             {
                 SlashAttackAsync(attackAngle).Forget();
             }
