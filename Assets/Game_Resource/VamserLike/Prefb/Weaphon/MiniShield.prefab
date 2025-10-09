@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4042318979796296752}
   - component: {fileID: 3795582895211286164}
   - component: {fileID: 8785151288299878884}
+  - component: {fileID: 5778610390890820374}
   m_Layer: 0
   m_Name: MiniShield
   m_TagString: Player_Attack
@@ -119,7 +120,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -162,3 +163,15 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &5778610390890820374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029326127143702795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cb66b986f4b49ad9a96c45832126ba5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -74,7 +74,7 @@ namespace DogGuns_Games.vamsir
             {
                 // 진주에 필요한 모든 데이터를 전달하여 초기화합니다. (결합도 감소)
                 // 이제 lifetime은 외부에서 관리하므로 전달하지 않습니다.
-                pearlProjectile.Initialize(attackSpeed, attackPower, isUpgradelv2, mobStunTime);
+                pearlProjectile.Initialize(this);
             }
             else
             {

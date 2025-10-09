@@ -63,6 +63,8 @@ namespace DogGuns_Games.vamsir
     
             // 총알 상태 초기화
             obj.ResetState();
+            // 풀에서 나올 때마다 부모 무기의 최신 스탯으로 갱신합니다.
+            obj.Initialize(this);
             obj.gameObject.SetActive(true);
           
         }

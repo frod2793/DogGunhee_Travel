@@ -439,6 +439,17 @@ namespace DogGuns_Games.vamsir
             LogManager.LogWarning("inGameObjectParent가 할당되지 않아 플레이어 위치를 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
             return Vector3.zero; // 기본값 반환
         }
+
+        public Transform PlayerTransfrom()
+        {
+            if (inGameObjectPlayerParent != null)
+            {
+                return inGameObjectPlayerParent.transform;
+            }
+            LogManager.LogWarning("inGameObjectParent가 할당되지 않아 플레이어 위치를 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
+            return inGameObjectPlayerParent.transform;// 기본값 반환
+        }
+        
         
         /// <summary>
         /// 플레이어(inGameObjectPlayerParent)를 새로운 위치로 이동시킵니다.

@@ -139,9 +139,10 @@ namespace DogGuns_Games.vamsir
         /// 외부(틱 데미지 등)에서 몹에게 데미지를 입히는 공용 메서드입니다.
         /// </summary>
         /// <param name="damage">입힐 데미지 양</param>
-        public virtual void TakeDamage(float damage)
+        /// <param name="stunTime">적용할 스턴 시간 (0이면 스턴 없음)</param>
+        public virtual void TakeDamage(float damage, float stunTime = 0f)
         {
-            // 하위 클래스에서 구체적인 로직을 구현합니다.
+            // 하위 클래스에서 구체적인 로직을 구현합니다. (NormalMob.cs 참고)
         }
 
         /// <summary>

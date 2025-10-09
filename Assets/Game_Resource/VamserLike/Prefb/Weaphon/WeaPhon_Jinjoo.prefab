@@ -104,9 +104,9 @@ MonoBehaviour:
   coolTime: 0
   attackSpeed: 10
   attackRange: 0
-  mobStunTime: 0
-  weaphonIndex: 3
+  mobStunTime: 0.5
   isShooting: 0
+  weaphonIndex: 3
+  isUpgradelv2: 0
   weaphonState: 0
   pearlPrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
-  isUpgraded: 0

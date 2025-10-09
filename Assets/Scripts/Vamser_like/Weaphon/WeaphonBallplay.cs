@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Pool;
 
 namespace DogGuns_Games.vamsir
 {
@@ -20,14 +21,29 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private float rotationRadius = 2.5f;
 
         private float _currentAngle = 0f;
-        private readonly List<GameObject> _spawnedBalls = new List<GameObject>();
+        
+        // 오브젝트 풀링을 위한 필드
+        private IObjectPool<BallDamageDealer> _ballPool;
+        private readonly List<BallDamageDealer> _activeBalls = new List<BallDamageDealer>();
+
+        private void Awake()
+        {
+            // 오브젝트 풀 초기화
+            _ballPool = new ObjectPool<BallDamageDealer>(
+                createFunc: CreateBall,
+                actionOnGet: OnGetBall,
+                actionOnRelease: OnReleaseBall,
+                actionOnDestroy: OnDestroyBall,
+                maxSize: ballCount * 2 // 예상 최대 개수보다 넉넉하게 설정
+            );
+        }
 
         public override void OnEnable()
         {
             base.OnEnable();
             
             _currentAngle = 0f; // 회전 각도 초기화
-            ClearBalls();
+            ClearBalls(); // 이전 게임의 공이 남아있을 경우 풀에 반환
             
             if (ballPrefab != null)
             {
@@ -45,6 +61,16 @@ namespace DogGuns_Games.vamsir
             ClearBalls();
         }
 
+        private void OnDestroy()
+        {
+            // 오브젝트가 파괴될 때 풀도 함께 정리합니다.
+            // IObjectPool<T> 인터페이스에는 Dispose가 없으므로, IDisposable로 캐스팅하여 호출합니다.
+            if (_ballPool is System.IDisposable disposablePool)
+            {
+                disposablePool.Dispose();
+            }
+        }
+
         private void Update()
         {
             // 이 오브젝트는 더 이상 회전하지 않습니다. 대신 각 공의 위치를 직접 계산하여 업데이트합니다.
@@ -55,15 +81,15 @@ namespace DogGuns_Games.vamsir
             // 2. 회전 각도 업데이트 (시계 방향: 음수)
             _currentAngle += -attackSpeed * rotationDirectionCorrection * Time.deltaTime;
 
-            if (_spawnedBalls.Count == 0) return;
+            if (_activeBalls.Count == 0) return;
 
             // 3. 각 공의 위치를 새로운 각도에 맞춰 재계산
-            float angleStep = 360f / _spawnedBalls.Count;
-            for (int i = 0; i < _spawnedBalls.Count; i++)
+            float angleStep = 360f / _activeBalls.Count;
+            for (int i = 0; i < _activeBalls.Count; i++)
             {
                 float angle = _currentAngle + (i * angleStep);
                 Vector3 newPosition = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad), 0) * rotationRadius;
-                _spawnedBalls[i].transform.localPosition = newPosition;
+                _activeBalls[i].transform.localPosition = newPosition;
             }
         }
 
@@ -73,29 +99,46 @@ namespace DogGuns_Games.vamsir
 
             for (int i = 0; i < ballCount; i++)
             {
-                float angle = i * angleStep;
-                
-                Vector3 spawnPosition = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad), 0) * rotationRadius;
-
-                GameObject ball = Instantiate(ballPrefab, transform);
-                ball.transform.localPosition = spawnPosition;
-                
-                if (ball.TryGetComponent<BallDamageDealer>(out var damageDealer))
-                {
-                    damageDealer.Initialize(attackPower, coolTime);
-                }
-                
-                _spawnedBalls.Add(ball);
+                var ball = _ballPool.Get();
+                // OnGetBall에서 초기화가 처리됩니다.
             }
         }
 
         private void ClearBalls()
         {
-            foreach (var ball in _spawnedBalls)
+            // 활성화된 모든 공을 풀에 반환합니다.
+            foreach (var ball in _activeBalls)
             {
-                if (ball != null) Destroy(ball);
+                _ballPool.Release(ball);
             }
-            _spawnedBalls.Clear();
+            _activeBalls.Clear();
         }
+
+        #region Object Pool Methods
+
+        private BallDamageDealer CreateBall()
+        {
+            GameObject ballInstance = Instantiate(ballPrefab, transform);
+            return ballInstance.GetComponent<BallDamageDealer>();
+        }
+
+        private void OnGetBall(BallDamageDealer ball)
+        {
+            ball.Initialize(this);
+            ball.gameObject.SetActive(true);
+            _activeBalls.Add(ball);
+        }
+
+        private void OnReleaseBall(BallDamageDealer ball)
+        {
+            ball.gameObject.SetActive(false);
+        }
+
+        private void OnDestroyBall(BallDamageDealer ball)
+        {
+            Destroy(ball.gameObject);
+        }
+
+        #endregion
     }
 }

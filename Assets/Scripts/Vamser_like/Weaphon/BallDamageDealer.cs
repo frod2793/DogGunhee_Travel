@@ -8,7 +8,7 @@ namespace DogGuns_Games.vamsir
     /// 적과 충돌 시 지정된 공격력과 쿨타임에 따라 지속적인 피해를 줍니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(TrailRenderer))]
-    public class BallDamageDealer : MonoBehaviour
+    public class BallDamageDealer : Weaphon_base
     {
         private float _attackPower;
         private float _coolTime;
@@ -40,10 +40,11 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// WeaphonBallplay에서 이 공의 스탯을 초기화합니다.
         /// </summary>
-        public void Initialize(float attackPower, float coolTime)
+        public void Initialize(Weaphon_base parentWeapon)
         {
-            _attackPower = attackPower;
-            _coolTime = coolTime;
+            isUpgradelv2 = parentWeapon.isUpgradelv2;
+            attackPower = parentWeapon.attackPower;
+            mobStunTime = parentWeapon.mobStunTime;
 
             // 무기가 활성화/비활성화 될 때 궤적이 초기화되도록 합니다.
             if (_trailRenderer != null)
@@ -108,7 +109,6 @@ namespace DogGuns_Games.vamsir
                 return; // 아직 쿨다운 중
             }
 
-            enemy.TakeDamage(_attackPower);
             _damageCooldowns[enemyId] = Time.time + _coolTime;
         }
 

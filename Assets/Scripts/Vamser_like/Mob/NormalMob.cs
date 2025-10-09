@@ -42,6 +42,13 @@ namespace DogGuns_Games.vamsir
         {
             DOTween.SetTweensCapacity(500, 50);
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            
+            // 이 컴포넌트가 정상적으로 동작하려면 Collider가 Trigger여야 합니다.
+            var col = GetComponent<Collider2D>();
+            if (col != null && !col.isTrigger)
+            {
+                LogManager.LogWarning($"'{name}'의 Collider2D가 Trigger로 설정되지 않았습니다. 자동으로 isTrigger를 true로 설정합니다.", LogManager.LogCategory.NormalMob, this);
+            }
         }
 
         private void Start()
@@ -339,36 +346,36 @@ namespace DogGuns_Games.vamsir
         
         #endregion
 
-        private void OnCollisionEnter2D(Collision2D other)
+        private void OnTriggerEnter2D(Collider2D other)
         {
             if (_isHitByShoot)
             {
-                HandleCollision(other);
+                HandleTrigger(other);
             }
         }
 
-        private void OnCollisionStay2D(Collision2D other)
+        private void OnTriggerStay2D(Collider2D other)
         {
             if (!_isHitByShoot)
             {
-                HandleCollision(other);
+                HandleTrigger(other);
             }
         }
 
-        private void HandleCollision(Collision2D other)
+        private void HandleTrigger(Collider2D other)
         {
             if (!IsHit && other.gameObject.CompareTag("Player_Attack"))
             {
-                HitCooltime(other).Forget();
-                LogManager.Log("_isHitByShoot: "+_isHitByShoot,LogManager.LogCategory.NormalMob);
+                Weaphon_base obj = other.GetComponent<Weaphon_base>();
+                ProcessWeaponHit(obj);
             }
         }
 
-        private async UniTask HitCooltime(Collision2D other)
+        /// <summary>
+        /// 플레이어 무기와의 충돌을 처리합니다.
+        /// </summary>
+        private void ProcessWeaponHit(Weaphon_base weaphon = null)
         {
-            IsHit = true;
-
-            // [수정] 무기 변경 등으로 인해 무기 참조가 null이 되었을 경우, 게임 매니저를 통해 다시 획득합니다.
             if (_playerWeaphon == null)
             {
                 if (VamserLikeGameManager.Instance != null && VamserLikeGameManager.Instance.spawnedPlayer != null)
@@ -380,55 +387,64 @@ namespace DogGuns_Games.vamsir
                     }
                 }
             }
-            
-            // 재시도 후에도 null이면, 처리를 중단합니다.
+
             if (_playerWeaphon == null)
             {
                 LogManager.LogError("플레이어 무기를 찾을 수 없어 피격 처리를 할 수 없습니다.", LogManager.LogCategory.NormalMob, this);
-                IsHit = false; // 무적 상태를 해제하여 다음 충돌에서 다시 시도할 수 있도록 합니다.
                 return;
             }
-
-            await EffectManager.Instance.PlayQueuedFlashEffect(_spriteRenderer); // 큐에 추가하고 완료를 기다립니다.
-            SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
-
+            
             float attackPower = _playerWeaphon.attackPower;
             float stunTime = _playerWeaphon.mobStunTime;
+            
+            TakeDamage(attackPower, stunTime);
+        }
 
-            await UniTask.Yield();
-            Mob_Hp -= attackPower;
+        /// <summary>
+        /// 몹에게 데미지를 입히고, 스턴을 적용하는 통합 메서드입니다.
+        /// </summary>
+        /// <param name="damage">입힐 데미지 양</param>
+        /// <param name="stunTime">적용할 스턴 시간 (0이면 스턴 없음)</param>
+        public override void TakeDamage(float damage, float stunTime = 0f)
+        {
+            if (IsDead || IsHit) return;
+
+            IsHit = true;
+
+            Mob_Hp -= damage;
+
+            // 피격 이펙트 및 사운드 재생
+            EffectManager.Instance.PlayQueuedFlashEffect(_spriteRenderer).Forget(); // 큐에 추가하고 기다리지 않습니다.
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
 
             if (Mob_Hp <= 0 && !IsDead)
             {
                 SetMobState(MobState.Die);
                 SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
-
             }
-            else
+            else if (stunTime > 0f)
             {
                 Mob_StunTime = stunTime;
                 SetMobState(MobState.Stun);
             }
 
-            IsHit = false;
+            // async void의 위험을 피하기 위해, 무적 시간 해제 로직을 별도의 비동기 메서드로 분리하여 호출합니다.
+            ResetIsHitFlagAfterDelay().Forget();
         }
 
         /// <summary>
-        /// 외부(틱 데미지 등)에서 몹에게 데미지를 입히는 공용 메서드입니다.
+        /// 짧은 지연 후 IsHit 플래그를 안전하게 해제합니다.
         /// </summary>
-        /// <param name="damage">입힐 데미지 양</param>
-        public override void TakeDamage(float damage)
+        private async UniTaskVoid ResetIsHitFlagAfterDelay()
         {
-            if (IsDead || IsHit) return;
-
-            Mob_Hp -= damage;
-
-            // 피격 이펙트 재생
-            EffectManager.Instance.PlayQueuedFlashEffect(_spriteRenderer).Forget(); // 큐에 추가하고 기다리지 않습니다.
-
-            if (Mob_Hp <= 0 && !IsDead)
+            try
             {
-                SetMobState(MobState.Die);
+                await UniTask.DelayFrame(1, cancellationToken: this.GetCancellationTokenOnDestroy());
+                IsHit = false;
+            }
+            catch (OperationCanceledException)
+            {
+                // 오브젝트 파괴 시 작업이 취소되는 것은 정상적인 동작이므로, 예외를 무시합니다.
             }
         }
 

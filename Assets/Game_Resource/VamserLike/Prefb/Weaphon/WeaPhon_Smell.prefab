@@ -102,13 +102,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02d7cc3b6135799448e4fdad74cf3f7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackPower: 1
-  coolTime: 0
+  attackPower: 10
+  coolTime: 0.5
   attackSpeed: 0
   attackRange: 0
-  mobStunTime: 0
-  weaphonIndex: 5
+  mobStunTime: 0.5
   isShooting: 0
+  weaphonIndex: 5
+  isUpgradelv2: 0
   weaphonState: 0
   maxTrailPoints: 50
   pointSpacing: 0.1
@@ -253,7 +254,7 @@ EdgeCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0

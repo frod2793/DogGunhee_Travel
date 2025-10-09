@@ -109,8 +109,9 @@ MonoBehaviour:
   attackSpeed: 1
   attackRange: 30
   mobStunTime: 1
-  weaphonIndex: 4
   isShooting: 0
+  weaphonIndex: 4
+  isUpgradelv2: 0
   weaphonState: 0
   initialAttackPower: 40
   initialCoolTime: 0.5
@@ -118,7 +119,6 @@ MonoBehaviour:
   pierceDistance: 1
   pierceDuration: 0.3
   rotationOffset: -130
-  isUpgraded: 0
   slashAngle: 130
   slashRange: 0.7
   slashDuration: 0.3
@@ -152,7 +152,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0

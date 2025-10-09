@@ -107,8 +107,9 @@ MonoBehaviour:
   attackSpeed: 0
   attackRange: 0
   mobStunTime: 1
-  weaphonIndex: 1
   isShooting: 0
+  weaphonIndex: 1
+  isUpgradelv2: 0
   weaphonState: 0
   attackDuration: 0.2
   damageTickInterval: 0.2
@@ -146,7 +147,7 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0

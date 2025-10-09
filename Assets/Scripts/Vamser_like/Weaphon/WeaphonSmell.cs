@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DogGuns_Games.vamsir
 {
@@ -35,39 +34,39 @@ namespace DogGuns_Games.vamsir
         private LineRenderer _trailRenderer;
         private EdgeCollider2D _trailCollider;
         private Transform _playerTransform;
-        private LinkedList<TrailPoint> _points;
-        private Dictionary<int, float> _damageCooldowns;
+
+        // 순환 큐(Circular Queue)를 위한 필드 (메모리 최적화)
+        private TrailPoint[] _points;
+        private int _head;
+        private int _tail;
+        private int _pointCount;
+
+        // 렌더러와 콜라이더 업데이트 최적화를 위한 캐시 배열
+        private Vector3[] _linePositions;
+        private readonly List<Vector2> _colliderPointsList = new List<Vector2>();
+
+        private readonly Dictionary<int, float> _damageCooldowns = new Dictionary<int, float>();
 
         private void Awake()
         {
             _trailRenderer = GetComponent<LineRenderer>();
             _trailCollider = GetComponent<EdgeCollider2D>();
-            _points = new LinkedList<TrailPoint>();
-            _damageCooldowns = new Dictionary<int, float>();
 
-            SetupLineRenderer();
+           
         }
 
         public override void OnEnable()
         {
             base.OnEnable();
-            
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerObject != null)
-            {
-                _playerTransform = playerObject.transform;
-            }
-            else
-            {
-                Debug.LogError("WeaphonSmell: 'Player' 태그를 가진 게임 오브젝트를 찾을 수 없습니다!", this);
-                _playerTransform = null;
-            }
-
+            SetupLineRenderer();
+            _playerTransform = VamserLikeGameManager.Instance.PlayerTransfrom();
             _trailRenderer.startWidth = trailWidth;
             _trailRenderer.endWidth = trailWidth;
             
-            // 활성화 시 기존 흔적 및 데이터 초기화
-            _points.Clear();
+            // 순환 큐 및 데이터 초기화
+            _points = new TrailPoint[maxTrailPoints];
+            _linePositions = new Vector3[maxTrailPoints];
+            _head = 0; _tail = 0; _pointCount = 0;
             _damageCooldowns.Clear();
             UpdateTrail();
         }
@@ -76,9 +75,8 @@ namespace DogGuns_Games.vamsir
         {
             _trailRenderer.useWorldSpace = true;
             _trailRenderer.sortingOrder = trailSortingOrder;
-            _trailRenderer.numCapVertices = 0;
-            _trailRenderer.numCornerVertices = 0;
-
+            _trailRenderer.numCapVertices = 5; // 라인의 끝부분을 부드럽게 처리합니다.
+            _trailRenderer.numCornerVertices = 5;
             // 그라데이션 설정: 최신 부분(오른쪽)이 불투명하고, 오래된 부분(왼쪽)으로 갈수록 투명해집니다.
             var colorGradient = new Gradient();
             colorGradient.SetKeys(
@@ -111,89 +109,109 @@ namespace DogGuns_Games.vamsir
         public override void OnDisable()
         {
             base.OnDisable();
-            if (_points != null) { _points.Clear(); UpdateTrail(); }
-            if (_damageCooldowns != null) { _damageCooldowns.Clear(); }
+            // 비활성화 시 모든 포인트와 데이터를 초기화합니다.
+            _pointCount = 0;
+            UpdateTrail();
+            _damageCooldowns.Clear();
         }
 
         private void Update()
         {
-            // 수명이 다한 포인트를 리스트의 앞에서부터 제거합니다.
+            if (_playerTransform == null) return;
+
+            // 1. 수명이 다한 포인트 제거 (순환 큐의 head를 이동)
             bool trailUpdated = false;
-            while (_points.Count > 0 && Time.time - _points.First.Value.creationTime > trailLifetime)
+            while (_pointCount > 0 && Time.time - _points[_head].creationTime > trailLifetime)
             {
-                _points.RemoveFirst();
+                _head = (_head + 1) % maxTrailPoints;
+                _pointCount--;
                 trailUpdated = true;
             }
 
-            // 포인트가 제거되었다면, LineRenderer와 Collider를 업데이트합니다.
+            // 2. 플레이어 이동에 따라 새 포인트 추가
+            Vector3 currentPosition = _playerTransform.position;
+            bool shouldAddPoint = _pointCount == 0 || Vector3.Distance(_points[(_tail - 1 + maxTrailPoints) % maxTrailPoints].position, currentPosition) > pointSpacing;
+
+            if (shouldAddPoint)
+            {
+                // 순환 큐가 가득 찼다면, 가장 오래된 포인트를 덮어씁니다 (head를 이동).
+                if (_pointCount == maxTrailPoints)
+                {
+                    _head = (_head + 1) % maxTrailPoints;
+                    _pointCount--;
+                }
+
+                _points[_tail] = new TrailPoint { position = currentPosition, creationTime = Time.time };
+                _tail = (_tail + 1) % maxTrailPoints;
+                _pointCount++;
+                trailUpdated = true;
+            }
+
+            // 3. 흔적에 변경이 있었다면 렌더러와 콜라이더를 업데이트합니다.
             if (trailUpdated)
             {
                 UpdateTrail();
             }
         }
 
-        private void FixedUpdate()
-        {
-            if (_playerTransform == null) return;
-
-            Vector3 currentPosition = _playerTransform.position;
-            
-            // 마지막 포인트에서 일정 거리 이상 움직였을 때 새 포인트를 추가합니다.
-            bool shouldAddPoint = _points.Count == 0 || Vector3.Distance(_points.Last.Value.position, currentPosition) > pointSpacing;
-
-            if (shouldAddPoint)
-            {
-                // 위치와 현재 시간을 함께 저장하는 새로운 TrailPoint를 추가합니다.
-                _points.AddLast(new TrailPoint { position = currentPosition, creationTime = Time.time });
-
-                // 최대 포인트 수를 초과하면 가장 오래된 포인트를 제거합니다.
-                while (_points.Count > maxTrailPoints)
-                {
-                    _points.RemoveFirst();
-                }
-
-                UpdateTrail();
-            }
-        }
-
         private void UpdateTrail()
         {
-            if (_points.Count < 2)
+            if (_pointCount < 2)
             {
                 _trailRenderer.positionCount = 0;
                 _trailCollider.enabled = false;
                 return;
             }
 
+            _trailRenderer.positionCount = _pointCount;
             _trailCollider.enabled = true;
-            _trailRenderer.positionCount = _points.Count;
-            
-            // TrailPoint 리스트에서 위치(Vector3) 정보만 추출하여 LineRenderer에 설정합니다.
-            _trailRenderer.SetPositions(_points.Select(p => p.position).ToArray());
 
-            // EdgeCollider의 포인트들을 업데이트합니다.
-            Vector2[] localPoints = new Vector2[_points.Count];
-            int i = 0;
-            foreach (var trailPoint in _points)
+            // 순환 큐의 데이터를 미리 할당된 배열에 복사하여 GC를 방지합니다.
+            int currentPointIndex = _head;
+            for (int i = 0; i < _pointCount; i++)
             {
-                localPoints[i] = transform.InverseTransformPoint(trailPoint.position);
-                i++;
+                _linePositions[i] = _points[currentPointIndex].position;
+                // _colliderPoints[i] = transform.InverseTransformPoint(_points[currentPointIndex].position); // List로 변경되므로 직접 할당하지 않음
+                currentPointIndex = (currentPointIndex + 1) % maxTrailPoints;
             }
-            _trailCollider.points = localPoints;
-        }
 
+            // GC 할당을 피하기 위해 SetPositions(ToArray()) 대신, positionCount를 설정하고 각 포인트를 직접 할당합니다.
+            for (int i = 0; i < _pointCount; i++)
+            {
+                _trailRenderer.SetPosition(i, _linePositions[i]);
+            }
+            
+            // EdgeCollider2D는 SetPoints(List<T>)를 사용하여 GC 할당 없이 업데이트합니다.
+            _colliderPointsList.Clear();
+            for (int i = 0; i < _pointCount; i++)
+            {
+                // LineRenderer의 월드 좌표를 EdgeCollider2D의 로컬 좌표로 변환합니다.
+                _colliderPointsList.Add(transform.InverseTransformPoint(_linePositions[i]));
+            }
+            _trailCollider.SetPoints(_colliderPointsList);
+        }
+       
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (!other.TryGetComponent<VamserMobBase>(out var enemy)) return;
-            int enemyId = other.GetInstanceID();
-            if (_damageCooldowns.TryGetValue(enemyId, out float nextDamageTime) && Time.time < nextDamageTime) return;
-            enemy.TakeDamage(attackPower);
-            _damageCooldowns[enemyId] = Time.time + coolTime;
-        }
+            if (!other.CompareTag("Mob")) return;
 
-        private void OnTriggerExit2D(Collider2D other)
-        {
-            if (other.TryGetComponent<VamserMobBase>(out _)) { _damageCooldowns.Remove(other.GetInstanceID()); }
+            // 쿨타임이 적용된 지속적인 데미지
+            int mobInstanceId = other.gameObject.GetInstanceID();
+
+            // 쿨타임이 끝났는지 확인 (또는 처음 충돌하는 몹인지 확인)
+            if (!_damageCooldowns.ContainsKey(mobInstanceId) || Time.time >= _damageCooldowns[mobInstanceId])
+            {
+                if (other.TryGetComponent<VamserMobBase>(out var mob))
+                {
+                    if (!mob.IsDead)
+                    {
+                        // 데미지를 입히고 다음 쿨타임 시간을 기록합니다.
+                        mob.TakeDamage(attackPower);
+                        _damageCooldowns[mobInstanceId] = Time.time + coolTime;
+                        
+                    }
+                }
+            }
         }
     }
 }

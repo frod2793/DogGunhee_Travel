@@ -1,6 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Pool;
 
 namespace DogGuns_Games.vamsir
 {
@@ -37,26 +38,26 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private float returnDelay = 0.1f;
         [Tooltip("부메랑이 초당 회전하는 횟수입니다.")]
         [SerializeField] private float boomerangRotationsPerSecond = 2.5f;
-
-        // 성능 최적화를 위해 ObjectPoolSpawner 참조를 캐싱합니다.
-        private ObjectPoolSpawner _objectPooler;
+        
+        // 부메랑 오브젝트 풀
+        private IObjectPool<BoomerangProjectile> _boomerangPool;
+        private Transform _playerTransform; // 플레이어 위치 추적을 위한 캐시
 
         #endregion
 
         #region Unity 라이프사이클
+        
 
         public override void OnEnable()
         {
-            base.OnEnable();
+            base.OnEnable(); // 부모 클래스의 OnEnable을 호출하여 상태를 초기화합니다.
+            InitializeBoomerangPool();
             
             if (_shieldRenderer == null)
                 _shieldRenderer = shieldCollider.GetComponent<SpriteRenderer>();
             
             // 게임 매니저에서 ObjectPoolSpawner 인스턴스를 캐싱합니다.
-            if (VamserLikeGameManager.Instance != null)
-            {
-                _objectPooler = VamserLikeGameManager.Instance.objectPoolSpawner;
-            }
+            _playerTransform = VamserLikeGameManager.Instance.PlayerTransfrom();
                 
             // 초기 상태 설정
             shieldCollider.enabled = false;
@@ -98,9 +99,9 @@ namespace DogGuns_Games.vamsir
             _isAnimShield = true;
 
             // 업그레이드 상태일 경우, 방패 애니메이션과 별개로 부메랑 공격을 즉시 시작합니다.
-            if (isUpgradelv2)
+            if (isUpgradelv2) // isUpgradelv2는 부모 클래스 Weaphon_base에 정의되어 있습니다.
             {
-                LaunchBoomerangAttackAsync();
+                LaunchBoomerangs();
             }
             
             try
@@ -135,17 +136,11 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 오브젝트 풀링을 사용하여 부메랑 광역 공격을 비동기적으로 실행합니다.
         /// </summary>
-        private void LaunchBoomerangAttackAsync()
+        private void LaunchBoomerangs()
         {
             if (boomerangPrefab == null)
             {
                 LogManager.LogWarning("부메랑 프리팹이 할당되지 않았습니다.", LogManager.LogCategory.Weapon, this);
-                return;
-            }
-            
-            if (_objectPooler == null)
-            {
-                LogManager.LogError("ObjectPoolSpawner를 찾을 수 없습니다.", LogManager.LogCategory.Weapon, this);
                 return;
             }
 
@@ -155,59 +150,38 @@ namespace DogGuns_Games.vamsir
             {
                 float angle = i * angleStep;
                 Vector3 direction = Quaternion.Euler(0, 0, angle) * Vector3.up;
-                
-                // 각 부메랑이 생성되는 순간의 플레이어 위치를 실시간으로 가져옵니다.
-                Vector3 spawnPosition = VamserLikeGameManager.Instance.PlayerPos(); 
-                GameObject boomerang = _objectPooler.SpawnObject(boomerangPrefab, spawnPosition, Quaternion.Euler(0, 0, angle));
-                if (boomerang == null) continue;
-        
-                // 각 부메랑의 애니메이션을 독립적으로 실행하고, 발사 위치를 전달합니다.
-                AnimateSingleBoomerangAsync(boomerang, direction, spawnPosition).Forget();
+
+                // 풀에서 부메랑을 가져와 초기화합니다.
+                var boomerang = _boomerangPool.Get();
+                boomerang.transform.position = _playerTransform.position;
+                boomerang.transform.rotation = Quaternion.Euler(0, 0, angle);
+                boomerang.Initialize(_boomerangPool, this.attackPower, this.mobStunTime, _playerTransform, direction, boomerangSpeed, boomerangDistance, returnDelay, boomerangRotationsPerSecond);
             }
         }
 
-        /// <summary>
-        /// 단일 부메랑의 이동 및 회전 애니메이션을 처리하고, 완료 시 풀에 반환합니다.
-        /// </summary>
-        private async UniTaskVoid AnimateSingleBoomerangAsync(GameObject boomerang, Vector3 direction, Vector3 originPosition)
+        #endregion
+
+        #region 오브젝트 풀링
+
+        private void InitializeBoomerangPool()
         {
-            try
+            _boomerangPool = new ObjectPool<BoomerangProjectile>(
+                // AddComponent는 프리팹에 설정된 값을 무시하고 기본값으로 컴포넌트를 생성하여 데이터 유실을 유발합니다.
+                // Instantiate로 생성된 인스턴스에서 GetComponent를 사용하여 기존 컴포넌트를 가져와야 합니다.
+                createFunc: () => Instantiate(boomerangPrefab).GetComponent<BoomerangProjectile>(),
+                actionOnGet: (proj) => proj.gameObject.SetActive(true),
+                actionOnRelease: (proj) => proj.gameObject.SetActive(false),
+                actionOnDestroy: (proj) => Destroy(proj.gameObject),
+                maxSize: boomerangCount * 2
+            );
+        }
+
+        // OnDestroy에서 풀을 정리하여 메모리 누수를 방지합니다.
+        private void OnDestroy()
+        {
+            if (_boomerangPool is System.IDisposable disposablePool)
             {
-                float outwardDuration = boomerangDistance / boomerangSpeed;
-                float returnDuration = outwardDuration;
-                float totalDuration = outwardDuration + returnDelay + returnDuration;
-
-                // 회전 트윈 생성
-                float totalRotations = totalDuration * boomerangRotationsPerSecond;
-                var rotateTween = boomerang.transform.DORotate(new Vector3(0, 0, 360f * totalRotations), totalDuration, RotateMode.FastBeyond360)
-                    .SetEase(Ease.Linear);
-                
-                // 트윈의 생명주기를 부메랑 오브젝트에 연결하여, 오브젝트 비활성화 시 트윈이 자동 정리되도록 합니다.
-                rotateTween.SetLink(boomerang);
-
-                // 1. 발사 지점에서 바깥으로 이동
-                await boomerang.transform.DOMove(originPosition + (direction * boomerangDistance), outwardDuration)
-                    .SetEase(Ease.OutQuad)
-                    .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-
-                // 2. 복귀 전 딜레이
-                await UniTask.Delay(System.TimeSpan.FromSeconds(returnDelay), cancellationToken: this.GetCancellationTokenOnDestroy());
-
-                // 3. 플레이어의 현재 위치를 동적으로 추적하며 복귀 (수동 루프)
-                // 이동 주체인 GameManager로부터 플레이어의 실시간 위치를 가져옵니다.
-                while (boomerang.activeInHierarchy && Vector3.Distance(boomerang.transform.position, VamserLikeGameManager.Instance.PlayerPos()) > 0.1f)
-                {
-                    boomerang.transform.position = Vector3.MoveTowards(boomerang.transform.position, VamserLikeGameManager.Instance.PlayerPos(), boomerangSpeed * Time.deltaTime);
-                    await UniTask.Yield(PlayerLoopTiming.Update, this.GetCancellationTokenOnDestroy());
-                }
-            }
-            finally
-            {
-                // 애니메이션이 성공적으로 끝나거나, 도중에 취소되어도 부메랑을 풀에 반환합니다.
-                if (boomerang.activeInHierarchy) // 오브젝트가 여전히 활성 상태일 때만 반환
-                {
-                    _objectPooler.ReturnObject(boomerang);
-                }
+                disposablePool.Dispose();
             }
         }
 

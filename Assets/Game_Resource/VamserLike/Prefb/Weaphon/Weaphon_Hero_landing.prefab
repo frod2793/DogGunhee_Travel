@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 630497876753694219}
   - component: {fileID: 4409687409235855706}
   m_Layer: 0
-  m_Name: Hero_landing
+  m_Name: Weaphon_Hero_landing
   m_TagString: Player_Attack
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -54,15 +54,15 @@ MonoBehaviour:
   coolTime: 0
   attackSpeed: 0
   attackRange: 0
-  mobStunTime: 0
-  weaphonIndex: 2
+  mobStunTime: 3
   isShooting: 1
+  weaphonIndex: 2
+  isUpgradelv2: 0
   weaphonState: 0
   shield: {fileID: 4152132807508348180}
   shieldCollider: {fileID: 6276148643301183331}
   shieldAnimDuration: 0.5
   shockwaveDuration: 0.1
-  isUpgradelv1: 0
   boomerangPrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
   boomerangCount: 5
   boomerangSpeed: 10

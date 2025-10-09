@@ -3,7 +3,7 @@ using DG.Tweening;
 using DogGuns_Games.vamsir;
 using UnityEngine;
 
-public class BoneBullet : MonoBehaviour
+public class BoneBullet : Weaphon_base
 {
     #region 필드 및 변수
 
@@ -20,7 +20,6 @@ public class BoneBullet : MonoBehaviour
     private readonly float _rotateSpeed = 5f;
 
     private bool _isActive;
-    private readonly bool _isNecclassary = false;
 
     #endregion
 
@@ -41,14 +40,20 @@ public class BoneBullet : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Mob"))
         {
-            if (_isNecclassary)
+            // 몹에게 데미지와 스턴 효과를 직접 전달합니다.
+            if (other.gameObject.TryGetComponent<VamserMobBase>(out var mob))
+            {
+                mob.TakeDamage(attackPower, mobStunTime);
+            }
+            
+            if (isUpgradelv2)
             {
                 BulletExplosion();
             }
             else if (_isActive) // 총알이 활성 상태인지 확인
             {
                 _isActive = false;
-                objectPoolSpawner.WeaphonBoneObjectPool.Release(this);
+                objectPoolSpawner?.WeaphonBoneObjectPool.Release(this);
             }
         }
     }
@@ -98,7 +103,7 @@ public class BoneBullet : MonoBehaviour
             if (objectPoolSpawner != null && _isActive) // 총알이 활성 상태인지 확인
             {
                 _isActive = false;
-                objectPoolSpawner.WeaphonBoneObjectPool.Release(this);
+                objectPoolSpawner?.WeaphonBoneObjectPool.Release(this);
             }
     }
 
@@ -116,10 +121,21 @@ public class BoneBullet : MonoBehaviour
 
         // 총알 오브젝트 풀로 반환
         _isActive = false; // 반환 전 비활성화
-        objectPoolSpawner.WeaphonBoneObjectPool.Release(this);
+        objectPoolSpawner?.WeaphonBoneObjectPool.Release(this);
     }
 
     #endregion
+
+    /// <summary>
+    /// 부모 무기의 스탯으로 투사체를 초기화합니다.
+    /// </summary>
+    public void Initialize(Weaphon_base parentWeapon)
+    {
+        isUpgradelv2 = parentWeapon.isUpgradelv2;
+        attackPower = parentWeapon.attackPower;
+        mobStunTime = parentWeapon.mobStunTime;
+    }
+    
     public void ResetState()
     {
         // 필요한 상태 초기화

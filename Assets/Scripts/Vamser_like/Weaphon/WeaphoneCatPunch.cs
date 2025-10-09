@@ -1,6 +1,7 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using DG.Tweening;
 
@@ -35,6 +36,13 @@ namespace DogGuns_Games.vamsir
         private Color _originalTrailStartColor;
         private Color _originalTrailEndColor;
         private EdgeCollider2D _edgeCollider; // 라인 렌더러 경로를 따를 콜라이더
+
+        // 최적화를 위한 필드
+        private readonly HashSet<VamserMobBase> _hitMobsThisAttack = new HashSet<VamserMobBase>();
+        private const int MAX_TRAIL_VERTICES = 100; // 궤적의 최대 정점 수
+        private readonly Vector3[] _linePositions = new Vector3[MAX_TRAIL_VERTICES];
+        private readonly Vector2[] _colliderPoints = new Vector2[MAX_TRAIL_VERTICES];
+
 
         private void Awake()
         {
@@ -159,6 +167,7 @@ namespace DogGuns_Games.vamsir
         private async UniTaskVoid SlashAttackAsync(Vector3 attackAngle)
         {
             _isAttacking = true;
+            _hitMobsThisAttack.Clear(); // 새 공격 시작 시, 피격 몹 목록 초기화
             var cts = this.GetCancellationTokenOnDestroy();
 
             try
@@ -201,7 +210,7 @@ namespace DogGuns_Games.vamsir
 
                 var slashTween = DOTween.To(
                     () => localStartAngle, // getter: 시작 각도
-                    (angle) =>             // setter: 매 프레임 각도를 기반으로 위치와 회전 업데이트
+                    (float angle) =>       // setter: angle 타입을 float으로 명시하여 모호성 해결
                     {
                         float rad = angle * Mathf.Deg2Rad;
                         Vector3 newLocalPos = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0) * radius;
@@ -211,21 +220,17 @@ namespace DogGuns_Games.vamsir
                         // LineRenderer에 현재 무기 위치를 월드 좌표로 추가합니다.
                         if (_slashTrailRenderer != null)
                         {
-                            _slashTrailRenderer.positionCount++;
-                            _slashTrailRenderer.SetPosition(_slashTrailRenderer.positionCount - 1, transform.position);
-
-                            // EdgeCollider2D의 포인트를 LineRenderer의 경로와 동기화합니다.
-                            if (_edgeCollider != null && _slashTrailRenderer.positionCount > 1)
+                            int currentPositionCount = _slashTrailRenderer.positionCount;
+                            if (currentPositionCount < MAX_TRAIL_VERTICES)
                             {
-                                Vector3[] worldPositions = new Vector3[_slashTrailRenderer.positionCount];
-                                _slashTrailRenderer.GetPositions(worldPositions);
+                                _slashTrailRenderer.positionCount = currentPositionCount + 1;
+                                _slashTrailRenderer.SetPosition(currentPositionCount, transform.position);
 
-                                Vector2[] localPositions = new Vector2[_slashTrailRenderer.positionCount];
-                                for (int i = 0; i < worldPositions.Length; i++)
-                                {
-                                    localPositions[i] = transform.InverseTransformPoint(worldPositions[i]);
-                                }
-                                _edgeCollider.points = localPositions;
+                                // EdgeCollider2D도 GC 할당 없이 업데이트합니다.
+                                _colliderPoints[currentPositionCount] = transform.localPosition;
+                                // pointCount는 setter가 없으므로, points 배열을 새로 할당해야 합니다.
+                                // ArraySegment를 사용하여 필요한 부분만 잘라내 새 배열을 만듭니다.
+                                _edgeCollider.points = new ArraySegment<Vector2>(_colliderPoints, 0, currentPositionCount + 1).ToArray();
                             }
                         }
                     },
@@ -256,6 +261,7 @@ namespace DogGuns_Games.vamsir
             finally
             {
                 _isAttacking = false;
+                _hitMobsThisAttack.Clear();
                 // 오브젝트가 파괴되지 않았을 경우에만 상태를 리셋합니다.
                 if (this != null)
                 {
@@ -296,6 +302,21 @@ namespace DogGuns_Games.vamsir
             if (this != null && _slashTrailRenderer != null)
             {
                 _slashTrailRenderer.enabled = false;
+            }
+        }
+
+        /// <summary>
+        /// 공격 콜라이더가 몹과 충돌했을 때 호출됩니다.
+        /// </summary>
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            // 공격 중이 아니거나, 몹이 아니거나, 이미 이번 공격에서 맞은 몹이면 무시합니다.
+            if (!_isAttacking || !other.CompareTag("Mob")) return;
+
+            if (other.TryGetComponent<VamserMobBase>(out var mob) && _hitMobsThisAttack.Add(mob))
+            {
+                // HashSet.Add는 항목이 성공적으로 추가되었을 때 true를 반환하므로, 중복 피격을 방지합니다.
+                mob.TakeDamage(attackPower, mobStunTime);
             }
         }
     }

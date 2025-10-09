@@ -10,15 +10,11 @@ namespace DogGuns_Games.vamsir
     /// 이 스크립트는 진주 프리팹에 부착되어야 합니다.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D))]
-    public class PearlProjectile : MonoBehaviour
+    public class PearlProjectile : Weaphon_base
     {
         private Rigidbody2D _rb;
         private Camera _mainCamera;
-
-        // 무기로부터 전달받는 스탯
-        private float _damage;
-        private bool _isUpgraded;
-        private float _stunDuration;
+        
 
         private void Awake()
         {
@@ -32,15 +28,17 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 진주를 초기화하고 발사합니다.
         /// </summary>
-        public void Initialize(float speed, float damage, bool upgraded, float stunDuration)
+        public void Initialize(Weaphon_base parentWeapon)
         {
-            _damage = damage;
-            _isUpgraded = upgraded;
-            _stunDuration = stunDuration;
-
+            isUpgradelv2 = parentWeapon.isUpgradelv2;
+            attackPower = parentWeapon.attackPower;
+            mobStunTime = parentWeapon.mobStunTime;
+            attackSpeed = parentWeapon.attackSpeed;
+            
+            
             // 랜덤한 초기 방향으로 발사
             Vector2 randomDirection = UnityEngine.Random.insideUnitCircle.normalized;
-            _rb.linearVelocity = randomDirection * speed;
+            _rb.linearVelocity = randomDirection * attackSpeed;
         }
 
         private void FixedUpdate()
@@ -90,13 +88,13 @@ namespace DogGuns_Games.vamsir
             {
                 if (!mob.IsDead)
                 {
-                    // 데미지 적용
-                    mob.TakeDamage(_damage);
-
+                    // 진주가 몹에게 데미지를 입힙니다.
+                    mob.TakeDamage(attackPower);
+                    
                     // 업그레이드 시 스턴 효과 적용
-                    if (_isUpgraded)
+                    if (isUpgradelv2)
                     {
-                        mob.Mob_StunTime = _stunDuration;
+                        mob.Mob_StunTime = mobStunTime;
                         mob.SetMobState(VamserMobBase.MobState.Stun);
                     }
                 }
