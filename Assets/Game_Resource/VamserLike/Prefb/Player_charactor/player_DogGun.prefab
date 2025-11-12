@@ -103,23 +103,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e8002305a577734b9aabec3b7e18685, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <AttackPower>k__BackingField: 10
-  <CoolTime>k__BackingField: 1
-  <AttackSpeed>k__BackingField: 1
-  <WeaponSize>k__BackingField: 1
-  <ProjectileCount>k__BackingField: 1
-  <CriticalChance>k__BackingField: 5
-  <CriticalDamage>k__BackingField: 1.5
-  <Health>k__BackingField: 100
-  <HealthRegen>k__BackingField: 0
-  <Defense>k__BackingField: 0
-  <MoveSpeed>k__BackingField: 2
-  <ExpGain>k__BackingField: 1
-  <GoldGain>k__BackingField: 1
-  <ItemGainRange>k__BackingField: 1
-  <Reroll>k__BackingField: 1
+  m_attackPower: 10
+  m_coolTime: 1
+  m_attackSpeed: 1
+  m_weaponSize: 1
+  m_projectileCount: 1
+  m_criticalChance: 5
+  m_criticalDamage: 1.5
+  m_maxHealth: 100
+  m_healthRegen: 0
+  m_defense: 0
+  m_moveSpeed: 2.5
+  m_expGain: 1
+  m_goldGain: 1
+  m_itemGainRange: 1
+  m_reroll: 1
   characterIndex: 0
-  ishit: 0
 --- !u!95 &8995850725629666990
 Animator:
   serializedVersion: 7

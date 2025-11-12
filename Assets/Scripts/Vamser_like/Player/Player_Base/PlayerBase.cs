@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Serialization;
 using UnityEngine;
 
 namespace DogGuns_Games.vamsir
@@ -13,55 +14,90 @@ namespace DogGuns_Games.vamsir
         #region 플레이어 스탯
 
         [Header("공격 관련 스탯")]
-        [field: Tooltip("기본 공격력")]
-        [field: SerializeField] public float AttackPower { get; set; } = 10f;
-        [field: Tooltip("공격 쿨타임")]
-        [field: SerializeField] public float CoolTime { get; set; } = 1f;
-        [field: Tooltip("공격 속도 (투사체 속도 등)")]
-        [field: SerializeField] public float AttackSpeed { get; set; } = 1f;
-        [field: Tooltip("무기 크기 배율")]
-        [field: SerializeField] public float WeaponSize { get; set; } = 1f;
-        [field: Tooltip("투사체 개수")]
-        [field: SerializeField] public float ProjectileCount { get; set; } = 1f;
-        [field: Tooltip("치명타 확률 (%)")]
-        [field: SerializeField] public float CriticalChance { get; set; } = 5f;
-        [field: Tooltip("치명타 피해량 배율")]
-        [field: SerializeField] public float CriticalDamage { get; set; } = 1.5f;
+        [FormerlySerializedAs("AttackPower")]
+        [Tooltip("기본 공격력")] [SerializeField] private float m_attackPower = 10f;
+        public float AttackPower { get => m_attackPower; set => m_attackPower = value; }
+
+        [FormerlySerializedAs("CoolTime")]
+        [Tooltip("공격 쿨타임")] [SerializeField] private float m_coolTime = 1f;
+        public float CoolTime { get => m_coolTime; set => m_coolTime = value; }
+
+        [FormerlySerializedAs("AttackSpeed")]
+        [Tooltip("공격 속도 (투사체 속도 등)")] [SerializeField] private float m_attackSpeed = 1f;
+        public float AttackSpeed { get => m_attackSpeed; set => m_attackSpeed = value; }
+
+        [FormerlySerializedAs("WeaponSize")]
+        [Tooltip("무기 크기 배율")] [SerializeField] private float m_weaponSize = 1f;
+        public float WeaponSize { get => m_weaponSize; set => m_weaponSize = value; }
+
+        [FormerlySerializedAs("ProjectileCount")]
+        [Tooltip("투사체 개수")] [SerializeField] private float m_projectileCount = 1f;
+        public float ProjectileCount { get => m_projectileCount; set => m_projectileCount = value; }
+
+        [FormerlySerializedAs("CriticalChance")]
+        [Tooltip("치명타 확률 (%)")] [SerializeField] private float m_criticalChance = 5f;
+        public float CriticalChance { get => m_criticalChance; set => m_criticalChance = value; }
+
+        [FormerlySerializedAs("CriticalDamage")]
+        [Tooltip("치명타 피해량 배율")] [SerializeField] private float m_criticalDamage = 1.5f;
+        public float CriticalDamage { get => m_criticalDamage; set => m_criticalDamage = value; }
 
         [Header("방어 및 생존 관련 스탯")]
-        [field: Tooltip("최대 체력")]
-        [field: SerializeField] public float Health { get; set; } = 100f;
-        [field: Tooltip("초당 체력 재생량")]
-        [field: SerializeField] public float HealthRegen { get; set; } = 0f;
-        [field: Tooltip("방어력")]
-        [field: SerializeField] public float Defense { get; set; } = 0f;
-        [field: Tooltip("이동 속도")]
-        [field: SerializeField] public float MoveSpeed { get; set; } = 5f;
+        [FormerlySerializedAs("Health")]
+        [Tooltip("최대 체력")] [SerializeField] private float m_maxHealth = 100f;
+        public float MaxHealth
+        {
+            get => m_maxHealth;
+            set
+            {
+                if (Mathf.Approximately(m_maxHealth, value)) return;
+                m_maxHealth = value;
+                OnHealthChanged?.Invoke(CurrentHealth, m_maxHealth);
+            }
+        }
+        public float CurrentHealth { get; private set; }
+
+        [FormerlySerializedAs("HealthRegen")]
+        [Tooltip("초당 체력 재생량")] [SerializeField] private float m_healthRegen = 0f;
+        public float HealthRegen { get => m_healthRegen; set => m_healthRegen = value; }
+
+        [FormerlySerializedAs("Defense")]
+        [Tooltip("방어력")] [SerializeField] private float m_defense = 0f;
+        public float Defense { get => m_defense; set => m_defense = value; }
+
+        [FormerlySerializedAs("MoveSpeed")]
+        [Tooltip("이동 속도")] [SerializeField] private float m_moveSpeed = 5f;
+        public float MoveSpeed { get => m_moveSpeed; set => m_moveSpeed = value; }
 
         [Header("자원 획득 관련 스탯")]
-        [field: Tooltip("경험치 획득량 배율")]
-        [field: SerializeField] public float ExpGain { get; set; } = 1f;
-        [field: Tooltip("골드 획득량 배율")]
-        [field: SerializeField] public float GoldGain { get; set; } = 1f;
-        [field: Tooltip("아이템 획득 범위")]
-        [field: SerializeField] public float ItemGainRange { get; set; } = 1f;
-        [field: Tooltip("리롤 횟수")]
-        [field: SerializeField] public float Reroll { get; set; } = 1f;
+        [FormerlySerializedAs("ExpGain")]
+        [Tooltip("경험치 획득량 배율")] [SerializeField] private float m_expGain = 1f;
+        public float ExpGain { get => m_expGain; set => m_expGain = value; }
+
+        [FormerlySerializedAs("GoldGain")]
+        [Tooltip("골드 획득량 배율")] [SerializeField] private float m_goldGain = 1f;
+        public float GoldGain { get => m_goldGain; set => m_goldGain = value; }
+
+        [FormerlySerializedAs("ItemGainRange")]
+        [Tooltip("아이템 획득 범위")] [SerializeField] private float m_itemGainRange = 1f;
+        public float ItemGainRange { get => m_itemGainRange; set => m_itemGainRange = value; }
+
+        [FormerlySerializedAs("Reroll")]
+        [Tooltip("리롤 횟수")] [SerializeField] private float m_reroll = 1f;
+        public float Reroll { get => m_reroll; set => m_reroll = value; }
 
         [Header("캐릭터 정보")]
         public float Level { get; set; } = 1f;
         public Vector3 AttackAngle { get; set; }
         public int characterIndex; // 현재 캐릭터 인덱스
 
-        [Header("경험치 시스템")]
-        public float CurrentExp { get; set; } = 0f;
+        [Header("경험치 시스템")] public float CurrentExp { get; set; } = 0f;
         public float MaxExp { get; set; } = 100f;
-    
-        
-        // 레벨업 이벤트
+
+        // 이벤트
         public static event Action<float> OnLevelUp;
         public static event Action<float, float> OnExpChanged; // currentExp, maxExp
-        // public static event Action OnDamaged; // EffectManager가 직접 호출되므로 더 이상 필요하지 않습니다.
+        public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
 
         #endregion
 
@@ -77,9 +113,9 @@ namespace DogGuns_Games.vamsir
             Attack
         }
 
-        private PlayerState _playState;
-        public bool ishit = false;
-        private bool _activeColider = true;
+        private PlayerState m_playState;
+        private bool m_isHit = false; // 피격 후 짧은 무적 상태
+        private bool m_isColliderActive = true;
         public Weaphon_base WeaphonBase { get; set; }
 
         /// <summary>
@@ -87,11 +123,12 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public PlayerState PlayState
         {
-            get => _playState;
+            get => m_playState;
             set
             {
-                _playState = value;
-                SetPlayerState(_playState);
+                if (m_playState == value) return;
+                m_playState = value;
+                SetPlayerState(m_playState);
             }
         }
 
@@ -107,9 +144,6 @@ namespace DogGuns_Games.vamsir
                     break;
                 case PlayerState.Move:
                     PlayerMovement();
-                    break;
-                case PlayerState.Attack:
-                    Player_attack(AttackAngle);
                     break;
             }
         }
@@ -128,25 +162,27 @@ namespace DogGuns_Games.vamsir
             Level = 1f;
             CurrentExp = 0f;
             MaxExp = CalculateMaxExpForLevel(Level);
-            
+            CurrentHealth = MaxHealth;
+
             PlayStateManager.OnGameOver += OnGameOver;
-            PlayStateManager.OnGamePause+= OnGamePause;
-            PlayStateManager.OnGameResume+= OnGameResume;
+            PlayStateManager.OnGamePause += OnGamePause;
+            PlayStateManager.OnGameResume += OnGameResume;
             // UI 등 다른 리스너들에게 초기 상태를 통지합니다.
             OnLevelUp?.Invoke(Level);
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
+            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
         }
 
         private void OnGameResume()
         {
             SetPlayerState(PlayState);
-            _activeColider = true;
+            m_isColliderActive = true;
         }
 
         private void OnGamePause()
         {
             SetPlayerState(PlayerState.Idle);
-            _activeColider = false;
+            m_isColliderActive = false;
         }
 
 
@@ -188,12 +224,12 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 플레이어와 다른 오브젝트 간의 충돌 처리
         /// </summary>
-        public virtual void OnCollisionStay2D(Collision2D other)
+        public virtual void OnCollisionEnter2D(Collision2D other)
         {
-            if (_activeColider)
+            if (m_isColliderActive)
             {
                 GameObject colliderObject = other.gameObject;
-                string objectTag = colliderObject.tag;
+                string objectTag = colliderObject.tag; // CompareTag를 사용하는 것이 더 효율적입니다.
 
                 switch (objectTag)
                 {
@@ -216,18 +252,17 @@ namespace DogGuns_Games.vamsir
         /// <param name="mobObject">충돌한 몹 게임오브젝트</param>
         private void HandleMobCollision(GameObject mobObject)
         {
-            
             // 이미 피격 상태면 추가 처리 없음
-            if (ishit) return;
+            if (m_isHit) return;
 
-            ishit = true;
-            DelayAction(1f, () => ishit = false, this.GetCancellationTokenOnDestroy()).Forget();
+            // 피격 처리 및 쿨다운 시작
+            EnableHitCooldown(1f).Forget();
 
             // 몹으로부터 피해 계산
             VamserMobBase mob = mobObject.GetComponent<VamserMobBase>();
             if (mob != null)
             {
-                float damageAmount = CalculateDamage(mob.Mob_AttackDamage);
+                float damageAmount = CalculateIncomingDamage(mob.Mob_AttackDamage);
                 ApplyDamage(damageAmount);
             }
         }
@@ -235,7 +270,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 방어력을 고려한 최종 피해량 계산
         /// </summary>
-        private float CalculateDamage(float rawDamage)
+        private float CalculateIncomingDamage(float rawDamage)
         {
             // 방어력 공식 적용 (방어력이 높을수록 피해 감소)
             return Mathf.Max(1, rawDamage * (100 / (100 + Defense)));
@@ -246,19 +281,20 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void ApplyDamage(float damageAmount)
         {
-            Health -= damageAmount;
-            
+            CurrentHealth -= damageAmount;
+            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+
             // 피해량 디버그 로그
-            LogManager.Log($"플레이어가 <color=#FF0000>{damageAmount:F1}</color> 데미지를 받음 (남은 체력: {Health:F1})", LogManager.LogCategory.PlayerBase, this);
-           
+            LogManager.Log($"플레이어가 <color=#FF0000>{damageAmount:F1}</color> 데미지를 받음 (남은 체력: {CurrentHealth:F1})", LogManager.LogCategory.PlayerBase, this);
+
             // 이펙트 매니저를 직접 호출하여 카메라 흔들림 효과를 재생합니다.
             EffectManager.Instance?.PlayPlayerHitCameraShake();
-            
+
             // 피격 효과 재생
             PlayHitEffect();
-            
+
             // 데미지를 입은 후 체력을 확인하여 사망 처리
-            if (Health <= 0)
+            if (CurrentHealth <= 0)
             {
                 Player_Die();
             }
@@ -280,7 +316,6 @@ namespace DogGuns_Games.vamsir
                 // 오브젝트 풀로 반환
                 expObj.objectPoolSpawner.ExpObjectPool.Release(expObj);
                 SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
-
             }
         }
 
@@ -411,7 +446,7 @@ namespace DogGuns_Games.vamsir
         {
             // 레벨업 시 스탯 증가
             AttackPower += 5f;
-            Health += 20f;
+            MaxHealth += 20f;
             Defense += 2f;
             //MoveSpeed += 0.1f;
             
@@ -431,28 +466,23 @@ namespace DogGuns_Games.vamsir
 
         #endregion
         
-        #region 유틸리티 메서드
+        #region 유틸리티
 
         /// <summary>
-        /// 지정된 시간 후에 액션을 실행합니다.
+        /// 지정된 시간 동안 피격 무적 상태를 활성화합니다.
         /// </summary>
-        /// <param name="delay">지연 시간(초)</param>
-        /// <param name="action">실행할 액션</param>
-        /// <param name="cancellationToken">취소 토큰(선택 사항)</param>
-        /// <returns>UniTask</returns>
-        public UniTask DelayAction(float delay, Action action, CancellationToken cancellationToken = default)
+        private async UniTaskVoid EnableHitCooldown(float duration)
         {
-            return UniTask.Delay(
-                TimeSpan.FromSeconds(delay), 
-                cancellationToken: cancellationToken
-            ).ContinueWith(() => {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    action?.Invoke();
-                }
-            });
+            m_isHit = true;
+            try
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: this.GetCancellationTokenOnDestroy());
+            }
+            finally
+            {
+                m_isHit = false;
+            }
         }
-
         #endregion
         
         

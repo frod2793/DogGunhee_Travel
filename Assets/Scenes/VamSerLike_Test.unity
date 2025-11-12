@@ -3549,6 +3549,10 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_camera
+      value: 
+      objectReference: {fileID: 1424236142}
     - target: {fileID: 6514547305091603241, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1

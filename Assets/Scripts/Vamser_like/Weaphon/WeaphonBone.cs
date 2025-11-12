@@ -14,17 +14,15 @@ namespace DogGuns_Games.vamsir
 
         [Header("오브젝트 풀 설정")]
         [Tooltip("생성할 총알의 최대 개수입니다.")]
-        [FormerlySerializedAs("poolSizeBulletCount")]
+        
         [SerializeField] private int m_poolSizeBulletCount = 10;
 
         [Header("프리팹 및 부모 설정")]
         [Tooltip("복제하여 사용할 총알 프리팹입니다.")]
-        [FormerlySerializedAs("bonePrefab")]
         [SerializeField] private GameObject m_bonePrefab;
         [Tooltip("생성된 총알들이 위치할 부모 오브젝트입니다. 지정하지 않으면 이 오브젝트의 자식으로 생성됩니다.")]
-        [FormerlySerializedAs("bulletParent")]
+        
         [SerializeField] private Transform m_bulletParent;
-
         public IObjectPool<BoneBullet> WeaphonBoneObjectPool { get; private set; }
         private bool m_isAttacking; // 중복 호출 방지 플래그
 

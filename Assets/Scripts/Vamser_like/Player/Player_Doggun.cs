@@ -4,24 +4,23 @@ namespace DogGuns_Games.vamsir
 {
     public class Player_Doggun : PlayerBase
     {
-        SpriteRenderer _playerSpriteRenderer;
+        private SpriteRenderer m_playerSpriteRenderer;
 
         private void Awake()
         {
-            _playerSpriteRenderer = GetComponent<SpriteRenderer>();
+            m_playerSpriteRenderer = GetComponent<SpriteRenderer>();
         }
 
-        public override void OnCollisionStay2D(Collision2D other)
+        // 부모 클래스의 OnCollisionEnter2D를 오버라이드합니다.
+        public override void OnCollisionEnter2D(Collision2D other)
         {
-            base.OnCollisionStay2D(other);
+            base.OnCollisionEnter2D(other);
         }
 
         public override void Player_attack(Vector3 attackAngle)
         {
             base.Player_attack(attackAngle);
-
             WeaphonBase.Weaphon_Attack(attackAngle);
-            //   Debug.Log("Player_attack : " + AttackAngle);
         }
 
         public override void Player_Die()
@@ -29,20 +28,10 @@ namespace DogGuns_Games.vamsir
             base.Player_Die();
             SoundManager.PlaySound(Sound.SFX, SoundKeys.PlayerDeth, false);
         }
-
-        public override void Player_Idle()
-        {
-            base.Player_Idle();
-        }
-
+        
         protected override void PlayHitEffect()
         {
-            if (_playerSpriteRenderer == null)
-            {
-                _playerSpriteRenderer = GetComponent<SpriteRenderer>();
-            }
-
-            EffectManager.Instance.PlayImmediateFlashEffect(_playerSpriteRenderer);
+            EffectManager.Instance.PlayImmediateFlashEffect(m_playerSpriteRenderer);
             SoundManager.PlaySound(Sound.SFX, SoundKeys.playerHit, false);
         }
     }

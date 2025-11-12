@@ -3,7 +3,6 @@ using DG.Tweening;
 using DogGuns_Games.vamsir;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Serialization; // FormerlySerializedAs를 사용하기 위해 추가
 
 public class BoneBullet : Weaphon_base
 {
@@ -16,11 +15,9 @@ public class BoneBullet : Weaphon_base
     public float BulletSpeed { get; set; } = 0;
 
     [Header("폭발 설정")]
-    [FormerlySerializedAs("explosionRadius")] // 이전 필드 이름과의 매핑을 위해 추가
     [Tooltip("업그레이드 시 폭발 반경입니다.")]
     [SerializeField] private float m_explosionRadius = 1.5f;
-
-    [FormerlySerializedAs("explosionDamage")] // 이전 필드 이름과의 매핑을 위해 추가
+    
     [Tooltip("업그레이드 시 폭발로 인한 추가 광역 대미지입니다.")]
     [SerializeField] private float m_explosionDamage = 10f;
 
@@ -45,7 +42,6 @@ public class BoneBullet : Weaphon_base
 
     private void Awake()
     {
-        // OverlapCircle에 사용할 ContactFilter2D를 초기화합니다.
         m_contactFilter.useTriggers = true; // Mob의 isTrigger 콜라이더를 감지해야 하므로 true로 설정
         m_contactFilter.SetLayerMask(m_mobLayerMask); // 설정된 Mob 레이어만 감지
         m_contactFilter.useLayerMask = true;

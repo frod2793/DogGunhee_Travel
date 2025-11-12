@@ -108,7 +108,7 @@ MonoBehaviour:
   mobStunTime: 0
   isShooting: 0
   weaphonIndex: 0
-  isUpgradelv2: 1
+  isUpgradelv2: 0
   weaphonState: 0
   m_explosionRadius: 1.5
   m_explosionDamage: 10
