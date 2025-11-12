@@ -9,6 +9,7 @@ namespace DogGuns_Games.vamsir
         EnemyHit,
         LevelUp,
         WeaponSlash,
-        PlayerLevelUp
+        PlayerLevelUp,
+        BoneExplosion
     }
 }

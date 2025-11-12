@@ -102,16 +102,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackPower: 50
-  coolTime: 0.05
+  coolTime: 0.1
   attackSpeed: 15
   attackRange: 0
   mobStunTime: 0.5
-  weaphonIndex: 0
   isShooting: 1
+  weaphonIndex: 0
+  isUpgradelv2: 1
   weaphonState: 0
-  poolSizeBulletCount: 10
-  bonePrefab: {fileID: 1450392623949166087, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}
-  bulletParent: {fileID: 0}
+  m_poolSizeBulletCount: 10
+  m_bonePrefab: {fileID: 1450392623949166087, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}
+  m_bulletParent: {fileID: 0}
 --- !u!1 &8177060602824528970
 GameObject:
   m_ObjectHideFlags: 0

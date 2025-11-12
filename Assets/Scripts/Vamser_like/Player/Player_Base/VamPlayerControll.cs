@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -243,10 +244,18 @@ namespace DogGuns_Games.vamsir
 
         private async UniTask PlayerAttack(Vector3 attackAngle)
         {
+            if (playerCharactor == null || playerCharactor.WeaphonBase == null) return;
+
             _isAttack = true;
-            playerCharactor.AttackAngle = attackAngle;
-            playerCharactor.PlayState = PlayerBase.PlayerState.Attack;
-            await UniTask.Delay(100);
+            
+            // Weaphon_base의 AttackAngle에 의존하지 않고, 컨트롤러에서 직접 공격 방향을 전달합니다.
+            // 이를 통해 수동 조작과 자동 공격의 방향 결정 로직이 명확하게 분리됩니다.
+            playerCharactor.WeaphonBase.Weaphon_Attack(attackAngle);
+
+            // 공격 쿨타임 또는 애니메이션 시간에 따른 딜레이
+            // Weaphon_base의 coolTime을 사용하는 것이 더 정확할 수 있습니다.
+            await UniTask.Delay(TimeSpan.FromSeconds(playerCharactor.WeaphonBase.coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
+            
             _isAttack = false;
         }
 
