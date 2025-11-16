@@ -331,7 +331,7 @@ namespace DogGuns_Games.vamsir
                 float goldBonus = GoldGain > 0 ? GoldGain : 1;
                 int coinsToAdd = Mathf.RoundToInt(1 * goldBonus);
                 // 실제 코인 증가
-                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.ingameCoin += coinsToAdd;
+                PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin += coinsToAdd;
                 LogManager.Log($"코인 {coinsToAdd}개 획득", LogManager.LogCategory.PlayerBase);
                 // 오브젝트 풀로 반환
                 coinObj.objectPoolSpawner.CoinObjectPool.Release(coinObj);

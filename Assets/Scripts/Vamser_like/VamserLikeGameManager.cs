@@ -94,7 +94,7 @@ namespace DogGuns_Games.vamsir
                 DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
                 
                 PlayStateManager.instance.isPlay = true;
-                PlayerDataManagerDontdesytoy.Instance.scritpableobjPlayerData.nowPlayMObkillCOunt = 0;
+                PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt = 0;
 
                 SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
                 // 플레이어와 무기 스폰이 완료될 때까지 기다립니다.
@@ -144,7 +144,7 @@ namespace DogGuns_Games.vamsir
             OnPlayerChanged?.Invoke(null); // 플레이어가 사라졌음을 알림
 
             // 게임 내에 획득한 코인 합산
-            var playerData = PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData;
+            var playerData = PlayerDataManagerDontdesytoy.Instance?.PlayerData;
             if (playerData != null)
             {
                 playerData.currency1 += playerData.ingameCoin; // ingameCoin을 totalCoin에 합산
@@ -168,7 +168,7 @@ namespace DogGuns_Games.vamsir
             }
             else
             {
-                LogManager.LogWarning("PlayerDataManagerDontdesytoy 또는 scritpableobjPlayerData가 null입니다. 코인 합산 실패",
+                LogManager.LogWarning("PlayerDataManagerDontdesytoy 또는 PlayerData가 null입니다. 코인 합산 실패",
                     LogManager.LogCategory.VamserLikeGameManager);
             }
 
@@ -354,7 +354,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public int Mob_Count()
         {
-            return PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData?.nowPlayMObkillCOunt ?? 0;
+            return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.nowPlayMObkillCOunt ?? 0;
         }
 
         /// <summary>
@@ -424,7 +424,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         public int CoinCount()
         {
-            return PlayerDataManagerDontdesytoy.Instance?.scritpableobjPlayerData.ingameCoin ?? 0;
+            return PlayerDataManagerDontdesytoy.Instance?.PlayerData.ingameCoin ?? 0;
         }
 
         /// <summary>

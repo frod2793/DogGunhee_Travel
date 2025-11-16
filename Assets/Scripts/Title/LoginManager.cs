@@ -3,6 +3,7 @@ using System.IO;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DogGuns_Games
@@ -11,36 +12,66 @@ namespace DogGuns_Games
     {
         #region 변수 및 필드
 
-        [Header("회원 가입")] [SerializeField] private GameObject signUpPopUp;
+        [Header("UI 팝업")]
+        [Tooltip("회원가입 UI 패널입니다.")]
+        [FormerlySerializedAs("signUpPopUp")]
+        [SerializeField] private GameObject m_signUpPopUp;
+        [Tooltip("로그인 UI 패널입니다.")]
+        [FormerlySerializedAs("loginPopUp")]
+        [SerializeField] private GameObject m_loginPopUp;
 
-        [SerializeField] private TMP_InputField signUpNickNameInputField;
-        [SerializeField] private TMP_InputField signUpIDInputField;
-        [SerializeField] private TMP_InputField signUpPwInputField;
-        [SerializeField] private TMP_InputField signUpPwCheckInputField;
-        [SerializeField] private Button signUpBtn;
+        [Header("회원가입 컴포넌트")]
+        [Tooltip("회원가입 시 사용할 닉네임 입력 필드입니다.")]
+        [FormerlySerializedAs("signUpNickNameInputField")]
+        [SerializeField] private TMP_InputField m_signUpNickNameInputField;
+        [Tooltip("회원가입 시 사용할 아이디 입력 필드입니다.")]
+        [FormerlySerializedAs("signUpIDInputField")]
+        [SerializeField] private TMP_InputField m_signUpIDInputField;
+        [Tooltip("회원가입 시 사용할 비밀번호 입력 필드입니다.")]
+        [FormerlySerializedAs("signUpPwInputField")]
+        [SerializeField] private TMP_InputField m_signUpPwInputField;
+        [Tooltip("비밀번호 확인을 위한 입력 필드입니다.")]
+        [FormerlySerializedAs("signUpPwCheckInputField")]
+        [SerializeField] private TMP_InputField m_signUpPwCheckInputField;
+        [Tooltip("회원가입을 실행하는 버튼입니다.")]
+        [FormerlySerializedAs("signUpBtn")]
+        [SerializeField] private Button m_signUpBtn;
 
         public string NickName
         {
-            get => signUpNickNameInputField.text;
-            set => signUpNickNameInputField.text = value;
+            get => m_signUpNickNameInputField.text;
+            set => m_signUpNickNameInputField.text = value;
         }
 
-        [Header("로그인")] [SerializeField] private GameObject loginPopUp;
-        [SerializeField] private TMP_InputField loginIDInputField;
-        [SerializeField] private TMP_InputField loginPwInputField;
-        [SerializeField] private Button loginBtn;
-        [SerializeField] private Button openSingUpPopUpBtn;
+        [Header("로그인 컴포넌트")]
+        [Tooltip("로그인 시 사용할 아이디 입력 필드입니다.")]
+        [FormerlySerializedAs("loginIDInputField")]
+        [SerializeField] private TMP_InputField m_loginIDInputField;
+        [Tooltip("로그인 시 사용할 비밀번호 입력 필드입니다.")]
+        [FormerlySerializedAs("loginPwInputField")]
+        [SerializeField] private TMP_InputField m_loginPwInputField;
+        [Tooltip("로그인을 실행하는 버튼입니다.")]
+        [FormerlySerializedAs("loginBtn")]
+        [SerializeField] private Button m_loginBtn;
+        [Tooltip("회원가입 팝업을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openSingUpPopUpBtn")]
+        [SerializeField] private Button m_openSignUpPopUpBtn;
 
-        [Header("시작버튼")] [SerializeField] private Button startBtn;
+        [Header("메인 버튼")]
+        [Tooltip("게임 시작 및 자동 로그인을 시도하는 버튼입니다.")]
+        [FormerlySerializedAs("startBtn")]
+        [SerializeField] private Button m_startBtn;
+        [Tooltip("게스트 계정으로 로그인을 시도하는 버튼입니다.")]
+        [FormerlySerializedAs("guestLoginBtn")]
+        [SerializeField] private Button m_guestLoginBtn;
+        [Tooltip("로그인 팝업을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openLoginPopUpBtn")]
+        [SerializeField] private Button m_openLoginPopUpBtn;
 
-        [Header("게스트 로그인")] [SerializeField] private Button guestLoginBtn;
-
-        [Header("일반 로그인")] [SerializeField] private Button openLoginPopUpBtn;
-
-        //서버 매니져 
-        private ServerManager _serverManager;
-        private PlayerDataManagerDontdesytoy _playerDataManagerDontdesytoy;
-        private string _savePath;
+        // Private 멤버 변수
+        private ServerManager m_serverManager;
+        private PlayerDataManagerDontdesytoy m_playerDataManager;
+        private string m_savePath;
 
         #endregion
 
@@ -48,26 +79,26 @@ namespace DogGuns_Games
 
         private void Awake()
         {
-            _serverManager = ServerManager.Instance;
-            _playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
+            m_serverManager = ServerManager.Instance;
+            m_playerDataManager = PlayerDataManagerDontdesytoy.Instance;
             
             // 버튼 리스너들을 Awake에서 한 번에 설정합니다.
-            startBtn.onClick.AddListener(OnStartButtonPressed);
-            guestLoginBtn.onClick.AddListener(OnGuestLoginButtonPressed);
-            openLoginPopUpBtn.onClick.AddListener(ShowLoginPopup);
-            openSingUpPopUpBtn.onClick.AddListener(ShowSignUpPopup);
-            loginBtn.onClick.AddListener(OnLoginButtonPressed);
-            signUpBtn.onClick.AddListener(OnSignUpButtonPressed);
+            m_startBtn.onClick.AddListener(OnStartButtonPressed);
+            m_guestLoginBtn.onClick.AddListener(OnGuestLoginButtonPressed);
+            m_openLoginPopUpBtn.onClick.AddListener(ShowLoginPopup);
+            m_openSignUpPopUpBtn.onClick.AddListener(ShowSignUpPopup);
+            m_loginBtn.onClick.AddListener(OnLoginButtonPressed);
+            m_signUpBtn.onClick.AddListener(OnSignUpButtonPressed);
         }
 
         void Start()
         {
-            _savePath = Path.Combine(Application.persistentDataPath, "playerData.json");
+            m_savePath = Path.Combine(Application.persistentDataPath, "playerData.json");
 
             SoundManager.PlaySound(Sound.BGM, SoundKeys.Intro, true);
 
             SoundManager.Instance.LoadSoundSetting();
-            LoginButtonGroupACtive(false);
+            SetLoginButtonsActive(false);
         }
 
         #endregion
@@ -79,40 +110,33 @@ namespace DogGuns_Games
         /// </summary>
         private async void OnStartButtonPressed()
         {
-            startBtn.interactable = false; // 중복 클릭 방지
+            m_startBtn.interactable = false;
             try
             {
-                // 서버 매니저의 메서드가 UniTask를 반환하도록 수정하여 async/await를 사용합니다.
-                // 이는 콜백 지옥을 피하고 코드의 가독성과 유지보수성을 크게 향상시킵니다.
-                var (success, nickname, uuid) = await _serverManager.TokenLoginAsync();
+                var (success, nickname, uuid) = await m_serverManager.TokenLoginAsync();
                 if (success)
                 {
-                    await LoadOrCreatePlayerData(nickname, uuid);
-                    SceneLoader.Instance.LoadScene("LobbyScene");
+                    await ProcessLoginSuccessAsync(nickname, uuid);
                 }
                 else
                 {
                     // 토큰 로그인 실패 시, 다른 로그인 옵션을 보여줍니다.
-                    LoginButtonGroupACtive(true);
+                    SetLoginButtonsActive(true);
                 }
             }
             catch (Exception e)
             {
                 Debug.LogError($"토큰 로그인 중 오류 발생: {e.Message}");
-                LoginButtonGroupACtive(true);
+                SetLoginButtonsActive(true);
             }
-        }
-
-        /// <summary>
-        /// 로그인 버튼 그룹 활성화, 비활성화
-        /// </summary>
-        /// <param name="active"></param>
-        private void LoginButtonGroupACtive(bool active)
-        {
-            guestLoginBtn.gameObject.SetActive(active);
-            openSingUpPopUpBtn.gameObject.SetActive(active);
-            openLoginPopUpBtn.gameObject.SetActive(active);
-            startBtn.gameObject.SetActive(!active);
+            finally
+            {
+                // 성공 여부와 관계없이 시작 버튼은 다시 활성화 될 수 있습니다 (실패 시).
+                if (!m_startBtn.gameObject.activeSelf)
+                {
+                    m_startBtn.interactable = true;
+                }
+            }
         }
 
         /// <summary>
@@ -120,19 +144,19 @@ namespace DogGuns_Games
         /// </summary>
         private async void OnGuestLoginButtonPressed()
         {
-            guestLoginBtn.interactable = false;
+            m_guestLoginBtn.interactable = false;
             try
             {
-                var (nickname, uuid) = await _serverManager.GuestLoginAsync();
-                await LoadOrCreatePlayerData(nickname, uuid);
-                
-                LoginButtonGroupACtive(false);
-                SceneLoader.Instance.LoadScene("LobbyScene");
+                var (nickname, uuid) = await m_serverManager.GuestLoginAsync();
+                await ProcessLoginSuccessAsync(nickname, uuid);
             }
             catch (Exception e)
             {
                 Debug.LogError($"게스트 로그인 실패: {e.Message}");
-                guestLoginBtn.interactable = true;
+            }
+            finally
+            {
+                m_guestLoginBtn.interactable = true;
             }
         }
 
@@ -141,27 +165,37 @@ namespace DogGuns_Games
         /// </summary>
         private async void OnLoginButtonPressed()
         {
-            if (string.IsNullOrEmpty(loginIDInputField.text) || string.IsNullOrEmpty(loginPwInputField.text))
+            if (string.IsNullOrEmpty(m_loginIDInputField.text) || string.IsNullOrEmpty(m_loginPwInputField.text))
             {
                 Debug.Log("빈칸을 채워주세요");
                 return;
             }
 
-            loginBtn.interactable = false;
+            m_loginBtn.interactable = false;
             try
             {
-                var (nickname, uuid) = await _serverManager.LoginAsync(loginIDInputField.text, loginPwInputField.text);
-                
-                loginPopUp.SetActive(false);
-                await LoadOrCreatePlayerData(nickname, uuid);
-                
-                SceneLoader.Instance.LoadScene("LobbyScene");
+                var (nickname, uuid) = await m_serverManager.LoginAsync(m_loginIDInputField.text, m_loginPwInputField.text);
+                await ProcessLoginSuccessAsync(nickname, uuid, () => m_loginPopUp.SetActive(false));
             }
             catch (Exception e)
             {
                 Debug.LogError($"로그인 실패: {e.Message}");
-                loginBtn.interactable = true;
             }
+            finally
+            {
+                m_loginBtn.interactable = true;
+            }
+        }
+
+        /// <summary>
+        /// 로그인 성공 후 공통 처리 로직
+        /// </summary>
+        private async UniTask ProcessLoginSuccessAsync(string nickname, string uuid, Action onBeforeLoad = null)
+        {
+            onBeforeLoad?.Invoke();
+            await LoadOrCreatePlayerDataAsync(nickname, uuid);
+            SetLoginButtonsActive(false);
+            SceneLoader.Instance.LoadScene("LobbyScene");
         }
 
         #endregion
@@ -170,39 +204,38 @@ namespace DogGuns_Games
 
         private async void OnSignUpButtonPressed()
         {
-            if (string.IsNullOrEmpty(signUpNickNameInputField.text) || string.IsNullOrEmpty(signUpIDInputField.text) ||
-                string.IsNullOrEmpty(signUpPwInputField.text) || string.IsNullOrEmpty(signUpPwCheckInputField.text))
+            if (string.IsNullOrEmpty(m_signUpNickNameInputField.text) || string.IsNullOrEmpty(m_signUpIDInputField.text) ||
+                string.IsNullOrEmpty(m_signUpPwInputField.text) || string.IsNullOrEmpty(m_signUpPwCheckInputField.text))
             {
                 Debug.Log("빈칸을 채워주세요");
                 return;
             }
 
-            if (signUpPwInputField.text != signUpPwCheckInputField.text)
+            if (m_signUpPwInputField.text != m_signUpPwCheckInputField.text)
             {
                 Debug.Log("비밀번호가 일치하지 않습니다.");
                 return;
             }
 
-            signUpBtn.interactable = false;
+            m_signUpBtn.interactable = false;
             try
             {
                 // 1. 회원가입
-                await _serverManager.SignUpAsync(signUpIDInputField.text, signUpPwInputField.text, signUpNickNameInputField.text);
+                await m_serverManager.SignUpAsync(m_signUpIDInputField.text, m_signUpPwInputField.text, m_signUpNickNameInputField.text);
                 
                 // 2. 가입 성공 후 바로 로그인
-                var (nickname, uuid) = await _serverManager.LoginAsync(signUpIDInputField.text, signUpPwInputField.text);
+                var (nickname, uuid) = await m_serverManager.LoginAsync(m_signUpIDInputField.text, m_signUpPwInputField.text);
 
-                // 3. 데이터 로드 또는 생성
-                await LoadOrCreatePlayerData(nickname, uuid);
-
-                // 4. 씬 전환
-                signUpPopUp.SetActive(false);
-                SceneLoader.Instance.LoadScene("LobbyScene");
+                // 3. 데이터 로드 또는 생성 및 씬 전환
+                await ProcessLoginSuccessAsync(nickname, uuid, () => m_signUpPopUp.SetActive(false));
             }
             catch (Exception e)
             {
                 Debug.LogError($"회원가입 또는 로그인 실패: {e.Message}");
-                signUpBtn.interactable = true;
+            }
+            finally
+            {
+                m_signUpBtn.interactable = true;
             }
         }
 
@@ -211,12 +244,23 @@ namespace DogGuns_Games
         #region UI 상호작용 함수
 
         /// <summary>
+        /// 로그인 버튼 그룹 활성화/비활성화
+        /// </summary>
+        private void SetLoginButtonsActive(bool active)
+        {
+            m_guestLoginBtn.gameObject.SetActive(active);
+            m_openSignUpPopUpBtn.gameObject.SetActive(active);
+            m_openLoginPopUpBtn.gameObject.SetActive(active);
+            m_startBtn.gameObject.SetActive(!active);
+        }
+        
+        /// <summary>
         /// 회원 가입 팝업 열기 함수 
         /// </summary>
         private void ShowSignUpPopup()
         {
-            signUpPopUp.SetActive(true);
-            loginPopUp.SetActive(false);
+            m_signUpPopUp.SetActive(true);
+            m_loginPopUp.SetActive(false);
         }
 
         /// <summary>
@@ -224,35 +268,31 @@ namespace DogGuns_Games
         /// </summary>
         private void ShowLoginPopup()
         {
-            loginPopUp.SetActive(true);
-            signUpPopUp.SetActive(false);
+            m_loginPopUp.SetActive(true);
+            m_signUpPopUp.SetActive(false);
         }
 
         #endregion
 
         #region 데이터 관리 함수
 
-        private async UniTask LoadOrCreatePlayerData(string nickname, string uuid)
+        private async UniTask LoadOrCreatePlayerDataAsync(string nickname, string uuid)
         {
-            // 데이터 매니저의 메서드 또한 UniTask<bool>을 반환하도록 하여 데이터 존재 여부를 비동기적으로 확인합니다.
-            bool dataExists = await _playerDataManagerDontdesytoy.LoadDataFromServerAsync();
+            bool dataExists = await m_playerDataManager.LoadDataFromServerAsync();
             if (!dataExists)
             {
-                await CreateNewPlayerData(nickname, uuid);
+                await CreateNewPlayerDataAsync(nickname, uuid);
             }
         }
         
         /// <summary>
         /// 새로운 플레이어 데이터 생성
         /// </summary>
-        /// <param name="playerName">  </param>
-        /// <param name="uid"></param>
-        private async UniTask CreateNewPlayerData(string playerName, string uid)
+        private async UniTask CreateNewPlayerDataAsync(string playerName, string uid)
         {
-            _playerDataManagerDontdesytoy.scritpableobjPlayerData.InitializePlayerData(playerName, uid);
-            _playerDataManagerDontdesytoy.SavePlayerData(); // 로컬에 저장
-            await _playerDataManagerDontdesytoy.UploadDataToServerAsync(); // 서버에 업로드
-            startBtn.interactable = true;
+            m_playerDataManager.PlayerData.InitializePlayerData(playerName, uid);
+            m_playerDataManager.SavePlayerData(); // 로컬에 저장
+            await m_playerDataManager.UploadDataToServerAsync(); // 서버에 업로드
         }
 
         /// <summary>
@@ -260,28 +300,28 @@ namespace DogGuns_Games
         /// </summary>
         public async UniTask InsertPlayerDataAsync()
         {
-            _playerDataManagerDontdesytoy.SavePlayerData();
-            await _playerDataManagerDontdesytoy.UploadDataToServerAsync();
+            m_playerDataManager.SavePlayerData();
+            await m_playerDataManager.UploadDataToServerAsync();
         }
 
         private void LoadPlayerData()
         {
-            _playerDataManagerDontdesytoy.LoadPlayerData();
+            m_playerDataManager.LoadPlayerData();
         }
 
         /// <summary>
-        ///     플레이어 데이터 삭제
+        ///     플레이어 데이터 삭제 (주로 디버깅용)
         /// </summary>
         private void DeletePlayerData()
         {
-            if (File.Exists(_savePath))
+            if (File.Exists(m_savePath))
             {
-                File.Delete(_savePath);
-                Debug.Log("PlayerData deleted from: " + _savePath);
+                File.Delete(m_savePath);
+                Debug.Log("PlayerData deleted from: " + m_savePath);
             }
             else
             {
-                Debug.LogWarning("No PlayerData file found at: " + _savePath);
+                Debug.LogWarning("No PlayerData file found at: " + m_savePath);
             }
         }
 

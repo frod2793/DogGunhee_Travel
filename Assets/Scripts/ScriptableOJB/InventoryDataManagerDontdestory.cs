@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
 using BackEnd;
-using BackEnd.BackndNewtonsoft.Json;
 using UnityEngine;
 using System;
 using System.Linq;
+using UnityEngine.Serialization;
 using Cysharp.Threading.Tasks;
 
 namespace DogGuns_Games.Lobby
@@ -17,44 +17,52 @@ namespace DogGuns_Games.Lobby
     {
         #region 필드 및 변수
 
-        [SerializeField] private TextAsset itemDataJsonFile;
-        public Inventory_Data scritpableobjInventoryData;
-        public string inventorydataString;
+        [Header("데이터 소스")]
+        [Tooltip("아이템 정보가 담긴 JSON 파일입니다.")]
+        [SerializeField] private TextAsset m_itemDataJsonFile;
+        [Tooltip("인벤토리 데이터를 담고 있는 ScriptableObject 입니다.")]
+        [FormerlySerializedAs("scritpableobjInventoryData")]
+        [SerializeField] private Inventory_Data m_scriptableobjInventoryData;
 
-        private HybridEncryption _encryption;
-        private string _localSavePath;
+        public Inventory_Data InventoryData => m_scriptableobjInventoryData;
+        private string m_inventorydataString;
+
+        private HybridEncryption m_encryption;
+        private string m_localSavePath;
 
         // 캐시 필드
-        private Dictionary<int, Item_Data> _itemDataCache = new Dictionary<int, Item_Data>();
-        private bool _isDataLoaded;
+        private readonly Dictionary<int, Item_Data> m_itemDataCache = new Dictionary<int, Item_Data>();
+        private bool m_isDataLoaded;
         
         /// <summary>
         /// 인게임 세션 중에만 사용되는 임시 인벤토리. 무기, 장신구 등을 저장합니다.
         /// </summary>
         public List<SkillData> InGameAcquiredSkills { get; private set; }
 
+        private const string k_EncryptedInventoryPath = "inventoryData.encrypted";
+
         #endregion
 
         #region 싱글톤 패턴
 
-        private static InventoryDataManagerDontdestory instance;
-        private static readonly object LockObject = new object();
+        private static InventoryDataManagerDontdestory s_instance;
+        private static readonly object s_lockObject = new object();
 
         public static InventoryDataManagerDontdestory Instance
         {
             get
             {
-                if (instance == null)
+                if (s_instance == null)
                 {
-                    lock (LockObject) // 스레드 안전성 보장
+                    lock (s_lockObject) // 스레드 안전성 보장
                     {
-                        if (instance == null)
+                        if (s_instance == null)
                         {
-                            instance = FindAnyObjectByType<InventoryDataManagerDontdestory>();
-                            if (instance == null)
+                            s_instance = FindAnyObjectByType<InventoryDataManagerDontdestory>();
+                            if (s_instance == null)
                             {
                                 var container = new GameObject("InventoryDataManager");
-                                instance = container.AddComponent<InventoryDataManagerDontdestory>();
+                                s_instance = container.AddComponent<InventoryDataManagerDontdestory>();
                                 DontDestroyOnLoad(container);
                                 LogManager.Log("인벤토리 데이터 매니저 인스턴스가 생성되었습니다.", LogManager.LogCategory.InventoryManager);
                             }
@@ -62,7 +70,7 @@ namespace DogGuns_Games.Lobby
                     }
                 }
 
-                return instance;
+                return s_instance;
             }
         }
 
@@ -73,21 +81,22 @@ namespace DogGuns_Games.Lobby
         private void Awake()
         {
             // 싱글톤 패턴 구현
-            if (Instance != this)
+            if (s_instance != null && s_instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
+            s_instance = this;
             DontDestroyOnLoad(gameObject);
             
             // 초기화
-            _encryption = new HybridEncryption();
-            _localSavePath = Path.Combine(Application.persistentDataPath, "inventoryData.encrypted");
+            m_encryption = new HybridEncryption();
+            m_localSavePath = Path.Combine(Application.persistentDataPath, k_EncryptedInventoryPath);
             
             // Inventory_Data 초기화
-            if (scritpableobjInventoryData == null)
-                scritpableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
+            if (m_scriptableobjInventoryData == null)
+                m_scriptableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
             
             // 인게임 인벤토리 초기화
             InGameAcquiredSkills = new List<SkillData>();
@@ -97,7 +106,7 @@ namespace DogGuns_Games.Lobby
         {
             LoadItemDataFromJson();
 
-            if (!_isDataLoaded)
+            if (!m_isDataLoaded)
             {
                 LogManager.LogWarning("JSON에서 아이템 데이터를 불러오지 못했습니다.", LogManager.LogCategory.InventoryManager);
             }
@@ -120,29 +129,29 @@ namespace DogGuns_Games.Lobby
                 LogManager.Log("새 인벤토리 데이터를 생성합니다.", LogManager.LogCategory.InventoryManager);
                 
                 // 인벤토리 데이터가 이미 초기화되어 있는지 확인
-                if (scritpableobjInventoryData == null)
+                if (m_scriptableobjInventoryData == null)
                 {
-                    scritpableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
+                    m_scriptableobjInventoryData = ScriptableObject.CreateInstance<Inventory_Data>();
                 }
                 else
                 {
-                    scritpableobjInventoryData.InitInventory();
+                    m_scriptableobjInventoryData.InitInventory();
                 }
                 
                 // 기본 아이템 추가 (필요한 경우)
                 // 예: 시작용 기본 장비 추가
-                if (_isDataLoaded && _itemDataCache.Count > 0)
+                if (m_isDataLoaded && m_itemDataCache.Count > 0)
                 {
                     // 아이템 목록에서 첫 번째 아이템을 기본 아이템으로 추가 (예시)
-                    var defaultItemCode = _itemDataCache.Keys.First();
-                    var defaultItem = _itemDataCache[defaultItemCode];
+                    var defaultItemCode = m_itemDataCache.Keys.First();
+                    var defaultItem = m_itemDataCache[defaultItemCode];
                     
-                    scritpableobjInventoryData.AddItem(defaultItem);
+                    m_scriptableobjInventoryData.AddItem(defaultItem);
                     LogManager.Log($"기본 아이템 추가: {defaultItem.itemName} (코드: {defaultItem.itemCode})", LogManager.LogCategory.InventoryManager);
                 }
                 
                 // 인벤토리 JSON 문자열 생성
-                inventorydataString = JsonConvert.SerializeObject(scritpableobjInventoryData, Formatting.Indented);
+                m_inventorydataString = JsonUtility.ToJson(m_scriptableobjInventoryData, true);
                 
                 // 로컬에 저장
                 SaveInventoryData();
@@ -161,7 +170,7 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void LoadItemDataFromJson()
         {
-            if (itemDataJsonFile == null)
+            if (m_itemDataJsonFile == null)
             {
                 LogManager.LogError("아이템 데이터 JSON 파일이 인스펙터에서 할당되지 않았습니다.", LogManager.LogCategory.InventoryManager);
                 return;
@@ -169,7 +178,8 @@ namespace DogGuns_Games.Lobby
 
             try
             {
-                JsonItemData[] jsonItems = JsonConvert.DeserializeObject<JsonItemData[]>(itemDataJsonFile.text);
+                JsonItemDataList jsonItemsWrapper = JsonUtility.FromJson<JsonItemDataList>(m_itemDataJsonFile.text);
+                JsonItemData[] jsonItems = jsonItemsWrapper.items;
 
                 if (jsonItems == null || jsonItems.Length == 0)
                 {
@@ -177,7 +187,7 @@ namespace DogGuns_Games.Lobby
                     return;
                 }
 
-                _itemDataCache.Clear();
+                m_itemDataCache.Clear();
 
                 foreach (var jsonItem in jsonItems)
                 {
@@ -189,11 +199,11 @@ namespace DogGuns_Games.Lobby
                     itemData.itemcoinType = jsonItem.itemcoinType;
                     itemData.itemcoinCount = jsonItem.itemcoinCount;
 
-                    _itemDataCache[itemData.itemCode] = itemData;
+                    m_itemDataCache[itemData.itemCode] = itemData;
                 }
 
-                _isDataLoaded = true;
-                LogManager.Log($"JSON 데이터에서 {_itemDataCache.Count}개의 아이템을 성공적으로 로드했습니다.", LogManager.LogCategory.InventoryManager);
+                m_isDataLoaded = true;
+                LogManager.Log($"JSON 데이터에서 {m_itemDataCache.Count}개의 아이템을 성공적으로 로드했습니다.", LogManager.LogCategory.InventoryManager);
             }
             catch (Exception e)
             {
@@ -212,13 +222,13 @@ namespace DogGuns_Games.Lobby
         /// <returns>아이템 데이터 또는 null</returns>
         public Item_Data GetItemByItemCode(int itemCode)
         {
-            if (!_isDataLoaded)
+            if (!m_isDataLoaded)
             {
                 LogManager.LogWarning("아이템 데이터가 아직 로드되지 않았습니다.", LogManager.LogCategory.InventoryManager);
                 return null;
             }
 
-            if (_itemDataCache.TryGetValue(itemCode, out Item_Data item))
+            if (m_itemDataCache.TryGetValue(itemCode, out Item_Data item))
             {
                 return item;
             }
@@ -231,20 +241,20 @@ namespace DogGuns_Games.Lobby
         /// 인벤토리 데이터를 업데이트합니다.
         /// </summary>
         /// <param name="inventoryData">새로운 인벤토리 데이터</param>
-        public void Update_Inventory_Data(Inventory_Data inventoryData)
+        public void UpdateInventoryData(Inventory_Data inventoryData)
         {
             if (inventoryData == null)
             {
                 LogManager.LogWarning("업데이트할 인벤토리 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
-            scritpableobjInventoryData = inventoryData;
+            m_scriptableobjInventoryData = inventoryData;
             try
             {
-                inventorydataString = JsonConvert.SerializeObject(scritpableobjInventoryData, Formatting.Indented);
+                m_inventorydataString = JsonUtility.ToJson(m_scriptableobjInventoryData, true);
 #if UNITY_EDITOR
                 LogManager.Log("<color=green>인벤토리 데이터 업데이트 완료</color>", LogManager.LogCategory.InventoryManager);
-                LogManager.Log($"인벤토리 데이터: {inventorydataString}", LogManager.LogCategory.InventoryManager);
+                LogManager.Log($"인벤토리 데이터: {m_inventorydataString}", LogManager.LogCategory.InventoryManager);
 #endif
             }
             catch (Exception ex)
@@ -265,7 +275,7 @@ namespace DogGuns_Games.Lobby
                 LogManager.LogWarning("업데이트할 아이템 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
-            _itemDataCache[itemData.itemCode] = itemData;
+            m_itemDataCache[itemData.itemCode] = itemData;
         }
 
         /// <summary>
@@ -298,27 +308,27 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         public void SaveInventoryData()
         {
-            if (scritpableobjInventoryData == null)
+            if (m_scriptableobjInventoryData == null)
             {
                 LogManager.LogWarning("저장할 인벤토리 데이터가 null입니다.", LogManager.LogCategory.InventoryManager);
                 return;
             }
             try
             {
-                if (_encryption == null)
-                    _encryption = new HybridEncryption();
-                string jsonData = JsonUtility.ToJson(scritpableobjInventoryData, true);
+                if (m_encryption == null)
+                    m_encryption = new HybridEncryption();
+                string jsonData = JsonUtility.ToJson(m_scriptableobjInventoryData, true);
                 string rsaPublicKey = PlayerDataManagerDontdesytoy.Instance.RsaPublicKey;
                 if (string.IsNullOrEmpty(rsaPublicKey))
                 {
                     LogManager.LogError("RSA 공개키를 찾을 수 없습니다. 암호화 없이 저장합니다.", LogManager.LogCategory.InventoryManager);
-                    File.WriteAllText(_localSavePath.Replace(".encrypted", ".json"), jsonData);
+                    File.WriteAllText(m_localSavePath.Replace(".encrypted", ".json"), jsonData);
                     return;
                 }
-                EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, rsaPublicKey);
+                EncryptedPacket encryptedPacket = m_encryption.Encrypt(jsonData, rsaPublicKey);
                 string packetJson = JsonUtility.ToJson(encryptedPacket);
-                File.WriteAllText(_localSavePath, packetJson);
-                LogManager.Log($"인벤토리 데이터를 암호화하여 {_localSavePath}에 저장했습니다.", LogManager.LogCategory.InventoryManager);
+                File.WriteAllText(m_localSavePath, packetJson);
+                LogManager.Log($"인벤토리 데이터를 암호화하여 {m_localSavePath}에 저장했습니다.", LogManager.LogCategory.InventoryManager);
             }
             catch (Exception e)
             {
@@ -334,13 +344,13 @@ namespace DogGuns_Games.Lobby
             try
             {
                 // 암호화 객체가 초기화되지 않았다면 초기화
-                if (_encryption == null)
-                    _encryption = new HybridEncryption();
+                if (m_encryption == null)
+                    m_encryption = new HybridEncryption();
 
-                if (File.Exists(_localSavePath))
+                if (File.Exists(m_localSavePath))
                 {
                     // 암호화된 데이터 로드
-                    string packetJson = File.ReadAllText(_localSavePath);
+                    string packetJson = File.ReadAllText(m_localSavePath);
                     EncryptedPacket encryptedPacket =
                         JsonUtility.FromJson<EncryptedPacket>(packetJson);
 
@@ -353,10 +363,10 @@ namespace DogGuns_Games.Lobby
                     }
 
                     // 데이터 복호화
-                    string decryptedJson = _encryption.Decrypt(encryptedPacket, rsaPrivateKey);
+                    string decryptedJson = m_encryption.Decrypt(encryptedPacket, rsaPrivateKey);
 
                     // 복호화된 JSON을 Inventory_Data 객체로 변환
-                    JsonUtility.FromJsonOverwrite(decryptedJson, scritpableobjInventoryData);
+                    JsonUtility.FromJsonOverwrite(decryptedJson, m_scriptableobjInventoryData);
 
                     LogManager.Log("암호화된 인벤토리 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.InventoryManager);
                     LogManager.Log($"packetJson: {packetJson}", LogManager.LogCategory.InventoryManager);
@@ -398,11 +408,12 @@ namespace DogGuns_Games.Lobby
 
                 // 서버 데이터 파싱 및 업데이트
                 string inventoryJsonString = serverDataJson["Inventory"].ToString();
-                Inventory_Data serverData = JsonConvert.DeserializeObject<Inventory_Data>(inventoryJsonString);
+                var serverData = ScriptableObject.CreateInstance<Inventory_Data>();
+                JsonUtility.FromJsonOverwrite(inventoryJsonString, serverData);
 
                 if (serverData != null)
                 {
-                    Update_Inventory_Data(serverData);
+                    UpdateInventoryData(serverData);
                     SaveInventoryData(); // 로컬에도 저장
                     LogManager.Log("서버로부터 인벤토리 데이터를 성공적으로 로드하고 업데이트했습니다.", LogManager.LogCategory.InventoryManager);
                 }
@@ -425,12 +436,12 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         public async UniTask UploadDataToServerAsync()
         {
-            if (scritpableobjInventoryData == null) return;
+            if (m_scriptableobjInventoryData == null) return;
 
-            inventorydataString = JsonConvert.SerializeObject(scritpableobjInventoryData, Formatting.Indented);
+            m_inventorydataString = JsonUtility.ToJson(m_scriptableobjInventoryData, true);
 
             Param param = new Param();
-            param.Add("Inventory", inventorydataString);
+            param.Add("Inventory", m_inventorydataString);
 
             try
             {
@@ -452,13 +463,13 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         public void ExportInventoryDataToJson()
         {
-            if (scritpableobjInventoryData == null)
+            if (m_scriptableobjInventoryData == null)
                 return;
 
             try
             {
                 string savePath = Path.Combine(Application.persistentDataPath, "inventory_debug_export.json");
-                string jsonData = JsonConvert.SerializeObject(scritpableobjInventoryData, Formatting.Indented);
+                string jsonData = JsonUtility.ToJson(m_scriptableobjInventoryData, true);
                 File.WriteAllText(savePath, jsonData);
                 LogManager.Log($"인벤토리 데이터를 {savePath}에 내보냈습니다.", LogManager.LogCategory.InventoryManager);
             }
@@ -479,6 +490,12 @@ namespace DogGuns_Games.Lobby
         #endregion
 
         #region 헬퍼 클래스
+
+        [System.Serializable]
+        private class JsonItemDataList
+        {
+            public JsonItemData[] items;
+        }
 
         [System.Serializable]
         private class JsonItemData

@@ -1882,7 +1882,7 @@ ScriptedImporter:
   - name: DefaultTexturePlatform
     overridden: 0
     ignorePlatformSupport: 0
-    maxTextureSize: 4096
+    maxTextureSize: 8192
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -2763,7 +2763,7 @@ ScriptedImporter:
   rigPSDLayers: []
   sharedRigPSDLayers: []
   importFileNodeState: 1
-  platformSettingsDirtyTick: 638736163397751080
+  platformSettingsDirtyTick: 638987297683221380
   spriteSizeExpandChanged: 0
   generateGOHierarchy: 0
   textureAssetName: 

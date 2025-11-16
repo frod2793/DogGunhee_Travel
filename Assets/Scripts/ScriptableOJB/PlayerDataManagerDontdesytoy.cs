@@ -3,6 +3,7 @@ using System.IO;
 using BackEnd;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using UnityEngine.Serialization;
 
 namespace DogGuns_Games
 {
@@ -14,81 +15,90 @@ namespace DogGuns_Games
     {
         #region 변수, 프로퍼티, 필드
 
-        public PlayerData scritpableobjPlayerData;
-        
+        [Header("데이터")]
+        [Tooltip("플레이어 데이터를 담고 있는 ScriptableObject 입니다.")]
+        [FormerlySerializedAs("scritpableobjPlayerData")]
+        [SerializeField] private PlayerData m_scriptableobjPlayerData;
+
+        public PlayerData PlayerData => m_scriptableobjPlayerData;
+
         public string RsaPublicKey => _rsaPublicKey;
         public string RsaPrivateKey => _rsaPrivateKey;
-        
+
         private string _rsaPublicKey;
         private string _rsaPrivateKey;
         private HybridEncryption _encryption;
 
+        private const string k_EncryptedDataPath = "playerData.encrypted";
+        private const string k_RsaKeysPath = "rsakeys.json";
+
         // 플레이어 데이터 속성에 대한 접근자
         public int SelectWeaponIndex
         {
-            get => scritpableobjPlayerData.selelcWeaponIndex;
-            set => scritpableobjPlayerData.selelcWeaponIndex = value;
+            get => m_scriptableobjPlayerData.selelcWeaponIndex;
+            set => m_scriptableobjPlayerData.selelcWeaponIndex = value;
         }
 
         public int SelectCharacterIndex
         {
-            get => scritpableobjPlayerData.selectCharacterIndex;
-            set => scritpableobjPlayerData.selectCharacterIndex = value;
+            get => m_scriptableobjPlayerData.selectCharacterIndex;
+            set => m_scriptableobjPlayerData.selectCharacterIndex = value;
         }
-        
+
         #endregion
 
         #region 싱글톤 및 초기화
 
-        private static PlayerDataManagerDontdesytoy instance;
-        private static readonly object LockObject = new object();
+        private static PlayerDataManagerDontdesytoy s_instance;
+        private static readonly object s_lockObject = new object();
 
         public static PlayerDataManagerDontdesytoy Instance
         {
             get
             {
-                if (instance == null)
+                if (s_instance == null)
                 {
-                    lock (LockObject)
+                    lock (s_lockObject)
                     {
-                        if (instance == null)
+                        if (s_instance == null)
                         {
-                            instance = FindAnyObjectByType<PlayerDataManagerDontdesytoy>();
-                            if (instance == null)
+                            s_instance = FindAnyObjectByType<PlayerDataManagerDontdesytoy>();
+                            if (s_instance == null)
                             {
                                 var container = new GameObject("PlayerDataManager");
-                                instance = container.AddComponent<PlayerDataManagerDontdesytoy>();
+                                s_instance = container.AddComponent<PlayerDataManagerDontdesytoy>();
                                 DontDestroyOnLoad(container);
                             }
                         }
                     }
                 }
-                return instance;
+                return s_instance;
             }
         }
 
         private void Awake()
         {
             // 싱글톤 패턴 구현
-            if (Instance != this)
+            if (s_instance != null && s_instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
+            s_instance = this;
             DontDestroyOnLoad(gameObject);
 
             // PlayerData 초기화
-            if (scritpableobjPlayerData == null)
-                scritpableobjPlayerData = ScriptableObject.CreateInstance<PlayerData>();
-        
+            if (m_scriptableobjPlayerData == null)
+                m_scriptableobjPlayerData = ScriptableObject.CreateInstance<PlayerData>();
+
             // 암호화 객체 초기화
             _encryption = new HybridEncryption();
-    
+
             // 키 생성 또는 로드
             GenerateOrLoadRsaKeys();
         }
-        
+
         #endregion
 
         #region 로컬 데이터 관리
@@ -133,13 +143,13 @@ namespace DogGuns_Games
         {
             try
             {
-                var savePath = Path.Combine(Application.persistentDataPath, "playerData.encrypted");
-                if (scritpableobjPlayerData == null)
+                var savePath = Path.Combine(Application.persistentDataPath, k_EncryptedDataPath);
+                if (m_scriptableobjPlayerData == null)
                 {
                     LogManager.LogWarning("저장할 플레이어 데이터가 null입니다.", LogManager.LogCategory.PlayerDataManager);
                     return;
                 }
-                var jsonData = JsonUtility.ToJson(scritpableobjPlayerData, true);
+                var jsonData = JsonUtility.ToJson(m_scriptableobjPlayerData, true);
                 EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, _rsaPublicKey);
                 string packetJson = JsonUtility.ToJson(encryptedPacket);
                 File.WriteAllText(savePath, packetJson);
@@ -158,13 +168,13 @@ namespace DogGuns_Games
         {
             try
             {
-                var savePath = Path.Combine(Application.persistentDataPath, "playerData.encrypted");
+                var savePath = Path.Combine(Application.persistentDataPath, k_EncryptedDataPath);
                 if (File.Exists(savePath))
                 {
                     string packetJson = File.ReadAllText(savePath);
                     EncryptedPacket encryptedPacket = JsonUtility.FromJson<EncryptedPacket>(packetJson);
                     string decryptedJson = _encryption.Decrypt(encryptedPacket, _rsaPrivateKey);
-                    JsonUtility.FromJsonOverwrite(decryptedJson, scritpableobjPlayerData);
+                    JsonUtility.FromJsonOverwrite(decryptedJson, m_scriptableobjPlayerData);
                     LogManager.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.PlayerDataManager);
                 }
                 else
@@ -177,17 +187,17 @@ namespace DogGuns_Games
                 LogManager.LogError($"플레이어 데이터 로드 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerDataManager);
             }
         }
-        
+
         /// <summary>
         /// 플레이어 데이터를 업데이트합니다.
         /// </summary>
         /// <param name="playerData">새로운 플레이어 데이터</param>
         public void UpdatePlayerData(PlayerData playerData)
         {
-            scritpableobjPlayerData = playerData;
+            m_scriptableobjPlayerData = playerData;
             LogManager.Log("플레이어 데이터가 업데이트되었습니다.", LogManager.LogCategory.PlayerDataManager);
         }
-        
+
         #endregion
 
         #region 서버 데이터 처리
@@ -210,20 +220,11 @@ namespace DogGuns_Games
 
                 LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.", LogManager.LogCategory.PlayerDataManager);
 
-                // 서버 데이터 파싱
-                PlayerData serverData = ScriptableObject.CreateInstance<PlayerData>();
-                serverData.level = int.Parse(serverDataJson["level"].ToString());
-                serverData.currency1 = int.Parse(serverDataJson["Money1"].ToString());
-                serverData.currency2 = int.Parse(serverDataJson["Money2"].ToString());
-                serverData.experience = float.Parse(serverDataJson["experience"].ToString());
-                serverData.UID = serverDataJson["uid"].ToString();
-                serverData.nickname = serverDataJson["nickname"].ToString();
+                PlayerData serverData = ParseServerData(serverDataJson);
 
                 // 로컬 데이터 로드
                 LoadPlayerData();
-                PlayerData localData = scritpableobjPlayerData;
-
-                // 데이터 비교 및 최종 데이터 결정
+                PlayerData localData = m_scriptableobjPlayerData;
                 PlayerData finalData = ResolveDataConflict(serverData, localData);
 
                 UpdatePlayerData(finalData);
@@ -245,6 +246,21 @@ namespace DogGuns_Games
             }
         }
 
+        private PlayerData ParseServerData(LitJson.JsonData serverDataJson)
+        {
+            PlayerData serverData = ScriptableObject.CreateInstance<PlayerData>();
+            serverData.level = int.Parse(serverDataJson["level"].ToString());
+            serverData.currency1 = int.Parse(serverDataJson["Money1"].ToString());
+            serverData.currency2 = int.Parse(serverDataJson["Money2"].ToString());
+            serverData.experience = float.Parse(serverDataJson["experience"].ToString());
+            serverData.UID = serverDataJson["uid"].ToString();
+            serverData.nickname = serverDataJson["nickname"].ToString();
+            // 필요한 다른 필드들도 여기서 파싱합니다.
+            // 예: serverData.selectCharacterIndex = int.Parse(serverDataJson["selectCharacterIndex"].ToString());
+
+            return serverData;
+        }
+
         private PlayerData ResolveDataConflict(PlayerData serverData, PlayerData localData)
         {
             if (localData.level > serverData.level || 
@@ -263,12 +279,12 @@ namespace DogGuns_Games
         public async UniTask UploadDataToServerAsync()
         {
             Param param = new Param();
-            param.Add("nickname", scritpableobjPlayerData.nickname);
-            param.Add("uid", scritpableobjPlayerData.UID);
-            param.Add("Money1", scritpableobjPlayerData.currency1);
-            param.Add("Money2", scritpableobjPlayerData.currency2);
-            param.Add("experience", scritpableobjPlayerData.experience);
-            param.Add("level", scritpableobjPlayerData.level);
+            param.Add("nickname", m_scriptableobjPlayerData.nickname);
+            param.Add("uid", m_scriptableobjPlayerData.UID);
+            param.Add("Money1", m_scriptableobjPlayerData.currency1);
+            param.Add("Money2", m_scriptableobjPlayerData.currency2);
+            param.Add("experience", m_scriptableobjPlayerData.experience);
+            param.Add("level", m_scriptableobjPlayerData.level);
 
             try
             {
@@ -295,7 +311,7 @@ namespace DogGuns_Games
             public string publicKey;
             public string privateKey;
         }
-        
+
         #endregion
     }
 }

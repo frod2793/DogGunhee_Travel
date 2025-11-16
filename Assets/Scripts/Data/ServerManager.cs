@@ -11,9 +11,9 @@ namespace DogGuns_Games
     {
         #region 필드 및 프로퍼티
 
-        public string uuid;
-        public string nickName;
-        private Dictionary<string, string> _tableInDate = new Dictionary<string, string>();
+        public string Uuid { get; private set; }
+        public string NickName { get; private set; }
+        private readonly Dictionary<string, string> m_tableInDate = new Dictionary<string, string>();
 
         #endregion
 
@@ -95,10 +95,8 @@ namespace DogGuns_Games
             if (bro.IsSuccess())
             {
                 LogManager.Log("로그인 성공", LogManager.LogCategory.ServerManager);
-                uuid = Backend.UID;
-                nickName = Backend.UserNickName;
-                RefreshTokenIfAlive();
-                return (nickName, uuid);
+                OnLoginSuccess();
+                return (NickName, Uuid);
             }
             else
             {
@@ -117,10 +115,8 @@ namespace DogGuns_Games
             if (bro.IsSuccess())
             {
                 LogManager.Log("게스트 로그인 성공", LogManager.LogCategory.ServerManager);
-                uuid = Backend.UID;
-                nickName = Backend.UserNickName;
-                RefreshTokenIfAlive();
-                return (nickName, uuid);
+                OnLoginSuccess();
+                return (NickName, Uuid);
             }
             else
             {
@@ -140,10 +136,8 @@ namespace DogGuns_Games
             if (bro.IsSuccess())
             {
                 LogManager.Log("토큰 로그인 성공", LogManager.LogCategory.ServerManager);
-                uuid = Backend.UID;
-                nickName = Backend.UserNickName;
-                RefreshTokenIfAlive();
-                return (true, nickName, uuid);
+                OnLoginSuccess();
+                return (true, NickName, Uuid);
             }
             else
             {
@@ -174,6 +168,15 @@ namespace DogGuns_Games
             LogManager.Log("닉네임 설정 성공", LogManager.LogCategory.ServerManager);
         }
 
+        /// <summary>
+        /// 로그인 성공 시 공통으로 처리할 로직입니다.
+        /// </summary>
+        private void OnLoginSuccess()
+        {
+            Uuid = Backend.UID;
+            NickName = Backend.UserNickName;
+            RefreshTokenIfAlive();
+        }
         private void RefreshTokenIfAlive()
         {
             var bro = Backend.BMember.IsAccessTokenAlive();
@@ -194,9 +197,9 @@ namespace DogGuns_Games
         public async UniTask UploadDataAsync(string tableName, Param param)
         {
             BackendReturnObject bro;
-            if (_tableInDate.ContainsKey(tableName))
+            if (m_tableInDate.ContainsKey(tableName))
             {
-                string inDate = _tableInDate[tableName];
+                string inDate = m_tableInDate[tableName];
                 LogManager.Log($"{tableName} 테이블의 데이터 수정을 요청합니다. (inDate: {inDate})", LogManager.LogCategory.ServerManager);
                 bro = await BackendAsync(callback => Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, callback));
             }
@@ -206,7 +209,7 @@ namespace DogGuns_Games
                 bro = await BackendAsync(callback => Backend.GameData.Insert(tableName, param, callback));
                 if (bro.IsSuccess())
                 {
-                    _tableInDate[tableName] = bro.GetInDate();
+                    m_tableInDate[tableName] = bro.GetInDate();
                 }
             }
 
@@ -229,7 +232,7 @@ namespace DogGuns_Games
                 var gameDataJson = bro.FlattenRows();
                 if (gameDataJson.Count > 0)
                 {
-                    _tableInDate[tableName] = gameDataJson[0]["inDate"].ToString();
+                    m_tableInDate[tableName] = gameDataJson[0]["inDate"].ToString();
                     LogManager.Log($"{tableName} 테이블 데이터 다운로드 성공", LogManager.LogCategory.ServerManager);
                     return gameDataJson[0];
                 }

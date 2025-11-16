@@ -1153,41 +1153,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8795a3abfa04c4bcca4c7392af49c74e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerProfileImage: {fileID: 2083833966}
-  playerNameText: {fileID: 246676906}
-  playerLevelText: {fileID: 2097905893}
-  playerLevelSlider: {fileID: 1482941457}
-  startBtn: {fileID: 623481682}
-  tutorialBtn: {fileID: 0}
-  optionBtn: {fileID: 1785994343}
-  optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
-  cgamePopUp: {fileID: 297852345}
-  closeBtn: {fileID: 1793167909}
-  GameStartButton: {fileID: 1785914719}
-  characterSelectUIManager: {fileID: 617242525}
-  openCharacterSelectButton: {fileID: 845655990}
-  postManager: {fileID: 378748809}
-  openMessingerButton: {fileID: 142006359}
-  getPostReiwordButton: {fileID: 0}
-  closeMessingerButton: {fileID: 2060208934}
-  getPostExpensionReiwordButton: {fileID: 825264045}
-  closeMessingerExpensionButton: {fileID: 1903731116}
-  questPanelManager: {fileID: 1515052229}
-  openQuestPanelButton: {fileID: 803496075}
-  closeQuestPanelButton: {fileID: 860760911}
-  closeQuestExpensionButton: {fileID: 916068383}
-  gold: {fileID: 1907996060}
-  dia: {fileID: 424256521}
-  storeManager: {fileID: 1359785979}
-  openStoreButton: {fileID: 8499905}
-  closeStoreButton: {fileID: 747007923}
-  closeStoreExpendPopUp: {fileID: 2137160010}
-  itemSelectManager: {fileID: 1458571409}
-  openItemSelectButton: {fileID: 1040933211}
-  closeItemSelectButton: {fileID: 1925497325}
-  closeItemSelectExpensionButton: {fileID: 2030477381}
-  playerDataManagerDontdesytoy: {fileID: 0}
-  _isDebugMode: 0
+  m_playerProfileImage: {fileID: 2083833966}
+  m_playerNameText: {fileID: 246676906}
+  m_playerLevelText: {fileID: 2097905893}
+  m_playerLevelSlider: {fileID: 1482941457}
+  m_startBtn: {fileID: 623481682}
+  m_tutorialBtn: {fileID: 0}
+  m_optionBtn: {fileID: 1785994343}
+  m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
+  m_gameSelectPopUp: {fileID: 297852345}
+  m_closeGameSelectPopUpBtn: {fileID: 1793167909}
+  m_gameStartButton: {fileID: 1785914719}
+  m_characterSelectUIManager: {fileID: 617242525}
+  m_openCharacterSelectButton: {fileID: 845655990}
+  m_postManager: {fileID: 378748809}
+  m_openPostButton: {fileID: 142006359}
+  m_getPostRewardButton: {fileID: 0}
+  m_closePostButton: {fileID: 2060208934}
+  m_getPostExpansionRewardButton: {fileID: 825264045}
+  m_closePostExpansionButton: {fileID: 1903731116}
+  m_questPanelManager: {fileID: 1515052229}
+  m_openQuestPanelButton: {fileID: 803496075}
+  m_closeQuestPanelButton: {fileID: 860760911}
+  m_closeQuestExpansionButton: {fileID: 916068383}
+  m_goldText: {fileID: 1907996060}
+  m_diaText: {fileID: 424256521}
+  m_storeManager: {fileID: 1359785979}
+  m_openStoreButton: {fileID: 8499905}
+  m_closeStoreButton: {fileID: 747007923}
+  m_closeStoreExpendPopUp: {fileID: 2137160010}
+  m_itemSelectManager: {fileID: 1458571409}
+  m_openItemSelectButton: {fileID: 1040933211}
+  m_closeItemSelectButton: {fileID: 1925497325}
+  m_closeItemSelectExpansionButton: {fileID: 2030477381}
+  m_playerDataManager: {fileID: 0}
+  m_isDebugMode: 0
 --- !u!1 &81575512
 GameObject:
   m_ObjectHideFlags: 0
@@ -5750,7 +5750,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -327.40002, y: 195.2998}
+  m_AnchoredPosition: {x: -327.4004, y: 195.29883}
   m_SizeDelta: {x: 541, y: 291}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &623481680
@@ -10092,7 +10092,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 1.3999023, y: 2.2998047}
+  m_AnchoredPosition: {x: 1.3994141, y: 2.2988281}
   m_SizeDelta: {x: 275.19995, y: 210.8999}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &1064257346
@@ -14436,7 +14436,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -240.34058, y: 0}
+  m_AnchoredPosition: {x: -240.34082, y: 0}
   m_SizeDelta: {x: -240.3406, y: 197.23}
   m_Pivot: {x: 1, y: 1}
 --- !u!1 &1457257528
@@ -18013,10 +18013,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 2.0847223
+    x: 0
     y: 0
-    width: 0.03125
-    height: 0.03125
+    width: 1
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -18209,9 +18209,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fe59489635f72845b52abbc6eeea260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemDataJsonFile: {fileID: 4900000, guid: eb35b8abb9b40784fab2c3e58db9090f, type: 3}
-  scritpableobjInventoryData: {fileID: 0}
-  inventorydataString: 
+  m_itemDataJsonFile: {fileID: 0}
+  m_scriptableobjInventoryData: {fileID: 0}
 --- !u!1 &1902625721
 GameObject:
   m_ObjectHideFlags: 0

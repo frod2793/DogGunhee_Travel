@@ -2455,9 +2455,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fe59489635f72845b52abbc6eeea260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemDataJsonFile: {fileID: 4900000, guid: eb35b8abb9b40784fab2c3e58db9090f, type: 3}
-  scritpableobjInventoryData: {fileID: 0}
-  inventorydataString: 
+  m_itemDataJsonFile: {fileID: 0}
+  m_scriptableobjInventoryData: {fileID: 0}
 --- !u!4 &1510490380
 Transform:
   m_ObjectHideFlags: 0
@@ -2940,7 +2939,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5852d493f67eb724fbe3810b42d07969, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scritpableobjPlayerData: {fileID: 0}
+  m_scriptableobjPlayerData: {fileID: 0}
 --- !u!1 &1989070772
 GameObject:
   m_ObjectHideFlags: 0

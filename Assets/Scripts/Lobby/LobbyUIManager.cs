@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DogGuns_Games.Lobby
@@ -14,69 +16,103 @@ namespace DogGuns_Games.Lobby
         #region 변수 및 필드
         
         [Header("<color=green>플레이어 프로필")]
-        [SerializeField] private Image playerProfileImage;
-        [SerializeField] private TMP_Text playerNameText;
-        [SerializeField] private TMP_Text playerLevelText;
-        [SerializeField] private Slider playerLevelSlider;
+        [Tooltip("플레이어 프로필 이미지입니다.")]
+        [FormerlySerializedAs("playerProfileImage")] [SerializeField] private Image m_playerProfileImage;
+        [Tooltip("플레이어 이름 텍스트입니다.")]
+        [FormerlySerializedAs("playerNameText")] [SerializeField] private TMP_Text m_playerNameText;
+        [Tooltip("플레이어 레벨 텍스트입니다.")]
+        [FormerlySerializedAs("playerLevelText")] [SerializeField] private TMP_Text m_playerLevelText;
+        [Tooltip("플레이어 경험치 슬라이더입니다.")]
+        [FormerlySerializedAs("playerLevelSlider")] [SerializeField] private Slider m_playerLevelSlider;
 
         [Header("<color=green>플레이 및 설정 버튼 UI 목록</color>")]
-        [SerializeField] private Button startBtn;
-        [SerializeField] private Button tutorialBtn;
-        [SerializeField] private Button optionBtn;
+        [Tooltip("게임 시작 팝업을 여는 버튼입니다.")]
+        [FormerlySerializedAs("startBtn")] [SerializeField] private Button m_startBtn;
+        [Tooltip("튜토리얼 씬으로 이동하는 버튼입니다.")]
+        [FormerlySerializedAs("tutorialBtn")] [SerializeField] private Button m_tutorialBtn;
+        [Tooltip("옵션 팝업을 여는 버튼입니다.")]
+        [FormerlySerializedAs("optionBtn")] [SerializeField] private Button m_optionBtn;
 
         [Header("<color=green>팝업 UI</color>")]
-        [SerializeField] private OptionPopupManager optionPopupPrefab;
-        [SerializeField] private GameObject cgamePopUp;
-        [SerializeField] private Button closeBtn;
-        [SerializeField] private Button GameStartButton;
+        [Tooltip("인스턴스화할 옵션 팝업 프리팹입니다.")]
+        [FormerlySerializedAs("optionPopupPrefab")] [SerializeField] private OptionPopupManager m_optionPopupPrefab;
+        [Tooltip("게임 시작 선택 팝업입니다.")]
+        [FormerlySerializedAs("cgamePopUp")] [SerializeField] private GameObject m_gameSelectPopUp;
+        [Tooltip("게임 시작 선택 팝업을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeBtn")] [SerializeField] private Button m_closeGameSelectPopUpBtn;
+        [Tooltip("Vamser-like 게임을 시작하는 버튼입니다.")]
+        [FormerlySerializedAs("GameStartButton")] [SerializeField] private Button m_gameStartButton;
 
         [Header("<color=green>캐릭터 선택 시스템</color>")]
-        [SerializeField] private CharacterSelectUIManager characterSelectUIManager;
-        [SerializeField] private Button openCharacterSelectButton;
+        [Tooltip("캐릭터 선택 UI 매니저입니다.")]
+        [FormerlySerializedAs("characterSelectUIManager")] [SerializeField] private CharacterSelectUIManager m_characterSelectUIManager;
+        [Tooltip("캐릭터 선택 패널을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openCharacterSelectButton")] [SerializeField] private Button m_openCharacterSelectButton;
 
         [Header("<color=green>우편 시스템</color>")]
-        [SerializeField] private PostManager postManager;
-        [SerializeField] private Button openMessingerButton;
-        [SerializeField] private Button getPostReiwordButton;
-        [SerializeField] private Button closeMessingerButton;
-        [SerializeField] private Button getPostExpensionReiwordButton;
-        [SerializeField] private Button closeMessingerExpensionButton;
+        [Tooltip("우편 UI 매니저입니다.")]
+        [FormerlySerializedAs("postManager")] [SerializeField] private PostManager m_postManager;
+        [Tooltip("우편함 패널을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openMessingerButton")] [SerializeField] private Button m_openPostButton;
+        [Tooltip("우편 목록에서 보상을 수령하는 버튼입니다.")]
+        [FormerlySerializedAs("getPostReiwordButton")] [SerializeField] private Button m_getPostRewardButton;
+        [Tooltip("우편함 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeMessingerButton")] [SerializeField] private Button m_closePostButton;
+        [Tooltip("우편 상세 보기에서 보상을 수령하는 버튼입니다.")]
+        [FormerlySerializedAs("getPostExpensionReiwordButton")] [SerializeField] private Button m_getPostExpansionRewardButton;
+        [Tooltip("우편 상세 보기 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeMessingerExpensionButton")] [SerializeField] private Button m_closePostExpansionButton;
 
         [Header("<color=green>퀘스트 시스템</color>")]
-        [SerializeField] private QuestPanelManager questPanelManager;
-        [SerializeField] private Button openQuestPanelButton;
-        [SerializeField] private Button closeQuestPanelButton;
-        [SerializeField] private Button closeQuestExpensionButton;
+        [Tooltip("퀘스트 UI 매니저입니다.")]
+        [FormerlySerializedAs("questPanelManager")] [SerializeField] private QuestPanelManager m_questPanelManager;
+        [Tooltip("퀘스트 패널을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openQuestPanelButton")] [SerializeField] private Button m_openQuestPanelButton;
+        [Tooltip("퀘스트 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeQuestPanelButton")] [SerializeField] private Button m_closeQuestPanelButton;
+        [Tooltip("퀘스트 상세 보기 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeQuestExpensionButton")] [SerializeField] private Button m_closeQuestExpansionButton;
 
         [Header("<color=green>재화 시스템</color>")]
-        [SerializeField] private TMP_Text gold;
-        [SerializeField] private TMP_Text dia;
+        [Tooltip("골드 재화 텍스트입니다.")]
+        [FormerlySerializedAs("gold")] [SerializeField] private TMP_Text m_goldText;
+        [Tooltip("다이아 재화 텍스트입니다.")]
+        [FormerlySerializedAs("dia")] [SerializeField] private TMP_Text m_diaText;
         
         [Header("<color=green>상점 시스템</color>")]
-        [SerializeField] private StoreManager storeManager;
-        [SerializeField] private Button openStoreButton;
-        [SerializeField] private Button closeStoreButton;
-        [SerializeField] private Button closeStoreExpendPopUp;
+        [Tooltip("상점 UI 매니저입니다.")]
+        [FormerlySerializedAs("storeManager")] [SerializeField] private StoreManager m_storeManager;
+        [Tooltip("상점 패널을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openStoreButton")] [SerializeField] private Button m_openStoreButton;
+        [Tooltip("상점 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeStoreButton")] [SerializeField] private Button m_closeStoreButton;
+        [Tooltip("상점 상세 보기 팝업을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeStoreExpendPopUp")] [SerializeField] private Button m_closeStoreExpendPopUp;
 
         [Header("<color=green>아이템 팝업</color>")]
-        [SerializeField] private ItemSelectManager itemSelectManager;
-        [SerializeField] private Button openItemSelectButton;
-        [SerializeField] private Button closeItemSelectButton;
-        [SerializeField] private Button closeItemSelectExpensionButton;
+        [Tooltip("아이템 선택 UI 매니저입니다.")]
+        [FormerlySerializedAs("itemSelectManager")] [SerializeField] private ItemSelectManager m_itemSelectManager;
+        [Tooltip("아이템 선택 패널을 여는 버튼입니다.")]
+        [FormerlySerializedAs("openItemSelectButton")] [SerializeField] private Button m_openItemSelectButton;
+        [Tooltip("아이템 선택 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeItemSelectButton")] [SerializeField] private Button m_closeItemSelectButton;
+        [Tooltip("아이템 상세 보기 패널을 닫는 버튼입니다.")]
+        [FormerlySerializedAs("closeItemSelectExpensionButton")] [SerializeField] private Button m_closeItemSelectExpansionButton;
 
         [Header("<color=green>플레이어 정보</color>")]
-        [SerializeField] private PlayerDataManagerDontdesytoy playerDataManagerDontdesytoy;
+        [Tooltip("플레이어 데이터 매니저입니다.")]
+        [FormerlySerializedAs("playerDataManagerDontdesytoy")] [SerializeField] private PlayerDataManagerDontdesytoy m_playerDataManager;
 
-        private static List<Action> closePopUpActionList = new List<Action>();
+        private static readonly Stack<Action> s_closePopUpActions = new Stack<Action>();
 
         // 상수
         private const string ErrorNullReference = "참조가 없습니다: {0}";
 
         [Header("Debug")]
-        [SerializeField]
-        private bool _isDebugMode = false;
+        [Tooltip("활성화 시, 참조가 누락되었을 때 에러 로그를 출력합니다.")]
+        [SerializeField] private bool m_isDebugMode = false;
 
-        private OptionPopupManager currentOptionPopup; // 현재 활성화된 옵션 팝업 인스턴스
+        private OptionPopupManager m_currentOptionPopup; // 현재 활성화된 옵션 팝업 인스턴스
 
         #endregion
 
@@ -100,8 +136,8 @@ namespace DogGuns_Games.Lobby
         private void Start()
         {
             // 싱글톤 패턴 활용 - FindAnyObjectByType 사용 최소화
-            if (playerDataManagerDontdesytoy == null)
-                playerDataManagerDontdesytoy = PlayerDataManagerDontdesytoy.Instance;
+            if (m_playerDataManager == null)
+                m_playerDataManager = PlayerDataManagerDontdesytoy.Instance;
     
             UpdateCurrencyDisplay();
             SetPlayerData ();
@@ -112,15 +148,15 @@ namespace DogGuns_Games.Lobby
 
         private void SetPlayerData()
         {
-            if (playerDataManagerDontdesytoy == null || playerDataManagerDontdesytoy.scritpableobjPlayerData == null)
+            if (m_playerDataManager == null || m_playerDataManager.PlayerData == null)
             {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "플레이어 데이터"));
+                if (m_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "플레이어 데이터"));
                 return;
             }
 
-            playerNameText.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.nickname;
-            playerLevelText.text = $"Lv. {playerDataManagerDontdesytoy.scritpableobjPlayerData.level}";
-            playerLevelSlider.value = playerDataManagerDontdesytoy.scritpableobjPlayerData.experience / 100f; // 예시로 100을 최대 경험치로 설정
+            m_playerNameText.text = m_playerDataManager.PlayerData.nickname;
+            m_playerLevelText.text = $"Lv. {m_playerDataManager.PlayerData.level}";
+            m_playerLevelSlider.value = m_playerDataManager.PlayerData.experience / 100f; // 예시로 100을 최대 경험치로 설정
             
         }
         
@@ -130,20 +166,20 @@ namespace DogGuns_Games.Lobby
         private void CheckRequiredReferences()
         {
             // 중요 매니저 참조 확인
-            if (characterSelectUIManager == null)
-                if (_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "캐릭터 선택 매니저"));
+            if (m_characterSelectUIManager == null)
+                if (m_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "캐릭터 선택 매니저"));
     
-            if (postManager == null)
-                if (_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "우편 매니저"));
+            if (m_postManager == null)
+                if (m_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "우편 매니저"));
     
-            if (questPanelManager == null)
-                if (_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "퀘스트 매니저"));
+            if (m_questPanelManager == null)
+                if (m_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "퀘스트 매니저"));
     
-            if (storeManager == null)
-                if (_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "상점 매니저"));
+            if (m_storeManager == null)
+                if (m_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "상점 매니저"));
     
-            if (itemSelectManager == null)
-                if (_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "아이템 선택 매니저"));
+            if (m_itemSelectManager == null)
+                if (m_isDebugMode) Debug.LogWarning(string.Format(ErrorNullReference, "아이템 선택 매니저"));
         }
         /// <summary>
         /// 모바일 뒤로가기 버튼 입력 감지
@@ -162,195 +198,92 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void InitializeButtons()
         {
-            playButton_Init();
-            CharacterSelct_Init();
-            InitOtherSystems();
-            InitQuestManager();
-            InitPostManager();
-            InitStoreManager();
-            InitItemSelectManager();
+            InitializePlayButtons();
+            InitializeCharacterSelect();
+            InitializePostManager();
+            InitializeQuestManager();
+            InitializeStoreManager();
+            InitializeItemSelectManager();
         }
 
         /// <summary>
         /// 게임 관련 버튼 이벤트 등록
         /// </summary>
-        private void playButton_Init()
+        private void InitializePlayButtons()
         {
-            if (startBtn != null)
-                startBtn.onClick.AddListener(func_startBtn);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "시작 버튼"));
-
-            if (tutorialBtn != null)
-                tutorialBtn.onClick.AddListener(func_tutorialBtn);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "튜토리얼 버튼"));
-
-            if (optionBtn != null)
-                optionBtn.onClick.AddListener(func_optionBtn);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "옵션 버튼"));
-            
-            if (closeBtn != null)
-                closeBtn.onClick.AddListener(CloseButtonClick);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "닫기 버튼"));
-            
-            if (GameStartButton != null)
-                GameStartButton.onClick.AddListener(VamSerlikeStart);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "게임 시작 버튼"));
+            RegisterButtonOnClick(m_startBtn, OnStartButtonClicked, "시작 버튼");
+            RegisterButtonOnClick(m_tutorialBtn, OnTutorialButtonClicked, "튜토리얼 버튼");
+            RegisterButtonOnClick(m_optionBtn, OnOptionButtonClicked, "옵션 버튼");
+            RegisterButtonOnClick(m_closeGameSelectPopUpBtn, CloseButtonClick, "게임 선택 팝업 닫기 버튼");
+            RegisterButtonOnClick(m_gameStartButton, VamSerlikeStart, "Vamser-like 시작 버튼");
         }
 
         /// <summary>
         /// 캐릭터 선택창 버튼 이벤트 등록
         /// </summary>
-        private void CharacterSelct_Init()
+        private void InitializeCharacterSelect()
         {
-            if (characterSelectUIManager == null)
-            {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "캐릭터 선택 매니저"));
-                return;
-            }
-
-            if (openCharacterSelectButton != null)
-                openCharacterSelectButton.onClick.AddListener(characterSelectUIManager.OpenCharacterSelectPanel);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "캐릭터 선택창 열기 버튼"));
-        }
-
-        /// <summary>
-        /// 기타 시스템 초기화 (우편함, 퀘스트 등)
-        /// </summary>
-        private void InitOtherSystems()
-        {
-            if (openMessingerButton != null && postManager != null)
-                openMessingerButton.onClick.AddListener(postManager.OpenPostBoxPanel);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "우편함 버튼 또는 매니저"));
-
-            if (openQuestPanelButton != null && questPanelManager != null)
-                openQuestPanelButton.onClick.AddListener(questPanelManager.OpenQuestPanel);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "퀘스트 버튼 또는 매니저"));
+            RegisterButtonOnClick(m_openCharacterSelectButton, m_characterSelectUIManager.OpenCharacterSelectPanel, "캐릭터 선택창 열기 버튼", m_characterSelectUIManager);
         }
 
         /// <summary>
         /// 아이템 선택 시스템 초기화
         /// </summary>
-        private void InitItemSelectManager()
+        private void InitializeItemSelectManager()
         {
-            if (openItemSelectButton != null && itemSelectManager != null)
-                openItemSelectButton.onClick.AddListener(() => itemSelectManager.OpenItemSelectPanel());
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "아이템 선택 버튼 또는 매니저"));
-        
-            // 아이템 선택 닫기 버튼 초기화
-            if (closeItemSelectButton != null && itemSelectManager != null)
-            {
-                closeItemSelectButton.onClick.AddListener(CloseButtonClick);
-                if (_isDebugMode) Debug.Log("아이템 선택 닫기 버튼 이벤트 등록 완료");
-            }
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "아이템 선택 닫기 버튼 또는 매니저"));
-        
-            // 아이템 확장 패널 닫기 버튼 초기화
-            if (closeItemSelectExpensionButton != null && itemSelectManager != null)
-            {
-                closeItemSelectExpensionButton.onClick.AddListener(CloseButtonClick);
-                if (_isDebugMode) Debug.Log("아이템 확장 닫기 버튼 이벤트 등록 완료");
-            }
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "아이템 확장 닫기 버튼 또는 매니저"));
+            RegisterButtonOnClick(m_openItemSelectButton, m_itemSelectManager.OpenItemSelectPanel, "아이템 선택 버튼", m_itemSelectManager);
+            RegisterButtonOnClick(m_closeItemSelectButton, CloseButtonClick, "아이템 선택 닫기 버튼", m_itemSelectManager);
+            RegisterButtonOnClick(m_closeItemSelectExpansionButton, CloseButtonClick, "아이템 확장 닫기 버튼", m_itemSelectManager);
         }
 
         /// <summary>
         /// 상점 시스템 초기화
         /// </summary>
-        private void InitStoreManager()
+        private void InitializeStoreManager()
         {
-            if (openStoreButton != null && storeManager != null)
-                openStoreButton.onClick.AddListener(() => storeManager.OpenStorePanel());
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "상점 버튼 또는 매니저"));
-
-            if (closeStoreButton != null && storeManager != null)
-                closeStoreButton.onClick.AddListener(() => storeManager.CloseStorePanel());
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "상점 닫기 버튼 또는 매니저"));
-        
-            // 상점 확장 팝업 닫기 버튼 초기화
-            if (closeStoreExpendPopUp != null && storeManager != null)
-            {
-                closeStoreExpendPopUp.onClick.AddListener(CloseButtonClick);
-                if (_isDebugMode) Debug.Log("상점 확장 닫기 버튼 이벤트 등록 완료");
-            }
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "상점 확장 닫기 버튼 또는 매니저"));
+            RegisterButtonOnClick(m_openStoreButton, m_storeManager.OpenStorePanel, "상점 버튼", m_storeManager);
+            RegisterButtonOnClick(m_closeStoreButton, m_storeManager.CloseStorePanel, "상점 닫기 버튼", m_storeManager);
+            RegisterButtonOnClick(m_closeStoreExpendPopUp, CloseButtonClick, "상점 확장 닫기 버튼", m_storeManager);
         }
 
         /// <summary>
         /// 퀘스트 관련 버튼 이벤트 초기화
         /// </summary>
-        private void InitQuestManager()
+        private void InitializeQuestManager()
         {
-            if (closeQuestPanelButton != null && questPanelManager != null)
-                closeQuestPanelButton.onClick.AddListener(CloseButtonClick);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "퀘스트 닫기 버튼 또는 매니저"));
-
-            if (closeQuestExpensionButton != null && questPanelManager != null)
-                closeQuestExpensionButton.onClick.AddListener(CloseButtonClick);
-            else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "퀘스트 확장 닫기 버튼 또는 매니저"));
+            RegisterButtonOnClick(m_openQuestPanelButton, m_questPanelManager.OpenQuestPanel, "퀘스트 버튼", m_questPanelManager);
+            RegisterButtonOnClick(m_closeQuestPanelButton, CloseButtonClick, "퀘스트 닫기 버튼", m_questPanelManager);
+            RegisterButtonOnClick(m_closeQuestExpansionButton, CloseButtonClick, "퀘스트 확장 닫기 버튼", m_questPanelManager);
         }
 
         /// <summary>
         /// 우편 시스템 관련 버튼 이벤트 초기화
         /// </summary>
-        private void InitPostManager()
+        private void InitializePostManager()
         {
-            // 우편함 닫기 버튼 초기화
-            if (closeMessingerButton != null && postManager != null)
+            RegisterButtonOnClick(m_openPostButton, m_postManager.OpenPostBoxPanel, "우편함 버튼", m_postManager);
+            RegisterButtonOnClick(m_closePostButton, CloseButtonClick, "우편함 닫기 버튼", m_postManager);
+            RegisterButtonOnClick(m_closePostExpansionButton, CloseButtonClick, "우편함 확장 닫기 버튼", m_postManager);
+            RegisterButtonOnClick(m_getPostRewardButton, m_postManager.Getreward, "우편 보상 수령 버튼", m_postManager);
+            RegisterButtonOnClick(m_getPostExpansionRewardButton, () =>
             {
-                closeMessingerButton.onClick.AddListener(CloseButtonClick);
-                if (_isDebugMode) Debug.Log("우편함 닫기 버튼 이벤트 등록 완료");
-            }
-            else
-            {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "우편함 닫기 버튼 또는 매니저"));
-            }
+                m_postManager.Getreward();
+                CloseButtonClick();
+            }, "우편 확장 보상 수령 버튼", m_postManager);
+        }
 
-            // 우편함 확장 패널 닫기 버튼 초기화
-            if (closeMessingerExpensionButton != null && postManager != null)
+        /// <summary>
+        /// 버튼 클릭 이벤트를 안전하게 등록하는 헬퍼 메서드입니다.
+        /// </summary>
+        private void RegisterButtonOnClick(Button button, Action action, string buttonName, UnityEngine.Object dependency = null)
+        {
+            if (button != null && (dependency == null || dependency != null))
             {
-                closeMessingerExpensionButton.onClick.AddListener(CloseButtonClick);
-                if (_isDebugMode) Debug.Log("우편함 확장 닫기 버튼 이벤트 등록 완료");
+                button.onClick.AddListener(() => action?.Invoke());
             }
-            else
+            else if (m_isDebugMode)
             {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "우편함 확장 닫기 버튼 또는 매니저"));
-            }
-
-            // 우편 보상 수령 버튼 초기화
-            if (getPostExpensionReiwordButton != null && postManager != null)
-            {
-                getPostExpensionReiwordButton.onClick.AddListener(() =>
-                {
-                    postManager.Getreward();
-                    CloseButtonClick();
-                });
-
-                // 우편 목록 보상 버튼 초기화
-                if (getPostReiwordButton != null)
-                {
-                    getPostReiwordButton.onClick.AddListener(() => postManager.Getreward());
-                    if (_isDebugMode) Debug.Log("우편 보상 수령 버튼 이벤트 등록 완료");
-                }
-            }
-            else
-            {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "우편 보상 수령 버튼 또는 매니저"));
+                Debug.LogError(string.Format(ErrorNullReference, buttonName));
             }
         }
 
@@ -370,15 +303,15 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         public static void AddClosePopUpAction(Action action)
         {
-            if (action != null)
+            if (action == null)
             {
-                closePopUpActionList.Add(action);
-                // if (_isDebugMode) Debug.Log($"팝업 닫기 액션 등록됨 (현재 {closePopUpActionList.Count}개)");
+                // if (m_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "액션"));
+                return;
             }
-            else
-            {
-                // if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "액션"));
-            }
+            
+            s_closePopUpActions.Push(action);
+            // if (m_isDebugMode) Debug.Log($"팝업 닫기 액션 등록됨 (현재 {s_closePopUpActions.Count}개)");
+            
         }
 
         /// <summary>
@@ -386,19 +319,16 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void CloseButtonClick()
         {
-            if (closePopUpActionList.Count > 0)
+            if (s_closePopUpActions.Any())
             {
-                int lastIndex = closePopUpActionList.Count - 1;
-                Action lastAction = closePopUpActionList[lastIndex];
+                Action lastAction = s_closePopUpActions.Pop();
+                lastAction.Invoke();
                 
-                closePopUpActionList.RemoveAt(lastIndex);
-                lastAction?.Invoke();
-                
-                if (_isDebugMode) Debug.Log($"팝업 닫기 실행 (남은 팝업: {closePopUpActionList.Count}개)");
+                if (m_isDebugMode) Debug.Log($"팝업 닫기 실행 (남은 팝업: {s_closePopUpActions.Count}개)");
             }
             else
             {
-                if (_isDebugMode) Debug.Log("닫을 팝업이 없습니다.");
+                if (m_isDebugMode) Debug.Log("닫을 팝업이 없습니다.");
             }
         }
 
@@ -411,19 +341,19 @@ namespace DogGuns_Games.Lobby
         /// </summary>
         private void UpdateCurrencyDisplay()
         {
-            if (playerDataManagerDontdesytoy?.scritpableobjPlayerData == null)
+            if (m_playerDataManager?.PlayerData == null)
             {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "플레이어 데이터"));
+                if (m_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "플레이어 데이터"));
                 return;
             }
 
-            if (gold != null)
-                gold.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.currency1.ToString("N0");
+            if (m_goldText != null)
+                m_goldText.text = m_playerDataManager.PlayerData.currency1.ToString("N0");
 
-            if (dia != null)
-                dia.text = playerDataManagerDontdesytoy.scritpableobjPlayerData.currency2.ToString("N0");
+            if (m_diaText != null)
+                m_diaText.text = m_playerDataManager.PlayerData.currency2.ToString("N0");
             
-            if (_isDebugMode) Debug.Log("재화 정보 업데이트 완료");
+            if (m_isDebugMode) Debug.Log("재화 정보 업데이트 완료");
         }
 
         #endregion
@@ -433,62 +363,62 @@ namespace DogGuns_Games.Lobby
         /// <summary>
         /// 시작 버튼 콜백 - 게임 선택 팝업 표시
         /// </summary>
-        private void func_startBtn()
+        private void OnStartButtonClicked()
         {
-            if (_isDebugMode) Debug.Log("게임 선택 팝업");
+            if (m_isDebugMode) Debug.Log("게임 선택 팝업");
 
-            if (cgamePopUp != null)
+            if (m_gameSelectPopUp != null)
             {
-                cgamePopUp.SetActive(true);
-                AddClosePopUpAction(() => cgamePopUp.SetActive(false));
+                m_gameSelectPopUp.SetActive(true);
+                AddClosePopUpAction(() => m_gameSelectPopUp.SetActive(false));
             }
             else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "게임 선택 팝업"));
+                if (m_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "게임 선택 팝업"));
         }
 
         /// <summary>
         /// 튜토리얼 버튼 콜백 - 기본 튜토리얼 시작
         /// </summary>
-        private void func_tutorialBtn()
+        private void OnTutorialButtonClicked()
         {
-            if (_isDebugMode) Debug.Log("튜토리얼 시작");
+            if (m_isDebugMode) Debug.Log("튜토리얼 시작");
             // TODO: 튜토리얼 씬으로 이동하거나 가이드 표시
             if (SceneLoader.Instance != null)
             {
                 SceneLoader.Instance.LoadScene("Tutorial");
             }
         }
-
+        
         /// <summary>
         /// 옵션 버튼 콜백 - 옵션 팝업 표시
         /// </summary>
-        private void func_optionBtn()
+        private void OnOptionButtonClicked()
         {
-            if (optionPopupPrefab != null)
+            if (m_optionPopupPrefab != null)
             {
                 // 이미 열린 팝업이 있으면 닫기
-                if (currentOptionPopup != null)
+                if (m_currentOptionPopup != null)
                 {
-                    Destroy(currentOptionPopup.gameObject);
-                    currentOptionPopup = null;
+                    Destroy(m_currentOptionPopup.gameObject);
+                    m_currentOptionPopup = null;
                 }
 
                 // 새 옵션 팝업 인스턴스 생성
-                currentOptionPopup = Instantiate(optionPopupPrefab, transform.parent);
+                m_currentOptionPopup = Instantiate(m_optionPopupPrefab, transform.parent);
                 
                 // 팝업 닫기 액션 등록
                 AddClosePopUpAction(() => {
-                    if (currentOptionPopup != null)
+                    if (m_currentOptionPopup != null)
                     {
-                        Destroy(currentOptionPopup.gameObject);
-                        currentOptionPopup = null;
+                        Destroy(m_currentOptionPopup.gameObject);
+                        m_currentOptionPopup = null;
                     }
                 });
                 
-                if (_isDebugMode) Debug.Log("옵션 팝업 표시");
+                if (m_isDebugMode) Debug.Log("옵션 팝업 표시");
             }
             else
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "옵션 팝업 프리팹"));
+                if (m_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "옵션 팝업 프리팹"));
         }
 
         #endregion
@@ -503,15 +433,14 @@ namespace DogGuns_Games.Lobby
             if (SceneLoader.Instance != null)
             {
                 SceneLoader.Instance.LoadScene("VamSerlike");
-                if (_isDebugMode) Debug.Log("런게임 씬으로 전환");
+                if (m_isDebugMode) Debug.Log("런게임 씬으로 전환");
             }
             else
             {
-                if (_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "씬 로더"));
+                if (m_isDebugMode) Debug.LogError(string.Format(ErrorNullReference, "씬 로더"));
             }
         }
 
         #endregion
     }
 }
-
