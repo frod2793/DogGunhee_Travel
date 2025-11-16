@@ -676,20 +676,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14ea42ba3cc0440e4a607dba2670e287, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  signUpPopUp: {fileID: 1864831180}
-  signUpNickNameInputField: {fileID: 958617272}
-  signUpIDInputField: {fileID: 529880721}
-  signUpPwInputField: {fileID: 1464652147}
-  signUpPwCheckInputField: {fileID: 409951286}
-  signUpBtn: {fileID: 1427951444}
-  loginPopUp: {fileID: 460715061}
-  loginIDInputField: {fileID: 1771300658}
-  loginPwInputField: {fileID: 1257065018}
-  loginBtn: {fileID: 907283340}
-  openSingUpPopUpBtn: {fileID: 39406609}
-  startBtn: {fileID: 1676048293}
-  guestLoginBtn: {fileID: 2136691803}
-  openLoginPopUpBtn: {fileID: 575120355}
+  m_signUpPopUp: {fileID: 1864831180}
+  m_loginPopUp: {fileID: 460715061}
+  m_signUpNickNameInputField: {fileID: 958617272}
+  m_signUpIDInputField: {fileID: 529880721}
+  m_signUpPwInputField: {fileID: 1464652147}
+  m_signUpPwCheckInputField: {fileID: 409951286}
+  m_signUpBtn: {fileID: 1427951444}
+  m_loginIDInputField: {fileID: 1771300658}
+  m_loginPwInputField: {fileID: 1257065018}
+  m_loginBtn: {fileID: 907283340}
+  m_openSignUpPopUpBtn: {fileID: 39406609}
+  m_startBtn: {fileID: 1676048293}
+  m_guestLoginBtn: {fileID: 2136691803}
+  m_openLoginPopUpBtn: {fileID: 575120355}
 --- !u!1 &409951282
 GameObject:
   m_ObjectHideFlags: 0
@@ -4324,7 +4324,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5852d493f67eb724fbe3810b42d07969, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scritpableobjPlayerData: {fileID: 0}
+  m_scriptableobjPlayerData: {fileID: 0}
 --- !u!1 &1495696211
 GameObject:
   m_ObjectHideFlags: 0
@@ -4936,10 +4936,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 2.0847223
+    x: 0.23907454
     y: 0
-    width: 0.03125
-    height: 0.03125
+    width: 0.52056557
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
@@ -5209,8 +5209,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28f23102db0914f05abd097d5451ebd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uuid: 
-  nickName: 
 --- !u!1 &1733847516
 GameObject:
   m_ObjectHideFlags: 0
@@ -5255,8 +5253,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa6955cba98e64042b8efb54ea6c1549, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
-  settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
+  m_soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
+  m_settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
 --- !u!1 &1771300656
 GameObject:
   m_ObjectHideFlags: 0

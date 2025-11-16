@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 using UnityEngine;
 
 
@@ -34,14 +35,18 @@ public class SoundManager : MonoBehaviour
 
     #region 변수 및 필드
 
-    [SerializeField] private SoundData soundData; // 인스펙터에서 할당할 SoundData
+    [FormerlySerializedAs("soundData")]
+    [Tooltip("재생할 오디오 클립들의 데이터입니다.")]
+    [SerializeField] private SoundData m_soundData;
 
-    [SerializeField] public SettingsData_oBJ settingsData;
+    [FormerlySerializedAs("settingsData")]
+    [Tooltip("게임의 사운드 설정 데이터입니다.")]
+    [SerializeField] private SettingsData_oBJ m_settingsData;
     
-    AudioSource[] _audioSources = new AudioSource[(int)Sound.Max];
-    Dictionary<string, AudioClip> _audioClips = new Dictionary<string, AudioClip>();
-    private float _effectsoundVolum = 1.0f;
-    private float _bgmSoundVolum = 1.0f;
+    private AudioSource[] m_audioSources = new AudioSource[(int)Sound.Max];
+    private readonly Dictionary<string, AudioClip> m_audioClips = new Dictionary<string, AudioClip>();
+    public float EffectSoundVolume { get; private set; } = 1.0f;
+    public float BgmSoundVolume { get; private set; } = 1.0f;
 
     #endregion
 
@@ -77,30 +82,29 @@ public class SoundManager : MonoBehaviour
 
     private void Init()
     {
-        if (_audioSources[0] != null) return; // 이미 초기화된 경우 중복 방지
+        if (m_audioSources[0] != null) return; // 이미 초기화된 경우 중복 방지
 
         GameObject root = new GameObject { name = "Sound" };
-        root.hideFlags = HideFlags.None; 
         root.transform.parent = transform;
 
         string[] SoundNames = System.Enum.GetNames(typeof(Sound));
         for (int i = 0; i < SoundNames.Length - 1; i++)
         {
             GameObject go = new GameObject { name = SoundNames[i] };
-            _audioSources[i] = go.AddComponent<AudioSource>();
+            m_audioSources[i] = go.AddComponent<AudioSource>();
             go.transform.parent = root.transform;
         }
 
-        _audioSources[(int)Sound.BGM].loop = true;
+        m_audioSources[(int)Sound.BGM].loop = true;
 
         // 할당된 SoundData에서 오디오 클립 초기화
-        if (soundData != null)
+        if (m_soundData != null)
         {
-            foreach (var audioInfo in soundData.audioClips)
+            foreach (var audioInfo in m_soundData.audioClips)
             {
-                if (!_audioClips.ContainsKey(audioInfo.key))
+                if (!m_audioClips.ContainsKey(audioInfo.key))
                 {
-                    _audioClips.Add(audioInfo.key, audioInfo.clip);
+                    m_audioClips.Add(audioInfo.key, audioInfo.clip);
                 }
             }
         }
@@ -119,30 +123,35 @@ public class SoundManager : MonoBehaviour
         // SoundManager는 외부에서 설정된 값을 받아 적용하는 역할만 수행하여 데이터 충돌을 방지합니다.
         // settingsData.LoadSettings();
 
-        if (settingsData == null)
+        if (m_settingsData == null)
         {
             LogManager.LogError("SettingsData_oBJ가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
-            return;
+            // settingsData가 없어도 기본 볼륨으로 동작하도록 설정
+            BgmSoundVolume = 1.0f;
+            EffectSoundVolume = 1.0f;
         }
-        // 배경음과 효과음 볼륨 설정
-        _bgmSoundVolum = settingsData.backgroundSoundVolume;
-        _effectsoundVolum = settingsData.effectSoundVolume;
+        else
+        {
+            // 배경음과 효과음 볼륨 설정
+            BgmSoundVolume = m_settingsData.backgroundSoundVolume;
+            EffectSoundVolume = m_settingsData.effectSoundVolume;
+        }
 
         // 초기 볼륨 설정
-        VolumSet(Sound.BGM, _bgmSoundVolum);
-        VolumSet(Sound.SFX, _effectsoundVolum);
+        SetVolume(Sound.BGM, BgmSoundVolume);
+        SetVolume(Sound.SFX, EffectSoundVolume);
     }
     
     public void Clear()
     {
-        foreach (AudioSource audioSource in _audioSources)
+        foreach (AudioSource audioSource in m_audioSources)
         {
             if (audioSource == null) continue;
             audioSource.clip = null;
             audioSource.Stop();
         }
 
-        _audioClips.Clear();
+        m_audioClips.Clear();
     }
 
     #endregion
@@ -154,26 +163,29 @@ public class SoundManager : MonoBehaviour
         if (audioClip == null)
             return;
 
-        AudioSource audioSource = _audioSources[(int)type];
+        AudioSource audioSource = m_audioSources[(int)type];
         if (audioSource == null) return;
 
         audioSource.pitch = pitch;
 
         if (type == Sound.BGM)
         {
-            if (audioSource.isPlaying)
+            // 이미 같은 BGM이 재생 중이면 다시 재생하지 않음
+            if (audioSource.isPlaying && audioSource.clip == audioClip)
+                return;
+            
+            if(audioSource.isPlaying)
                 audioSource.Stop();
-            audioSource.volume = _bgmSoundVolum;
+            
+            audioSource.volume = BgmSoundVolume;
             audioSource.loop = loop;
             audioSource.clip = audioClip;
             audioSource.Play();
-            //성공 로그 출력 
-            LogManager.Log($"Playing BGM: {audioClip.name} with volume: {_bgmSoundVolum}", LogManager.LogCategory.SoundManager);
+            LogManager.Log($"Playing BGM: {audioClip.name} with volume: {BgmSoundVolume}", LogManager.LogCategory.SoundManager);
         }
         else // Effect
         {
-            audioSource.volume = _effectsoundVolum;
-            audioSource.loop = false;
+            audioSource.volume = EffectSoundVolume;
             audioSource.PlayOneShot(audioClip);
         }
     }
@@ -188,31 +200,31 @@ public class SoundManager : MonoBehaviour
 
     #region 유틸리티 메서드
 
-    public void VolumSet(Sound type = Sound.SFX, float volum = 1.0f)
+    public void SetVolume(Sound type, float volume)
     {
         if (type == Sound.BGM)
         {
-            _bgmSoundVolum = volum;
-            if (_audioSources[(int)Sound.BGM] != null)
+            BgmSoundVolume = volume;
+            if (m_audioSources[(int)Sound.BGM] != null)
             {
-                _audioSources[(int)Sound.BGM].volume = _bgmSoundVolum;
+                m_audioSources[(int)Sound.BGM].volume = BgmSoundVolume;
             }
-            LogManager.Log($"BGM volume updated to: {_bgmSoundVolum}", LogManager.LogCategory.SoundManager);
+            LogManager.Log($"BGM volume updated to: {BgmSoundVolume}", LogManager.LogCategory.SoundManager);
         }
         else if (type == Sound.SFX)
         {
-            _effectsoundVolum = volum;
-            if (_audioSources[(int)Sound.SFX] != null)
+            EffectSoundVolume = volume;
+            if (m_audioSources[(int)Sound.SFX] != null)
             {
-                _audioSources[(int)Sound.SFX].volume = _effectsoundVolum;
+                m_audioSources[(int)Sound.SFX].volume = EffectSoundVolume;
             }
-            LogManager.Log($"SFX volume updated to: {_effectsoundVolum}", LogManager.LogCategory.SoundManager);
+            LogManager.Log($"SFX volume updated to: {EffectSoundVolume}", LogManager.LogCategory.SoundManager);
         }
     }
 
     AudioClip GetAudioClip(string key)
     {
-        if (_audioClips.TryGetValue(key, out AudioClip audioClip))
+        if (m_audioClips.TryGetValue(key, out AudioClip audioClip))
         {
             return audioClip;
         }

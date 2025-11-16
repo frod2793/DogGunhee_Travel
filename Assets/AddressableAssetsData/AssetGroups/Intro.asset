@@ -14,27 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_GroupName: Intro
   m_GUID: 018177e5b48424b8f99bb143d10d8a9b
-  m_SerializeEntries:
-  - m_GUID: 2917fd536eadc4346ba3a9a1d8058c09
-    m_Address: Assets/Scenes/LobbyScene.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 54271c5352bc9f3469adffd87bbdd691
-    m_Address: Assets/Scenes/VamSerlike.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8c9cfa26abfee488c85f1582747f6a02
-    m_Address: Assets/Scenes/SampleScene.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b140c0d8da84b964798561de0f898171
-    m_Address: Assets/Scenes/VamSerLike_Test.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: f81b927aabe27c140b936a55fa05287c, type: 2}
   m_SchemaSet:

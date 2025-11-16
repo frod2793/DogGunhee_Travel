@@ -4,6 +4,7 @@ using DogGuns_Games.vamsir;
 using R3;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class OptionPopupManager : MonoBehaviour
@@ -12,33 +13,39 @@ public class OptionPopupManager : MonoBehaviour
 
     [Header("참조 데이터 및 프리팹")]
     [Tooltip("게임의 전반적인 설정을 관리하는 ScriptableObject입니다.")]
-    [SerializeField] private SettingsData_oBJ settingsData;
+    [FormerlySerializedAs("settingsData")]
+    [SerializeField] private SettingsData_oBJ m_settingsData;
     [Tooltip("동적으로 생성할 조이스틱 설정 팝업 프리팹입니다.")]
-    [SerializeField] private JoysticSetter joysticSetterPopUpPrefb;
+    [FormerlySerializedAs("joysticSetterPopUpPrefb")]
+    [SerializeField] private JoysticSetter m_joysticSetterPopupPrefab;
 
     [Header("UI 컴포넌트")]
     [Tooltip("효과음 볼륨을 조절하는 슬라이더입니다.")]
-    [SerializeField] private Slider effectSoundVolum;
+    [FormerlySerializedAs("effectSoundVolum")]
+    [SerializeField] private Slider m_effectSoundVolumeSlider;
     [Tooltip("배경음 볼륨을 조절하는 슬라이더입니다.")]
-    [SerializeField] private Slider bgMsoundVolum;
+    [FormerlySerializedAs("bgMsoundVolum")]
+    [SerializeField] private Slider m_bgmSoundVolumeSlider;
     [Tooltip("설정 창을 닫고 변경사항을 저장하는 버튼입니다.")]
-    [SerializeField] private Button exitBtn;
+    [FormerlySerializedAs("exitBtn")]
+    [SerializeField] private Button m_exitButton;
     [Tooltip("조이스틱 설정 팝업을 여는 버튼입니다.")]
-    [SerializeField] private Button joystickSizeBtn;
+    [FormerlySerializedAs("joystickSizeBtn")]
+    [SerializeField] private Button m_joystickSizeButton;
     
     // --- 내부 상태 변수 ---
     /// <summary>
     /// R3 구독을 관리하여 메모리 누수를 방지합니다.
     /// </summary>
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable m_disposables = new();
     /// <summary>
     /// 사운드 재생 및 볼륨 조절을 위한 SoundManager 인스턴스입니다.
     /// </summary>
-    private SoundManager _soundManager;
+    private SoundManager m_soundManager;
     /// <summary>
     /// 이 팝업이 속한 최상위 Canvas입니다.
     /// </summary>
-    private Canvas _canvas;
+    private Canvas m_canvas;
 
     #endregion
 
@@ -60,7 +67,7 @@ public class OptionPopupManager : MonoBehaviour
     private void OnDestroy()
     {
         // CompositeDisposable을 사용하여 모든 구독을 한 번에 정리합니다.
-        _disposables.Dispose();
+        m_disposables.Dispose();
     }
 
     #endregion
@@ -72,36 +79,26 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void InitializeComponents()
     {
-        _soundManager = SoundManager.Instance;
-        if (_soundManager == null)
+        m_soundManager = SoundManager.Instance;
+        if (m_soundManager == null)
         {
             Debug.LogError("SoundManager를 찾을 수 없습니다. OptionPopupManager가 정상적으로 작동하지 않을 수 있습니다.");
         }
 
         // 설정 데이터 검증
-        if (settingsData == null)
+        if (m_settingsData == null)
         {
             Debug.LogError("SettingsData가 할당되지 않았습니다!");
             return;
         }
 
         // 팝업이 속한 Canvas를 찾아서 참조합니다.
-        _canvas = GetComponentInParent<Canvas>();
-        if (_canvas == null)
+        m_canvas = GetComponentInParent<Canvas>();
+        if (m_canvas == null)
         {
             Debug.LogError("상위 오브젝트에서 Canvas를 찾을 수 없습니다!", this);
-            return; // Canvas가 없으면 더 이상 진행하지 않습니다.
         }
-        
-        // Canvas의 렌더 모드를 ScreenSpaceCamera로 설정하고, 렌더 카메라를 Main Camera로 지정합니다.
-        _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        _canvas.worldCamera = Camera.main;
-
-        // Camera.main이 null일 경우 (씬에 MainCamera 태그가 없는 경우) 경고를 출력합니다.
-        if (_canvas.worldCamera == null)
-        {
-            Debug.LogWarning("메인 카메라(Tag: MainCamera)를 찾을 수 없습니다. Canvas의 렌더 카메라가 설정되지 않았습니다.", this);
-        }
+        // Canvas의 RenderMode나 Camera 설정은 프리팹에서 지정하는 것이 더 안전하므로 코드에서 강제로 변경하지 않습니다.
     }
 
     /// <summary>
@@ -109,19 +106,19 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void LoadAndApplySettings()
     {
-        if (settingsData == null) return;
+        if (m_settingsData == null) return;
 
         // UI를 업데이트하기 직전에, 파일로부터 항상 최신 설정 데이터를 불러옵니다.
         // 이를 통해 데이터 로딩 시점의 일관성을 보장합니다.
-        settingsData.LoadSettings();
+        m_settingsData.LoadSettings();
 
         // UI에 설정값 적용 (R3는 Subscribe에서 값을 발행하므로 SetValueWithoutNotify가 필요합니다)
-        effectSoundVolum.SetValueWithoutNotify(settingsData.effectSoundVolume);
-        bgMsoundVolum.SetValueWithoutNotify(settingsData.backgroundSoundVolume);
+        m_effectSoundVolumeSlider.SetValueWithoutNotify(m_settingsData.effectSoundVolume);
+        m_bgmSoundVolumeSlider.SetValueWithoutNotify(m_settingsData.backgroundSoundVolume);
 
         // SoundManager에도 즉시 적용
-        SetSoundVolume(Sound.SFX, settingsData.effectSoundVolume);
-        SetSoundVolume(Sound.BGM, settingsData.backgroundSoundVolume);
+        SetSoundVolume(Sound.SFX, m_settingsData.effectSoundVolume);
+        SetSoundVolume(Sound.BGM, m_settingsData.backgroundSoundVolume);
     }
 
     #endregion
@@ -133,35 +130,28 @@ public class OptionPopupManager : MonoBehaviour
     private void BindUIEvents()
     {
         // 효과음 슬라이더 값이 변경될 때마다 settingsData 업데이트 및 SoundManager에 적용
-        effectSoundVolum.OnValueChangedAsObservable()
-            .Subscribe(value =>
-            {
-                settingsData.effectSoundVolume = value;
-                // 슬라이더를 빠르게 조작할 때 과도한 호출을 방지 (0.1초 간격)
-                Observable.Return(value)
-                    .ThrottleFirst(TimeSpan.FromSeconds(0.1))
-                    .Subscribe(v => SetSoundVolume(Sound.SFX, v))
-                    .AddTo(_disposables);
-            })
-            .AddTo(_disposables);
+        m_effectSoundVolumeSlider.OnValueChangedAsObservable()
+            .Do(value => m_settingsData.effectSoundVolume = value) // 스트림을 방해하지 않고 값 업데이트
+            .ThrottleFirst(TimeSpan.FromSeconds(0.1)) // 0.1초 간격으로 이벤트 발생 제어
+            .Subscribe(value => SetSoundVolume(Sound.SFX, value))
+            .AddTo(m_disposables);
 
         // 배경음 슬라이더 값이 변경될 때마다 settingsData 업데이트 및 SoundManager에 적용
-        bgMsoundVolum.OnValueChangedAsObservable()
-            .Subscribe(value =>
-            {
-                settingsData.backgroundSoundVolume = value;
-                Observable.Return(value)
-                    .ThrottleFirst(TimeSpan.FromSeconds(0.1))
-                    .Subscribe(v => SetSoundVolume(Sound.BGM, v))
-                    .AddTo(_disposables);
-            })
-            .AddTo(_disposables);
+        m_bgmSoundVolumeSlider.OnValueChangedAsObservable()
+            .Do(value => m_settingsData.backgroundSoundVolume = value)
+            .ThrottleFirst(TimeSpan.FromSeconds(0.1))
+            .Subscribe(value => SetSoundVolume(Sound.BGM, value))
+            .AddTo(m_disposables);
 
         // 나가기 버튼 클릭 시 설정 저장 및 팝업 닫기
-        exitBtn.OnClickAsObservable().Subscribe(_ => SaveAndExit()).AddTo(_disposables);
+        m_exitButton.OnClickAsObservable()
+            .Subscribe(_ => SaveAndExit())
+            .AddTo(m_disposables);
 
         // 조이스틱 설정 버튼 클릭 시 팝업 열기
-        joystickSizeBtn.OnClickAsObservable().Subscribe(_ => OpenJoystickSettings()).AddTo(_disposables);
+        m_joystickSizeButton.OnClickAsObservable()
+            .Subscribe(_ => OpenJoystickSettings())
+            .AddTo(m_disposables);
     }
 
     #endregion
@@ -175,9 +165,9 @@ public class OptionPopupManager : MonoBehaviour
     /// <param name="volume">볼륨 값</param>
     private void SetSoundVolume(Sound soundType, float volume)
     {
-        if (_soundManager != null)
+        if (m_soundManager != null)
         {
-            _soundManager.VolumSet(soundType, volume);
+            m_soundManager.SetVolume(soundType, volume);
         }
         else
         {
@@ -194,7 +184,7 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void SaveAndExit()
     {
-        settingsData.SaveSettings();
+        m_settingsData.SaveSettings();
         CloseOptionPopup();
     }
 
@@ -212,14 +202,14 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void OpenJoystickSettings()
     {
-        if (joysticSetterPopUpPrefb == null)
+        if (m_joysticSetterPopupPrefab == null)
         {
             Debug.LogError("조이스틱 설정 프리팹이 할당되지 않았습니다!");
             return;
         }
 
         // 조이스틱 설정 팝업 생성
-        var joystickSettingPopup = Instantiate(joysticSetterPopUpPrefb.gameObject, transform);
+        var joystickSettingPopup = Instantiate(m_joysticSetterPopupPrefab.gameObject, transform);
         joystickSettingPopup.SetActive(true);
     }
 
@@ -232,7 +222,7 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void OnValidate()
     {
-        if (settingsData == null)
+        if (m_settingsData == null)
         {
             Debug.LogWarning($"{gameObject.name}: SettingsData가 할당되지 않았습니다.");
         }

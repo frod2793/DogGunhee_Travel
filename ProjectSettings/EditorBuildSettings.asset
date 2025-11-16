@@ -17,7 +17,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/VamSerlike.unity
     guid: 54271c5352bc9f3469adffd87bbdd691
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/VamSerLike_Test.unity
     guid: b140c0d8da84b964798561de0f898171
   m_configObjects:

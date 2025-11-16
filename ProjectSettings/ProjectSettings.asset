@@ -70,6 +70,7 @@ PlayerSettings:
   androidStartInFullscreen: 1
   androidRenderOutsideSafeArea: 1
   androidUseSwappy: 1
+  androidDisplayOptions: 1
   androidBlitType: 0
   androidResizeableActivity: 0
   androidDefaultWindowWidth: 1920
@@ -921,7 +922,7 @@ PlayerSettings:
   cloudProjectId: 38ad3fa3-6150-40c1-92ad-a237c78cf084
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: DogGun_E_Run
+  projectName: 16bits_travel
   organizationId: frod2793
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
