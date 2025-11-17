@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: c0218446462d6b744bc070f0277a6ea3
   m_currentHash:
     serializedVersion: 2
-    Hash: b91055d1c66bfb5ffe298181b85fd37f
+    Hash: 407a89d3930cf4416b52da61494501b5
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 1
   m_CatalogRequestsTimeout: 0
@@ -81,6 +81,8 @@ MonoBehaviour:
         m_Value: 'ServerData/[BuildTarget]'
       - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 7e0d5025fd50847389f6bf03f7dcf125
+        m_Value: 
       - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
@@ -92,13 +94,15 @@ MonoBehaviour:
       - m_Id: 2b136268c4103534ab9b88b1952e78a8
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
       - m_Id: 2b6d97230360f3c4db941d8f6734ff3b
-        m_Value: 'ServerData/[BuildTarget]'
+        m_Value: CCDBuildData/ManagedEnvironment/ManagedBucket/ManagedBadge
       - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 7e0d5025fd50847389f6bf03f7dcf125
+        m_Value: production
       - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
-        m_Value: https://38ad3fa3-6150-40c1-92ad-a237c78cf084.client-api.unity3dusercontent.com/client_api/v1/buckets/BUCKET_ID/release_by_badge/latest/entry_by_path/content/?path=
+        m_Value: https://38ad3fa3-6150-40c1-92ad-a237c78cf084.client-api.unity3dusercontent.com/client_api/v1/environments/{CcdManager.EnvironmentName}/buckets/{CcdManager.BucketId}/release_by_badge/{CcdManager.Badge}/entry_by_path/content/?path=
     - m_InheritedParent: 
       m_Id: 2b4a95c355fe04ce088eceadeccacde0
       m_ProfileName: TestWebGl
@@ -109,6 +113,8 @@ MonoBehaviour:
         m_Value: 'ServerData/[BuildTarget]'
       - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 7e0d5025fd50847389f6bf03f7dcf125
+        m_Value: 
       - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
@@ -123,6 +129,8 @@ MonoBehaviour:
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
       - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 7e0d5025fd50847389f6bf03f7dcf125
+        m_Value: 
       - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: bd5abed8307a89a4f8cfbee81cb61eda
@@ -136,6 +144,9 @@ MonoBehaviour:
       m_InlineUsage: 0
     - m_Id: 5ac1934533b47cd44a967ee3e7e02a06
       m_Name: Local.BuildPath
+      m_InlineUsage: 0
+    - m_Id: 7e0d5025fd50847389f6bf03f7dcf125
+      m_Name: EnvironmentName
       m_InlineUsage: 0
     - m_Id: aff99e3f8264fce4f8f3a41bee6812b6
       m_Name: Local.LoadPath
@@ -166,4 +177,4 @@ MonoBehaviour:
     EnvironmentName: 
     BucketId: 
     Badge: 
-    State: 0
+    State: 1
