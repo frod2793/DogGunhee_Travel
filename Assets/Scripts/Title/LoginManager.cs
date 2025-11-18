@@ -15,10 +15,8 @@ namespace DogGuns_Games
 
         [Header("UI 팝업")]
         [Tooltip("회원가입 UI 패널입니다.")]
-        [FormerlySerializedAs("signUpPopUp")]
         [SerializeField] private GameObject m_signUpPopUp;
         [Tooltip("로그인 UI 패널입니다.")]
-        [FormerlySerializedAs("loginPopUp")]
         [SerializeField] private GameObject m_loginPopUp;
         [Tooltip("오류 메시지를 표시할 팝업입니다.")]
         [SerializeField] private GameObject m_errorPopup;
@@ -27,19 +25,14 @@ namespace DogGuns_Games
 
         [Header("회원가입 컴포넌트")]
         [Tooltip("회원가입 시 사용할 닉네임 입력 필드입니다.")]
-        [FormerlySerializedAs("signUpNickNameInputField")]
         [SerializeField] private TMP_InputField m_signUpNickNameInputField;
         [Tooltip("회원가입 시 사용할 아이디 입력 필드입니다.")]
-        [FormerlySerializedAs("signUpIDInputField")]
         [SerializeField] private TMP_InputField m_signUpIDInputField;
         [Tooltip("회원가입 시 사용할 비밀번호 입력 필드입니다.")]
-        [FormerlySerializedAs("signUpPwInputField")]
         [SerializeField] private TMP_InputField m_signUpPwInputField;
         [Tooltip("비밀번호 확인을 위한 입력 필드입니다.")]
-        [FormerlySerializedAs("signUpPwCheckInputField")]
         [SerializeField] private TMP_InputField m_signUpPwCheckInputField;
         [Tooltip("회원가입을 실행하는 버튼입니다.")]
-        [FormerlySerializedAs("signUpBtn")]
         [SerializeField] private Button m_signUpBtn;
 
         public string NickName
@@ -50,27 +43,20 @@ namespace DogGuns_Games
 
         [Header("로그인 컴포넌트")]
         [Tooltip("로그인 시 사용할 아이디 입력 필드입니다.")]
-        [FormerlySerializedAs("loginIDInputField")]
         [SerializeField] private TMP_InputField m_loginIDInputField;
         [Tooltip("로그인 시 사용할 비밀번호 입력 필드입니다.")]
-        [FormerlySerializedAs("loginPwInputField")]
         [SerializeField] private TMP_InputField m_loginPwInputField;
         [Tooltip("로그인을 실행하는 버튼입니다.")]
-        [FormerlySerializedAs("loginBtn")]
         [SerializeField] private Button m_loginBtn;
         [Tooltip("회원가입 팝업을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openSingUpPopUpBtn")]
         [SerializeField] private Button m_openSignUpPopUpBtn;
 
         [Header("메인 버튼")]
         [Tooltip("게임 시작 및 자동 로그인을 시도하는 버튼입니다.")]
-        [FormerlySerializedAs("startBtn")]
         [SerializeField] private Button m_startBtn;
         [Tooltip("게스트 계정으로 로그인을 시도하는 버튼입니다.")]
-        [FormerlySerializedAs("guestLoginBtn")]
         [SerializeField] private Button m_guestLoginBtn;
         [Tooltip("로그인 팝업을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openLoginPopUpBtn")]
         [SerializeField] private Button m_openLoginPopUpBtn;
 
         // Private 멤버 변수

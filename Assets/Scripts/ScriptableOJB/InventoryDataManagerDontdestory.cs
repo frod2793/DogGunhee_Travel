@@ -230,11 +230,44 @@ namespace DogGuns_Games.Lobby
 
             if (m_itemDataCache.TryGetValue(itemCode, out Item_Data item))
             {
+                // 아이템 획득 로직 추가
+                m_scriptableobjInventoryData.AddItem(item);
+                LogManager.Log($"아이템 '{item.itemName}' 1개를 획득했습니다.", LogManager.LogCategory.InventoryManager);
                 return item;
             }
 
             LogManager.LogWarning($"코드 {itemCode}를 가진 아이템을 찾을 수 없습니다.", LogManager.LogCategory.InventoryManager);
             return null;
+        }
+
+        /// <summary>
+        /// 아이템 이름으로 아이템을 찾아 인벤토리에 추가합니다.
+        /// </summary>
+        /// <param name="itemName">아이템 이름</param>
+        /// <param name="quantity">추가할 수량</param>
+        public void GetItemByName(string itemName, int quantity)
+        {
+            if (!m_isDataLoaded)
+            {
+                LogManager.LogWarning("아이템 데이터가 아직 로드되지 않았습니다.", LogManager.LogCategory.InventoryManager);
+                return;
+            }
+
+            var foundItem = m_itemDataCache.Values.FirstOrDefault(item => item.itemName == itemName);
+
+            if (foundItem != null)
+            {
+                // ScriptableObject.CreateInstance를 사용하여 원본 데이터가 아닌 복사본을 넘겨줍니다.
+                Item_Data itemToAdd = Instantiate(foundItem);
+                itemToAdd.itemCount = quantity;
+                
+                m_scriptableobjInventoryData.AddItem(itemToAdd);
+                LogManager.Log($"아이템 '{itemName}' {quantity}개를 획득했습니다.", LogManager.LogCategory.InventoryManager);
+            }
+            else
+            {
+                LogManager.LogWarning($"이름 '{itemName}'을(를) 가진 아이템을 찾을 수 없습니다.", LogManager.LogCategory.InventoryManager);
+            }
         }
 
         /// <summary>

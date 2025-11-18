@@ -35,11 +35,9 @@ public class SoundManager : MonoBehaviour
 
     #region 변수 및 필드
 
-    [FormerlySerializedAs("soundData")]
     [Tooltip("재생할 오디오 클립들의 데이터입니다.")]
     [SerializeField] private SoundData m_soundData;
 
-    [FormerlySerializedAs("settingsData")]
     [Tooltip("게임의 사운드 설정 데이터입니다.")]
     [SerializeField] private SettingsData_oBJ m_settingsData;
     

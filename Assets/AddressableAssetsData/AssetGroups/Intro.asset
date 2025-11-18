@@ -14,7 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_GroupName: Intro
   m_GUID: 018177e5b48424b8f99bb143d10d8a9b
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 17023a074d8968444bb7c3042c766af1
+    m_Address: Intro_background
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc9721fa4576f224e8b7e88db4246cd7
+    m_Address: title_image
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: f81b927aabe27c140b936a55fa05287c, type: 2}
   m_SchemaSet:

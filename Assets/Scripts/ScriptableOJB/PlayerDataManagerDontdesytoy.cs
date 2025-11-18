@@ -17,7 +17,6 @@ namespace DogGuns_Games
 
         [Header("데이터")]
         [Tooltip("플레이어 데이터를 담고 있는 ScriptableObject 입니다.")]
-        [FormerlySerializedAs("scritpableobjPlayerData")]
         [SerializeField] private PlayerData m_scriptableobjPlayerData;
 
         public PlayerData PlayerData => m_scriptableobjPlayerData;

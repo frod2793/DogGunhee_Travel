@@ -2813,7 +2813,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 11.5
+  m_fontSize: 11.45
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3578,13 +3578,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fc1343b6c4dba54a851e0df28c6b329, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  postBoxPanel: {fileID: 196991696}
-  postboxContainer: {fileID: 440166886}
-  postboxPrefab: {fileID: 302336552260605802, guid: 8fae60c29b5a65b4ea61032ca96d5277, type: 3}
-  postBoxPanelExtension: {fileID: 1765612370}
-  postBoxPanelExtensionText: {fileID: 517755146}
-  postBoxSendernameText: {fileID: 1394223268}
-  rewardItemNameText: {fileID: 815190495}
+  m_postBoxPanel: {fileID: 196991696}
+  m_postboxContainer: {fileID: 440166886}
+  m_postboxPrefab: {fileID: 302336552260605802, guid: 8fae60c29b5a65b4ea61032ca96d5277, type: 3}
+  m_postBoxDetailPanel: {fileID: 1765612370}
+  m_postBoxDetailText: {fileID: 517755146}
+  m_postBoxSenderNameText: {fileID: 1394223268}
+  m_rewardItemNameText: {fileID: 815190495}
 --- !u!1 &379894546
 GameObject:
   m_ObjectHideFlags: 0
@@ -3833,7 +3833,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 48.01, y: 0}
+  m_AnchoredPosition: {x: 46.71, y: 0}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &384309985
@@ -7822,8 +7822,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 16.255, y: 0}
-  m_SizeDelta: {x: 32.51, y: 14.92}
+  m_AnchoredPosition: {x: 15.605, y: 0}
+  m_SizeDelta: {x: 31.21, y: 14.92}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &815190494
 MonoBehaviour:
@@ -9660,8 +9660,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 87.89, y: 0}
-  m_SizeDelta: {x: 48.76, y: 14.92}
+  m_AnchoredPosition: {x: 85.61, y: 0}
+  m_SizeDelta: {x: 46.8, y: 14.92}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1037687262
 MonoBehaviour:
@@ -13876,7 +13876,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20.5
+  m_fontSize: 20.7
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

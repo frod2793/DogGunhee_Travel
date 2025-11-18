@@ -17,91 +17,91 @@ namespace DogGuns_Games.Lobby
         
         [Header("<color=green>플레이어 프로필")]
         [Tooltip("플레이어 프로필 이미지입니다.")]
-        [FormerlySerializedAs("playerProfileImage")] [SerializeField] private Image m_playerProfileImage;
+        [SerializeField] private Image m_playerProfileImage;
         [Tooltip("플레이어 이름 텍스트입니다.")]
-        [FormerlySerializedAs("playerNameText")] [SerializeField] private TMP_Text m_playerNameText;
+        [SerializeField] private TMP_Text m_playerNameText;
         [Tooltip("플레이어 레벨 텍스트입니다.")]
-        [FormerlySerializedAs("playerLevelText")] [SerializeField] private TMP_Text m_playerLevelText;
+        [SerializeField] private TMP_Text m_playerLevelText;
         [Tooltip("플레이어 경험치 슬라이더입니다.")]
-        [FormerlySerializedAs("playerLevelSlider")] [SerializeField] private Slider m_playerLevelSlider;
+        [SerializeField] private Slider m_playerLevelSlider;
 
         [Header("<color=green>플레이 및 설정 버튼 UI 목록</color>")]
         [Tooltip("게임 시작 팝업을 여는 버튼입니다.")]
-        [FormerlySerializedAs("startBtn")] [SerializeField] private Button m_startBtn;
+        [SerializeField] private Button m_startBtn;
         [Tooltip("튜토리얼 씬으로 이동하는 버튼입니다.")]
-        [FormerlySerializedAs("tutorialBtn")] [SerializeField] private Button m_tutorialBtn;
+        [SerializeField] private Button m_tutorialBtn;
         [Tooltip("옵션 팝업을 여는 버튼입니다.")]
-        [FormerlySerializedAs("optionBtn")] [SerializeField] private Button m_optionBtn;
+        [SerializeField] private Button m_optionBtn;
 
-        [Header("<color=green>팝업 UI</color>")]
+        [Header("<color=green>게임선택 UI</color>")]
         [Tooltip("인스턴스화할 옵션 팝업 프리팹입니다.")]
-        [FormerlySerializedAs("optionPopupPrefab")] [SerializeField] private OptionPopupManager m_optionPopupPrefab;
+        [SerializeField] private OptionPopupManager m_optionPopupPrefab;
         [Tooltip("게임 시작 선택 팝업입니다.")]
-        [FormerlySerializedAs("cgamePopUp")] [SerializeField] private GameObject m_gameSelectPopUp;
+        [SerializeField] private GameObject m_gameSelectPopUp;
         [Tooltip("게임 시작 선택 팝업을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeBtn")] [SerializeField] private Button m_closeGameSelectPopUpBtn;
+        [SerializeField] private Button m_closeGameSelectPopUpBtn;
         [Tooltip("Vamser-like 게임을 시작하는 버튼입니다.")]
-        [FormerlySerializedAs("GameStartButton")] [SerializeField] private Button m_gameStartButton;
+        [SerializeField] private Button m_gameStartButton;
 
         [Header("<color=green>캐릭터 선택 시스템</color>")]
         [Tooltip("캐릭터 선택 UI 매니저입니다.")]
-        [FormerlySerializedAs("characterSelectUIManager")] [SerializeField] private CharacterSelectUIManager m_characterSelectUIManager;
+        [SerializeField] private CharacterSelectUIManager m_characterSelectUIManager;
         [Tooltip("캐릭터 선택 패널을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openCharacterSelectButton")] [SerializeField] private Button m_openCharacterSelectButton;
+        [SerializeField] private Button m_openCharacterSelectButton;
 
         [Header("<color=green>우편 시스템</color>")]
         [Tooltip("우편 UI 매니저입니다.")]
-        [FormerlySerializedAs("postManager")] [SerializeField] private PostManager m_postManager;
+        [SerializeField] private PostManager m_postManager;
         [Tooltip("우편함 패널을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openMessingerButton")] [SerializeField] private Button m_openPostButton;
+        [SerializeField] private Button m_openPostButton;
         [Tooltip("우편 목록에서 보상을 수령하는 버튼입니다.")]
-        [FormerlySerializedAs("getPostReiwordButton")] [SerializeField] private Button m_getPostRewardButton;
+        [SerializeField] private Button m_getPostRewardButton;
         [Tooltip("우편함 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeMessingerButton")] [SerializeField] private Button m_closePostButton;
+        [SerializeField] private Button m_closePostButton;
         [Tooltip("우편 상세 보기에서 보상을 수령하는 버튼입니다.")]
-        [FormerlySerializedAs("getPostExpensionReiwordButton")] [SerializeField] private Button m_getPostExpansionRewardButton;
+        [SerializeField] private Button m_getPostExpansionRewardButton;
         [Tooltip("우편 상세 보기 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeMessingerExpensionButton")] [SerializeField] private Button m_closePostExpansionButton;
+        [SerializeField] private Button m_closePostExpansionButton;
 
         [Header("<color=green>퀘스트 시스템</color>")]
         [Tooltip("퀘스트 UI 매니저입니다.")]
-        [FormerlySerializedAs("questPanelManager")] [SerializeField] private QuestPanelManager m_questPanelManager;
+        [SerializeField] private QuestPanelManager m_questPanelManager;
         [Tooltip("퀘스트 패널을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openQuestPanelButton")] [SerializeField] private Button m_openQuestPanelButton;
+        [SerializeField] private Button m_openQuestPanelButton;
         [Tooltip("퀘스트 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeQuestPanelButton")] [SerializeField] private Button m_closeQuestPanelButton;
+        [SerializeField] private Button m_closeQuestPanelButton;
         [Tooltip("퀘스트 상세 보기 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeQuestExpensionButton")] [SerializeField] private Button m_closeQuestExpansionButton;
+        [SerializeField] private Button m_closeQuestExpansionButton;
 
         [Header("<color=green>재화 시스템</color>")]
         [Tooltip("골드 재화 텍스트입니다.")]
-        [FormerlySerializedAs("gold")] [SerializeField] private TMP_Text m_goldText;
+        [SerializeField] private TMP_Text m_goldText;
         [Tooltip("다이아 재화 텍스트입니다.")]
-        [FormerlySerializedAs("dia")] [SerializeField] private TMP_Text m_diaText;
+        [SerializeField] private TMP_Text m_diaText;
         
         [Header("<color=green>상점 시스템</color>")]
         [Tooltip("상점 UI 매니저입니다.")]
-        [FormerlySerializedAs("storeManager")] [SerializeField] private StoreManager m_storeManager;
+        [SerializeField] private StoreManager m_storeManager;
         [Tooltip("상점 패널을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openStoreButton")] [SerializeField] private Button m_openStoreButton;
+        [SerializeField] private Button m_openStoreButton;
         [Tooltip("상점 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeStoreButton")] [SerializeField] private Button m_closeStoreButton;
+        [SerializeField] private Button m_closeStoreButton;
         [Tooltip("상점 상세 보기 팝업을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeStoreExpendPopUp")] [SerializeField] private Button m_closeStoreExpendPopUp;
+        [SerializeField] private Button m_closeStoreExpendPopUp;
 
         [Header("<color=green>아이템 팝업</color>")]
         [Tooltip("아이템 선택 UI 매니저입니다.")]
-        [FormerlySerializedAs("itemSelectManager")] [SerializeField] private ItemSelectManager m_itemSelectManager;
+        [SerializeField] private ItemSelectManager m_itemSelectManager;
         [Tooltip("아이템 선택 패널을 여는 버튼입니다.")]
-        [FormerlySerializedAs("openItemSelectButton")] [SerializeField] private Button m_openItemSelectButton;
+        [SerializeField] private Button m_openItemSelectButton;
         [Tooltip("아이템 선택 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeItemSelectButton")] [SerializeField] private Button m_closeItemSelectButton;
+        [SerializeField] private Button m_closeItemSelectButton;
         [Tooltip("아이템 상세 보기 패널을 닫는 버튼입니다.")]
-        [FormerlySerializedAs("closeItemSelectExpensionButton")] [SerializeField] private Button m_closeItemSelectExpansionButton;
+        [SerializeField] private Button m_closeItemSelectExpansionButton;
 
         [Header("<color=green>플레이어 정보</color>")]
         [Tooltip("플레이어 데이터 매니저입니다.")]
-        [FormerlySerializedAs("playerDataManagerDontdesytoy")] [SerializeField] private PlayerDataManagerDontdesytoy m_playerDataManager;
+        [SerializeField] private PlayerDataManagerDontdesytoy m_playerDataManager;
 
         private static readonly Stack<Action> s_closePopUpActions = new Stack<Action>();
 
@@ -264,10 +264,10 @@ namespace DogGuns_Games.Lobby
             RegisterButtonOnClick(m_openPostButton, m_postManager.OpenPostBoxPanel, "우편함 버튼", m_postManager);
             RegisterButtonOnClick(m_closePostButton, CloseButtonClick, "우편함 닫기 버튼", m_postManager);
             RegisterButtonOnClick(m_closePostExpansionButton, CloseButtonClick, "우편함 확장 닫기 버튼", m_postManager);
-            RegisterButtonOnClick(m_getPostRewardButton, m_postManager.Getreward, "우편 보상 수령 버튼", m_postManager);
+            RegisterButtonOnClick(m_getPostRewardButton, m_postManager.GetReward, "우편 보상 수령 버튼", m_postManager);
             RegisterButtonOnClick(m_getPostExpansionRewardButton, () =>
             {
-                m_postManager.Getreward();
+                m_postManager.GetReward();
                 CloseButtonClick();
             }, "우편 확장 보상 수령 버튼", m_postManager);
         }

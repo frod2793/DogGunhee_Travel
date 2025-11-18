@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: c0218446462d6b744bc070f0277a6ea3
   m_currentHash:
     serializedVersion: 2
-    Hash: 407a89d3930cf4416b52da61494501b5
+    Hash: 8ca3e665b6ff0c091399e8f897d357a9
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 1
   m_CatalogRequestsTimeout: 0
@@ -173,8 +173,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f0101f86a336f2647876f7bfad988b57, type: 2}
   m_ActiveProfileId: 020a8b7d816678e40a60a31bc9ddfb08
   m_CcdManagedData:
-    EnvironmentId: 
-    EnvironmentName: 
-    BucketId: 
-    Badge: 
-    State: 1
+    EnvironmentId: 91e54eea-5930-491f-84fa-6a336191558b
+    EnvironmentName: production
+    BucketId: 481c8508-c6da-4f09-96c8-827fd3142e26
+    Badge: latest
+    State: 0

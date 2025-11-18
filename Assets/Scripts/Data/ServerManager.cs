@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BackEnd;
 using Cysharp.Threading.Tasks;
 using LitJson;
+using System.Linq;
 using UnityEngine;
 
 namespace DogGuns_Games
@@ -13,6 +14,22 @@ namespace DogGuns_Games
 
         public string Uuid { get; private set; }
         public string NickName { get; private set; }
+
+        /// <summary>
+        /// 서버에서 받아온 우편 정보를 담는 구조체입니다.
+        /// </summary>
+        public struct PostInfo
+        {
+            public BackEnd.PostType postType;
+            public string postInDate;
+            public string inDate;
+            public string title;
+            public string content;
+            public string sender;
+            // key: itemChart, value: itemValue
+            public Dictionary<string, int> items;
+        }
+
         private readonly Dictionary<string, string> m_tableInDate = new Dictionary<string, string>();
 
         #endregion
@@ -319,6 +336,97 @@ namespace DogGuns_Games
                     }
         }
 
+        /// <summary>
+        /// 지정된 타입의 우편 목록을 비동기적으로 불러옵니다.
+        /// </summary>
+        /// <param name="postType">불러올 우편 타입</param>
+        /// <returns>우편 정보 리스트</returns>
+        public async UniTask<List<PostInfo>> GetPostListAsync(PostType postType)
+        {
+            var bro = await BackendAsync(callback => Backend.UPost.GetPostList(postType, 100, callback));
+
+            if (!bro.IsSuccess())
+            {
+                ErroDebug(bro);
+                throw new Exception($"우편 목록({postType}) 불러오기 실패: {bro.GetMessage()}");
+            }
+
+            var postList = new List<PostInfo>();
+            var json = bro.GetReturnValuetoJSON();
+
+            if (!json.ContainsKey("postList"))
+            {
+                LogManager.LogWarning($"'{postType}' 타입의 우편이 없습니다.", LogManager.LogCategory.ServerManager);
+                return postList;
+            }
+
+            var postListJson = json["postList"];
+
+            foreach (JsonData postJson in postListJson)
+            {
+                var postInfo = new PostInfo
+                {
+                    postType = postType,
+                    postInDate = postJson["inDate"].ToString(),
+                    inDate = ConvertToCustomDateFormat(postJson["inDate"].ToString()),
+                    title = postJson["title"].ToString(),
+                    content = postJson["content"].ToString(),
+                    sender = postJson.Keys.Contains("senderNickname") ? postJson["senderNickname"].ToString() : "운영팀",
+                    items = new Dictionary<string, int>()
+                };
+
+                if (postJson["items"].IsArray)
+                {
+                    foreach (JsonData itemJson in postJson["items"])
+                    {
+                        // 제공해주신 코드에 따라 "아이템 차트"만 허용합니다.
+                        if (itemJson["chartName"].ToString() == "아이템 차트")
+                        {
+                            string itemName = itemJson["item"]["itemName"].ToString();
+                            if (int.TryParse(itemJson["itemCount"].ToString(), out int itemCount))
+                            {
+                                if (postInfo.items.ContainsKey(itemName))
+                                    postInfo.items[itemName] += itemCount;
+                                else
+                                    postInfo.items.Add(itemName, itemCount);
+                            }
+                        }
+                    }
+                }
+                else if (postJson["items"].IsObject)
+                {
+                    postInfo.items = postJson["items"].Keys.ToDictionary(
+                        key => key,
+                        key => int.TryParse(postJson["items"][key].ToString(), out int val) ? val : 0);
+                }
+                
+                postList.Add(postInfo);
+            }
+            LogManager.Log($"총 {postList.Count}개의 우편({postType})을 불러왔습니다.", LogManager.LogCategory.ServerManager);
+            return postList;
+        }
+
+        /// <summary>
+        /// 특정 우편 아이템을 비동기적으로 수령합니다.
+        /// </summary>
+        /// <param name="postType">수령할 우편의 타입</param>
+        /// <param name="postInDate">수령할 우편의 inDate</param>
+        /// <returns>수령 성공 여부</returns>
+        public async UniTask<bool> ReceivePostItemAsync(PostType postType, string postInDate)
+        {
+            var bro = await BackendAsync(callback => Backend.UPost.ReceivePostItem(postType, postInDate, callback));
+
+            if (!bro.IsSuccess())
+            {
+                ErroDebug(bro);
+                LogManager.LogError($"우편 수령 실패 ({postType}, {postInDate}): {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
+                return false;
+            }
+
+            LogManager.Log($"우편 수령 성공 ({postType}, {postInDate})", LogManager.LogCategory.ServerManager);
+            return true;
+        }
+
         #endregion
 
         #region 유틸리티 메서드
@@ -345,6 +453,19 @@ namespace DogGuns_Games
             LogManager.LogError($"Message: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
         }
 
+        /// <summary>
+        /// 뒤끝 inDate 형식(yyyy-MM-ddTHH:mm:ss.fffZ)을 "yyyy-MM-dd" 형식으로 변환합니다.
+        /// </summary>
+        private string ConvertToCustomDateFormat(string inDate)
+        {
+            if (DateTime.TryParse(inDate, out DateTime date))
+            {
+                return date.ToString("yyyy-MM-dd");
+            }
+            // 파싱 실패 시 원본 문자열 반환
+            return inDate;
+        }
+        
         #endregion
     }
 }
