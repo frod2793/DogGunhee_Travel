@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using BackEnd;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -19,6 +20,10 @@ namespace DogGuns_Games
         [Tooltip("로그인 UI 패널입니다.")]
         [FormerlySerializedAs("loginPopUp")]
         [SerializeField] private GameObject m_loginPopUp;
+        [Tooltip("오류 메시지를 표시할 팝업입니다.")]
+        [SerializeField] private GameObject m_errorPopup;
+        [Tooltip("오류 메시지 텍스트입니다.")]
+        [SerializeField] private TMP_Text m_errorMessageText;
 
         [Header("회원가입 컴포넌트")]
         [Tooltip("회원가입 시 사용할 닉네임 입력 필드입니다.")]
@@ -152,11 +157,44 @@ namespace DogGuns_Games
             }
             catch (Exception e)
             {
-                Debug.LogError($"게스트 로그인 실패: {e.Message}");
+                // "bad customId" 오류는通常, 로컬에 저장된 게스트 정보가 손상되었을 때 발생합니다.
+                if (e.Message.Contains("bad customId"))
+                {
+                    Debug.LogWarning("손상된 게스트 계정 정보 감지. 계정 정보 삭제 후 재시도합니다.");
+                    // 사용자에게 잠시 후 재시도한다는 UI 피드백을 보여주는 것이 좋습니다.
+                    await DeleteGuestInfoAndRetryLoginAsync();
+                }
+                else
+                {
+                    Debug.LogError($"게스트 로그인 실패: {e.Message}");
+                    ShowErrorPopupAsync("게스트 로그인에 실패했습니다.\n잠시 후 다시 시도해주세요.").Forget();
+                }
             }
             finally
             {
                 m_guestLoginBtn.interactable = true;
+            }
+        }
+
+        /// <summary>
+        /// 로컬에 저장된 게스트 계정 정보를 삭제하고 다시 로그인을 시도합니다.
+        /// </summary>
+        private async UniTask DeleteGuestInfoAndRetryLoginAsync()
+        {
+            try
+            {
+                // 뒤끝 SDK를 사용하여 로컬 게스트 정보를 삭제합니다.
+                Backend.BMember.DeleteGuestInfo();
+                Debug.Log("로컬 게스트 정보 삭제 성공. 새로운 계정으로 재로그인합니다.");
+
+                // 새로운 게스트 계정으로 다시 로그인 시도
+                var (nickname, uuid) = await m_serverManager.GuestLoginAsync();
+                await ProcessLoginSuccessAsync(nickname, uuid);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"게스트 계정 재로그인 실패: {e.Message}");
+                ShowErrorPopupAsync("게스트 계정 복구에 실패했습니다.\n네트워크 상태를 확인해주세요.").Forget();
             }
         }
 
@@ -167,7 +205,7 @@ namespace DogGuns_Games
         {
             if (string.IsNullOrEmpty(m_loginIDInputField.text) || string.IsNullOrEmpty(m_loginPwInputField.text))
             {
-                Debug.Log("빈칸을 채워주세요");
+                ShowErrorPopupAsync("아이디와 비밀번호를 모두 입력해주세요.").Forget();
                 return;
             }
 
@@ -179,7 +217,7 @@ namespace DogGuns_Games
             }
             catch (Exception e)
             {
-                Debug.LogError($"로그인 실패: {e.Message}");
+                ShowErrorPopupAsync("아이디 또는 비밀번호가 일치하지 않습니다.").Forget();
             }
             finally
             {
@@ -207,13 +245,13 @@ namespace DogGuns_Games
             if (string.IsNullOrEmpty(m_signUpNickNameInputField.text) || string.IsNullOrEmpty(m_signUpIDInputField.text) ||
                 string.IsNullOrEmpty(m_signUpPwInputField.text) || string.IsNullOrEmpty(m_signUpPwCheckInputField.text))
             {
-                Debug.Log("빈칸을 채워주세요");
+                ShowErrorPopupAsync("모든 항목을 입력해주세요.").Forget();
                 return;
             }
 
             if (m_signUpPwInputField.text != m_signUpPwCheckInputField.text)
             {
-                Debug.Log("비밀번호가 일치하지 않습니다.");
+                ShowErrorPopupAsync("비밀번호가 일치하지 않습니다.").Forget();
                 return;
             }
 
@@ -231,7 +269,7 @@ namespace DogGuns_Games
             }
             catch (Exception e)
             {
-                Debug.LogError($"회원가입 또는 로그인 실패: {e.Message}");
+                ShowErrorPopupAsync("회원가입에 실패했습니다.\n" + e.Message).Forget();
             }
             finally
             {
@@ -272,6 +310,28 @@ namespace DogGuns_Games
             m_signUpPopUp.SetActive(false);
         }
 
+        /// <summary>
+        /// 지정된 메시지와 함께 오류 팝업을 표시합니다.
+        /// </summary>
+        private async UniTask ShowErrorPopupAsync(string message)
+        {
+            if (m_errorPopup == null || m_errorMessageText == null)
+            {
+                Debug.LogError("오류 팝업 또는 텍스트가 할당되지 않았습니다.");
+                return;
+            }
+
+            m_errorMessageText.text = message;
+            m_errorPopup.SetActive(true);
+
+            // 3초 후에 팝업을 자동으로 닫습니다.
+            await UniTask.Delay(TimeSpan.FromSeconds(3), ignoreTimeScale: true);
+
+            if (m_errorPopup != null) // 딜레이 후 객체가 파괴되었을 수 있으므로 확인
+            {
+                m_errorPopup.SetActive(false);
+            }
+        }
         #endregion
 
         #region 데이터 관리 함수
