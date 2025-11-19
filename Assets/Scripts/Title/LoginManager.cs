@@ -113,6 +113,7 @@ namespace DogGuns_Games
         /// </summary>
         private async UniTaskVoid OnStartButtonPressed()
         {
+            Debug.Log("clike");
             SetInteractable(false); // 중복 클릭 방지
 
             // ServerManager 반환 타입 (bool success, string error) 대응

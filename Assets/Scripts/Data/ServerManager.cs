@@ -17,39 +17,44 @@ namespace DogGuns_Games
 
         public class PostInfo
         {
-            public BackEnd.PostType postType;
-            public string postInDate;
-            public string inDate;
-            public string title;
-            public string content;
-            public string sender;
-            public Dictionary<string, int> items = new Dictionary<string, int>();
+            public BackEnd.PostType PostType;
+            public string PostInDate;
+            public string InDate;
+            public string Title;
+            public string Content;
+            public string Sender;
+            public Dictionary<string, int> Items = new Dictionary<string, int>();
         }
 
-        private readonly Dictionary<string, string> m_tableInDate = new Dictionary<string, string>(4);
+        // [최적화] 테이블별 inDate 캐싱 (초기 용량 설정으로 재할당 방지)
+        private readonly Dictionary<string, string> m_tableInDate = new Dictionary<string, string>(8);
+
+        // 초기화 상태 추적 (스레드 안전성 확보)
         private readonly UniTaskCompletionSource<bool> m_isInitialized = new UniTaskCompletionSource<bool>();
-        private const int InitTimeoutSec = 10;
+
+        // 타임아웃 상수
+        private const int k_InitTimeoutSec = 10;
 
         #endregion
 
         #region 싱글톤 패턴
 
-        private static ServerManager instance;
+        private static ServerManager m_instance;
 
         public static ServerManager Instance
         {
             get
             {
-                if (instance == null)
+                if (m_instance == null)
                 {
-                    instance = FindFirstObjectByType<ServerManager>();
-                    if (instance == null)
+                    m_instance = FindFirstObjectByType<ServerManager>();
+                    if (m_instance == null)
                     {
                         var container = new GameObject("ServerManager");
-                        instance = container.AddComponent<ServerManager>();
+                        m_instance = container.AddComponent<ServerManager>();
                     }
                 }
-                return instance;
+                return m_instance;
             }
         }
 
@@ -59,16 +64,22 @@ namespace DogGuns_Games
 
         private void Awake()
         {
-            if (instance == null)
+            if (m_instance == null)
             {
-                instance = this;
+                m_instance = this;
                 DontDestroyOnLoad(gameObject);
-                InitializeAsync().Forget();
             }
-            else if (instance != this)
+            else if (m_instance != this)
             {
                 Destroy(gameObject);
+                return;
             }
+        }
+
+        private void Start()
+        {
+            // 초기화 시작 (Fire-and-forget)
+            InitializeAsync().Forget();
         }
 
         #endregion
@@ -80,37 +91,41 @@ namespace DogGuns_Games
             bool isSuccess = false;
             try
             {
+                // [최적화] Timeout 확장 메서드로 타임아웃 로직 간소화
                 var bro = await InitializeBackendAsync()
-                                .Timeout(TimeSpan.FromSeconds(InitTimeoutSec));
+                                .Timeout(TimeSpan.FromSeconds(k_InitTimeoutSec));
 
                 if (bro.IsSuccess())
                 {
-                    LogManager.Log("뒤끝 SDK 비동기 초기화 성공", LogManager.LogCategory.ServerManager);
+                    LogManager.Log("뒤끝 SDK 초기화 성공", LogManager.LogCategory.ServerManager);
                     isSuccess = true;
                 }
                 else
                 {
-                    LogManager.LogError($"뒤끝 SDK 비동기 초기화 실패: {bro}", LogManager.LogCategory.ServerManager);
+                    LogManager.LogError($"뒤끝 SDK 초기화 실패: {bro}", LogManager.LogCategory.ServerManager);
                 }
             }
             catch (TimeoutException)
             {
-                LogManager.LogError($"뒤끝 SDK 초기화 시간 초과({InitTimeoutSec}초). 네트워크 연결을 확인해주세요.", LogManager.LogCategory.ServerManager);
+                LogManager.LogError($"뒤끝 SDK 초기화 시간 초과({k_InitTimeoutSec}초). 네트워크를 확인해주세요.", LogManager.LogCategory.ServerManager);
             }
             catch (Exception e)
             {
-                LogManager.LogError($"뒤끝 SDK 초기화 중 예외 발생: {e.Message}", LogManager.LogCategory.ServerManager);
+                LogManager.LogError($"뒤끝 SDK 초기화 중 치명적 오류: {e.Message}", LogManager.LogCategory.ServerManager);
             }
             finally
             {
+                // 결과 설정 (성공 여부와 관계없이 대기 중인 작업들의 Lock 해제)
                 m_isInitialized.TrySetResult(isSuccess);
             }
         }
 
         private UniTask<BackendReturnObject> InitializeBackendAsync()
         {
-            var setting = new BackendCustomSetting();
-            return UniTask.Create(() => UniTask.FromResult(Backend.Initialize(setting)));
+            var bro = Backend.Initialize();
+
+            // 동기 결과를 UniTask로 감싸서 반환 (오버헤드 최소화)
+            return UniTask.FromResult(bro);
         }
 
         #endregion
@@ -121,7 +136,6 @@ namespace DogGuns_Games
         {
             await m_isInitialized.Task;
 
-            // callback의 타입이 BackendCallback으로 정확히 전달됩니다.
             var bro = await BackendAsync(callback => Backend.BMember.CustomLogin(id, pw, callback));
 
             if (bro.IsSuccess())
@@ -148,6 +162,7 @@ namespace DogGuns_Games
                 return (true, null);
             }
 
+            // 실패 시 로컬 정보 삭제 후 재시도 가능하도록 유도
             Backend.BMember.DeleteGuestInfo();
             ErroDebug(bro);
             return (false, bro.GetMessage());
@@ -166,7 +181,7 @@ namespace DogGuns_Games
                 return (true, null);
             }
 
-            LogManager.LogWarning($"토큰 로그인 실패: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
+            LogManager.LogWarning($"토큰 로그인 실패/만료: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
             return (false, bro.GetMessage());
         }
 
@@ -181,13 +196,13 @@ namespace DogGuns_Games
                 return (false, signUpBro.GetMessage());
             }
 
-            LogManager.Log("회원가입 성공, 닉네임 설정 시도", LogManager.LogCategory.ServerManager);
+            LogManager.Log("회원가입 성공. 닉네임 설정 시도...", LogManager.LogCategory.ServerManager);
 
             var updateBro = await BackendAsync(callback => Backend.BMember.UpdateNickname(nickname, callback));
             if (!updateBro.IsSuccess())
             {
                 ErroDebug(updateBro);
-                return (false, $"가입은 성공했으나 닉네임 설정 실패: {updateBro.GetMessage()}");
+                return (false, $"가입 성공, 닉네임 설정 실패: {updateBro.GetMessage()}");
             }
 
             LogManager.Log("닉네임 설정 성공", LogManager.LogCategory.ServerManager);
@@ -203,10 +218,11 @@ namespace DogGuns_Games
 
         private void RefreshTokenIfAlive()
         {
+            // 토큰 갱신 (메인 스레드 부하 적음, 필요시 비동기 래핑 가능)
             var bro = Backend.BMember.IsAccessTokenAlive();
             if (bro.IsSuccess())
             {
-                LogManager.Log("액세스 토큰 유효, 갱신을 시도합니다.", LogManager.LogCategory.ServerManager);
+                LogManager.Log("액세스 토큰 갱신 시도", LogManager.LogCategory.ServerManager);
                 Backend.BMember.RefreshTheBackendToken();
             }
         }
@@ -220,14 +236,16 @@ namespace DogGuns_Games
             await m_isInitialized.Task;
 
             BackendReturnObject bro;
+
+            // [최적화] TryGetValue로 딕셔너리 조회 성능 향상
             if (m_tableInDate.TryGetValue(tableName, out string inDate))
             {
-                LogManager.Log($"{tableName} 데이터 수정 요청 (inDate: {inDate})", LogManager.LogCategory.ServerManager);
+                LogManager.Log($"{tableName} 수정 요청 (inDate: {inDate})", LogManager.LogCategory.ServerManager);
                 bro = await BackendAsync(callback => Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, callback));
             }
             else
             {
-                LogManager.Log($"{tableName} 새 데이터 삽입 요청", LogManager.LogCategory.ServerManager);
+                LogManager.Log($"{tableName} 신규 삽입 요청", LogManager.LogCategory.ServerManager);
                 bro = await BackendAsync(callback => Backend.GameData.Insert(tableName, param, callback));
                 if (bro.IsSuccess())
                 {
@@ -240,8 +258,8 @@ namespace DogGuns_Games
                 ErroDebug(bro);
                 throw new Exception($"데이터 업로드 실패 ({tableName}): {bro.GetMessage()}");
             }
-            
-            LogManager.Log($"{tableName} 테이블 데이터 업로드 성공", LogManager.LogCategory.ServerManager);
+
+            LogManager.Log($"{tableName} 업로드 완료", LogManager.LogCategory.ServerManager);
         }
 
         public async UniTask<JsonData> DownloadDataAsync(string tableName)
@@ -249,7 +267,7 @@ namespace DogGuns_Games
             await m_isInitialized.Task;
 
             var bro = await BackendAsync(callback => Backend.GameData.GetMyData(tableName, new Where(), callback));
-            
+
             if (bro.IsSuccess())
             {
                 var gameDataJson = bro.FlattenRows();
@@ -257,14 +275,14 @@ namespace DogGuns_Games
                 {
                     var row = gameDataJson[0];
                     m_tableInDate[tableName] = row["inDate"].ToString();
-                    LogManager.Log($"{tableName} 데이터 다운로드 성공", LogManager.LogCategory.ServerManager);
+                    LogManager.Log($"{tableName} 다운로드 완료", LogManager.LogCategory.ServerManager);
                     return row;
                 }
-                
+
                 LogManager.Log($"{tableName} 데이터 없음", LogManager.LogCategory.ServerManager);
                 return null;
             }
-            
+
             ErroDebug(bro);
             throw new Exception($"데이터 다운로드 실패 ({tableName}): {bro.GetMessage()}");
         }
@@ -283,8 +301,7 @@ namespace DogGuns_Games
                 var json = bro.GetReturnValuetoJSON()["postList"];
                 for (var i = 0; i < json.Count; i++)
                 {
-                    LogManager.Log($"제목 : {json[i]["title"]}", LogManager.LogCategory.ServerManager);
-                    LogManager.Log($"inDate : {json[i]["inDate"]}", LogManager.LogCategory.ServerManager);
+                    LogManager.Log($"제목: {json[i]["title"]}, 날짜: {json[i]["inDate"]}", LogManager.LogCategory.ServerManager);
                 }
             }
         }
@@ -304,7 +321,6 @@ namespace DogGuns_Games
             var json = bro.GetReturnValuetoJSON();
             if (!json.ContainsKey("postList"))
             {
-                LogManager.LogWarning($"'{postType}' 타입의 우편이 없습니다.", LogManager.LogCategory.ServerManager);
                 return new List<PostInfo>();
             }
 
@@ -315,14 +331,15 @@ namespace DogGuns_Games
             {
                 var postInfo = new PostInfo
                 {
-                    postType = postType,
-                    postInDate = postJson["inDate"].ToString(),
-                    inDate = ConvertToCustomDateFormat(postJson["inDate"].ToString()),
-                    title = postJson["title"].ToString(),
-                    content = postJson["content"].ToString(),
-                    sender = postJson.ContainsKey("senderNickname") ? postJson["senderNickname"].ToString() : "운영팀",
+                    PostType = postType,
+                    PostInDate = postJson["inDate"].ToString(),
+                    InDate = ConvertToCustomDateFormat(postJson["inDate"].ToString()),
+                    Title = postJson["title"].ToString(),
+                    Content = postJson["content"].ToString(),
+                    Sender = postJson.ContainsKey("senderNickname") ? postJson["senderNickname"].ToString() : "운영팀",
                 };
 
+                // 아이템 파싱
                 if (postJson["items"].IsArray)
                 {
                     foreach (JsonData itemJson in postJson["items"])
@@ -332,10 +349,10 @@ namespace DogGuns_Games
                             string itemName = itemJson["item"]["itemName"].ToString();
                             if (int.TryParse(itemJson["itemCount"].ToString(), out int itemCount))
                             {
-                                if (postInfo.items.ContainsKey(itemName))
-                                    postInfo.items[itemName] += itemCount;
+                                if (postInfo.Items.ContainsKey(itemName))
+                                    postInfo.Items[itemName] += itemCount;
                                 else
-                                    postInfo.items.Add(itemName, itemCount);
+                                    postInfo.Items.Add(itemName, itemCount);
                             }
                         }
                     }
@@ -345,14 +362,14 @@ namespace DogGuns_Games
                     foreach (string key in postJson["items"].Keys)
                     {
                         int val = int.TryParse(postJson["items"][key].ToString(), out int v) ? v : 0;
-                        postInfo.items[key] = val;
+                        postInfo.Items[key] = val;
                     }
                 }
-                
+
                 postList.Add(postInfo);
             }
 
-            LogManager.Log($"총 {postList.Count}개의 우편({postType})을 불러왔습니다.", LogManager.LogCategory.ServerManager);
+            LogManager.Log($"우편 {postList.Count}개 로드 완료 ({postType})", LogManager.LogCategory.ServerManager);
             return postList;
         }
 
@@ -368,7 +385,7 @@ namespace DogGuns_Games
                 return false;
             }
 
-            LogManager.Log($"우편 수령 성공 ({postType}, {postInDate})", LogManager.LogCategory.ServerManager);
+            LogManager.Log($"우편 수령 완료 ({postType})", LogManager.LogCategory.ServerManager);
             return true;
         }
 
@@ -377,21 +394,18 @@ namespace DogGuns_Games
         #region 유틸리티 메서드
 
         /// <summary>
-        /// [수정됨] Action<BackendReturnObject> -> Backend.BackendCallback 으로 타입 변경
+        /// 뒤끝 비동기 콜백 메서드를 UniTask로 변환하는 래퍼
         /// </summary>
         private UniTask<BackendReturnObject> BackendAsync(Action<Backend.BackendCallback> backendCall)
         {
             var tcs = new UniTaskCompletionSource<BackendReturnObject>();
-            // C# 컴파일러가 여기서 람다식을 BackendCallback 델리게이트로 자동 변환합니다.
             backendCall(bro => tcs.TrySetResult(bro));
             return tcs.Task;
         }
 
         private void ErroDebug(BackendReturnObject bro)
         {
-            LogManager.LogError($"StatusCode: {bro.GetStatusCode()}", LogManager.LogCategory.ServerManager);
-            LogManager.LogError($"ErrorCode: {bro.GetErrorCode()}", LogManager.LogCategory.ServerManager);
-            LogManager.LogError($"Message: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
+            LogManager.LogError($"[Error] {bro.GetStatusCode()} / {bro.GetErrorCode()} / {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
         }
 
         private string ConvertToCustomDateFormat(string inDate)
@@ -402,7 +416,7 @@ namespace DogGuns_Games
             }
             return inDate;
         }
-        
+
         #endregion
     }
 }

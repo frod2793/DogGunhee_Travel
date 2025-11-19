@@ -1,263 +1,256 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
+using BackEnd;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace DogGuns_Games.Lobby
 {
     /// <summary>
-    /// 게임 내 우편 시스템을 관리하는 클래스
+    /// 게임 내 우편 시스템을 관리하는 클래스 (헤더 한글화 적용)
     /// </summary>
     public class PostManager : MonoBehaviour
     {
-        #region 우편함 UI 요소
+        #region UI 요소
 
-        [Header("<color=green>우편함 기본 UI")]
+        [Header("우편함 기본 UI")]
+        [Tooltip("우편함 전체 패널")]
         [SerializeField] private GameObject m_postBoxPanel;
-        [SerializeField] private GameObject m_postboxContainer;
-        [SerializeField] private PostIndex m_postboxPrefab;
+        [Tooltip("우편 목록이 생성될 부모 트랜스폼")]
+        [SerializeField] private Transform m_postBoxContainer;
+        [Tooltip("생성할 우편 아이템 프리팹")]
+        [SerializeField] private PostIndex m_postBoxPrefab;
 
-        [Header("<color=green>우편함 상세 UI")]
+        [Header("우편함 상세 UI")]
+        [Tooltip("우편 상세 정보 패널")]
         [SerializeField] private GameObject m_postBoxDetailPanel;
+        [Tooltip("우편 내용 텍스트")]
         [SerializeField] private TMP_Text m_postBoxDetailText;
+        [Tooltip("보낸 사람 이름 텍스트")]
         [SerializeField] private TMP_Text m_postBoxSenderNameText;
+        [Tooltip("보상 아이템 목록 텍스트")]
         [SerializeField] private TMP_Text m_rewardItemNameText;
 
         #endregion
 
-        #region 데이터 필드
+        #region 내부 데이터 및 풀링
 
-        /// <summary>
-        /// 현재 선택된 아이템 코드
-        /// </summary>
+        // 현재 선택된 우편 정보
         private ServerManager.PostInfo m_currentPostInfo;
+
+        // StringBuilder 캐싱
+        private readonly StringBuilder m_stringBuilder = new StringBuilder(100);
+
+        // 오브젝트 풀링을 위한 큐
+        private readonly Queue<PostIndex> m_pooledItems = new Queue<PostIndex>();
+
+        // 활성화된 아이템 추적 (Key: PostInDate)
+        private readonly Dictionary<string, PostIndex> m_activeItems = new Dictionary<string, PostIndex>();
 
         #endregion
 
         #region Unity 라이프사이클
 
-        private async void Start()
+        private void Start()
         {
+            InitializePostSystemAsync().Forget();
+        }
+
+        #endregion
+
+        #region 초기화 및 데이터 로드
+
+        private async UniTaskVoid InitializePostSystemAsync()
+        {
+            if (m_postBoxPanel != null) m_postBoxPanel.SetActive(false);
+            if (m_postBoxDetailPanel != null) m_postBoxDetailPanel.SetActive(false);
+
             try
             {
-                await InitializePostSystem();
+                var (adminPosts, couponPosts) = await UniTask.WhenAll(
+                    ServerManager.Instance.GetPostListAsync(PostType.Admin),
+                    ServerManager.Instance.GetPostListAsync(PostType.Coupon)
+                );
+
+                var allPosts = new List<ServerManager.PostInfo>(adminPosts.Count + couponPosts.Count);
+                allPosts.AddRange(adminPosts);
+                allPosts.AddRange(couponPosts);
+
+                RefreshPostList(allPosts);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                LogManager.LogError($"우편 시스템 초기화 중 오류 발생: {ex.Message}", LogManager.LogCategory.PostManager);
+                LogManager.LogError($"우편 로드 실패: {ex.Message}", LogManager.LogCategory.PostManager);
             }
         }
 
-        #endregion
-
-        #region 초기화
-
-        /// <summary>
-        /// 우편 시스템 초기화
-        /// </summary>
-        private async UniTask InitializePostSystem()
+        private void RefreshPostList(List<ServerManager.PostInfo> postList)
         {
-            // UI 초기 상태 설정
-            if (m_postBoxPanel != null)
-                m_postBoxPanel.SetActive(false);
-            
-            if (m_postBoxDetailPanel != null)
-                m_postBoxDetailPanel.SetActive(false);
-            
-            // 서버에서 우편 목록 불러오기
-            var postList = await ServerManager.Instance.GetPostListAsync(BackEnd.PostType.Admin);
-            postList.AddRange(await ServerManager.Instance.GetPostListAsync(BackEnd.PostType.Coupon));
-            
-            // 기존 우편 목록 초기화
-            foreach (Transform child in m_postboxContainer.transform)
+            foreach (var item in m_activeItems.Values)
             {
-                Destroy(child.gameObject);
+                item.gameObject.SetActive(false);
+                m_pooledItems.Enqueue(item);
             }
+            m_activeItems.Clear();
 
-            // 새 우편 목록 추가
-            foreach (var postInfo in postList)
+            foreach (var info in postList)
             {
-                AddPostItem(postInfo);
+                PostIndex postItem = GetPooledItem();
+                
+                UnityEvent onClick = new UnityEvent();
+                onClick.AddListener(() => OpenPostDetailPanel(info));
+
+                UnityEvent onReward = new UnityEvent();
+                onReward.AddListener(() => HandleRewardClaim(info));
+
+                postItem.SetPostIndex(info.Sender, info.Title, info.InDate, onReward, onClick);
+                
+                if (!m_activeItems.ContainsKey(info.PostInDate))
+                {
+                    m_activeItems.Add(info.PostInDate, postItem);
+                }
             }
         }
+
         #endregion
 
-        #region 우편함 UI 관리
+        #region 오브젝트 풀링 시스템
 
-        /// <summary>
-        /// 우편함 메인 패널 열기
-        /// </summary>
+        private PostIndex GetPooledItem()
+        {
+            PostIndex item;
+            if (m_pooledItems.Count > 0)
+            {
+                item = m_pooledItems.Dequeue();
+                item.gameObject.SetActive(true);
+            }
+            else
+            {
+                item = Instantiate(m_postBoxPrefab, m_postBoxContainer);
+            }
+            return item;
+        }
+
+        private void ReturnToPool(string inDate)
+        {
+            if (m_activeItems.TryGetValue(inDate, out PostIndex item))
+            {
+                item.gameObject.SetActive(false);
+                m_pooledItems.Enqueue(item);
+                m_activeItems.Remove(inDate);
+            }
+        }
+
+        #endregion
+
+        #region UI 상호작용
+
         public void OpenPostBoxPanel()
         {
-            if (m_postBoxPanel == null)
-            {
-                LogManager.LogError("우편함 패널이 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
-                return;
-            }
-
+            if (m_postBoxPanel == null) return;
             m_postBoxPanel.SetActive(true);
             LobbyUIManager.AddClosePopUpAction(ClosePostBoxPanel);
-            LogManager.Log("우편함 패널 열림", LogManager.LogCategory.PostManager);
         }
 
-        /// <summary>
-        /// 우편함 메인 패널 닫기
-        /// </summary>
         private void ClosePostBoxPanel()
         {
             if (m_postBoxPanel == null) return;
             m_postBoxPanel.SetActive(false);
-            LogManager.Log("우편함 패널 닫힘", LogManager.LogCategory.PostManager);
         }
 
-        /// <summary>
-        /// 우편 상세 패널 열기
-        /// </summary>
         private void OpenPostDetailPanel(ServerManager.PostInfo postInfo)
         {
-            if (m_postBoxDetailPanel == null)
-            {
-                LogManager.LogError("우편함 상세 패널이 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
-                return;
-            }
-
-            m_postBoxDetailPanel.SetActive(true);
-            string rewardItemsString = GetRewardItemsString(postInfo.items);
-            if (m_postBoxDetailText != null)
-                m_postBoxDetailText.text = postInfo.content;
-            if (m_postBoxSenderNameText != null)
-                m_postBoxSenderNameText.text = postInfo.sender;
-            if (m_rewardItemNameText != null)
-                m_rewardItemNameText.text = rewardItemsString;
             m_currentPostInfo = postInfo;
+
+            if (m_postBoxDetailText != null) m_postBoxDetailText.text = postInfo.Content;
+            if (m_postBoxSenderNameText != null) m_postBoxSenderNameText.text = postInfo.Sender;
+            if (m_rewardItemNameText != null) m_rewardItemNameText.text = GenerateRewardString(postInfo.Items);
+
+            if (m_postBoxDetailPanel != null) m_postBoxDetailPanel.SetActive(true);
             LobbyUIManager.AddClosePopUpAction(ClosePostDetailPanel);
-            LogManager.Log($"우편 상세 열림: {postInfo.sender}로부터의 메시지", LogManager.LogCategory.PostManager);
         }
 
-        /// <summary>
-        /// 우편 상세 패널 닫기
-        /// </summary>
         private void ClosePostDetailPanel()
         {
             if (m_postBoxDetailPanel == null) return;
             m_postBoxDetailPanel.SetActive(false);
-            LogManager.Log("우편 상세 패널 닫힘", LogManager.LogCategory.PostManager);
         }
 
         #endregion
 
-        #region 우편 데이터 관리
-        
-        /// <summary>
-        /// 우편 아이템 추가 및 UI 이벤트 설정
-        /// </summary>
-        /// <param name="postInfo">서버에서 받아온 우편 정보</param>
-        private void AddPostItem(ServerManager.PostInfo postInfo)
+        #region 보상 처리 로직
+
+        public void OnClickDetailRewardBtn()
         {
-            if (m_postboxPrefab == null || m_postboxContainer == null)
-            {
-                LogManager.LogError("우편함 프리팹 또는 컨테이너가 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
-                return;
-            }
-
-            PostIndex postIndex = Instantiate(m_postboxPrefab, m_postboxContainer.transform);
-            if (postIndex == null)
-            {
-                LogManager.LogError("우편함 프리팹 생성 실패!", LogManager.LogCategory.PostManager);
-                return;
-            }
-
-            // 이벤트 설정
-            UnityEngine.Events.UnityEvent clickEvent = new UnityEngine.Events.UnityEvent();
-            clickEvent.AddListener(() => OpenPostDetailPanel(postInfo));
-
-            UnityEngine.Events.UnityEvent rewardEvent = new UnityEngine.Events.UnityEvent();
-            rewardEvent.AddListener(() => ConfirmReward(postInfo, postIndex.gameObject));
-
-            // 우편 인덱스 초기화
-            postIndex.SetPostIndex(postInfo.sender, postInfo.title, postInfo.inDate, rewardEvent, clickEvent);
-    
-            LogManager.Log($"우편 추가됨: {postInfo.sender}로부터 {postInfo.inDate}에 받은 메시지, 보상: {GetRewardItemsString(postInfo.items)}", LogManager.LogCategory.PostManager);
+            if (m_currentPostInfo == null) return;
+            HandleRewardClaim(m_currentPostInfo);
         }
 
-        /// <summary>
-        /// 보상 수령 처리
-        /// </summary>
-        public void GetReward()
+        private void HandleRewardClaim(ServerManager.PostInfo postInfo)
         {
-            if (m_currentPostInfo.items == null || m_currentPostInfo.items.Count == 0)
+            ProcessRewardAsync(postInfo).Forget();
+        }
+
+        private async UniTaskVoid ProcessRewardAsync(ServerManager.PostInfo postInfo)
+        {
+            if (postInfo.Items == null || postInfo.Items.Count == 0)
             {
-                LogManager.LogWarning("수령할 유효한 아이템이 없습니다.", LogManager.LogCategory.PostManager);
+                LogManager.LogWarning("수령할 아이템이 없습니다.", LogManager.LogCategory.PostManager);
                 return;
             }
 
-            // 상세 패널에서 보상 수령 시, 해당 UI 오브젝트가 없으므로 null 전달
-            ConfirmReward(m_currentPostInfo, null);
-            LogManager.Log($"보상 수령: {GetRewardItemsString(m_currentPostInfo.items)}", LogManager.LogCategory.PostManager);
-        }
-
-        /// <summary>
-        /// 보상 수령 확인 및 처리
-        /// </summary>
-        /// <param name="postInfo">수령할 우편 정보</param>
-        /// <param name="postObject">파괴할 우편 UI 오브젝트 (선택 사항)</param>
-        private async void ConfirmReward(ServerManager.PostInfo postInfo, GameObject postObject)
-        {
             try
             {
-                if (InventoryDataManagerDontdestory.Instance == null)
+                bool isSuccess = await ServerManager.Instance.ReceivePostItemAsync(postInfo.PostType, postInfo.PostInDate);
+
+                if (!isSuccess) return;
+
+                if (InventoryDataManagerDontdestory.Instance != null)
                 {
-                    LogManager.LogError("인벤토리 데이터 매니저가 설정되지 않았습니다.", LogManager.LogCategory.PostManager);
-                    return;
+                    foreach (var item in postInfo.Items)
+                    {
+                        InventoryDataManagerDontdestory.Instance.GetItemByName(item.Key, item.Value);
+                    }
                 }
 
-                bool isSuccess = await ServerManager.Instance.ReceivePostItemAsync(postInfo.postType, postInfo.postInDate);
+                LogManager.Log($"보상 수령 완료: {GenerateRewardString(postInfo.Items)}", LogManager.LogCategory.PostManager);
 
-                if (!isSuccess)
+                ReturnToPool(postInfo.PostInDate); 
+                
+                if (m_postBoxDetailPanel.activeSelf && m_currentPostInfo == postInfo)
                 {
-                    LogManager.LogError("우편 수령에 실패했습니다.", LogManager.LogCategory.PostManager);
-                    return;
-                }
-
-                foreach (var item in postInfo.items)
-                {
-                    //TODO: 현재는 아이템 이름으로 지급, 추후 아이템 코드로 변경 필요
-                    InventoryDataManagerDontdestory.Instance.GetItemByName(item.Key, item.Value);
-                    LogManager.Log($"아이템 '{item.Key}' {item.Value}개가 인벤토리에 추가되었습니다.", LogManager.LogCategory.PostManager);
-                }
-
-                // UI 오브젝트가 있으면 파괴하여 목록에서 제거
-                if (postObject != null)
-                {
-                    Destroy(postObject);
+                    ClosePostDetailPanel();
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                LogManager.LogError($"보상 수령 중 오류 발생: {ex.Message}", LogManager.LogCategory.PostManager);
-                // 사용자에게 오류 팝업을 띄우는 등의 추가적인 처리를 할 수 있습니다.
+                LogManager.LogError($"보상 수령 중 예외 발생: {ex.Message}", LogManager.LogCategory.PostManager);
             }
         }
 
-        /// <summary>
-        /// 보상 아이템 목록을 UI에 표시할 문자열로 변환합니다.
-        /// </summary>
-        /// <param name="items">아이템 목록</param>
-        /// <returns>변환된 문자열</returns>
-        private string GetRewardItemsString(Dictionary<string, int> items)
-        {
-            if (items == null || items.Count == 0)
-            {
-                return "보상 없음";
-            }
+        #endregion
 
-            StringBuilder sb = new StringBuilder();
+        #region 유틸리티
+
+        private string GenerateRewardString(Dictionary<string, int> items)
+        {
+            if (items == null || items.Count == 0) return "보상 없음";
+
+            m_stringBuilder.Clear();
             foreach (var item in items)
             {
-                sb.Append($"{item.Key} {item.Value}개, ");
+                m_stringBuilder.Append(item.Key).Append(" ").Append(item.Value).Append("개, ");
             }
-            return sb.ToString().TrimEnd(',', ' ');
+
+            if (m_stringBuilder.Length > 2)
+            {
+                m_stringBuilder.Length -= 2;
+            }
+
+            return m_stringBuilder.ToString();
         }
 
         #endregion
