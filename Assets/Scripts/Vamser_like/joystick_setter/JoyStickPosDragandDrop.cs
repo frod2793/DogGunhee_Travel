@@ -2,37 +2,36 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class JoyStickPosDragandDrop : MonoBehaviour, IDragHandler, IEndDragHandler, IPointerDownHandler
+public class JoyStickPosDragandDrop : MonoBehaviour, IDragHandler, IEndDragHandler
 {
-    [SerializeField]  float offsetY = 1000f;
     private RectTransform rectTransform;
     private Canvas canvas;
-    private CanvasScaler canvasScaler;
     private Vector2 dragOffset;
+    private bool m_isDragging = false;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
-        canvasScaler = canvas != null ? canvas.GetComponentInParent<CanvasScaler>() : null;
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (canvas == null || rectTransform == null) return;
-        Vector2 localPointerPosition;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvas.transform as RectTransform,
-            eventData.position,
-            eventData.pressEventCamera,
-            out localPointerPosition))
-        {
-            dragOffset = rectTransform.anchoredPosition - localPointerPosition;
-        }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
         if (canvas == null || rectTransform == null) return;
+
+        if (!m_isDragging)
+        {
+            m_isDragging = true;
+            Vector2 localPointerPositionOnDragStart;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform,
+                eventData.pressPosition, // 드래그 시작 위치 사용
+                eventData.pressEventCamera,
+                out localPointerPositionOnDragStart))
+            {
+                dragOffset = rectTransform.anchoredPosition - localPointerPositionOnDragStart;
+            }
+        }
+        
         Vector2 localPointerPosition;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvas.transform as RectTransform,
@@ -47,6 +46,7 @@ public class JoyStickPosDragandDrop : MonoBehaviour, IDragHandler, IEndDragHandl
     {
         if (canvas == null || rectTransform == null) return;
         rectTransform.anchoredPosition = ClampToCanvas(rectTransform.anchoredPosition);
+        m_isDragging = false;
     }
 
     private Vector2 ClampToCanvas(Vector2 position)

@@ -108,15 +108,19 @@ class buildEditorScript
 
     private static void SetupAndroidBuild(string fileName, bool isBundle)
     {
-        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.DefaultCompany.DogGun_E_Run");
+        // PlayerSettings에 설정된 패키지 이름을 그대로 사용하도록 하여 일관성을 유지합니다.
+        string packageName = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+        Debug.Log($"Android Package Name: {packageName}");
+
         EditorUserBuildSettings.buildAppBundle = isBundle;
 
-        /*
-        PlayerSettings.Android.keystoreName = "path/to/your/keystore.keystore";
-        PlayerSettings.Android.keystorePass = "yourKeystorePassword";
-        PlayerSettings.Android.keyaliasName = "yourAliasName";
-        PlayerSettings.Android.keyaliasPass = "yourAliasPassword";
-        */
+        // 릴리즈 빌드를 위한 키스토어 설정 (환경 변수 사용)
+        // PlayerSettings.Android.useCustomKeystore = true;
+        // PlayerSettings.Android.keystoreName = Environment.GetEnvironmentVariable("ANDROID_KEYSTORE_PATH");
+        // PlayerSettings.Android.keystorePass = Environment.GetEnvironmentVariable("ANDROID_KEYSTORE_PASS");
+        // PlayerSettings.Android.keyaliasName = Environment.GetEnvironmentVariable("ANDROID_KEY_ALIAS");
+        // PlayerSettings.Android.keyaliasPass = Environment.GetEnvironmentVariable("ANDROID_KEY_PASS");
+
 
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
         {

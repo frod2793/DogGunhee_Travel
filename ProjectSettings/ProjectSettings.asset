@@ -8,7 +8,7 @@ PlayerSettings:
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
-  defaultScreenOrientation: 4
+  defaultScreenOrientation: 0
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 100
@@ -72,7 +72,7 @@ PlayerSettings:
   androidUseSwappy: 1
   androidDisplayOptions: 1
   androidBlitType: 0
-  androidResizeableActivity: 0
+  androidResizeableActivity: 1
   androidDefaultWindowWidth: 1920
   androidDefaultWindowHeight: 1080
   androidMinimumWindowWidth: 400

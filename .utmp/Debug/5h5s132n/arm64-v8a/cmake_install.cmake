@@ -1,4 +1,4 @@
-# Install script for directory: /Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp
+# Install script for directory: /Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/PramData/AndroidApplicationController/Cache/com.DefaultCompany.DogGun_E_Run/gradle-project/unityLibrary/src/main/cpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

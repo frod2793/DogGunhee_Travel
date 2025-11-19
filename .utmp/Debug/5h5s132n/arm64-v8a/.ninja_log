@@ -1,5 +1,3 @@
 # ninja log v5
-423	695	1763509277514564275	/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/5h5s132n/obj/arm64-v8a/libswappywrapper.so	9aac0d6b777e355
-5	422	1763509277246828186	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	c2ba8a4b8a25ec25
-2	636	1763512261211352735	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	c2ba8a4b8a25ec25
-637	902	1763512261476217012	/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/5h5s132n/obj/arm64-v8a/libswappywrapper.so	9aac0d6b777e355
+0	220	1763523233511336527	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	70fd0b66a5d49983
+221	349	1763523233638768750	/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/PramData/AndroidApplicationController/Cache/com.DefaultCompany.DogGun_E_Run/gradle-project/unityLibrary/build/intermediates/cxx/Debug/5h5s132n/obj/arm64-v8a/libswappywrapper.so	1b3045340d8804d9

@@ -21,20 +21,14 @@ namespace DogGuns_Games.vamsir
         [FormerlySerializedAs("playerCharactor")]
         [SerializeField] private PlayerBase m_playerCharacter;
         [Tooltip("플레이어 머리 위에 표시될 HP 슬라이더 프리팹입니다.")]
-        [FormerlySerializedAs("playerHpSliderPrefab")]
-        [SerializeField] private Slider m_playerHpSliderPrefab;
-        [Tooltip("플레이어를 따라다닐 메인 카메라입니다.")]
-        [FormerlySerializedAs("cameraTransform")]
-        [SerializeField] private Camera m_camera;
+        [FormerlySerializedAs("playerHpSliderPrefab")] [SerializeField]
+        private Slider m_playerHpSliderPrefab;
         [Tooltip("플레이어의 이동 범위를 제한하는 맵의 SpriteRenderer입니다.")]
         [FormerlySerializedAs("mapRange")]
         [SerializeField] private SpriteRenderer m_mapRange;
 
         [Header("입력 및 UI")]
         [Tooltip("플레이어 이동에 사용될 조이스틱입니다.")]
-        [FormerlySerializedAs("variableJoystick")]
-        [SerializeField] private VariableJoystick m_variableJoystick;
-        [Tooltip("조이스틱 입력으로 인식할 최소값입니다.")]
         private const float k_joystickInputThreshold = 0.1f;
 
         [Header("카메라 이동")]
@@ -59,6 +53,7 @@ namespace DogGuns_Games.vamsir
         // Private 상태 변수
         private VamserLikeGameManager m_gameManager;
         private Animator m_playerAnimator;
+        private Camera m_camera;
         private Slider m_playerHpSlider;
         private bool m_isGameStarted = false;
         private bool m_isAttacking = false;
@@ -80,7 +75,6 @@ namespace DogGuns_Games.vamsir
             m_contactFilter.useTriggers = true; // 몹의 isTrigger 콜라이더를 감지
             m_contactFilter.SetLayerMask(m_enemyLayer);
             m_contactFilter.useLayerMask = true;
-            
         }
 
         private void Start()
@@ -138,7 +132,9 @@ namespace DogGuns_Games.vamsir
                 m_playerCharacter = character;
                 m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
                 m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
-                m_camera = Camera.main;
+                m_camera = VamserLikeGameManager.Instance.MainCamera;
+                LogManager.Log(m_camera != null ? $"캐릭터 할당 성공: {character.name}, 카메라 할당 성공" : $"캐릭터 할당 성공: {character.name}, 그러나 카메라 할당 실패", 
+                    LogManager.LogCategory.PlayerBase);
                 
                 SetPlayerHpSlider();
                 
@@ -222,6 +218,9 @@ namespace DogGuns_Games.vamsir
                     MoveDirection = m_autoMoveDirection;
                 }
             }
+            
+            LogManager.Log($"[Movement] Final MoveDirection: {MoveDirection}", LogManager.LogCategory.PlayerBase);
+            
             UpdateAnimationState(MoveDirection.magnitude);
         }
 
@@ -248,7 +247,22 @@ namespace DogGuns_Games.vamsir
 
         private Vector3 GetJoystickInputDirection()
         {
-            return (Vector3.right * m_variableJoystick.Horizontal + Vector3.up * m_variableJoystick.Vertical);
+            // GameManager를 통해 중앙에서 관리되는 조이스틱 참조를 사용합니다.
+            var joystick = VamserLikeGameManager.Instance?.Joystick;
+            if (joystick != null)
+            {
+                Vector3 direction = new Vector3(joystick.Horizontal, joystick.Vertical, 0);
+                if (direction.magnitude > k_joystickInputThreshold)
+                {
+                    LogManager.Log($"[Input] Joystick Input: ({joystick.Horizontal:F2}, {joystick.Vertical:F2})", LogManager.LogCategory.PlayerBase);
+                }
+                return direction.normalized;
+            }
+            else
+            {
+                LogManager.LogWarning("[Input] Joystick is not available.", LogManager.LogCategory.PlayerBase);
+                return Vector3.zero;
+            }
         }
 
         private Vector3 ClampPositionToMap(Vector3 position)
@@ -312,7 +326,14 @@ namespace DogGuns_Games.vamsir
 
         private void FollowCamera()
         {
-            if (m_playerObject == null || m_camera == null || m_mapRange == null) return;
+            if (m_playerObject == null || m_camera == null || m_mapRange == null)
+            {
+                if (m_camera == null)
+                {
+                    LogManager.LogWarning("[Camera] Main Camera is not assigned. Camera cannot follow.", LogManager.LogCategory.PlayerBase);
+                }
+                return;
+            }
             
             Vector3 targetPosition = new Vector3(m_playerObject.transform.position.x, m_playerObject.transform.position.y, m_camera.transform.position.z);
             Bounds mapBounds = m_mapRange.bounds;
@@ -321,6 +342,8 @@ namespace DogGuns_Games.vamsir
 
             targetPosition.x = Mathf.Clamp(targetPosition.x, mapBounds.min.x + cameraHalfWidth, mapBounds.max.x - cameraHalfWidth);
             targetPosition.y = Mathf.Clamp(targetPosition.y, mapBounds.min.y + cameraHalfHeight, mapBounds.max.y - cameraHalfHeight);
+            
+            LogManager.Log($"[Camera] Following player to Target Position: {targetPosition}", LogManager.LogCategory.PlayerBase);
 
             m_camera.transform.position = Vector3.SmoothDamp(m_camera.transform.position, targetPosition, ref m_cameraVelocity, m_cameraSmoothTime);
         }

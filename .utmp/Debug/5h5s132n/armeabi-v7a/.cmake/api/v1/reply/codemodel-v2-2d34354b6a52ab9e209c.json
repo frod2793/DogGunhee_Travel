@@ -66,7 +66,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "swappywrapper::@7e25bd1f32ce224db4e9",
-					"jsonFile" : "target-swappywrapper-Debug-f9abcc2a1bd6465c5ae2.json",
+					"jsonFile" : "target-swappywrapper-Debug-caacdfeb12e11177e222.json",
 					"name" : "swappywrapper",
 					"projectIndex" : 1
 				}
@@ -77,7 +77,7 @@
 	"paths" : 
 	{
 		"build" : "/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/.utmp/Debug/5h5s132n/armeabi-v7a",
-		"source" : "/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp"
+		"source" : "/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/PramData/AndroidApplicationController/Cache/com.DefaultCompany.DogGun_E_Run/gradle-project/unityLibrary/src/main/cpp"
 	},
 	"version" : 
 	{

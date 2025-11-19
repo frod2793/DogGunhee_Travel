@@ -47,6 +47,13 @@ namespace DogGuns_Games.vamsir
         private ObjectPoolSpawner m_objectPoolSpawner;
         public ObjectPoolSpawner ObjectPoolSpawner => m_objectPoolSpawner;
         private VamPlayerControll m_vamPlayerControll;
+        public VamPlayerControll PlayerController => m_vamPlayerControll;
+        private VariableJoystick m_variableJoystick;
+        public VariableJoystick Joystick => m_variableJoystick;
+        private Camera m_mainCamera;
+        public Camera MainCamera => m_mainCamera;
+        private VamserLikeUI m_uiManager;
+        public VamserLikeUI UIManager => m_uiManager;
 
         #endregion
 
@@ -73,13 +80,11 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGameOver += OnGameOver;
         }
 
-        private void Start()
+        private void OnEnable()
         {
-            // VamserLikeGameManager가 모든 준비를 마친 후, PlayStateManager를 통해 게임 시작을 명시적으로 트리거합니다.
-            if (PlayStateManager.instance != null)
-            {
-                PlayStateManager.instance.StartGame();
-            }
+            // 게임 시작 로직은 UI의 카운트다운 후 시작되도록 VamserLikeUI로 이동합니다.
+            // VamserLikeGameManager가 모든 준비를 마친 후, VamserLikeUI를 통해 게임 시작 카운트다운을 시작합니다.
+            m_uiManager?.StartGameCountdown();
         }
 
         /// <summary>
@@ -90,10 +95,32 @@ namespace DogGuns_Games.vamsir
             if (m_objectPoolSpawner == null)
             {
                 m_objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
+                LogManager.Log(m_objectPoolSpawner != null ? "ObjectPoolSpawner 참조 캐싱 성공" : "ObjectPoolSpawner 참조 캐싱 실패", 
+                    LogManager.LogCategory.VamserLikeGameManager);
             }
             if (m_vamPlayerControll == null)
             {
                 m_vamPlayerControll = FindFirstObjectByType<VamPlayerControll>();
+                LogManager.Log(m_vamPlayerControll != null ? "VamPlayerControll 참조 캐싱 성공" : "VamPlayerControll 참조 캐싱 실패", 
+                    LogManager.LogCategory.VamserLikeGameManager);
+            }
+            if (m_variableJoystick == null)
+            {
+                m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
+                LogManager.Log(m_variableJoystick != null ? "VariableJoystick 참조 캐싱 성공" : "VariableJoystick 참조 캐싱 실패", 
+                    LogManager.LogCategory.VamserLikeGameManager);
+            }
+            if (m_mainCamera == null)
+            {
+                m_mainCamera = Camera.main;
+                LogManager.Log(m_mainCamera != null ? "MainCamera 참조 캐싱 성공" : "MainCamera 참조 캐싱 실패", 
+                    LogManager.LogCategory.VamserLikeGameManager);
+            }
+            if (m_uiManager == null)
+            {
+                m_uiManager = FindFirstObjectByType<VamserLikeUI>();
+                LogManager.Log(m_uiManager != null ? "VamserLikeUI 참조 캐싱 성공" : "VamserLikeUI 참조 캐싱 실패",
+                    LogManager.LogCategory.VamserLikeGameManager);
             }
         }
 

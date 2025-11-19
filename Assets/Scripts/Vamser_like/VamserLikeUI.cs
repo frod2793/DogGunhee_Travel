@@ -118,9 +118,14 @@ namespace DogGuns_Games.vamsir
         private void Start()
         {
             // 참조 캐싱
-            m_playerController = FindFirstObjectByType<VamPlayerControll>();
-            m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
-
+            m_playerController = m_gameManager.PlayerController;
+            m_variableJoystick = m_gameManager.Joystick;
+            LogManager.Log(m_playerController != null ? "PlayerController 참조 가져오기 성공" : "PlayerController 참조 가져오기 실패", 
+                LogManager.LogCategory.VamserLikeUI);
+            LogManager.Log(m_variableJoystick != null ? "VariableJoystick 참조 가져오기 성공" : "VariableJoystick 참조 가져오기 실패", 
+                LogManager.LogCategory.VamserLikeUI);
+            
+            // 모든 참조가 할당된 후 이벤트를 구독합니다.
             SubscribeToEvents();
         }
 
@@ -166,6 +171,38 @@ namespace DogGuns_Games.vamsir
             InitializeUI();
 
             UpdateUI(_cancellationTokenSource.Token).Forget();
+        }
+
+        /// <summary>
+        /// 게임 시작 전 3초 카운트다운을 표시하고 게임을 시작합니다.
+        /// </summary>
+        public async void StartGameCountdown()
+        {
+            try
+            {
+                if (m_mobWaveText == null)
+                {
+                    PlayStateManager.instance.StartGame(); // UI가 없으면 즉시 시작
+                    return;
+                }
+
+                m_mobWaveText.gameObject.SetActive(true);
+
+                // 카운트다운을 위한 빠른 버전의 텍스트 효과 호출
+                await WaveTextFadeEffect("3..", 0.5f, 0.2f);
+                await WaveTextFadeEffect("2..", 0.5f, 0.2f);
+                await WaveTextFadeEffect("1..", 0.5f, 0.2f);
+
+                // 게임 시작 텍스트는 기존 효과 사용
+                await WaveTextFadeEffect("Game Start!");
+                PlayStateManager.instance.StartGame();
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"게임 시작 카운트다운 중 오류 발생: {ex.Message}", LogManager.LogCategory.VamserLikeUI);
+                // 카운트다운에 실패하더라도 게임은 시작되도록 처리
+                PlayStateManager.instance.StartGame();
+            }
         }
 
         private void Pause()
@@ -370,6 +407,7 @@ namespace DogGuns_Games.vamsir
             if (m_variableJoystick != null)
             {
                 m_variableJoystick.OnPointerUp(null); // 입력 해제
+                m_variableJoystick.enabled = false; // 조이스틱 컴포넌트 비활성화
             }
 
             m_autoAttackToggle.isOn = false; // 자동 공격 토글 비활성화
@@ -414,14 +452,14 @@ namespace DogGuns_Games.vamsir
         }
 
         // DOTween을 이용한 mobWaveText 페이드 인/아웃 효과
-        private async UniTask WaveTextFadeEffect(string waveText)
+        private async UniTask WaveTextFadeEffect(string waveText, float holdDuration = 1.0f, float fadeDuration = 0.5f)
         {
             m_mobWaveText.text = waveText;
             m_mobWaveText.alpha = 0f;
             m_mobWaveText.gameObject.SetActive(true);
-            await m_mobWaveText.DOFade(1f, 0.5f).AsyncWaitForCompletion(); // 페이드 인
-            await UniTask.Delay(1000); // 1초간 표시
-            await m_mobWaveText.DOFade(0f, 0.5f).AsyncWaitForCompletion(); // 페이드 아웃
+            await m_mobWaveText.DOFade(1f, fadeDuration).AsyncWaitForCompletion(); // 페이드 인
+            await UniTask.Delay(TimeSpan.FromSeconds(holdDuration)); // 지정된 시간 동안 표시
+            await m_mobWaveText.DOFade(0f, fadeDuration).AsyncWaitForCompletion(); // 페이드 아웃
             m_mobWaveText.gameObject.SetActive(false);
         }
 
