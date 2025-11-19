@@ -96,6 +96,14 @@ namespace DogGuns_Games
             {
                 LogManager.LogError("뒤끝 초기화 실패: " + bro, LogManager.LogCategory.ServerManager);
             }
+            
+            Backend.Utils.GetGoogleHash();
+
+//example
+            string googlehash = Backend.Utils.GetGoogleHash();
+
+            Debug.Log($"<color=green>[googlehash] : {googlehash}</color>");
+            
         }
 
         #endregion
