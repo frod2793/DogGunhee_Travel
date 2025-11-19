@@ -113,7 +113,6 @@ namespace DogGuns_Games
         /// </summary>
         private async UniTaskVoid OnStartButtonPressed()
         {
-            Debug.Log("clike");
             SetInteractable(false); // 중복 클릭 방지
 
             // ServerManager 반환 타입 (bool success, string error) 대응
@@ -137,6 +136,7 @@ namespace DogGuns_Games
         /// </summary>
         private async UniTaskVoid OnGuestLoginButtonPressed()
         {
+            Debug.Log("guest");
             SetInteractable(false);
 
             var (success, error) = await m_serverManager.GuestLoginAsync();
@@ -343,7 +343,6 @@ namespace DogGuns_Games
         private void SetInteractable(bool interactable)
         {
             m_startBtn.interactable = interactable;
-            m_guestLoginBtn.interactable = interactable;
             m_loginBtn.interactable = interactable;
             m_signUpBtn.interactable = interactable;
         }
