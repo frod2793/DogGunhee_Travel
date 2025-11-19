@@ -40,11 +40,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2917fd536eadc4346ba3a9a1d8058c09
-    m_Address: Assets/Scenes/LobbyScene.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2c192c63847c74f48bc73740db59a24b
     m_Address: Drop_item
     m_ReadOnly: 0
@@ -80,11 +75,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 54271c5352bc9f3469adffd87bbdd691
-    m_Address: Assets/Scenes/VamSerlike.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6da3e616afe6e9642a2a6fbe5d363ca8
     m_Address: Player_charactor
     m_ReadOnly: 0
@@ -92,11 +82,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6efa305b409e57449addb4f0370f209d
     m_Address: Assets/Scripts/ScriptableOJB/SkillDatabase.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7905e388b7f424c71963bef35b91e7d5
-    m_Address: Assets/Scenes/IntroScene.unity
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

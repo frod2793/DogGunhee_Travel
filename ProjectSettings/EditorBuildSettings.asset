@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/VamSerLike_Test.unity
     guid: b140c0d8da84b964798561de0f898171
+  - enabled: 0
+    path: Assets/Scenes/SampleScene.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 8149a9a8d3edb8549b9992f33d64ed1f, type: 2}
   m_UseUCBPForAssetBundles: 0

@@ -1,5 +1,0 @@
-/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/.utmp/RelWithDebInfo/334o4qx2/arm64-v8a/CMakeFiles/edit_cache.dir
-/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/.utmp/RelWithDebInfo/334o4qx2/arm64-v8a/CMakeFiles/rebuild_cache.dir
-/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/.utmp/RelWithDebInfo/334o4qx2/arm64-v8a/FramePacing/CMakeFiles/swappywrapper.dir
-/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/.utmp/RelWithDebInfo/334o4qx2/arm64-v8a/FramePacing/CMakeFiles/edit_cache.dir
-/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/.utmp/RelWithDebInfo/334o4qx2/arm64-v8a/FramePacing/CMakeFiles/rebuild_cache.dir

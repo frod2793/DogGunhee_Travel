@@ -1,68 +1,57 @@
 using System;
-using System.IO;
+using System.IO; // 파일 처리가 필요 없다면 제거 가능
 using BackEnd;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DogGuns_Games
 {
     public class LoginManager : MonoBehaviour
     {
-        #region 변수 및 필드
+        #region UI 컴포넌트 (직렬화 필드)
 
-        [Header("UI 팝업")]
-        [Tooltip("회원가입 UI 패널입니다.")]
+        [Header("UI 패널")]
         [SerializeField] private GameObject m_signUpPopUp;
-        [Tooltip("로그인 UI 패널입니다.")]
         [SerializeField] private GameObject m_loginPopUp;
-        [Tooltip("오류 메시지를 표시할 팝업입니다.")]
         [SerializeField] private GameObject m_errorPopup;
-        [Tooltip("오류 메시지 텍스트입니다.")]
         [SerializeField] private TMP_Text m_errorMessageText;
 
-        [Header("회원가입 컴포넌트")]
-        [Tooltip("회원가입 시 사용할 닉네임 입력 필드입니다.")]
+        [Header("회원가입 입력 필드")]
         [SerializeField] private TMP_InputField m_signUpNickNameInputField;
-        [Tooltip("회원가입 시 사용할 아이디 입력 필드입니다.")]
         [SerializeField] private TMP_InputField m_signUpIDInputField;
-        [Tooltip("회원가입 시 사용할 비밀번호 입력 필드입니다.")]
         [SerializeField] private TMP_InputField m_signUpPwInputField;
-        [Tooltip("비밀번호 확인을 위한 입력 필드입니다.")]
         [SerializeField] private TMP_InputField m_signUpPwCheckInputField;
-        [Tooltip("회원가입을 실행하는 버튼입니다.")]
         [SerializeField] private Button m_signUpBtn;
 
-        public string NickName
-        {
-            get => m_signUpNickNameInputField.text;
-            set => m_signUpNickNameInputField.text = value;
-        }
-
-        [Header("로그인 컴포넌트")]
-        [Tooltip("로그인 시 사용할 아이디 입력 필드입니다.")]
+        [Header("로그인 입력 필드")]
         [SerializeField] private TMP_InputField m_loginIDInputField;
-        [Tooltip("로그인 시 사용할 비밀번호 입력 필드입니다.")]
         [SerializeField] private TMP_InputField m_loginPwInputField;
-        [Tooltip("로그인을 실행하는 버튼입니다.")]
         [SerializeField] private Button m_loginBtn;
-        [Tooltip("회원가입 팝업을 여는 버튼입니다.")]
         [SerializeField] private Button m_openSignUpPopUpBtn;
 
         [Header("메인 버튼")]
-        [Tooltip("게임 시작 및 자동 로그인을 시도하는 버튼입니다.")]
         [SerializeField] private Button m_startBtn;
-        [Tooltip("게스트 계정으로 로그인을 시도하는 버튼입니다.")]
         [SerializeField] private Button m_guestLoginBtn;
-        [Tooltip("로그인 팝업을 여는 버튼입니다.")]
         [SerializeField] private Button m_openLoginPopUpBtn;
 
-        // Private 멤버 변수
+        [Header("디버그")]
+        [SerializeField] private TMP_Text m_hashKeyText;
+        [SerializeField] private Button m_showHashKeyButton;
+
+        [Header("버전")]
+        [SerializeField] private TMP_Text m_versionText;
+
+        #endregion
+
+        #region 내부 필드
+
         private ServerManager m_serverManager;
         private PlayerDataManagerDontdesytoy m_playerDataManager;
-        private string m_savePath;
+        
+        // 씬이 파괴될 때 비동기 작업을 취소하기 위한 토큰 소스
+        private System.Threading.CancellationTokenSource m_cts;
 
         #endregion
 
@@ -70,211 +59,265 @@ namespace DogGuns_Games
 
         private void Awake()
         {
+            // 싱글톤 캐싱
             m_serverManager = ServerManager.Instance;
             m_playerDataManager = PlayerDataManagerDontdesytoy.Instance;
+            m_cts = new System.Threading.CancellationTokenSource();
+
+            // 버튼 리스너 등록 (UniTask.Action 또는 람다 + Forget 사용)
+            m_startBtn.onClick.AddListener(() => OnStartButtonPressed().Forget());
+            m_guestLoginBtn.onClick.AddListener(() => OnGuestLoginButtonPressed().Forget());
+            m_loginBtn.onClick.AddListener(() => OnLoginButtonPressed().Forget());
+            m_signUpBtn.onClick.AddListener(() => OnSignUpButtonPressed().Forget());
             
-            // 버튼 리스너들을 Awake에서 한 번에 설정합니다.
-            m_startBtn.onClick.AddListener(OnStartButtonPressed);
-            m_guestLoginBtn.onClick.AddListener(OnGuestLoginButtonPressed);
+            // 단순 UI 전환 리스너
             m_openLoginPopUpBtn.onClick.AddListener(ShowLoginPopup);
             m_openSignUpPopUpBtn.onClick.AddListener(ShowSignUpPopup);
-            m_loginBtn.onClick.AddListener(OnLoginButtonPressed);
-            m_signUpBtn.onClick.AddListener(OnSignUpButtonPressed);
+            m_showHashKeyButton?.onClick.AddListener(OnShowHashKeyButtonPressed);
         }
 
-        void Start()
+        private void Start()
         {
-            m_savePath = Path.Combine(Application.persistentDataPath, "playerData.json");
-
+            // BGM 재생
             SoundManager.PlaySound(Sound.BGM, SoundKeys.Intro, true);
-
             SoundManager.Instance.LoadSoundSetting();
+
+            // 버전 정보 표시
+            if (m_versionText != null)
+            {
+                m_versionText.text = $"Ver. {Application.version}";
+                
+            }
+
+            // 초기 UI 상태 설정 (자동 로그인 시도 전에는 버튼 숨김)
             SetLoginButtonsActive(false);
+            
+            // 시작 시 자동 로그인 시도 (Start 버튼을 누를 필요 없이 바로 하려면 여기서 호출)
+            // 여기서는 기존 로직대로 Start 버튼 대기 상태로 둡니다.
+             m_startBtn.gameObject.SetActive(true);
+        }
+
+        private void OnDestroy()
+        {
+            // 씬 전환/파괴 시 진행 중인 비동기 작업 취소
+            m_cts.Cancel();
+            m_cts.Dispose();
         }
 
         #endregion
 
-        #region 로그인 관련 함수
+        #region 로그인 로직
 
         /// <summary>
-        /// 시작 버튼을 눌렀을 때 토큰으로 자동 로그인을 시도합니다.
+        /// 시작 버튼: 토큰 로그인 시도
         /// </summary>
-        private async void OnStartButtonPressed()
+        private async UniTaskVoid OnStartButtonPressed()
         {
-            m_startBtn.interactable = false;
-            try
+            SetInteractable(false); // 중복 클릭 방지
+
+            // ServerManager 반환 타입 (bool success, string error) 대응
+            var (success, error) = await m_serverManager.TokenLoginAsync();
+
+            if (success)
             {
-                var (success, nickname, uuid) = await m_serverManager.TokenLoginAsync();
-                if (success)
-                {
-                    await ProcessLoginSuccessAsync(nickname, uuid);
-                }
-                else
-                {
-                    // 토큰 로그인 실패 시, 다른 로그인 옵션을 보여줍니다.
-                    SetLoginButtonsActive(true);
-                }
+                await ProcessLoginSuccessAsync();
             }
-            catch (Exception e)
+            else
             {
-                Debug.LogError($"토큰 로그인 중 오류 발생: {e.Message}");
-                SetLoginButtonsActive(true);
+                Debug.LogWarning($"토큰 로그인 실패 또는 만료: {error}");
+                SetLoginButtonsActive(true); // 실패 시 수동 로그인 버튼들 표시
             }
-            finally
-            {
-                // 성공 여부와 관계없이 시작 버튼은 다시 활성화 될 수 있습니다 (실패 시).
-                if (!m_startBtn.gameObject.activeSelf)
-                {
-                    m_startBtn.interactable = true;
-                }
-            }
+            
+            // 토큰 로그인은 실패해도 굳이 팝업을 띄우지 않고 로그인 버튼만 보여주면 됩니다.
         }
 
         /// <summary>
-        /// 게스트 로그인 버튼 함수 
+        /// 게스트 로그인
         /// </summary>
-        private async void OnGuestLoginButtonPressed()
+        private async UniTaskVoid OnGuestLoginButtonPressed()
         {
-            m_guestLoginBtn.interactable = false;
-            try
+            SetInteractable(false);
+
+            var (success, error) = await m_serverManager.GuestLoginAsync();
+
+            if (success)
             {
-                var (nickname, uuid) = await m_serverManager.GuestLoginAsync();
-                await ProcessLoginSuccessAsync(nickname, uuid);
+                await ProcessLoginSuccessAsync();
             }
-            catch (Exception e)
+            else
             {
-                // "bad customId" 오류는通常, 로컬에 저장된 게스트 정보가 손상되었을 때 발생합니다.
-                if (e.Message.Contains("bad customId"))
+                // 에러 처리 로직
+                if (error != null && error.Contains("bad customId"))
                 {
-                    Debug.LogWarning("손상된 게스트 계정 정보 감지. 계정 정보 삭제 후 재시도합니다.");
-                    // 사용자에게 잠시 후 재시도한다는 UI 피드백을 보여주는 것이 좋습니다.
+                    Debug.LogWarning("게스트 정보 불일치 감지. 정보 초기화 후 재시도합니다.");
                     await DeleteGuestInfoAndRetryLoginAsync();
                 }
-        else if (e.Message.Contains("bad packageName"))
-        {
-            Debug.LogError($"게스트 로그인 실패: 잘못된 패키지 이름입니다. Unity 프로젝트 설정과 뒤끝 콘솔의 패키지 이름이 일치하는지 확인해주세요.");
-            ShowErrorPopupAsync("게스트 로그인에 실패했습니다.\n(오류: 잘못된 패키지 이름)").Forget();
-        }
+                else if (error != null && error.Contains("bad packageName"))
+                {
+                    ShowErrorPopupAsync("잘못된 패키지 이름입니다.\n콘솔 설정을 확인하세요.").Forget();
+                    SetInteractable(true);
+                }
                 else
                 {
-                    Debug.LogError($"게스트 로그인 실패: {e.Message}");
-                    ShowErrorPopupAsync("게스트 로그인에 실패했습니다.\n잠시 후 다시 시도해주세요.").Forget();
+                    ShowErrorPopupAsync($"게스트 로그인 실패\n{error}").Forget();
+                    SetInteractable(true);
                 }
             }
-            finally
-            {
-                m_guestLoginBtn.interactable = true;
-            }
         }
 
         /// <summary>
-        /// 로컬에 저장된 게스트 계정 정보를 삭제하고 다시 로그인을 시도합니다.
+        /// 일반 로그인
         /// </summary>
-        private async UniTask DeleteGuestInfoAndRetryLoginAsync()
+        private async UniTaskVoid OnLoginButtonPressed()
         {
-            try
-            {
-                // 뒤끝 SDK를 사용하여 로컬 게스트 정보를 삭제합니다.
-                Backend.BMember.DeleteGuestInfo();
-                Debug.Log("로컬 게스트 정보 삭제 성공. 새로운 계정으로 재로그인합니다.");
+            string id = m_loginIDInputField.text;
+            string pw = m_loginPwInputField.text;
 
-                // 새로운 게스트 계정으로 다시 로그인 시도
-                var (nickname, uuid) = await m_serverManager.GuestLoginAsync();
-                await ProcessLoginSuccessAsync(nickname, uuid);
-            }
-            catch (Exception e)
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(pw))
             {
-                Debug.LogError($"게스트 계정 재로그인 실패: {e.Message}");
-                ShowErrorPopupAsync("게스트 계정 복구에 실패했습니다.\n네트워크 상태를 확인해주세요.").Forget();
-            }
-        }
-
-        /// <summary>
-        /// 로그인 버튼 함수
-        /// </summary>
-        private async void OnLoginButtonPressed()
-        {
-            if (string.IsNullOrEmpty(m_loginIDInputField.text) || string.IsNullOrEmpty(m_loginPwInputField.text))
-            {
-                ShowErrorPopupAsync("아이디와 비밀번호를 모두 입력해주세요.").Forget();
+                ShowErrorPopupAsync("아이디와 비밀번호를 입력해주세요.").Forget();
                 return;
             }
 
-            m_loginBtn.interactable = false;
-            try
+            SetInteractable(false);
+
+            var (success, error) = await m_serverManager.LoginAsync(id, pw);
+
+            if (success)
             {
-                var (nickname, uuid) = await m_serverManager.LoginAsync(m_loginIDInputField.text, m_loginPwInputField.text);
-                await ProcessLoginSuccessAsync(nickname, uuid, () => m_loginPopUp.SetActive(false));
+                m_loginPopUp.SetActive(false);
+                await ProcessLoginSuccessAsync();
             }
-            catch (Exception e)
+            else
             {
-                ShowErrorPopupAsync("아이디 또는 비밀번호가 일치하지 않습니다.").Forget();
-            }
-            finally
-            {
-                m_loginBtn.interactable = true;
+                string msg = error.Contains("StatusCode : 401") 
+                    ? "아이디 또는 비밀번호가 일치하지 않습니다." 
+                    : $"로그인 실패\n{error}";
+                
+                ShowErrorPopupAsync(msg).Forget();
+                SetInteractable(true);
             }
         }
 
         /// <summary>
-        /// 로그인 성공 후 공통 처리 로직
+        /// 게스트 정보 삭제 후 재시도
         /// </summary>
-        private async UniTask ProcessLoginSuccessAsync(string nickname, string uuid, Action onBeforeLoad = null)
+        private async UniTask DeleteGuestInfoAndRetryLoginAsync()
         {
-            onBeforeLoad?.Invoke();
+            Backend.BMember.DeleteGuestInfo();
+            
+            // 잠시 대기 (안전성 확보)
+            await UniTask.Delay(500, cancellationToken: m_cts.Token);
+
+            var (success, error) = await m_serverManager.GuestLoginAsync();
+            if (success)
+            {
+                await ProcessLoginSuccessAsync();
+            }
+            else
+            {
+                ShowErrorPopupAsync("게스트 계정 재생성에 실패했습니다.").Forget();
+                SetInteractable(true);
+            }
+        }
+
+        /// <summary>
+        /// [공통] 로그인 성공 처리
+        /// </summary>
+        private async UniTask ProcessLoginSuccessAsync()
+        {
+            // ServerManager에 캐싱된 정보 사용
+            string nickname = m_serverManager.NickName;
+            string uuid = m_serverManager.Uuid;
+
+            Debug.Log($"로그인 처리 시작: {nickname} ({uuid})");
+
+            // 데이터 로드/생성
             await LoadOrCreatePlayerDataAsync(nickname, uuid);
+
+            // 버튼 숨김 처리 (씬 이동 전 깜빡임 방지)
             SetLoginButtonsActive(false);
+            m_startBtn.gameObject.SetActive(false);
+
+            // 씬 이동
             SceneLoader.Instance.LoadScene("LobbyScene");
         }
 
         #endregion
 
-        #region 회원가입 관련 함수
+        #region 회원가입 로직
 
-        private async void OnSignUpButtonPressed()
+        private async UniTaskVoid OnSignUpButtonPressed()
         {
-            if (string.IsNullOrEmpty(m_signUpNickNameInputField.text) || string.IsNullOrEmpty(m_signUpIDInputField.text) ||
-                string.IsNullOrEmpty(m_signUpPwInputField.text) || string.IsNullOrEmpty(m_signUpPwCheckInputField.text))
+            string nick = m_signUpNickNameInputField.text;
+            string id = m_signUpIDInputField.text;
+            string pw = m_signUpPwInputField.text;
+            string pwCheck = m_signUpPwCheckInputField.text;
+
+            if (string.IsNullOrEmpty(nick) || string.IsNullOrEmpty(id) || 
+                string.IsNullOrEmpty(pw) || string.IsNullOrEmpty(pwCheck))
             {
                 ShowErrorPopupAsync("모든 항목을 입력해주세요.").Forget();
                 return;
             }
 
-            if (m_signUpPwInputField.text != m_signUpPwCheckInputField.text)
+            if (pw != pwCheck)
             {
                 ShowErrorPopupAsync("비밀번호가 일치하지 않습니다.").Forget();
                 return;
             }
 
-            m_signUpBtn.interactable = false;
-            try
-            {
-                // 1. 회원가입
-                await m_serverManager.SignUpAsync(m_signUpIDInputField.text, m_signUpPwInputField.text, m_signUpNickNameInputField.text);
-                
-                // 2. 가입 성공 후 바로 로그인
-                var (nickname, uuid) = await m_serverManager.LoginAsync(m_signUpIDInputField.text, m_signUpPwInputField.text);
+            SetInteractable(false);
 
-                // 3. 데이터 로드 또는 생성 및 씬 전환
-                await ProcessLoginSuccessAsync(nickname, uuid, () => m_signUpPopUp.SetActive(false));
-            }
-            catch (Exception e)
+            // 1. 회원가입 시도
+            var (signUpSuccess, signUpError) = await m_serverManager.SignUpAsync(id, pw, nick);
+
+            if (!signUpSuccess)
             {
-                ShowErrorPopupAsync("회원가입에 실패했습니다.\n" + e.Message).Forget();
+                ShowErrorPopupAsync($"회원가입 실패\n{signUpError}").Forget();
+                SetInteractable(true);
+                return;
             }
-            finally
+
+            // 2. 가입 성공 시 바로 로그인 시도
+            var (loginSuccess, loginError) = await m_serverManager.LoginAsync(id, pw);
+
+            if (loginSuccess)
             {
-                m_signUpBtn.interactable = true;
+                m_signUpPopUp.SetActive(false);
+                await ProcessLoginSuccessAsync();
+            }
+            else
+            {
+                // 가입은 됐는데 로그인이 안 된 특이 케이스
+                ShowErrorPopupAsync("가입에는 성공했으나 로그인에 실패했습니다.\n다시 로그인해주세요.").Forget();
+                m_signUpPopUp.SetActive(false);
+                m_loginPopUp.SetActive(true);
+                SetInteractable(true);
             }
         }
 
         #endregion
 
-        #region UI 상호작용 함수
+        #region 데이터 관리
 
-        /// <summary>
-        /// 로그인 버튼 그룹 활성화/비활성화
-        /// </summary>
+        private async UniTask LoadOrCreatePlayerDataAsync(string nickname, string uuid)
+        {
+            bool dataExists = await m_playerDataManager.LoadDataFromServerAsync();
+            
+            if (!dataExists)
+            {
+                Debug.Log("신규 유저 데이터 생성 중...");
+                m_playerDataManager.PlayerData.InitializePlayerData(nickname, uuid);
+                m_playerDataManager.SavePlayerData(); // 로컬 저장
+                await m_playerDataManager.UploadDataToServerAsync(); // 서버 저장
+            }
+        }
+
+        #endregion
+
+        #region UI 및 유틸리티
+
         private void SetLoginButtonsActive(bool active)
         {
             m_guestLoginBtn.gameObject.SetActive(active);
@@ -282,97 +325,81 @@ namespace DogGuns_Games
             m_openLoginPopUpBtn.gameObject.SetActive(active);
             m_startBtn.gameObject.SetActive(!active);
         }
-        
-        /// <summary>
-        /// 회원 가입 팝업 열기 함수 
-        /// </summary>
+
         private void ShowSignUpPopup()
         {
             m_signUpPopUp.SetActive(true);
             m_loginPopUp.SetActive(false);
         }
 
-        /// <summary>
-        /// 로그인 팝업 열기 함수 
-        /// </summary>
         private void ShowLoginPopup()
         {
             m_loginPopUp.SetActive(true);
             m_signUpPopUp.SetActive(false);
         }
 
-        /// <summary>
-        /// 지정된 메시지와 함께 오류 팝업을 표시합니다.
-        /// </summary>
-        private async UniTask ShowErrorPopupAsync(string message)
+        // 모든 버튼의 인터랙션 제어 (중복 클릭 방지)
+        private void SetInteractable(bool interactable)
         {
-            if (m_errorPopup == null || m_errorMessageText == null)
-            {
-                Debug.LogError("오류 팝업 또는 텍스트가 할당되지 않았습니다.");
-                return;
-            }
+            m_startBtn.interactable = interactable;
+            m_guestLoginBtn.interactable = interactable;
+            m_loginBtn.interactable = interactable;
+            m_signUpBtn.interactable = interactable;
+        }
+
+        private async UniTaskVoid ShowErrorPopupAsync(string message)
+        {
+            if (m_errorPopup == null) return;
 
             m_errorMessageText.text = message;
             m_errorPopup.SetActive(true);
 
-            // 3초 후에 팝업을 자동으로 닫습니다.
-            await UniTask.Delay(TimeSpan.FromSeconds(3), ignoreTimeScale: true);
+            // CancellationToken을 사용하여 씬이 바뀌거나 파괴되면 딜레이 취소
+            await UniTask.Delay(TimeSpan.FromSeconds(3), cancellationToken: m_cts.Token)
+                         .SuppressCancellationThrow(); // 취소 시 예외 던지지 않음
 
-            if (m_errorPopup != null) // 딜레이 후 객체가 파괴되었을 수 있으므로 확인
+            if (m_errorPopup != null)
             {
                 m_errorPopup.SetActive(false);
             }
         }
-        #endregion
 
-        #region 데이터 관리 함수
-
-        private async UniTask LoadOrCreatePlayerDataAsync(string nickname, string uuid)
+        /// <summary>
+        /// 구글 해시 키를 가져와 UI에 표시합니다.
+        /// </summary>
+        private void OnShowHashKeyButtonPressed()
         {
-            bool dataExists = await m_playerDataManager.LoadDataFromServerAsync();
-            if (!dataExists)
+            if (m_hashKeyText == null) return;
+            
+            m_hashKeyText.gameObject.SetActive(true);
+
+            // [중요] 에디터 환경에서는 GoogleHash를 가져올 수 없으므로 예외 처리
+#if UNITY_EDITOR
+            m_hashKeyText.text = "<color=yellow>에디터에서는 해시 키를 확인할 수 없습니다.\n(APK 빌드 후 모바일에서 확인하세요)</color>";
+            Debug.Log("Google Hash Key는 Android 환경에서만 추출 가능합니다.");
+            return;
+#endif
+
+            // Android 환경이라도 혹시 모를 에러에 대비해 try-catch 사용
+            try
             {
-                await CreateNewPlayerDataAsync(nickname, uuid);
+                string googleHash = Backend.Utils.GetGoogleHash();
+
+                if (!string.IsNullOrEmpty(googleHash))
+                {
+                    m_hashKeyText.text = $"<color=green>Google Hash Key: {googleHash}</color>";
+                    // PC에서 로그를 보기 위해 복사하기 쉽도록 로그 출력
+                    Debug.Log($"Google Hash Key: {googleHash}");
+                }
+                else
+                {
+                    m_hashKeyText.text = "<color=red>해시 키를 가져올 수 없습니다.</color>";
+                }
             }
-        }
-        
-        /// <summary>
-        /// 새로운 플레이어 데이터 생성
-        /// </summary>
-        private async UniTask CreateNewPlayerDataAsync(string playerName, string uid)
-        {
-            m_playerDataManager.PlayerData.InitializePlayerData(playerName, uid);
-            m_playerDataManager.SavePlayerData(); // 로컬에 저장
-            await m_playerDataManager.UploadDataToServerAsync(); // 서버에 업로드
-        }
-
-        /// <summary>
-        ///     플레이어 데이터 저장
-        /// </summary>
-        public async UniTask InsertPlayerDataAsync()
-        {
-            m_playerDataManager.SavePlayerData();
-            await m_playerDataManager.UploadDataToServerAsync();
-        }
-
-        private void LoadPlayerData()
-        {
-            m_playerDataManager.LoadPlayerData();
-        }
-
-        /// <summary>
-        ///     플레이어 데이터 삭제 (주로 디버깅용)
-        /// </summary>
-        private void DeletePlayerData()
-        {
-            if (File.Exists(m_savePath))
+            catch (Exception e)
             {
-                File.Delete(m_savePath);
-                Debug.Log("PlayerData deleted from: " + m_savePath);
-            }
-            else
-            {
-                Debug.LogWarning("No PlayerData file found at: " + m_savePath);
+                Debug.LogError($"해시 키 추출 중 에러 발생: {e.Message}");
+                m_hashKeyText.text = $"<color=red>오류 발생: {e.Message}</color>";
             }
         }
 
