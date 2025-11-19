@@ -80,6 +80,7 @@ namespace DogGuns_Games.vamsir
             m_contactFilter.useTriggers = true; // 몹의 isTrigger 콜라이더를 감지
             m_contactFilter.SetLayerMask(m_enemyLayer);
             m_contactFilter.useLayerMask = true;
+            
         }
 
         private void Start()
@@ -199,12 +200,12 @@ namespace DogGuns_Games.vamsir
                 {
                     DisableAutoMoveAttack();
                 }
-                m_autoMoveDirection = Vector3.zero; // 자동 이동 방향 초기화
                 TryAttack(MoveDirection);
+                // 조이스틱 입력이 있을 때는 수동 이동이므로, 여기서 return하지 않고 ProcessMovement로 넘어갑니다.
             }
             else
             {
-                // 자동 공격 활성화 조건 체크
+                // 조이스틱 입력이 없을 때 자동 공격 활성화 조건 체크
                 if (AutoAttackEnabledByToggle && !m_isAutoAttackActive)
                 {
                     EnableAutoMoveAttack();
@@ -214,7 +215,6 @@ namespace DogGuns_Games.vamsir
                 if (!m_isAutoAttackActive)
                 {
                     MoveDirection = Vector3.zero;
-                    UpdateAnimationState(0f);
                 }
                 else
                 {
@@ -222,6 +222,7 @@ namespace DogGuns_Games.vamsir
                     MoveDirection = m_autoMoveDirection;
                 }
             }
+            UpdateAnimationState(MoveDirection.magnitude);
         }
 
         /// <summary>
@@ -231,7 +232,6 @@ namespace DogGuns_Games.vamsir
         {
             if (m_playerObject == null || m_playerCharacter == null || MoveDirection == Vector3.zero)
             {
-                UpdateAnimationState(0f);
                 return;
             }
 
@@ -243,7 +243,6 @@ namespace DogGuns_Games.vamsir
             // 여기서는 기존 구조를 유지하여 transform.position을 직접 변경합니다.
             m_playerObject.transform.position = ClampPositionToMap(targetPosition);
 
-            UpdateAnimationState(MoveDirection.magnitude);
             UpdateCharacterRotation(MoveDirection);
         }
 

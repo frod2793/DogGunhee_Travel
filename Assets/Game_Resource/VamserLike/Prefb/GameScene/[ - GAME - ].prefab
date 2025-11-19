@@ -1609,7 +1609,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 17.199999, y: 22.015999}
+    oldSize: {x: 17.2, y: 22}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -4519,8 +4519,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa6955cba98e64042b8efb54ea6c1549, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
-  settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
+  m_soundData: {fileID: 0}
+  m_settingsData: {fileID: 0}
 --- !u!1 &2536832316562801150
 GameObject:
   m_ObjectHideFlags: 0
@@ -5139,11 +5139,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba2e1479d42afc645ab7173157cf7f64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnedPlayer: {fileID: 0}
-  inGameObjectPlayerParent: {fileID: 3904192412624442642}
-  optionPopupManager: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
-  objectPoolSpawner: {fileID: 0}
-  vamPlayerControll: {fileID: 0}
+  m_inGameObjectPlayerParent: {fileID: 3904192412624442642}
+  m_optionPopupManager: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
 --- !u!114 &4441102585319734577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5156,47 +5153,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a947f548df8967459641a63baf7aaa7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LevelText: {fileID: 9201628983834539402}
-  playerLevelSlider: {fileID: 3688871088709051694}
-  mobWaveText: {fileID: 3097138278563862329}
-  coinText: {fileID: 5526639034195345620}
-  mobCountText: {fileID: 100979216074067289}
-  playerLevelText: {fileID: 9201628983834539402}
-  expSlider: {fileID: 3688871088709051694}
-  menuBtn: {fileID: 6484211315223021118}
-  menuPanel: {fileID: 8680412533363948918}
-  settingBtn: {fileID: 4598682413901158561}
-  exitBtn: {fileID: 2176910946093467014}
-  weaponUIList:
+  m_levelText: {fileID: 9201628983834539402}
+  m_playerLevelSlider: {fileID: 3688871088709051694}
+  m_mobWaveText: {fileID: 3097138278563862329}
+  m_coinText: {fileID: 5526639034195345620}
+  m_mobCountText: {fileID: 100979216074067289}
+  m_playerLevelText_InGame: {fileID: 9201628983834539402}
+  m_expSlider: {fileID: 3688871088709051694}
+  m_menuButton: {fileID: 6484211315223021118}
+  m_menuPanel: {fileID: 8680412533363948918}
+  m_settingButton: {fileID: 4598682413901158561}
+  m_exitButton: {fileID: 2176910946093467014}
+  m_weaponUIList:
   - {fileID: 3364288503574055070}
   - {fileID: 7741281634418726633}
   - {fileID: 4710660810917202987}
   - {fileID: 1158666360371057994}
   - {fileID: 1694170840939111920}
-  juListUIList:
+  m_juListUIList:
   - {fileID: 5852951044940925649}
   - {fileID: 6010907870839229036}
   - {fileID: 8926708657958088291}
   - {fileID: 3259465422285118836}
   - {fileID: 5805811200887633202}
-  gameOverPanel: {fileID: 5326696202211183432}
-  gameOverExitBtn: {fileID: 9096663981543718621}
-  gameOverRestartBtn: {fileID: 33626322447179973}
-  gameOverText: {fileID: 6871925226784063955}
-  gameOverCoinText: {fileID: 780171969683013771}
-  gameOverWaveText: {fileID: 4537003788523140421}
-  gameOverMobCountText: {fileID: 3482257439608609303}
-  variableJoystick: {fileID: 828506961107316506}
-  autoAttackToggle: {fileID: 1455662123896014048}
-  settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
-  joystickTransform: {fileID: 828506961372771170}
-  skillSelectionPanel: {fileID: 2703381375941911504}
-  refreshButton: {fileID: 8456642198871269253}
-  skillSelectionButtonPrefab: {fileID: 7077696939418672509, guid: cef5008464231864c912a757027d750b, type: 3}
-  skillButtonContainer: {fileID: 5910445723532851813}
-  countdownText: {fileID: 8940687763278491046}
-  countDownslider: {fileID: 5711089526905010961}
-  skillDatabase: {fileID: 11400000, guid: 6efa305b409e57449addb4f0370f209d, type: 2}
+  m_gameOverPanel: {fileID: 5326696202211183432}
+  m_gameOverExitButton: {fileID: 9096663981543718621}
+  m_gameOverRestartButton: {fileID: 33626322447179973}
+  m_gameOverText: {fileID: 6871925226784063955}
+  m_gameOverCoinText: {fileID: 780171969683013771}
+  m_gameOverWaveText: {fileID: 4537003788523140421}
+  m_gameOverMobCountText: {fileID: 3482257439608609303}
+  m_variableJoystick: {fileID: 828506961107316506}
+  m_joystickTransform: {fileID: 828506961372771170}
+  m_autoAttackToggle: {fileID: 1455662123896014048}
+  m_settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
+  m_skillSelectionPanel: {fileID: 2703381375941911504}
+  m_refreshButton: {fileID: 8456642198871269253}
+  m_skillSelectionButtonPrefab: {fileID: 7077696939418672509, guid: cef5008464231864c912a757027d750b, type: 3}
+  m_skillButtonContainer: {fileID: 5910445723532851813}
+  m_countdownText: {fileID: 8940687763278491046}
+  m_countDownSlider: {fileID: 5711089526905010961}
+  m_skillDatabase: {fileID: 11400000, guid: 6efa305b409e57449addb4f0370f209d, type: 2}
 --- !u!114 &300642051815753672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5209,7 +5206,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e15839a422f164b4db2f12a980c8bf69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPlay: 0
 --- !u!1 &2975904508896927380
 GameObject:
   m_ObjectHideFlags: 0
@@ -12228,35 +12224,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a5c7db7f299b242b18e2c886886ee0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialMobCount: 20
-  mobsPerWave: 20
-  maxPoolSize: 100
-  mobPrefabReference:
+  m_initialMobCount: 50
+  m_mobsPerWave: 20
+  m_maxPoolSize: 100
+  m_mobPrefabReference:
     m_AssetGUID: c471a13dad9b00644acffbffcbad0eb4
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 
     m_EditorAssetChanged: 1
-  mobParent: {fileID: 3963251007470096304}
-  expPrefabReference:
+  m_mobParent: {fileID: 3963251007470096304}
+  m_expPrefabReference:
     m_AssetGUID: 9990d404d42a6ae4abc0e629718dadeb
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 
     m_EditorAssetChanged: 0
-  bigExpPrefabReference:
+  m_bigExpPrefabReference:
     m_AssetGUID: cf3e8c61dfbfa344b9ca98f921f02227
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 
     m_EditorAssetChanged: 0
-  coinPrefabReference:
+  m_coinPrefabReference:
     m_AssetGUID: 130be8c60f147e845ba0247850661c42
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 
     m_EditorAssetChanged: 0
-  coinSpawnPercent: 25
+  m_coinSpawnPercent: 25
 --- !u!1 &6964389140685110448
 GameObject:
   m_ObjectHideFlags: 0

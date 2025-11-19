@@ -32,7 +32,7 @@ namespace DogGuns_Games.vamsir
             // 무기가 비활성화(교체)될 때, 활성화된 진주가 있다면 풀에 반환합니다.
             if (_activePearlInstance != null && _activePearlInstance.activeInHierarchy)
             {
-                var objectPooler = VamserLikeGameManager.Instance?.objectPoolSpawner;
+                var objectPooler = VamserLikeGameManager.Instance?.ObjectPoolSpawner;
                 if (objectPooler != null)
                 {
                     objectPooler.ReturnObject(_activePearlInstance);
@@ -54,7 +54,7 @@ namespace DogGuns_Games.vamsir
 
         private void LaunchPearl()
         {
-            var objectPooler = VamserLikeGameManager.Instance.objectPoolSpawner;
+            var objectPooler = VamserLikeGameManager.Instance.ObjectPoolSpawner;
             if (objectPooler == null || pearlPrefab == null)
             {
                 Debug.LogError("ObjectPooler 또는 PearlPrefab이 할당되지 않았습니다.");

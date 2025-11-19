@@ -175,9 +175,9 @@ public class TestManager : MonoBehaviour
                 await _gameManager.ChangeCharacterAndWeapon_Spawn();
                 
                 // 스폰된 무기의 업그레이드 상태를 토글 값과 동기화합니다.
-                if (_gameManager.spawnedPlayer != null)
+                if (_gameManager.SpawnedPlayer != null)
                 {
-                    var weapon = _gameManager.spawnedPlayer.GetComponentInChildren<Weaphon_base>();
+                    var weapon = _gameManager.SpawnedPlayer.GetComponentInChildren<Weaphon_base>();
                     if (weapon != null)
                     {
                         weapon.isUpgradelv2 = isWeaponeUPgrade.isOn;

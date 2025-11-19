@@ -378,9 +378,9 @@ namespace DogGuns_Games.vamsir
         {
             if (_playerWeaphon == null)
             {
-                if (VamserLikeGameManager.Instance != null && VamserLikeGameManager.Instance.spawnedPlayer != null)
+                if (VamserLikeGameManager.Instance != null && VamserLikeGameManager.Instance.SpawnedPlayer != null)
                 {
-                    _playerWeaphon = VamserLikeGameManager.Instance.spawnedPlayer.WeaphonBase;
+                    _playerWeaphon = VamserLikeGameManager.Instance.SpawnedPlayer.WeaphonBase;
                     if (_playerWeaphon != null)
                     {
                         LogManager.Log("플레이어 무기 참조를 다시 획득했습니다.", LogManager.LogCategory.NormalMob, this);

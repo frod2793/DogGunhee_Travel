@@ -5,6 +5,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using DG.Tweening;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -16,93 +17,87 @@ namespace DogGuns_Games.vamsir
     {
         #region 필드 및 변수
 
-        [Header("<color=green>User Info UI")] [SerializeField]
-        private TMP_Text LevelText;
+        [Header("<color=green>User Info UI")]
+        [FormerlySerializedAs("LevelText")] [SerializeField] private TMP_Text m_levelText;
+        [FormerlySerializedAs("playerLevelSlider")] [SerializeField] private Slider m_playerLevelSlider;
 
-        [SerializeField] private Slider playerLevelSlider;
+        [Header("<color=green>Text UI")]
+        [FormerlySerializedAs("mobWaveText")] [SerializeField] private TMP_Text m_mobWaveText;
+        [FormerlySerializedAs("coinText")] [SerializeField] private TMP_Text m_coinText;
+        [FormerlySerializedAs("mobCountText")] [SerializeField] private TMP_Text m_mobCountText;
+        [FormerlySerializedAs("playerLevelText")] [SerializeField] private TMP_Text m_playerLevelText_InGame;
+        [FormerlySerializedAs("expSlider")] [SerializeField] private Slider m_expSlider;
+        private int m_getCoinCount = 0; // 초기화 전 코인 정보를 담을 변수
 
-        [Header("<color=green>Text UI")] [SerializeField]
-        private TMP_Text mobWaveText;
+        [Header("<color=green>Menu UI")]
+        [FormerlySerializedAs("menuBtn")] [SerializeField] private Button m_menuButton;
+        [FormerlySerializedAs("menuPanel")] [SerializeField] private GameObject m_menuPanel;
+        [FormerlySerializedAs("settingBtn")] [SerializeField] private Button m_settingButton;
+        [FormerlySerializedAs("exitBtn")] [SerializeField] private Button m_exitButton;
+        [FormerlySerializedAs("weaponUIList")] public List<GameObject> m_weaponUIList = new List<GameObject>();
+        [FormerlySerializedAs("juListUIList")] public List<Image> m_juListUIList = new List<Image>();
 
-        [SerializeField] private TMP_Text coinText;
-        [SerializeField] private TMP_Text mobCountText;
-        [SerializeField] private TMP_Text playerLevelText;
-        [SerializeField] private Slider expSlider;
-        private int getcoinCount = 0; // 초기화 전 코인 정보를 담을 변수
+        [Header("<color=green>GameOver UI")]
+        [FormerlySerializedAs("gameOverPanel")] [SerializeField] private GameObject m_gameOverPanel;
+        [FormerlySerializedAs("gameOverExitBtn")] [SerializeField] private Button m_gameOverExitButton;
+        [FormerlySerializedAs("gameOverRestartBtn")] [SerializeField] private Button m_gameOverRestartButton;
+        [FormerlySerializedAs("gameOverText")] [SerializeField] private TMP_Text m_gameOverText;
+        [FormerlySerializedAs("gameOverCoinText")] [SerializeField] private TMP_Text m_gameOverCoinText;
+        [FormerlySerializedAs("gameOverWaveText")] [SerializeField] private TMP_Text m_gameOverWaveText;
+        [FormerlySerializedAs("gameOverMobCountText")] [SerializeField] private TMP_Text m_gameOverMobCountText;
 
-        [Header("<color=green>Menu UI")] [SerializeField]
-        private Button menuBtn;
+        [Header("<color=green>조이스틱")]
+        [FormerlySerializedAs("variableJoystick")] [SerializeField] private VariableJoystick m_variableJoystick;
+        [Tooltip("조이스틱의 위치와 크기를 제어하는 RectTransform 입니다.")]
+        [FormerlySerializedAs("joystickTransform")] [SerializeField] private RectTransform m_joystickTransform;
 
-        [SerializeField] private GameObject menuPanel;
-        [SerializeField] private Button settingBtn;
-        [SerializeField] private Button exitBtn;
-        public List<GameObject> weaponUIList = new List<GameObject>();
-        public List<Image> juListUIList = new List<Image>();
+        [Header("<color=green>플레이어 자동 공격 활성화 토글 ")]
+        [FormerlySerializedAs("autoAttackToggle")] [SerializeField] private Toggle m_autoAttackToggle;
 
-        [Header("<color=green>GameOver UI")] [SerializeField]
-        private GameObject gameOverPanel;
-
-        [SerializeField] private Button gameOverExitBtn;
-        [SerializeField] private Button gameOverRestartBtn;
-        [SerializeField] private TMP_Text gameOverText;
-        [SerializeField] private TMP_Text gameOverCoinText;
-        [SerializeField] private TMP_Text gameOverWaveText;
-        [SerializeField] private TMP_Text gameOverMobCountText;
-
-
-        [Header("<color=green>조이스틱")] [SerializeField]
-        private VariableJoystick variableJoystick;
-
-        [Header("<color=green>플레이어 자동 공격 활성화 토글 ")] [SerializeField]
-        private Toggle autoAttackToggle;
-
-        [Header("설정 데이터")] [SerializeField] private SettingsData_oBJ settingsData;
-
-        [Tooltip("조이스틱의 위치와 크기를 제어하는 RectTransform 입니다.")] [SerializeField]
-        private RectTransform joystickTransform;
-
-        VamserLikeGameManager _gameManager;
-        private CancellationTokenSource _cancellationTokenSource;
-        private Tween _expSliderTween;
-
-        // WebGL 메모리 최적화를 위한 변수
-        private int _lastWave = -1; // Wave UI 업데이트 최적화를 위한 변수
-
-        private readonly List<SelectSkillBtnPrefab>
-            _skillButtonPool = new List<SelectSkillBtnPrefab>(); // 스킬 버튼 오브젝트 풀링
-
-        private readonly List<SkillData> _skillChoices = new List<SkillData>(3); // 스킬 선택 최적화를 위한 리스트
-
-        private readonly List<SkillData> _acquiredAccessorySkills = new List<SkillData>(); // 획득한 장신구 스킬 목록
-        private int _nextJuListSlotIndex = 0; // 장신구 UI 슬롯 업데이트 최적화를 위한 인덱스
+        [Header("설정 데이터")]
+        [FormerlySerializedAs("settingsData")] [SerializeField] private SettingsData_oBJ m_settingsData;
 
         /// <summary>
         /// 레벨업 시 표시되는 스킬 선택 UI입니다.
         /// 3개의 랜덤 스킬이 제시되며, 선택 시 팝업이 닫힙니다.
         /// 리프레시 버튼으로 선택지를 다시 뽑을 수 있습니다.
         /// </summary>
-        [Header("Skill Selection UI")] [Tooltip("스킬 선택 팝업의 최상위 패널입니다.")] [SerializeField]
-        private GameObject skillSelectionPanel;
+        [Header("Skill Selection UI")]
+        [Tooltip("스킬 선택 팝업의 최상위 패널입니다.")]
+        [FormerlySerializedAs("skillSelectionPanel")] [SerializeField] private GameObject m_skillSelectionPanel;
+        [Tooltip("스킬 선택지를 다시 뽑는 리프레시 버튼입니다.")]
+        [FormerlySerializedAs("refreshButton")] [SerializeField] private Button m_refreshButton;
+        [Tooltip("동적으로 생성될 스킬 선택 버튼의 프리팹입니다.")]
+        [FormerlySerializedAs("skillSelectionButtonPrefab")] [SerializeField] private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
+        [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")]
+        [FormerlySerializedAs("skillButtonContainer")] [SerializeField] private GameObject m_skillButtonContainer;
+        [FormerlySerializedAs("countdownText")] [SerializeField] private TMP_Text m_countdownText;
+        [FormerlySerializedAs("countDownslider")] [SerializeField] private Slider m_countDownSlider;
 
-        [Tooltip("스킬 선택지를 다시 뽑는 리프레시 버튼입니다.")] [SerializeField]
-        private Button refreshButton;
+        [Header("Skill Data")]
+        [Tooltip("게임 내 모든 스킬 정보가 담긴 데이터베이스입니다.")]
+        [FormerlySerializedAs("skillDatabase")] [SerializeField] private SkillDatabase m_skillDatabase;
 
-        [Tooltip("동적으로 생성될 스킬 선택 버튼의 프리팹입니다.")] [SerializeField]
-        private SelectSkillBtnPrefab skillSelectionButtonPrefab;
+        // Private Fields
+        private VamserLikeGameManager m_gameManager;
+        private VamPlayerControll m_playerController;
+        private CancellationTokenSource _cancellationTokenSource;
+        private Tween _expSliderTween;
 
-        [Tooltip("생성된 스킬 선택 버튼들이 위치할 부모 컨테이너입니다.")] [SerializeField]
-        private GameObject skillButtonContainer;
+        // WebGL 메모리 최적화를 위한 변수
+        private int _lastWave = -1; // Wave UI 업데이트 최적화를 위한 변수
 
-        [SerializeField] TMP_Text countdownText;
-        [SerializeField] private Slider countDownslider;
-
-
-        [Header("Skill Data")] [Tooltip("게임 내 모든 스킬 정보가 담긴 데이터베이스입니다.")] [SerializeField]
-        private SkillDatabase skillDatabase;
-
+        // 스킬 선택 관련 필드
+        private readonly List<SelectSkillBtnPrefab> _skillButtonPool = new List<SelectSkillBtnPrefab>(); // 스킬 버튼 오브젝트 풀링
+        private readonly List<SkillData> _skillChoices = new List<SkillData>(3); // 스킬 선택 최적화를 위한 리스트
+        private readonly List<SkillData> _acquiredAccessorySkills = new List<SkillData>(); // 획득한 장신구 스킬 목록
+        private int _nextJuListSlotIndex = 0; // 장신구 UI 슬롯 업데이트 최적화를 위한 인덱스
         private int _pendingSkillSelections = 0; // 처리 대기 중인 스킬 선택 횟수
         private bool _isSkillSelectionActive = false; // 스킬 선택 UI가 활성화되어 있는지 여부
         private CancellationTokenSource _skillSelectionTimerCts; // 자동 스킬 선택 타이머를 위한 CancellationTokenSource
+
+        // 상수
+        private static readonly Vector2 k_DefaultJoystickPosition = new Vector2(300, 300);
 
         #endregion
 
@@ -111,7 +106,7 @@ namespace DogGuns_Games.vamsir
         private void Awake()
         {
             // 싱글톤 인스턴스를 사용하여 더 효율적이고 안정적으로 참조를 가져옵니다.
-            _gameManager = VamserLikeGameManager.Instance; // Instance 프로퍼티가 null 체크를 담당합니다.
+            m_gameManager = VamserLikeGameManager.Instance; // Instance 프로퍼티가 null 체크를 담당합니다.
 
 #if UNITY_STANDALONE || UNITY_WEBGL|| UNITY_STANDALONE_OSX
             // PC 및 WebGL 환경에서 창 크기를 720x1280으로 고정합니다.
@@ -122,35 +117,11 @@ namespace DogGuns_Games.vamsir
 
         private void Start()
         {
-            PlayStateManager.OnGameStart += GameStart;
-            PlayStateManager.OnGamePause += Pause;
-            PlayStateManager.OnGameResume += Resume;
-            PlayStateManager.OnGameOver += ShowGameOverPopup;
-            // 플레이어 경험치 이벤트 구독
-            PlayerBase.OnExpChanged += OnPlayerExpChanged;
-            PlayerBase.OnLevelUp += OnPlayerLevelUp;
-            SettingsData_oBJ.OnSettingsChanged += JoystickSetting; // 설정 변경 이벤트 구독
+            // 참조 캐싱
+            m_playerController = FindFirstObjectByType<VamPlayerControll>();
+            m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
 
-            // 자동 공격 토글 이벤트 연결
-            autoAttackToggle.onValueChanged.AddListener(isOn =>
-            {
-                var playerController = FindFirstObjectByType<VamPlayerControll>();
-                if (playerController != null)
-                {
-                    LogManager.Log($"VamPlayerControll을 찾았습니다. 자동 공격 상태를 {isOn}(으)로 변경합니다.",
-                        LogManager.LogCategory.VamserLikeUI);
-                    playerController.AutoAttackEnabledByToggle = isOn;
-                }
-                else
-                {
-                    LogManager.LogError(
-                        "VamPlayerControll을 찾을 수 없습니다! 플레이어 오브젝트가 활성화되어 있고 VamPlayerControll 컴포넌트가 추가되었는지 확인하세요.",
-                        LogManager.LogCategory.VamserLikeUI);
-                }
-            });
-
-            // 리프레시 버튼 이벤트 연결
-            refreshButton.onClick.AddListener(GenerateSkillChoices);
+            SubscribeToEvents();
         }
 
         private void OnDestroy()
@@ -170,8 +141,10 @@ namespace DogGuns_Games.vamsir
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
             SettingsData_oBJ.OnSettingsChanged -= JoystickSetting; // 설정 변경 이벤트 구독 해제
 
+            // 토글 및 버튼 이벤트 해제
+            m_autoAttackToggle.onValueChanged.RemoveListener(OnAutoAttackToggleChanged);
             // 리프레시 버튼 이벤트 해제
-            refreshButton.onClick.RemoveListener(GenerateSkillChoices);
+            m_refreshButton.onClick.RemoveListener(GenerateSkillChoices);
         }
 
         #endregion
@@ -181,50 +154,82 @@ namespace DogGuns_Games.vamsir
         private void GameStart()
         {
             // 게임 시작 시, 파일에 저장된 최신 설정값을 명시적으로 불러옵니다.
-            settingsData.LoadSettings();
+            m_settingsData.LoadSettings();
 
-            BtnSetting();
+            InitializeButtons();
             JoystickSetting();
             SoundSetting(); // 사운드 설정 추가
             InitializeJuListUI(); // 스킬 UI 리스트 초기화
             _acquiredAccessorySkills.Clear(); // 게임 시작 시 획득한 스킬 목록 초기화
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // UI 초기 상태 설정
-            // 레벨 텍스트 초기화 (메모리 최적화)
-            LevelText.SetText("Lv. {0}", (int)_gameManager.PlayerLevel());
-            playerLevelText.SetText("Lv. {0}", (int)_gameManager.PlayerLevel());
-
-            // 경험치 슬라이더 초기화
-            playerLevelSlider.value = _gameManager.GetPlayerExpProgress();
-            if (expSlider != null) expSlider.value = _gameManager.GetPlayerExpProgress();
+            InitializeUI();
 
             UpdateUI(_cancellationTokenSource.Token).Forget();
         }
 
         private void Pause()
         {
-            joystickTransform.gameObject.SetActive(false);
+            m_joystickTransform.gameObject.SetActive(false);
         }
 
         private void Resume()
         {
-            joystickTransform.gameObject.SetActive(true);
+            m_joystickTransform.gameObject.SetActive(true);
             JoystickSetting();
         }
 
         #endregion
 
         #region UI 설정 및 초기화
+        
+        /// <summary>
+        /// 게임 시작 시 UI 요소들을 초기화합니다.
+        /// </summary>
+        private void InitializeUI()
+        {
+            UpdatePlayerLevelUI(m_gameManager.PlayerLevel());
+            UpdatePlayerExpUI(m_gameManager.GetPlayerExpProgress());
+        }
+        
+        /// <summary>
+        /// 필요한 이벤트들을 구독합니다.
+        /// </summary>
+        private void SubscribeToEvents()
+        {
+            PlayStateManager.OnGameStart += GameStart;
+            PlayStateManager.OnGamePause += Pause;
+            PlayStateManager.OnGameResume += Resume;
+            PlayStateManager.OnGameOver += ShowGameOverPopup;
+
+            PlayerBase.OnExpChanged += OnPlayerExpChanged;
+            PlayerBase.OnLevelUp += OnPlayerLevelUp;
+            SettingsData_oBJ.OnSettingsChanged += JoystickSetting;
+
+            m_autoAttackToggle.onValueChanged.AddListener(OnAutoAttackToggleChanged);
+            m_refreshButton.onClick.AddListener(GenerateSkillChoices);
+        }
+        
+        /// <summary>
+        /// 자동 공격 토글 상태가 변경될 때 호출됩니다.
+        /// </summary>
+        private void OnAutoAttackToggleChanged(bool isOn)
+        {
+            if (m_playerController != null)
+                m_playerController.AutoAttackEnabledByToggle = isOn;
+            else
+                LogManager.LogError("VamPlayerControll을 찾을 수 없습니다!", LogManager.LogCategory.VamserLikeUI);
+        }
 
         private void JoystickSetting()
         {
-            if (variableJoystick == null)
+            if (m_variableJoystick == null)
             {
-                variableJoystick = FindFirstObjectByType<VariableJoystick>();
+                LogManager.LogError("VariableJoystick을 찾을 수 없습니다.", LogManager.LogCategory.VamserLikeUI);
+                return;
             }
 
-            if (settingsData == null)
+            if (m_settingsData == null)
             {
                 LogManager.LogError("VamserLikeUI에 SettingsData가 할당되지 않았습니다. 인스펙터에서 할당해주세요.",
                     LogManager.LogCategory.VamserLikeUI);
@@ -234,46 +239,43 @@ namespace DogGuns_Games.vamsir
             // OnSettingsChanged 이벤트는 이미 메모리의 settingsData가 업데이트된 후에 호출됩니다.
             // 여기서 LoadSettings()를 다시 호출하면 파일의 이전 데이터로 덮어쓰여 문제가 발생하므로 제거합니다.
 
-            joystickTransform.localScale = new Vector3(settingsData.joystickSize,
-                settingsData.joystickSize, 1);
-            variableJoystick.SetMode((JoystickType)settingsData.joystickType);
+            m_joystickTransform.localScale = new Vector3(m_settingsData.joystickSize, m_settingsData.joystickSize, 1);
+            if (m_variableJoystick != null)
+            {
+                m_variableJoystick.SetMode((JoystickType)m_settingsData.joystickType);
+            }
 
-            joystickTransform.anchoredPosition = settingsData.joystickPos;
-
-            CheckJoystickVisibilityAndResetIfOutside();
+            // 저장된 조이스틱 위치가 화면 밖에 있는지 확인하고, 밖에 있다면 기본 위치로 재설정합니다.
+            if (IsJoystickVisible(m_settingsData.joystickPos))
+            {
+                m_joystickTransform.anchoredPosition = m_settingsData.joystickPos;
+            }
+            else
+            {
+                m_joystickTransform.anchoredPosition = k_DefaultJoystickPosition; // 안전한 기본 위치
+                LogManager.LogWarning("저장된 조이스틱 위치가 화면 밖이라 기본 위치로 재설정합니다.", LogManager.LogCategory.VamserLikeUI);
+            }
         }
 
         /// <summary>
-        /// 조이스틱이 화면 밖에 있는지 확인하고, 밖에 있다면 기본 위치로 재설정합니다.
-        /// Screen Space - Camera 렌더 모드를 기준으로 동작합니다.
+        /// 지정된 위치에 조이스틱이 있을 때 화면에 보이는지 확인합니다.
         /// </summary>
-        private void CheckJoystickVisibilityAndResetIfOutside()
+        /// <param name="joystickPosition">확인할 조이스틱의 anchoredPosition</param>
+        /// <returns>화면에 보이면 true, 그렇지 않으면 false</returns>
+        private bool IsJoystickVisible(Vector2 joystickPosition)
         {
-            var canvas = joystickTransform.GetComponentInParent<Canvas>();
-            if (canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            {
-                // ScreenSpaceOverlay는 이 로직으로 처리할 수 없으므로, 필요 시 별도 구현
-                return;
-            }
+            var canvas = m_joystickTransform.GetComponentInParent<Canvas>();
+            if (canvas == null) return false;
 
-            var camera = canvas.worldCamera;
-            if (camera == null)
-            {
-                LogManager.LogWarning("조이스틱 가시성 검사를 위한 렌더 카메라를 찾을 수 없습니다.", LogManager.LogCategory.VamserLikeUI);
-                return;
-            }
+            RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+            Rect joystickRect = new Rect(
+                joystickPosition.x - (m_joystickTransform.rect.width * m_joystickTransform.pivot.x * m_joystickTransform.localScale.x),
+                joystickPosition.y - (m_joystickTransform.rect.height * m_joystickTransform.pivot.y * m_joystickTransform.localScale.y),
+                m_joystickTransform.rect.width * m_joystickTransform.localScale.x,
+                m_joystickTransform.rect.height * m_joystickTransform.localScale.y
+            );
 
-            Rect screenRect = new Rect(0, 0, Screen.width, Screen.height);
-            Vector3[] joystickCorners = new Vector3[4];
-            joystickTransform.GetWorldCorners(joystickCorners);
-
-            bool isVisible = joystickCorners.Any(corner => screenRect.Contains(camera.WorldToScreenPoint(corner)));
-
-            if (!isVisible)
-            {
-                joystickTransform.anchoredPosition = new Vector2(300, 300); // 안전한 기본 위치
-                LogManager.LogWarning("저장된 조이스틱 위치가 화면 밖이라 기본 위치로 재설정합니다.", LogManager.LogCategory.VamserLikeUI);
-            }
+            return canvasRect.rect.Overlaps(joystickRect, true);
         }
 
         private void SoundSetting()
@@ -286,7 +288,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void InitializeJuListUI()
         {
-            foreach (var image in juListUIList)
+            foreach (var image in m_juListUIList)
             {
                 if (image == null) continue;
                 var color = image.color;
@@ -299,17 +301,17 @@ namespace DogGuns_Games.vamsir
             _nextJuListSlotIndex = 0; // 인덱스 초기화
         }
 
-        private void BtnSetting()
+        private void InitializeButtons()
         {
-            menuBtn.onClick.AddListener(PausePopUp);
+            m_menuButton.onClick.AddListener(PausePopUp);
 
-            exitBtn.onClick.AddListener(PausePopUp);
+            m_exitButton.onClick.AddListener(PausePopUp);
 
-            settingBtn.onClick.AddListener(() => { _gameManager.OpenOptionPopup(); });
+            m_settingButton.onClick.AddListener(() => { m_gameManager.OpenOptionPopup(); });
 
             // 게임 오버 버튼 설정
-            gameOverExitBtn.onClick.AddListener(GameOverExit);
-            gameOverRestartBtn.onClick.AddListener(GameOverRestart);
+            m_gameOverExitButton.onClick.AddListener(GameOverExit);
+            m_gameOverRestartButton.onClick.AddListener(GameOverRestart);
         }
 
         #endregion
@@ -319,14 +321,14 @@ namespace DogGuns_Games.vamsir
         private void PausePopUp()
         {
             // 메뉴 패널의 현재 활성 상태의 반대로 설정합니다.
-            bool isMenuPanelBecomingActive = !menuPanel.activeSelf;
-            menuPanel.SetActive(isMenuPanelBecomingActive);
+            bool isMenuPanelBecomingActive = !m_menuPanel.activeSelf;
+            m_menuPanel.SetActive(isMenuPanelBecomingActive);
 
             // isMenuPanelBecomingActive 값에 따라 게임의 Pause/Resume 상태를 설정합니다.
-            _gameManager.SetMenuPopupState(isMenuPanelBecomingActive);
+            m_gameManager.SetMenuPopupState(isMenuPanelBecomingActive);
 
             // 메뉴 패널이 활성화되면 조이스틱을 비활성화하고, 그 반대의 경우도 마찬가지입니다.
-            joystickTransform.gameObject.SetActive(!isMenuPanelBecomingActive);
+            m_joystickTransform.gameObject.SetActive(!isMenuPanelBecomingActive);
 
             // 메뉴 패널이 활성화될 때만 장신구 UI를 업데이트합니다.
             if (isMenuPanelBecomingActive) RefreshJuListDisplay();
@@ -335,14 +337,14 @@ namespace DogGuns_Games.vamsir
         private void GameOverExit()
         {
             // 게임 오버 패널을 비활성화하고, 로비 씬으로 이동
-            gameOverPanel.SetActive(false);
+            m_gameOverPanel.SetActive(false);
             SceneLoader.Instance.LoadLobbyScene();
         }
 
         private void GameOverRestart()
         {
             // 게임 오버 패널을 비활성화하고, 게임을 다시 시작
-            gameOverPanel.SetActive(false);
+            m_gameOverPanel.SetActive(false);
             // 씬을 다시 로드하여 게임을 재시작
             UnityEngine.SceneManagement.SceneManager.LoadScene(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
@@ -361,16 +363,16 @@ namespace DogGuns_Games.vamsir
             UpdateGameOverUI();
 
             // 게임 오버 패널 활성화
-            gameOverPanel.SetActive(true);
+            m_gameOverPanel.SetActive(true);
 
             // 조이스틱 비활성화 및 위치/상태 초기화
-            joystickTransform.gameObject.SetActive(false);
-            if (variableJoystick != null)
+            m_joystickTransform.gameObject.SetActive(false);
+            if (m_variableJoystick != null)
             {
-                variableJoystick.OnPointerUp(null); // 입력 해제
+                m_variableJoystick.OnPointerUp(null); // 입력 해제
             }
 
-            autoAttackToggle.isOn = false; // 자동 공격 토글 비활성화
+            m_autoAttackToggle.isOn = false; // 자동 공격 토글 비활성화
 
             // 취소 토큰 소스가 있다면 취소합니다.
             _cancellationTokenSource?.Cancel();
@@ -381,10 +383,10 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void UpdateGameOverUI()
         {
-            gameOverText.text = "Game Over";
-            gameOverCoinText.SetText("Coins: {0}", getcoinCount);
-            gameOverWaveText.SetText("Wave: {0}", _gameManager.MobSpawnWave());
-            gameOverMobCountText.SetText("Kills: {0}", _gameManager.Mob_Count());
+            m_gameOverText.text = "Game Over";
+            m_gameOverCoinText.SetText("Coins: {0}", m_getCoinCount);
+            m_gameOverWaveText.SetText("Wave: {0}", m_gameManager.MobSpawnWave());
+            m_gameOverMobCountText.SetText("Kills: {0}", m_gameManager.Mob_Count());
         }
 
         #endregion
@@ -395,7 +397,7 @@ namespace DogGuns_Games.vamsir
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                int currentWave = _gameManager.MobSpawnWave();
+                int currentWave = m_gameManager.MobSpawnWave();
                 if (_lastWave != currentWave)
                 {
                     _lastWave = currentWave;
@@ -404,9 +406,9 @@ namespace DogGuns_Games.vamsir
                 }
 
                 // SetText를 사용하여 숫자 업데이트 시 문자열 할당 방지
-                coinText.SetText("{0}", _gameManager.CoinCount());
-                getcoinCount = _gameManager.CoinCount();
-                mobCountText.SetText("{0}", _gameManager.Mob_Count());
+                m_coinText.SetText("{0}", m_gameManager.CoinCount());
+                m_getCoinCount = m_gameManager.CoinCount();
+                m_mobCountText.SetText("{0}", m_gameManager.Mob_Count());
                 await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate, cancellationToken);
             }
         }
@@ -414,13 +416,13 @@ namespace DogGuns_Games.vamsir
         // DOTween을 이용한 mobWaveText 페이드 인/아웃 효과
         private async UniTask WaveTextFadeEffect(string waveText)
         {
-            mobWaveText.text = waveText;
-            mobWaveText.alpha = 0f;
-            mobWaveText.gameObject.SetActive(true);
-            await mobWaveText.DOFade(1f, 0.5f).AsyncWaitForCompletion(); // 페이드 인
+            m_mobWaveText.text = waveText;
+            m_mobWaveText.alpha = 0f;
+            m_mobWaveText.gameObject.SetActive(true);
+            await m_mobWaveText.DOFade(1f, 0.5f).AsyncWaitForCompletion(); // 페이드 인
             await UniTask.Delay(1000); // 1초간 표시
-            await mobWaveText.DOFade(0f, 0.5f).AsyncWaitForCompletion(); // 페이드 아웃
-            mobWaveText.gameObject.SetActive(false);
+            await m_mobWaveText.DOFade(0f, 0.5f).AsyncWaitForCompletion(); // 페이드 아웃
+            m_mobWaveText.gameObject.SetActive(false);
         }
 
         #endregion
@@ -433,22 +435,20 @@ namespace DogGuns_Games.vamsir
         private void OnPlayerExpChanged(float currentExp, float maxExp)
         {
             float progress = (maxExp > 0) ? currentExp / maxExp : 0;
+            UpdatePlayerExpUI(progress);
+        }
 
-            // 기존 트윈을 중지하고 새 애니메이션 시작
-            _expSliderTween?.Kill();
-            _expSliderTween = playerLevelSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
+        /// <summary>
+        /// 플레이어 경험치 UI(슬라이더)를 업데이트합니다.
+        /// </summary>
+        private void UpdatePlayerExpUI(float progress)
+        {
+            _expSliderTween?.Kill(); // 기존 트윈 중지
+            _expSliderTween = m_playerLevelSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
 
-            // 중복 슬라이더가 있는 경우 함께 업데이트
-            if (expSlider != null)
-            {
-                // 이 슬라이더는 별도의 트윈으로 관리할 필요가 거의 없으므로, Kill 없이 바로 실행합니다.
-                expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
-            }
-
-            // 디버그 로그 (메모리 최적화)
-            // WebGL 환경에서는 GC 부담을 줄이기 위해 릴리즈 빌드에서 이 로그를 비활성화하는 것이 좋습니다.
-            // LogManager.Log($"경험치 UI 업데이트: {currentExp:F1}/{maxExp:F1} ({progress * 100:F1}%)",
-            //     LogManager.LogCategory.VamserLikeUI);
+            // 인게임 하단 경험치 슬라이더도 함께 업데이트
+            if (m_expSlider != null)
+                m_expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
         }
 
         /// <summary>
@@ -456,9 +456,7 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void OnPlayerLevelUp(float newLevel)
         {
-            // 레벨 텍스트 업데이트 (문자열 할당 최적화)
-            LevelText.SetText("Lv. {0}", (int)newLevel);
-            playerLevelText.SetText("Lv. {0}", (int)newLevel);
+            UpdatePlayerLevelUI(newLevel);
 
             // 레벨업 축하 효과 (선택사항)
             ShowLevelUpEffect(newLevel);
@@ -480,22 +478,30 @@ namespace DogGuns_Games.vamsir
         }
 
         /// <summary>
+        /// 플레이어 레벨 UI(텍스트)를 업데이트합니다.
+        /// </summary>
+        private void UpdatePlayerLevelUI(float level)
+        {
+            m_levelText.SetText("Lv. {0}", (int)level);
+            m_playerLevelText_InGame.SetText("Lv. {0}", (int)level);
+        }
+
+        /// <summary>
         /// 레벨업 시 시각적 효과를 표시합니다.
         /// </summary>
         private void ShowLevelUpEffect(float newLevel)
         {
             // 레벨 텍스트에 간단한 효과 적용 (선택사항)
-            if (LevelText != null)
+            if (m_levelText != null)
             {
                 // 크기 변화 효과 (DOTween 사용)
-                LevelText.transform.localScale = Vector3.one * 1.2f;
-                LevelText.transform.DOScale(Vector3.one, 0.3f)
-                    .SetEase(Ease.OutBack);
+                m_levelText.transform.localScale = Vector3.one * 1.2f;
+                m_levelText.transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.OutBack);
 
                 // 색상 변화 효과 (DOTween 사용)
-                Color originalColor = LevelText.color;
-                LevelText.color = Color.yellow;
-                LevelText.DOColor(originalColor, 1f);
+                Color originalColor = m_levelText.color;
+                m_levelText.color = Color.yellow;
+                m_levelText.DOColor(originalColor, 1f);
             }
         }
 
@@ -519,9 +525,9 @@ namespace DogGuns_Games.vamsir
         /// </summary>
         private void ShowSkillSelectionPanel()
         {
-            _gameManager.SetMenuPopupState(true); // 게임 일시정지
+            m_gameManager.SetMenuPopupState(true); // 게임 일시정지
             _isSkillSelectionActive = true;
-            skillSelectionPanel.SetActive(true);
+            m_skillSelectionPanel.SetActive(true);
             GenerateSkillChoices();
         }
 
@@ -545,15 +551,15 @@ namespace DogGuns_Games.vamsir
             const float duration = 6.0f;
             float timer = duration;
 
-            countdownText.gameObject.SetActive(true);
-            countDownslider.gameObject.SetActive(true);
-            countDownslider.value = 1f;
+            m_countdownText.gameObject.SetActive(true);
+            m_countDownSlider.gameObject.SetActive(true);
+            m_countDownSlider.value = 1f;
 
             // 타이머가 진행 중이고, 취소 요청이 없을 때만 루프를 실행합니다.
             while (timer > 0.01f && !cancellationToken.IsCancellationRequested)
             {
-                countdownText.text = Mathf.CeilToInt(timer).ToString();
-                countDownslider.value = timer / duration;
+                m_countdownText.text = Mathf.CeilToInt(timer).ToString();
+                m_countDownSlider.value = timer / duration;
 
                 // await UniTask.Yield()는 취소 시 예외를 던지므로, 안전하게 다음 프레임까지 기다립니다.
                 await UniTask.NextFrame(cancellationToken);
@@ -568,8 +574,8 @@ namespace DogGuns_Games.vamsir
             {
                 LogManager.Log("카운트다운 정상 완료. 자동 선택을 시작합니다.", LogManager.LogCategory.VamserLikeUI);
                 // 시간이 다 되면 0을 표시하고 자동 선택 실행
-                countdownText.text = "0";
-                countDownslider.value = 0;
+                m_countdownText.text = "0";
+                m_countDownSlider.value = 0;
                 // 애니메이션이 끝날 때까지 기다린 후 다음 로직을 실행합니다.
                 await SelectRandomSkill();
             }
@@ -626,7 +632,7 @@ namespace DogGuns_Games.vamsir
 
             // 2. LINQ 대신 수동으로 랜덤 스킬 선택 (메모리 최적화)
             _skillChoices.Clear();
-            var totalSkills = skillDatabase.allSkills.Count;
+            var totalSkills = m_skillDatabase.allSkills.Count;
             int skillsToSelect = Mathf.Min(3, totalSkills);
 
             for (int i = 0; i < skillsToSelect; i++)
@@ -635,7 +641,7 @@ namespace DogGuns_Games.vamsir
                 do
                 {
                     int randomIndex = Random.Range(0, totalSkills);
-                    selectedSkill = skillDatabase.allSkills[randomIndex];
+                    selectedSkill = m_skillDatabase.allSkills[randomIndex];
                 } while (_skillChoices.Contains(selectedSkill)); // 중복 방지
 
                 _skillChoices.Add(selectedSkill);
@@ -649,13 +655,13 @@ namespace DogGuns_Games.vamsir
                 {
                     // 풀에서 재사용
                     button = _skillButtonPool[i];
-                    // 버튼을 재사용할 때, 부모를 다시 설정하여 childCount 문제를 방지합니다.
-                    button.transform.SetParent(skillButtonContainer.transform, false);
+                    // 버튼을 재사용할 때, 부모를 다시 설정하여 문제를 방지합니다.
+                    button.transform.SetParent(m_skillButtonContainer.transform, false);
                 }
                 else
                 {
                     // 풀이 부족하면 새로 생성하고 추가
-                    button = Instantiate(skillSelectionButtonPrefab, skillButtonContainer.transform);
+                    button = Instantiate(m_skillSelectionButtonPrefab, m_skillButtonContainer.transform);
                     _skillButtonPool.Add(button);
                 }
 
@@ -676,9 +682,9 @@ namespace DogGuns_Games.vamsir
 
             // TODO: 실제 스킬 적용 로직 (예: 플레이어 스탯 강화, 새 무기 추가 등)
             // 선택된 스킬을 인게임 인벤토리에 직접 추가합니다.
-            if (_gameManager.spawnedPlayer != null)
+            if (m_gameManager.SpawnedPlayer != null)
             {
-                var playerRenderer = _gameManager.spawnedPlayer.GetComponent<SpriteRenderer>();
+                var playerRenderer = m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>();
                 EffectManager.Instance.PlayLevelUpEffect(playerRenderer);
             }
 
@@ -701,21 +707,21 @@ namespace DogGuns_Games.vamsir
                 // 모든 선택이 끝났으면, 패널을 닫고 게임을 재개합니다.
                 _skillSelectionTimerCts?.Cancel();
                 _skillSelectionTimerCts = null;
-                skillSelectionPanel.SetActive(false);
+                m_skillSelectionPanel.SetActive(false);
                 _isSkillSelectionActive = false;
 
                 // 패널이 닫힐 때 카운트다운 UI를 비활성화합니다.
-                if (countdownText != null)
+                if (m_countdownText != null)
                 {
-                    countdownText.gameObject.SetActive(false);
+                    m_countdownText.gameObject.SetActive(false);
                 }
 
-                if (countDownslider != null)
+                if (m_countDownSlider != null)
                 {
-                    countDownslider.gameObject.SetActive(false);
+                    m_countDownSlider.gameObject.SetActive(false);
                 }
 
-                _gameManager.SetMenuPopupState(false); // 게임 재개
+                m_gameManager.SetMenuPopupState(false); // 게임 재개
             }
         }
 
@@ -726,11 +732,11 @@ namespace DogGuns_Games.vamsir
         {
             LogManager.Log("장신구 UI 목록을 새로 고칩니다.", LogManager.LogCategory.VamserLikeUI);
             // juListUIList와 _acquiredAccessorySkills 중 더 작은 크기를 기준으로 반복합니다.
-            int displayCount = Mathf.Min(juListUIList.Count, _acquiredAccessorySkills.Count);
+            int displayCount = Mathf.Min(m_juListUIList.Count, _acquiredAccessorySkills.Count);
 
-            for (int i = 0; i < juListUIList.Count; i++)
+            for (int i = 0; i < m_juListUIList.Count; i++)
             {
-                var targetSlot = juListUIList[i];
+                var targetSlot = m_juListUIList[i];
                 if (targetSlot == null)
                 {
                     LogManager.LogWarning("항목이 비어있음 ");

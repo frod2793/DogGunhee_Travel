@@ -1333,18 +1333,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: '[ - Logmanager - ]'
       objectReference: {fileID: 0}
-    - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
-      propertyPath: logCategorySettings.Array.data[11].enableLog
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
-      propertyPath: logCategorySettings.Array.data[12].enableLog
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
-      propertyPath: logCategorySettings.Array.data[16].enableLog
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

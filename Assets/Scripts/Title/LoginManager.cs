@@ -150,6 +150,11 @@ namespace DogGuns_Games
                     // 사용자에게 잠시 후 재시도한다는 UI 피드백을 보여주는 것이 좋습니다.
                     await DeleteGuestInfoAndRetryLoginAsync();
                 }
+        else if (e.Message.Contains("bad packageName"))
+        {
+            Debug.LogError($"게스트 로그인 실패: 잘못된 패키지 이름입니다. Unity 프로젝트 설정과 뒤끝 콘솔의 패키지 이름이 일치하는지 확인해주세요.");
+            ShowErrorPopupAsync("게스트 로그인에 실패했습니다.\n(오류: 잘못된 패키지 이름)").Forget();
+        }
                 else
                 {
                     Debug.LogError($"게스트 로그인 실패: {e.Message}");

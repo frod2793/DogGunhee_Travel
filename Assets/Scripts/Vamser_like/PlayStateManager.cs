@@ -12,8 +12,6 @@ namespace DogGuns_Games.vamsir
         
         public static PlayStateManager instance;
 
-        public bool isPlay = false;
-
         private void Awake()
         {
             if (instance == null)
@@ -21,6 +19,11 @@ namespace DogGuns_Games.vamsir
                 instance = this;
             }
         }
+        
+        /// <summary>
+        /// 현재 게임이 플레이 상태인지 여부를 반환합니다.
+        /// </summary>
+        public bool IsPlaying => PlayState == GameState.Play;
 
         public enum GameState
         {
@@ -33,7 +36,7 @@ namespace DogGuns_Games.vamsir
         private GameState _playState;
 
         public GameState PlayState
-        {
+        {   
             get => _playState;
             set
             {
@@ -42,40 +45,46 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        private void OnValidate()
-        {
-            if (Application.isPlaying)
-            {
-                // 플레이 모드에서만 SetMobState 호출
-                SetMobState(PlayState);
-            }
-        }
-
         private void Start()
         {
-           Invoke(nameof(Gamestart), 1f);
+           // 게임 시작은 VamserLikeGameManager에서 명시적으로 호출하도록 변경
+           // 이 클래스는 더 이상 스스로 게임 시작을 호출하지 않습니다.
         }
-        
-        private void Gamestart()
+        public void StartGame()
         {
             PlayState = GameState.Play;
         }
 
-        public void SetMobState(GameState state)
+        public void Pause()
         {
-            switch (state)
+            if (PlayState == GameState.GameOver) return;
+            PlayState = GameState.Pause;
+        }
+
+        public void Resume()
+        {
+            if (PlayState == GameState.GameOver) return;
+            PlayState = GameState.Resume;
+        }
+
+        public void GameOver()
+        {
+            PlayState = GameState.GameOver;
+        }
+
+        private void SetMobState(GameState newState)
+        {
+            switch (newState)
             {
                 case GameState.Play:
                     OnGameStart?.Invoke();
                     LogManager.Log("OnGameStart", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.Pause:
-                    OnGamePause?.Invoke();
-                    LogManager.Log("OnGamePause", LogManager.LogCategory.PlayStateManager);
-                    break;
                 case GameState.Resume:
-                    OnGameResume?.Invoke();
-                    LogManager.Log("OnGameResume", LogManager.LogCategory.PlayStateManager);
+                    if (newState == GameState.Pause) OnGamePause?.Invoke();
+                    else OnGameResume?.Invoke();
+                    LogManager.Log(newState == GameState.Pause ? "OnGamePause" : "OnGameResume", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.GameOver:
                     OnGameOver?.Invoke();

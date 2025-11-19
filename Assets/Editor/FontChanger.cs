@@ -40,7 +40,7 @@ public class FontChanger : EditorWindow
     private void ChangeFontsInScene()
     {
         // 현재 씬에 있는 모든 TextMeshProUGUI 컴포넌트를 찾음 (비활성화된 오브젝트 포함)
-        TextMeshProUGUI[] allTmpTexts = FindObjectsOfType<TextMeshProUGUI>(true);
+        TextMeshProUGUI[] allTmpTexts = FindObjectsByType<TextMeshProUGUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         int changedCount = 0;
 
         foreach (TextMeshProUGUI tmp in allTmpTexts)
@@ -52,7 +52,7 @@ public class FontChanger : EditorWindow
         }
 
         // 월드 스페이스의 TextMeshPro 컴포넌트도 변경
-        TextMeshPro[] allWorldTmpTexts = FindObjectsOfType<TextMeshPro>(true);
+        TextMeshPro[] allWorldTmpTexts = FindObjectsByType<TextMeshPro>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (TextMeshPro tmp in allWorldTmpTexts)
         {
             Undo.RecordObject(tmp, "Change Font");

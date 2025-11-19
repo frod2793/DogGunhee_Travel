@@ -1,0 +1,5 @@
+# ninja log v5
+423	695	1763509277514564275	/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/5h5s132n/obj/arm64-v8a/libswappywrapper.so	9aac0d6b777e355
+5	422	1763509277246828186	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	c2ba8a4b8a25ec25
+2	636	1763512261211352735	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	c2ba8a4b8a25ec25
+637	902	1763512261476217012	/Users/woodenshield/Desktop/UNITY/Project/DogGunhee_Travel/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/5h5s132n/obj/arm64-v8a/libswappywrapper.so	9aac0d6b777e355

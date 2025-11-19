@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4801870749949023554}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 111.95867, y: 263.98102, z: -4.8481636}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -44,43 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8fa75bb2f23b2345a07f23985742f6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableDebugLog: 1
-  enableErrorLog: 1
-  enableWarningLog: 1
-  logCategorySettings:
-  - category: 0
-    enableLog: 1
-  - category: 1
-    enableLog: 0
-  - category: 2
-    enableLog: 0
-  - category: 3
-    enableLog: 0
-  - category: 4
-    enableLog: 0
-  - category: 5
-    enableLog: 0
-  - category: 6
-    enableLog: 0
-  - category: 7
-    enableLog: 0
-  - category: 8
-    enableLog: 0
-  - category: 9
-    enableLog: 0
-  - category: 10
-    enableLog: 0
-  - category: 11
-    enableLog: 0
-  - category: 12
-    enableLog: 0
-  - category: 13
-    enableLog: 0
-  - category: 14
-    enableLog: 0
-  - category: 15
-    enableLog: 0
-  - category: 16
-    enableLog: 0
-  - category: 17
-    enableLog: 0
+  m_enableDebugLog: 1
+  m_enableErrorLog: 1
+  m_enableWarningLog: 1
+  m_logCategoryEnables: 0000000000000000000000000000000000000000
