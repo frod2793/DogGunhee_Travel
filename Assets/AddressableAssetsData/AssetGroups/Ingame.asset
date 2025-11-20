@@ -130,6 +130,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bbed90bc3c2d841fdb5c8cf0973ea605
+    m_Address: Weaphon/Shield_Impackt.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c471a13dad9b00644acffbffcbad0eb4
     m_Address: Mob_0
     m_ReadOnly: 0

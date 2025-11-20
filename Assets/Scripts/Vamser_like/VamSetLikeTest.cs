@@ -3,78 +3,130 @@ using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
-#if (UNITY_EDITOR) 
+#if UNITY_EDITOR
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// VamserLikeGameManager의 커스텀 에디터 클래스입니다.
-    /// 인스펙터에서 직접 캐릭터와 무기를 변경하는 테스트 기능을 제공합니다.
+    /// VamserLikeGameManager의 커스텀 에디터 클래스 (최적화됨)
+    /// 인스펙터에서 런타임 중 캐릭터와 무기를 즉시 교체하는 테스트 도구를 제공합니다.
     /// </summary>
     [CustomEditor(typeof(VamserLikeGameManager))]
     public class VamserLikeGameManagerEditor : Editor
     {
-        #region 필드 및 변수
+        #region 내부 상태 변수
 
-        // Editor 클래스의 필드는 SerializeField로 직렬화되지 않으므로, 일반 private 필드로 선언합니다.
-        private int _characterIndex;
-        private int _weaponIndex;
-        private bool _isChanging; // 비동기 작업 진행 상태를 추적하는 플래그
+        private int m_characterIndex;
+        private int m_weaponIndex;
+        private bool m_isChanging; // 비동기 작업 진행 상태
 
         #endregion
 
-        #region 에디터 UI
+        #region Unity 에디터 라이프사이클
+
+        /// <summary>
+        /// 인스펙터가 활성화될 때 호출됩니다.
+        /// 현재 게임 데이터와 에디터 입력값을 동기화합니다.
+        /// </summary>
+        private void OnEnable()
+        {
+            SyncDataFromManager();
+        }
 
         public override void OnInspectorGUI()
         {
-            // 기본 인스펙터 UI를 먼저 그립니다.
+            // 기본 인스펙터 UI 그리기
             base.OnInspectorGUI();
 
-            VamserLikeGameManager vamserLikeGameManager = (VamserLikeGameManager) target;
-
-            // 테스트 기능 UI를 구분하기 위해 시각적인 구획을 추가합니다.
+            // 구분선 및 헤더
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("인게임 테스트 컨트롤", EditorStyles.boldLabel);
-            
-            _characterIndex = EditorGUILayout.IntField("캐릭터 인덱스", _characterIndex);
-            _weaponIndex = EditorGUILayout.IntField("무기 인덱스", _weaponIndex);
+            EditorGUILayout.LabelField("🎮 인게임 테스트 컨트롤", EditorStyles.boldLabel);
 
-            // 비동기 작업이 진행 중일 때는 버튼을 비활성화하여 중복 실행을 방지합니다.
-            EditorGUI.BeginDisabledGroup(_isChanging);
-            if (GUILayout.Button("캐릭터 및 무기 변경"))
+            // [안정성] 플레이 모드가 아닐 경우 안내 메시지 표시 후 리턴
+            if (!Application.isPlaying)
             {
-                // 버튼 클릭 시 비동기 작업을 시작하고, UI는 즉시 반환됩니다. (Fire and Forget)
-                ChangeCharacterAndWeaponAsync(vamserLikeGameManager).Forget();
+                EditorGUILayout.HelpBox("이 기능은 플레이 모드(Play Mode)에서만 사용할 수 있습니다.", MessageType.Info);
+                return;
             }
-            EditorGUI.EndDisabledGroup();
+
+            DrawTestControls();
         }
 
         #endregion
 
-        #region 버튼 액션
+        #region UI 그리기 및 로직
+
+        private void DrawTestControls()
+        {
+            // 입력 필드 그리기
+            m_characterIndex = EditorGUILayout.IntField("캐릭터 인덱스", m_characterIndex);
+            m_weaponIndex = EditorGUILayout.IntField("무기 인덱스", m_weaponIndex);
+
+            EditorGUILayout.Space(5);
+
+            // 비동기 작업 중 버튼 비활성화 처리
+            EditorGUI.BeginDisabledGroup(m_isChanging);
+            
+            if (GUILayout.Button("캐릭터 및 무기 변경 적용", GUILayout.Height(30)))
+            {
+                VamserLikeGameManager manager = (VamserLikeGameManager)target;
+                ChangeCharacterAndWeaponAsync(manager).Forget();
+            }
+            
+            EditorGUI.EndDisabledGroup();
+        }
 
         /// <summary>
-        /// 캐릭터와 무기를 비동기적으로 변경하고, 작업이 완료될 때까지 UI를 갱신합니다.
+        /// PlayerDataManager의 현재 값으로 에디터 필드를 초기화합니다.
         /// </summary>
-        private async UniTask ChangeCharacterAndWeaponAsync(VamserLikeGameManager gameManager)
+        private void SyncDataFromManager()
         {
-            if (_isChanging) return;
-            _isChanging = true;
-            Repaint(); // 인스펙터를 다시 그려서 비활성화된 버튼을 즉시 표시합니다.
+            if (Application.isPlaying && PlayerDataManagerDontdesytoy.Instance != null)
+            {
+                m_characterIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
+                m_weaponIndex = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터와 무기를 비동기적으로 변경합니다.
+        /// </summary>
+        private async UniTaskVoid ChangeCharacterAndWeaponAsync(VamserLikeGameManager gameManager)
+        {
+            if (m_isChanging) return;
+
+            m_isChanging = true;
+            
+            // 변경 시작 시점의 상태를 UI에 즉시 반영
+            Repaint(); 
 
             try
             {
-                PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = _characterIndex;
-                PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = _weaponIndex;
+                // 싱글톤 참조 안전성 체크
+                if (PlayerDataManagerDontdesytoy.Instance == null)
+                {
+                    Debug.LogError("[Editor] PlayerDataManager 인스턴스가 없습니다.");
+                    return;
+                }
+
+                // 데이터 설정
+                PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_characterIndex;
+                PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = m_weaponIndex;
+
+                Debug.Log($"[Editor] 변경 요청: Char({m_characterIndex}), Wep({m_weaponIndex})");
+
+                // 실제 게임 로직 호출
                 await gameManager.ChangeCharacterAndWeapon_Spawn();
             }
             catch (Exception e)
             {
-                Debug.LogError($"캐릭터/무기 변경 중 에디터에서 예외 발생: {e.Message}");
+                Debug.LogError($"[Editor] 변경 중 오류 발생: {e.Message}");
             }
             finally
             {
-                _isChanging = false;
-                Repaint(); // 작업 완료 후 버튼을 다시 활성화하기 위해 인스펙터를 다시 그립니다.
+                m_isChanging = false;
+                
+                // 작업 완료 후 버튼 활성화를 위해 다시 그리기
+                Repaint(); 
             }
         }
 

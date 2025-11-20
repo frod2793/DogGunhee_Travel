@@ -38,7 +38,7 @@ namespace DogGuns_Games.vamsir
             );
         }
 
-        public override void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             
@@ -55,7 +55,7 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        public override void OnDisable()
+        protected override void OnDisable()
         {
             base.OnDisable();
             ClearBalls();

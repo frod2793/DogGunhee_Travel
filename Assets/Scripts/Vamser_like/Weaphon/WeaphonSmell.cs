@@ -55,7 +55,7 @@ namespace DogGuns_Games.vamsir
            
         }
 
-        public override void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             SetupLineRenderer();
@@ -106,7 +106,7 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        public override void OnDisable()
+        protected override void OnDisable()
         {
             base.OnDisable();
             // 비활성화 시 모든 포인트와 데이터를 초기화합니다.

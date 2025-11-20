@@ -68,7 +68,7 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        public override void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable(); // 기본 상태를 Idle로 설정
 

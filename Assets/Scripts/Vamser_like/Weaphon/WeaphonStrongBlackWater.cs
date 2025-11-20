@@ -48,7 +48,7 @@ namespace DogGuns_Games.vamsir
             _collider2D.enabled = false;
         }
 
-        public override void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             mobStunTime = 0.5f;

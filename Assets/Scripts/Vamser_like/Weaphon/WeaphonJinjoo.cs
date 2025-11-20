@@ -19,14 +19,14 @@ namespace DogGuns_Games.vamsir
         
         private GameObject _activePearlInstance; // 현재 활성화된 진주 인스턴스
 
-        public override void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             // 무기가 활성화될 때, 기존에 남아있을 수 있는 진주가 없도록 초기화합니다.
             _activePearlInstance = null;
         }
 
-        public override void OnDisable()
+        protected override void OnDisable()
         {
             base.OnDisable();
             // 무기가 비활성화(교체)될 때, 활성화된 진주가 있다면 풀에 반환합니다.

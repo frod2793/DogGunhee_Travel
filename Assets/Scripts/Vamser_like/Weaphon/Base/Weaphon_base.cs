@@ -50,12 +50,12 @@ namespace DogGuns_Games.vamsir
 
         #region Unity 라이프사이클
 
-        public virtual void OnEnable()
+        protected virtual void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
         }
 
-        public virtual void OnDisable()
+        protected virtual void OnDisable()
         {
             // 자식 클래스에서 필요 시 재정의
         }

@@ -30,7 +30,7 @@ namespace DogGuns_Games.vamsir
 
         #region 초기화 및 오브젝트 풀 관리
 
-        public override void OnEnable()
+        protected override void OnEnable()
         {
             
             base.OnEnable();
