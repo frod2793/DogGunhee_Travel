@@ -1,24 +1,41 @@
 using UnityEngine;
+
 namespace DogGuns_Games.vamsir
 {
-    public class VamserMobBase : MonoBehaviour, IObjectPoolSpawnerSettable
+    /// <summary>
+    /// 모든 몬스터의 최상위 기본 클래스입니다.
+    /// 공통 스탯, 상태 머신(FSM), 이벤트 핸들링을 정의합니다.
+    /// </summary>
+    public abstract class VamserMobBase : MonoBehaviour, IObjectPoolUser
     {
-        public ObjectPoolSpawner objectPoolSpawner { get; set; }
+        #region 프로퍼티 (공통 스탯)
 
-        
-        public float Mob_Speed { get; set; }
-        protected float Mob_Hp { get; set; }
-        public float Mob_AttackDamage { get; set; }
-        public float Mob_AttackSpeed { get; set; }
-        public float Mob_AttackRange { get; set; }
-        public float Mob_StunTime { get; set; }
+        // 인터페이스 구현
+        public ObjectPoolSpawner ObjectPoolSpawner { get; set; }
+
+        // [최적화] 명명 규칙 통일 (PascalCase, Mob_ 접두사 제거)
+        public float MoveSpeed { get; set; }
+        public float CurrentHp { get; protected set; }
+        public float AttackDamage { get; set; }
+        public float AttackSpeed { get; set; }
+        public float AttackRange { get; set; }
+        public float StunTime { get; set; }
+
         public bool IsDead { get; protected set; }
         public bool IsHit { get; protected set; }
         
-        protected PlayerBase player; // 플레이어 참조를 저장할 필드
-        protected Transform playerTransform; // 실제 움직이는 플레이어 부모 객체의 Transform
+        /// <summary>
+        /// 이동 가능 여부 (일시정지, 스턴 등에서 제어)
+        /// </summary>
+        public bool IsMoveEnabled { get; protected set; }
 
-        public bool ismove;
+        #endregion
+
+        #region 내부 참조 및 상태
+
+        protected PlayerBase m_player; 
+        protected Transform m_playerTransform;
+
         public enum MobState
         {
             Idle,
@@ -28,131 +45,167 @@ namespace DogGuns_Games.vamsir
             Die
         }
 
-        [SerializeField] private MobState mobState;
+        [Tooltip("현재 몬스터의 상태 (디버깅용)")]
+        [SerializeField] protected MobState m_currentState;
+        public MobState CurrentState => m_currentState;
+
+        #endregion
+
+        #region Unity 라이프사이클
 
         public virtual void OnEnable()
         {
             IsDead = false;
-            PlayStateManager.OnGamePause += Pause;
-            PlayStateManager.OnGameResume += Resume;
+            IsHit = false;
+            IsMoveEnabled = true;
+            
+            // 이벤트 구독
+            PlayStateManager.OnGamePause += OnPause;
+            PlayStateManager.OnGameResume += OnResume;
             PlayStateManager.OnGameOver += OnGameOver;
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
-            PlayStateManager.OnGamePause -= Pause;
-            PlayStateManager.OnGameResume -= Resume;
+            // 이벤트 구독 해제
+            PlayStateManager.OnGamePause -= OnPause;
+            PlayStateManager.OnGameResume -= OnResume;
             PlayStateManager.OnGameOver -= OnGameOver;
         }
 
-        private void OnGameOver()
-        {
-            ismove = false;
-        }
-        
         private void OnValidate()
         {
+            // 에디터에서 상태 강제 변경 테스트용
             if (Application.isPlaying)
             {
-                // 플레이 모드에서만 SetMobState 호출
-                SetMobState(mobState);
+                SetState(m_currentState);
             }
         }
+
+        #endregion
+
+        #region 초기화 및 타겟 설정
+
         /// <summary>
         /// 외부에서 플레이어(타겟)를 설정합니다.
         /// </summary>
         public virtual void SetTarget(PlayerBase target)
         {
-            player = target;
-            if (player != null)
+            m_player = target;
+            if (m_player != null)
             {
-                // 플레이어 캐릭터의 부모 객체가 실제 움직임을 담당하므로, 부모의 Transform을 추적 대상으로 설정합니다.
-                playerTransform = player.transform.parent;
+                // 플레이어의 실제 이동 객체(부모) 추적
+                m_playerTransform = m_player.transform.parent;
             }
             else
             {
-                playerTransform = null;
+                m_playerTransform = null;
             }
         }
-        protected virtual void Pause()
+
+        #endregion
+
+        #region 상태 관리 (FSM)
+
+        /// <summary>
+        /// 몬스터의 상태를 변경하고 해당 동작을 실행합니다.
+        /// </summary>
+        public void SetState(MobState state)
         {
-            ismove = false;
-        }
-        
-        protected virtual void Resume()
-        {
-            ismove = true;
-        }
-        
-        public void SetMobState(MobState state)
-        {
+            m_currentState = state;
             switch (state)
             {
-                case MobState.Idle: Mob_Idle(); 
-                    break;
-                case MobState.Move: Mob_Move(); 
-                    break;
-                case MobState.Stun: Mob_Stun(); 
-                    break;
-                case MobState.Attack: Mob_Attack(); 
-                    break;
-                case MobState.Die: Mob_Die();
-                    break;
+                case MobState.Idle: OnIdle(); break;
+                case MobState.Move: OnMove(); break;
+                case MobState.Stun: OnStun(); break;
+                case MobState.Attack: OnAttack(); break;
+                case MobState.Die: OnDie(); break;
             }
         }
 
-        protected virtual void Mob_Idle()
+        // 자식 클래스에서 오버라이드할 가상 메서드들 (이름 표준화: Mob_ -> On)
+        protected virtual void OnIdle() { }
+
+        protected virtual void OnMove() 
         {
+            IsMoveEnabled = true;
         }
 
-        protected virtual void Mob_Move()
+        protected virtual void OnStun() 
         {
-            
+            IsMoveEnabled = false;
         }
 
-        protected virtual void Mob_Stun()
-        {
-            
-        }
+        protected virtual void OnAttack() { }
 
-        protected virtual void Mob_hit()
-        {
-            
-        }
-        
-        protected virtual void Mob_Attack()
-        {
-        }
-
-        protected virtual void Mob_Die()
+        /// <summary>
+        /// 사망 처리 기본 로직 (오브젝트 풀 반환 포함)
+        /// </summary>
+        protected virtual void OnDie()
         {
             if (!IsDead)
             {
                 IsDead = true;
-                objectPoolSpawner.MobObjectPool.Release(this);
-                PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt++;
-                LogManager.Log("Die : " + name, LogManager.LogCategory.mobBase);
+                IsMoveEnabled = false;
+
+                // 킬 카운트 증가
+                if (PlayerDataManagerDontdesytoy.Instance != null)
+                {
+                    PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt++;
+                }
+
+                LogManager.Log($"Die : {name}", LogManager.LogCategory.mobBase);
+
+                // 오브젝트 풀 반환
+                if (ObjectPoolSpawner != null)
+                {
+                    ObjectPoolSpawner.MobObjectPool.Release(this);
+                }
+                else
+                {
+                    // 풀이 없으면 파괴 (안전장치)
+                    Destroy(gameObject);
+                }
             }
         }
 
-        /// <summary>
-        /// 외부(틱 데미지 등)에서 몹에게 데미지를 입히는 공용 메서드입니다.
-        /// </summary>
-        /// <param name="damage">입힐 데미지 양</param>
-        /// <param name="stunTime">적용할 스턴 시간 (0이면 스턴 없음)</param>
-        public virtual void TakeDamage(float damage, float stunTime = 0f)
+        #endregion
+
+        #region 게임 상태 이벤트 핸들러
+
+        protected virtual void OnPause()
         {
-            // 하위 클래스에서 구체적인 로직을 구현합니다. (NormalMob.cs 참고)
+            IsMoveEnabled = false;
+        }
+        
+        protected virtual void OnResume()
+        {
+            // 죽거나 스턴 상태가 아닐 때만 이동 재개
+            if (!IsDead && m_currentState != MobState.Stun)
+            {
+                IsMoveEnabled = true;
+            }
         }
 
-        /// <summary>
-        /// 몹에게 슬로우 효과를 적용하는 공용 메서드입니다.
-        /// </summary>
-        /// <param name="slowMultiplier">속도 감소 배율 (0.0 ~ 1.0). 0.3은 30% 감소.</param>
-        /// <param name="duration">슬로우 지속 시간(초).</param>
-        public virtual void ApplySlow(float slowMultiplier, float duration)
+        private void OnGameOver()
         {
-            // 하위 클래스에서 구체적인 로직을 구현합니다.
+            IsMoveEnabled = false;
         }
+
+        #endregion
+
+        #region 전투 인터페이스 (공용)
+
+        /// <summary>
+        /// 데미지 적용 (자식 클래스 구현 필요)
+        /// </summary>
+        public virtual void TakeDamage(float damage, float stunTime = 0f) { }
+
+        /// <summary>
+        /// 슬로우 효과 적용 (자식 클래스 구현 필요)
+        /// </summary>
+        public virtual void ApplySlow(float slowMultiplier, float duration) { }
+
+        #endregion
     }
 }

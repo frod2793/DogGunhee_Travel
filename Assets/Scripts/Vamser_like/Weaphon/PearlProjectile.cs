@@ -1,8 +1,4 @@
 using UnityEngine;
-using Cysharp.Threading.Tasks;
-using System;
-using System.Threading;
-
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
@@ -90,12 +86,13 @@ namespace DogGuns_Games.vamsir
                 {
                     // 진주가 몹에게 데미지를 입힙니다.
                     mob.TakeDamage(attackPower);
-                    
+            
                     // 업그레이드 시 스턴 효과 적용
                     if (isUpgradelv2)
                     {
-                        mob.Mob_StunTime = mobStunTime;
-                        mob.SetMobState(VamserMobBase.MobState.Stun);
+                        mob.StunTime = mobStunTime;
+                        // [수정] 변수 직접 접근 대신 public 메서드 사용
+                        mob.SetState(VamserMobBase.MobState.Stun); 
                     }
                 }
             }

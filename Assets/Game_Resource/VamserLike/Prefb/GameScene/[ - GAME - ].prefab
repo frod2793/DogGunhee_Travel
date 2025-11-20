@@ -1134,12 +1134,15 @@ MonoBehaviour:
   weaphonIndex: 1
   isUpgradelv2: 0
   weaphonState: 0
-  attackDuration: 3
-  damageTickInterval: 0.5
-  isUpgraded: 0
-  rangeMultiplier: 1.5
-  slowAmount: 0.3
-  slowDuration: 1
+  m_damageTickInterval: 0.5
+  m_rangeMultiplier: 1.5
+  m_slowAmount: 0.3
+  m_slowDuration: 1
+  m_targetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  m_animator: {fileID: 0}
+  m_collider2D: {fileID: 0}
 --- !u!58 &8647823617673169154
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -4154,8 +4157,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa6955cba98e64042b8efb54ea6c1549, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_soundData: {fileID: 0}
-  m_settingsData: {fileID: 0}
+  m_soundData: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
+  m_settingsData: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
 --- !u!1 &2536832316562801150
 GameObject:
   m_ObjectHideFlags: 0
@@ -4774,8 +4777,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba2e1479d42afc645ab7173157cf7f64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_inGameObjectPlayerParent: {fileID: 3904192412624442642}
-  m_optionPopupManager: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
+  m_playerContainer: {fileID: 3904192412624442642}
+  m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
 --- !u!114 &4441102585319734577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8498,15 +8501,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 639ebc134cdc4c44cac9bd90dd711e7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ismove: 0
-  mobState: 0
-  initialHp: 100
-  initialSpeed: 1
-  initialAttackDamage: 10
-  initialAttackSpeed: 1
-  initialAttackRange: 1
-  initialStunTime: 0.1
-  searchRange: 0
+  m_currentState: 0
+  m_initialHp: 100
+  m_initialSpeed: 1
+  m_initialAttackDamage: 10
+  m_initialStunTime: 0.1
+  m_searchRange: 8
+  m_wanderWaitRange: {x: 1, y: 3}
 --- !u!61 &6024610064113227362
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -8690,6 +8691,7 @@ MonoBehaviour:
   weaphonIndex: 0
   isUpgradelv2: 0
   weaphonState: 0
+  m_rotateSpeed: 360
   m_explosionRadius: 1.5
   m_explosionDamage: 10
   m_mobLayerMask:
@@ -9560,11 +9562,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a725d9be5ab1f47dd9b14f11fb975b09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  floatHeight: 0.2
-  floatDuration: 1.5
-  rotationAngle: 10
-  rotationDuration: 2
-  lifeTime: 30
+  m_floatHeight: 0.2
+  m_floatDuration: 1.5
+  m_rotationAngle: 10
+  m_rotationDuration: 2
+  m_lifeTime: 30
   <CoinValue>k__BackingField: 1
 --- !u!1 &6226803593973240889
 GameObject:
@@ -10283,7 +10285,6 @@ MonoBehaviour:
   m_playerObject: {fileID: 3904192412624442642}
   m_playerCharacter: {fileID: 0}
   m_playerHpSliderPrefab: {fileID: 8185285322273779487, guid: 4953059d40def43a788e717e4a533007, type: 3}
-  m_camera: {fileID: 0}
   m_mapRange: {fileID: 6380052682920689255}
   m_cameraSmoothTime: 0.25
   m_enemyLayer:
@@ -10291,7 +10292,6 @@ MonoBehaviour:
     m_Bits: 64
   m_detectionRadius: 30
   m_attackRadius: 1.5
-  m_autoAttackMoveSpeedMultiplier: 1.2
 --- !u!1 &6729624359695587028
 GameObject:
   m_ObjectHideFlags: 0
@@ -11040,8 +11040,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04a5c7db7f299b242b18e2c886886ee0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_initialMobCount: 50
-  m_mobsPerWave: 20
+  m_mapRange: {fileID: 6380052682920689255}
+  m_initialMobCount: 10
+  m_mobsPerWave: 10
   m_maxPoolSize: 100
   m_mobPrefabReference:
     m_AssetGUID: c471a13dad9b00644acffbffcbad0eb4
@@ -11949,11 +11950,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2709c06c63540654aac063bc3fe1bf8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  floatHeight: 0.2
-  floatDuration: 1.5
-  rotationAngle: 10
-  rotationDuration: 2
-  lifeTime: 30
+  m_floatHeight: 0.2
+  m_floatDuration: 1.5
+  m_rotationAngle: 10
+  m_rotationDuration: 2
+  m_lifeTime: 30
   <ExpValue>k__BackingField: 10
 --- !u!61 &2350294113008716996
 BoxCollider2D:

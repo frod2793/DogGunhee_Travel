@@ -5,518 +5,401 @@ using UnityEngine;
 
 namespace DogGuns_Games.vamsir
 {
+    /// <summary>
+    /// 일반 몬스터의 AI 및 상태를 관리하는 클래스입니다.
+    /// VamserMobBase(부모)의 최적화된 구조를 상속받습니다.
+    /// </summary>
     public class NormalMob : VamserMobBase
     {
-        [Header("<color=green>플레이어 무기")] 
-        private Weaphon_base _playerWeaphon;
+        #region 인스펙터 필드 (스탯 및 AI 설정)
 
-        //피격 물체가 발사체인지 구분
-        private bool _isHitByShoot;
+        [Header("몬스터 기본 스탯")]
+        [SerializeField] private float m_initialHp = 100f;
+        [SerializeField] private float m_initialSpeed = 1f;
+        [SerializeField] private float m_initialAttackDamage = 10f;
+        [SerializeField] private float m_initialStunTime = 0.1f;
 
-        [Header("몹 스탯")]
-        [SerializeField] private float initialHp = 100f;
-        [SerializeField] private float initialSpeed = 1f;
-        [SerializeField] private float initialAttackDamage = 10f;
-        [SerializeField] private float initialAttackSpeed = 1f;
-        [SerializeField] private float initialAttackRange = 1f;
-        [SerializeField] private float initialStunTime = 0.1f;
-
-        [Header("<color=green>탐색 범위")]
-        [SerializeField] private float searchRange = 8f;
+        [Header("AI 설정")]
+        [SerializeField] private float m_searchRange = 8f;
         
-        private Bounds _mapBounds;
-        private Tween _wanderTween;
-        private bool _isWaitingToWander; // 추가: 배회 사이의 대기 상태를 추적하는 플래그
-        private bool _isAiPaused; // 추가: AI 동작을 일시정지하는 플래그
+        [Tooltip("배회 시 도착 후 대기 시간 범위 (최소, 최대)")]
+        [SerializeField] private Vector2 m_wanderWaitRange = new Vector2(1f, 3f);
 
-        private enum AIState
-        {
-            Wandering,
-            Chasing
-        }
-        private AIState _currentState;
-        private SpriteRenderer _spriteRenderer;
-        private Tween _slowTween;
+        #endregion
+
+        #region 내부 변수
+
+        private enum AIState { None, Wandering, Chasing, Stunned, Dead }
+        private AIState m_aiState = AIState.None;
+
+        private Bounds m_mapBounds;
+        private Tween m_moveTween;
+        private Tween m_slowTween;
+        private SpriteRenderer m_spriteRenderer;
+        private Transform m_cachedTransform;
         
+        private Weaphon_base m_cachedPlayerWeapon;
+        private bool m_isHitByProjectile; 
+
+        private bool m_isAiPaused;
+
+        #endregion
+
+        #region Unity 라이프사이클
+
         private void Awake()
         {
-            DOTween.SetTweensCapacity(500, 50);
-            _spriteRenderer = GetComponent<SpriteRenderer>();
-            
-            // 이 컴포넌트가 정상적으로 동작하려면 Collider가 Trigger여야 합니다.
-            var col = GetComponent<Collider2D>();
-            if (col != null && !col.isTrigger)
-            {
-                LogManager.LogWarning($"'{name}'의 Collider2D가 Trigger로 설정되지 않았습니다. 자동으로 isTrigger를 true로 설정합니다.", LogManager.LogCategory.NormalMob, this);
-            }
+            m_cachedTransform = transform;
+            m_spriteRenderer = GetComponent<SpriteRenderer>();
+
+            // [삭제됨] 몬스터 콜라이더를 강제로 트리거로 만드는 코드를 제거했습니다.
+            // 무기 콜라이더가 트리거라면, 몬스터가 일반 콜라이더여도 OnTriggerEnter2D가 정상 호출됩니다.
         }
 
         private void Start()
         {
-            // 맵 오브젝트를 "Map" 태그로 찾고, SpriteRenderer의 bounds를 캐싱
             var mapObj = GameObject.FindGameObjectWithTag("Map");
-            if (mapObj != null)
+            if (mapObj != null && mapObj.TryGetComponent(out SpriteRenderer mapRenderer))
             {
-                var mapRenderer = mapObj.GetComponent<SpriteRenderer>();
-                if (mapRenderer != null)
-                {
-                    _mapBounds = mapRenderer.bounds;
-                }
-                else
-                {
-                    LogManager.LogWarning("Map object does not have a SpriteRenderer component.", LogManager.LogCategory.NormalMob, this);
-                }
+                m_mapBounds = mapRenderer.bounds;
             }
             else
             {
-                LogManager.LogWarning("Could not find GameObject with 'Map' tag.", LogManager.LogCategory.NormalMob, this);
+                m_mapBounds = new Bounds(Vector3.zero, Vector3.one * 100f);
             }
         }
 
-        /// <summary>
-        /// 몹이 스폰되거나 풀에서 재사용될 때 호출되어 상태를 초기화합니다.
-        /// </summary>
-        private void Initialize()
+        public override void OnEnable()
         {
-            // 스탯 초기화
-            Mob_Hp = initialHp;
-            Mob_Speed = initialSpeed;
-            Mob_AttackDamage = initialAttackDamage;
-            Mob_AttackSpeed = initialAttackSpeed;
-            Mob_AttackRange = initialAttackRange;
-            Mob_StunTime = initialStunTime;
-            
-            // 상태 플래그 초기화 (부모 클래스의 프로퍼티 사용)
-            IsDead = false;
-            IsHit = false;
-            ismove = false;
+            base.OnEnable();
+            InitializeMob();
+            StartAILoopAsync().Forget();
+        }
 
-            // AI 상태 초기화 - transform.DOKill()은 드물게 내부 오류를 유발할 수 있습니다.
-            // 더 안전하게, 이 클래스가 직접 관리하는 트윈들만 명시적으로 Kill합니다.
-            _wanderTween?.Kill();
-            _slowTween?.Kill();
-            if (_spriteRenderer != null)
-            {
-                _spriteRenderer.DOKill();
-            }
-            
-            _isWaitingToWander = false;
-            _isAiPaused = false;
-            _currentState = AIState.Wandering;
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            KillAllTweens();
+        }
 
-            // 플레이어 및 무기 참조 설정
-            if (player != null)
+        private void FixedUpdate()
+        {
+            if (!IsMoveEnabled || IsDead || m_aiState == AIState.Stunned || m_aiState == AIState.Dead || m_isAiPaused) 
+                return;
+
+            switch (m_aiState)
             {
-                _playerWeaphon = player.WeaphonBase;
-                _isHitByShoot = _playerWeaphon != null && _playerWeaphon.isShooting;
+                case AIState.Chasing:
+                    HandleChasingState();
+                    break;
+                
+                case AIState.Wandering:
+                    CheckPlayerDetection();
+                    break;
             }
+        }
+
+        #endregion
+
+        #region 초기화
+
+        private void InitializeMob()
+        {
+            CurrentHp = m_initialHp;
+            MoveSpeed = m_initialSpeed;
+            AttackDamage = m_initialAttackDamage;
+            StunTime = m_initialStunTime;
+
+            m_aiState = AIState.None;
+            m_cachedPlayerWeapon = null;
+            m_isAiPaused = false;
+            
+            if (m_spriteRenderer != null) m_spriteRenderer.color = Color.white;
         }
 
         public override void SetTarget(PlayerBase target)
         {
             base.SetTarget(target);
-            Initialize();
-        }
-   
-        public override void OnEnable()
-        {
-            base.OnEnable();
-            StartAIBehavior().Forget();
-        }
 
-        private void FixedUpdate()
-        {
-            // ismove는 Mob_Move, Mob_Stun 등 상태 변경 메서드에서 관리
-            // playerTransform은 StartAIBehavior에서 유효성이 보장되므로, null 체크만으로 충분합니다.
-            if (_isAiPaused || !ismove || playerTransform == null || IsDead)
+            if (m_player != null)
             {
-                return;
+                m_cachedPlayerWeapon = m_player.WeaphonBase;
+                m_isHitByProjectile = m_cachedPlayerWeapon != null && m_cachedPlayerWeapon.isShooting;
             }
-
-            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-        
-            // --- 상태 전환 로직 ---
-            if (_currentState == AIState.Wandering && distanceToPlayer <= searchRange)
-            {
-                // 배회 -> 추격
-                _currentState = AIState.Chasing;
-                _wanderTween?.Kill(); // 진행 중인 배회 움직임 즉시 중단
-                _isWaitingToWander = false; // 대기 상태였다면 취소
-                LogManager.Log("플레이어 감지, 추격을 시작합니다.", LogManager.LogCategory.NormalMob, this);
-            }
-            else if (_currentState == AIState.Chasing && distanceToPlayer > searchRange)
-            {
-                // 추격 -> 배회
-                _currentState = AIState.Wandering;
-                Wander(); // 배회 시작
-                LogManager.Log("플레이어를 놓쳤습니다. 배회를 시작합니다.", LogManager.LogCategory.NormalMob, this);
-            }
-        
-            // --- 상태별 행동 로직 ---
-            if (_currentState == AIState.Chasing)
-            {
-                ChasePlayer();
-            }
-            else if (_currentState == AIState.Wandering)
-            {
-                // 배회 상태인데, 실제 움직임(Tween)도 없고 다음 배회를 위한 대기 상태도 아니라면 (예: 스턴 직후)
-                // AI가 멈추는 것을 방지하기 위해 새로운 배회 행동을 시작시킵니다.
-                bool isWanderTweenActive = _wanderTween != null && _wanderTween.IsActive();
-                if (!isWanderTweenActive && !_isWaitingToWander)
-                {
-                    Wander();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 몬스터의 AI 동작을 일시정지하거나 재개합니다.
-        /// </summary>
-        /// <param name="pause">true이면 일시정지, false이면 재개합니다.</param>
-        public void PauseAI(bool pause)
-        {
-            _isAiPaused = pause;
-
-            if (pause)
-            {
-                _wanderTween?.Pause();
-            }
-            else
-            {
-                _wanderTween?.Play();
-            }
-        }
-
-        #region Game State Handlers
-
-        /// <summary>
-        /// 게임이 일시정지될 때 호출됩니다.
-        /// </summary>
-        protected override void Pause()
-        {
-            base.Pause(); // ismove = false 설정
-            // 모든 활성 DOTween 애니메이션을 일시정지합니다.
-            _wanderTween?.Pause();
-            _slowTween?.Pause();
-            _spriteRenderer?.DOPause();
-            _isAiPaused = true;
-        }
-
-        /// <summary>
-        /// 게임이 재개될 때 호출됩니다.
-        /// </summary>
-        protected override void Resume()
-        {
-            base.Resume(); // ismove = true 설정
-            // 일시정지된 모든 DOTween 애니메이션을 다시 재생합니다.
-            _wanderTween?.Play();
-            _slowTween?.Play();
-            _spriteRenderer?.DOPlay();
-            _isAiPaused = false;
         }
 
         #endregion
 
-        #region AI Logic
-        
-        // 적 ai 로직 설명 
-        // 스폰후 적의 현위치가 맵의 외부 인지 내부인지 검사 
-        // 맵의 외부일시 맵 내부 까지 복귀 
-        // 맵의 내부일시 플레이어 탐색을 위한 배회 
-        // 플레이어 탐지 시 플레이어 추격 
+        #region AI 로직
 
-        private async UniTask StartAIBehavior()
+        private async UniTaskVoid StartAILoopAsync()
         {
-            // 스포너가 player를 설정하고, 그 player가 부모 객체에 연결될 때까지 대기합니다.
-            // 이것이 모든 초기화 순서 관련 레이스 컨디션의 근본적인 해결책입니다.
-            await UniTask.WaitUntil(() => player != null && player.transform.parent != null, cancellationToken: this.GetCancellationTokenOnDestroy());
+            var token = this.GetCancellationTokenOnDestroy();
 
-            // 이 시점에서는 player와 player.transform.parent가 모두 유효함이 보장됩니다.
-            // SetTarget에서 이미 설정되었을 수 있지만, 여기서 다시 한번 확실하게 설정합니다.
-            playerTransform = player.transform.parent;
-            LogManager.Log("플레이어 참조 및 Transform 설정 완료. AI를 시작합니다.", LogManager.LogCategory.NormalMob, this);
-
-            // 맵 외부에 있다면, 맵 내부로 이동
-            if (_mapBounds.size != Vector3.zero && !_mapBounds.Contains(transform.position))
+            await UniTask.WaitUntil(() => m_player != null && m_player.transform.parent != null, cancellationToken: token);
+            
+            m_playerTransform = m_player.transform.parent;
+            
+            if (!m_mapBounds.Contains(m_cachedTransform.position))
             {
-                await MoveToMapBoundary();
+                await ReturnToMapAsync(token);
             }
 
-            // AI 상태 시작
-            _currentState = AIState.Wandering;
-            SetMobState(MobState.Move); // AI가 모든 준비를 마친 후 이동 상태로 전환
-            Wander(); // 초기 배회 시작
+            SetState(MobState.Move); 
+            ChangeAIState(AIState.Wandering);
         }
 
-        private async UniTask MoveToMapBoundary()
+        private void ChangeAIState(AIState newState)
         {
-            Vector3 targetPosition = transform.position;
-            targetPosition.x = Mathf.Clamp(targetPosition.x, _mapBounds.min.x, _mapBounds.max.x);
-            targetPosition.y = Mathf.Clamp(targetPosition.y, _mapBounds.min.y, _mapBounds.max.y);
-            targetPosition.z = 0f; // 2D 게임이므로 Z축을 0으로 고정합니다.
+            if (m_aiState == newState) return;
             
-            float duration = Vector3.Distance(transform.position, targetPosition) / (Mob_Speed * 2); // 2배 빠른 속도로 복귀
+            if (m_aiState == AIState.Wandering)
+            {
+                m_moveTween?.Kill();
+            }
 
-            var tween = transform.DOMove(targetPosition, duration)
-                .SetEase(Ease.Linear);
-
-            await UniTask.WaitUntil(() => !tween.IsActive(), cancellationToken: this.GetCancellationTokenOnDestroy());
-        }
-        
-        private void ChasePlayer()
-        {
-            Vector3 direction = (playerTransform.position - transform.position).normalized;
+            m_aiState = newState;
             
-            Vector3 newPosition = transform.position + direction * Mob_Speed * Time.fixedDeltaTime;
-            newPosition.z = 0f; // 2D 게임이므로 Z축을 0으로 고정합니다.
-            transform.position = newPosition;
-
-            FlipTowards(direction);
+            if (newState == AIState.Wandering)
+            {
+                StartWandering();
+            }
         }
 
-        private void Wander()
+        private void CheckPlayerDetection()
         {
-            // AI가 일시정지 상태이면 새로운 배회 동작을 시작하지 않습니다.
-            if (_isAiPaused) return;
+            if (m_playerTransform == null) return;
 
-            // 맵 내부에서 랜덤한 목적지 설정
-            Vector3 randomDestination = GetRandomPositionInMap();
-    
-            Vector3 direction = (randomDestination - transform.position).normalized;
-            FlipTowards(direction);
-    
-            float duration = Vector3.Distance(transform.position, randomDestination) / Mob_Speed;
-            _wanderTween = transform.DOMove(randomDestination, duration)
+            float distSqr = (m_cachedTransform.position - m_playerTransform.position).sqrMagnitude;
+            float rangeSqr = m_searchRange * m_searchRange;
+
+            if (m_aiState == AIState.Wandering && distSqr <= rangeSqr)
+            {
+                ChangeAIState(AIState.Chasing);
+            }
+            else if (m_aiState == AIState.Chasing && distSqr > rangeSqr)
+            {
+                ChangeAIState(AIState.Wandering);
+            }
+        }
+
+        #endregion
+
+        #region 이동 로직
+
+        private async UniTask ReturnToMapAsync(System.Threading.CancellationToken token)
+        {
+            Vector3 targetPos = m_mapBounds.ClosestPoint(m_cachedTransform.position);
+            targetPos.z = 0;
+
+            float duration = Vector3.Distance(m_cachedTransform.position, targetPos) / (MoveSpeed * 2f);
+            
+            await m_cachedTransform.DOMove(targetPos, duration)
                 .SetEase(Ease.Linear)
-                .OnComplete(() =>
-                {
-                    // 이동 완료 후, 현재 상태가 여전히 '배회'일 경우에만 다음 배회 예약
-                    if (_currentState == AIState.Wandering)
-                    {
-                        WaitAndWander().Forget();
-                    }
-                });
+                .SetLink(gameObject)
+                .ToUniTask(cancellationToken: token);
         }
 
-        private async UniTask WaitAndWander()
+        private void HandleChasingState()
         {
-            try
-            {
-                // AI가 일시정지 상태이면 대기를 시작하지 않습니다.
-                if (_isAiPaused) return;
+            if (m_playerTransform == null) return;
 
-                _isWaitingToWander = true; // 대기 상태 시작
-                await UniTask.Delay(TimeSpan.FromSeconds(UnityEngine.Random.Range(1f, 3f)), cancellationToken: this.GetCancellationTokenOnDestroy());
-                
-                // Delay 이후에도 여전히 배회 상태여야 다음 행동을 시작
-                if (_currentState == AIState.Wandering)
-                {
-                    _isWaitingToWander = false; // 대기 상태 종료
-                    Wander(); // 상태가 바뀌지 않았다면 다음 배회 시작
-                }
-            }
-            catch (OperationCanceledException)
+            Vector3 dir = (m_playerTransform.position - m_cachedTransform.position).normalized;
+            Vector3 newPos = m_cachedTransform.position + dir * (MoveSpeed * Time.fixedDeltaTime);
+            newPos.z = 0;
+            
+            m_cachedTransform.position = newPos;
+            FlipTowards(dir.x);
+            
+            CheckPlayerDetection();
+        }
+
+        private void StartWandering()
+        {
+            if (!IsMoveEnabled || m_aiState != AIState.Wandering || m_isAiPaused) return;
+
+            Vector3 dest = GetRandomPositionInMap();
+            Vector3 dir = (dest - m_cachedTransform.position).normalized;
+            FlipTowards(dir.x);
+
+            float duration = Vector3.Distance(m_cachedTransform.position, dest) / MoveSpeed;
+
+            m_moveTween = m_cachedTransform.DOMove(dest, duration)
+                .SetEase(Ease.Linear)
+                .SetLink(gameObject)
+                .OnComplete(() => WaitAndWanderNext().Forget());
+        }
+
+        private async UniTaskVoid WaitAndWanderNext()
+        {
+            float waitTime = UnityEngine.Random.Range(m_wanderWaitRange.x, m_wanderWaitRange.y);
+            await UniTask.Delay(TimeSpan.FromSeconds(waitTime), cancellationToken: this.GetCancellationTokenOnDestroy());
+
+            if (m_aiState == AIState.Wandering && IsMoveEnabled && !m_isAiPaused)
             {
-                /* 작업 취소는 정상 동작 */
-            }
-            finally
-            {
-                // 작업이 성공적으로 끝나거나, 취소되거나, 예외가 발생해도 대기 상태는 반드시 해제
-                _isWaitingToWander = false;
+                StartWandering();
             }
         }
-        
+
         private Vector3 GetRandomPositionInMap()
         {
-            if (_mapBounds.size == Vector3.zero) return transform.position;
-    
-            float randomX = UnityEngine.Random.Range(_mapBounds.min.x, _mapBounds.max.x);
-            float randomY = UnityEngine.Random.Range(_mapBounds.min.y, _mapBounds.max.y);
-            return new Vector3(randomX, randomY, 0f); // 2D 게임이므로 Z축을 0으로 고정합니다.
+            float x = UnityEngine.Random.Range(m_mapBounds.min.x, m_mapBounds.max.x);
+            float y = UnityEngine.Random.Range(m_mapBounds.min.y, m_mapBounds.max.y);
+            return new Vector3(x, y, 0);
         }
 
-        private void FlipTowards(Vector3 direction)
+        private void FlipTowards(float dirX)
         {
-            if (Mathf.Abs(direction.x) > 0.01f) // 아주 작은 움직임에는 반응하지 않도록
+            if (Mathf.Abs(dirX) > 0.01f)
             {
-                float yRotation = direction.x > 0 ? 180f : 0f;
-                transform.rotation = Quaternion.Euler(0, yRotation, 0);
+                float yRotation = dirX > 0 ? 180f : 0f;
+                m_cachedTransform.rotation = Quaternion.Euler(0, yRotation, 0);
             }
         }
-        
+
         #endregion
 
+        #region 전투 및 피격 처리
+
+        // 무기의 Collider가 Trigger라면, 몬스터가 일반 Collider여도 이 함수가 호출됩니다.
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (_isHitByShoot)
+            if (m_isHitByProjectile && !IsHit && other.CompareTag("Player_Attack"))
             {
-                HandleTrigger(other);
+                ProcessHit(other);
             }
         }
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (!_isHitByShoot)
+            if (!m_isHitByProjectile && !IsHit && other.CompareTag("Player_Attack"))
             {
-                HandleTrigger(other);
+                ProcessHit(other);
             }
         }
 
-        private void HandleTrigger(Collider2D other)
+        private void ProcessHit(Collider2D other)
         {
-            if (!IsHit && other.gameObject.CompareTag("Player_Attack"))
+            if (other.TryGetComponent(out Weaphon_base weapon))
             {
-                Weaphon_base obj = other.GetComponent<Weaphon_base>();
-                ProcessWeaponHit(obj);
+                TakeDamage(weapon.attackPower, weapon.mobStunTime);
+            }
+            else if (m_cachedPlayerWeapon != null)
+            {
+                TakeDamage(m_cachedPlayerWeapon.attackPower, m_cachedPlayerWeapon.mobStunTime);
             }
         }
 
-        /// <summary>
-        /// 플레이어 무기와의 충돌을 처리합니다.
-        /// </summary>
-        private void ProcessWeaponHit(Weaphon_base weaphon = null)
-        {
-            if (_playerWeaphon == null)
-            {
-                if (VamserLikeGameManager.Instance != null && VamserLikeGameManager.Instance.SpawnedPlayer != null)
-                {
-                    _playerWeaphon = VamserLikeGameManager.Instance.SpawnedPlayer.WeaphonBase;
-                    if (_playerWeaphon != null)
-                    {
-                        LogManager.Log("플레이어 무기 참조를 다시 획득했습니다.", LogManager.LogCategory.NormalMob, this);
-                    }
-                }
-            }
-
-            if (_playerWeaphon == null)
-            {
-                LogManager.LogError("플레이어 무기를 찾을 수 없어 피격 처리를 할 수 없습니다.", LogManager.LogCategory.NormalMob, this);
-                return;
-            }
-            
-            float attackPower = _playerWeaphon.attackPower;
-            float stunTime = _playerWeaphon.mobStunTime;
-            
-            TakeDamage(attackPower, stunTime);
-        }
-
-        /// <summary>
-        /// 몹에게 데미지를 입히고, 스턴을 적용하는 통합 메서드입니다.
-        /// </summary>
-        /// <param name="damage">입힐 데미지 양</param>
-        /// <param name="stunTime">적용할 스턴 시간 (0이면 스턴 없음)</param>
         public override void TakeDamage(float damage, float stunTime = 0f)
         {
             if (IsDead || IsHit) return;
 
             IsHit = true;
+            CurrentHp -= damage;
 
-            Mob_Hp -= damage;
-
-            // 피격 이펙트 및 사운드 재생
-            EffectManager.Instance.PlayQueuedFlashEffect(_spriteRenderer).Forget(); // 큐에 추가하고 기다리지 않습니다.
+            EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer).Forget();
             SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
 
-            if (Mob_Hp <= 0 && !IsDead)
+            if (CurrentHp <= 0)
             {
-                SetMobState(MobState.Die);
-                SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
+                OnDie();
             }
-            else if (stunTime > 0f)
+            else if (stunTime > 0)
             {
-                Mob_StunTime = stunTime;
-                SetMobState(MobState.Stun);
+                ApplyStun(stunTime);
             }
 
-            // async void의 위험을 피하기 위해, 무적 시간 해제 로직을 별도의 비동기 메서드로 분리하여 호출합니다.
-            ResetIsHitFlagAfterDelay().Forget();
+            ResetHitFlagAsync().Forget();
         }
 
-        /// <summary>
-        /// 짧은 지연 후 IsHit 플래그를 안전하게 해제합니다.
-        /// </summary>
-        private async UniTaskVoid ResetIsHitFlagAfterDelay()
+        private async UniTaskVoid ResetHitFlagAsync()
         {
-            try
+            await UniTask.Yield(PlayerLoopTiming.FixedUpdate);
+            IsHit = false;
+        }
+
+        private void ApplyStun(float duration)
+        {
+            ChangeAIState(AIState.Stunned);
+            SetState(MobState.Stun);
+            StunTime = duration;
+
+            DOVirtual.DelayedCall(duration, () =>
             {
-                await UniTask.DelayFrame(1, cancellationToken: this.GetCancellationTokenOnDestroy());
-                IsHit = false;
-            }
-            catch (OperationCanceledException)
-            {
-                // 오브젝트 파괴 시 작업이 취소되는 것은 정상적인 동작이므로, 예외를 무시합니다.
-            }
+                if (!IsDead)
+                {
+                    SetState(MobState.Move);
+                    ChangeAIState(AIState.Wandering);
+                }
+            }).SetLink(gameObject);
         }
 
-        /// <summary>
-        /// 몹에게 슬로우 효과를 적용합니다.
-        /// </summary>
-        /// <param name="slowMultiplier">속도 감소 배율 (0.0 ~ 1.0). 0.3은 30% 감소.</param>
-        /// <param name="duration">슬로우 지속 시간(초).</param>
-        public override void ApplySlow(float slowMultiplier, float duration)
+        public override void ApplySlow(float slowAmount, float duration)
         {
-            // 기존 슬로우 효과가 있다면 현재 트윈을 완료하고 새 트윈 시작
-            _slowTween?.Kill(true);
+            m_slowTween?.Kill(true);
 
-            // 슬로우 효과는 기본 속도(initialSpeed)를 기준으로 계산해야 중첩 시 문제가 없습니다.
-            // 여기서는 간단하게 현재 속도를 기준으로 처리합니다.
-            float currentSpeed = Mob_Speed;
-            Mob_Speed *= (1f - slowMultiplier);
+            float originalSpeed = m_initialSpeed;
+            MoveSpeed = originalSpeed * (1f - slowAmount);
 
-            // 지정된 시간 후에 원래 속도로 복구
-            _slowTween = DOVirtual.DelayedCall(duration, () => { Mob_Speed = currentSpeed; })
-                .SetTarget(this); // 오브젝트가 파괴될 때 트윈도 함께 정리
+            m_slowTween = DOVirtual.DelayedCall(duration, () => 
+            { 
+                MoveSpeed = originalSpeed; 
+            }).SetLink(gameObject);
         }
 
-        protected override void Mob_Idle()
+        protected override void OnDie()
         {
-            LogManager.Log("Idle", LogManager.LogCategory.NormalMob);
-        }
-
-        protected override void Mob_Move()
-        {
-            ismove = true;
-        }
-
-        protected override void Mob_Stun()
-        {
-            LogManager.Log("Stun", LogManager.LogCategory.NormalMob);
-            ismove = false;
-            _wanderTween?.Kill(); // 배회 중이었다면 중지
-            _isWaitingToWander = false; // 스턴 시 대기 상태도 강제로 해제
-            DOVirtual.DelayedCall(Mob_StunTime, () => SetMobState(MobState.Move));
-        }
-
-        protected override void Mob_hit()
-        {
-            base.Mob_hit();
-        }
-
-        protected override void Mob_Attack()
-        {
-            LogManager.Log("Attack", LogManager.LogCategory.NormalMob);
-        }
-
-        protected override void Mob_Die()
-        {
-            // 오브젝트 풀로 돌아가기 전, 모든 동작(Tween)을 확실히 정지시킵니다.
-            _wanderTween?.Kill();
-            _slowTween?.Kill();
-            if (_spriteRenderer != null)
-            {
-                _spriteRenderer.DOKill();
-            }
+            if (IsDead) return;
             
-            base.Mob_Die();
-            LogManager.Log("Die", LogManager.LogCategory.NormalMob);
+            ChangeAIState(AIState.Dead);
+            KillAllTweens();
+
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
+            
+            base.OnDie();
         }
+
+        private void KillAllTweens()
+        {
+            m_moveTween?.Kill();
+            m_slowTween?.Kill();
+            if (m_spriteRenderer != null) m_spriteRenderer.DOKill();
+        }
+
+        #endregion
+
+        #region 게임 상태 이벤트 핸들러
+
+        protected override void OnPause()
+        {
+            base.OnPause();
+            m_moveTween?.Pause();
+            m_isAiPaused = true;
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            
+            if (!IsDead && m_aiState != AIState.Stunned)
+            {
+                m_moveTween?.Play();
+                m_isAiPaused = false;
+                
+                if (m_aiState == AIState.Wandering && (m_moveTween == null || !m_moveTween.IsActive()))
+                {
+                    StartWandering();
+                }
+            }
+        }
+
+        #endregion
 
 #if UNITY_EDITOR
-        // 씬 뷰에서 선택했을 때 탐색 범위를 노란색 원으로 표시합니다.
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, searchRange);
+            Gizmos.DrawWireSphere(transform.position, m_searchRange);
         }
 #endif
     }

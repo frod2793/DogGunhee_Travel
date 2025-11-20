@@ -1,101 +1,161 @@
-using DG.Tweening;
-using UnityEngine;
-using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using DogGuns_Games.vamsir;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.Serialization;
 
-public class DropItemBase : MonoBehaviour, IObjectPoolSpawnerSettable
+namespace DogGuns_Games.vamsir
 {
-    public ObjectPoolSpawner objectPoolSpawner { get; set; }
-    // 몬스터를 잡으면 나오는 아이템 코인, 경험치 , 대형 경험치 등의 드랍 시의 부유 효과 등을 정의 함
-    [Header("플로팅 효과 설정")]
-    [Tooltip("아이템이 위아래로 떠다니는 최대 높이입니다.")]
-    [SerializeField] protected float floatHeight = 0.2f;
-    [Tooltip("아이템이 한 번 위아래로 왕복하는 데 걸리는 시간입니다.")]
-    [SerializeField] protected float floatDuration = 1.5f;
-
-    [Header("회전 효과 설정")]
-    [Tooltip("좌우로 회전하는 최대 각도입니다 (Y축 기준).")]
-    [SerializeField] protected float rotationAngle = 10f;
-    [Tooltip("한 번 좌우로 왕복하는 데 걸리는 시간입니다.")]
-    [SerializeField] protected float rotationDuration = 2.0f;
-
-    [Header("생명주기 설정")]
-    [Tooltip("스폰된 후, 줍지 않았을 때 자동으로 사라지기까지의 시간(초)입니다.")]
-    [SerializeField] protected float lifeTime = 30f;
-
-    private CancellationTokenSource _lifeTimeCts;
-
-    protected virtual void OnEnable()
+    /// <summary>
+    /// 몬스터가 드랍하는 아이템(코인, 경험치 등)의 베이스 클래스입니다.
+    /// 부유 효과(Floating)와 자동 회수(Despawn) 로직을 담당합니다.
+    /// </summary>
+    public class DropItemBase : MonoBehaviour, IObjectPoolUser
     {
-        // 오브젝트가 활성화될 때 플로팅 효과 시작
-        StartFloating();
+        #region 프로퍼티 및 필드
 
-        // 자동 복귀 타이머 시작
-        StartReturnToPoolTimer();
-    }
+        // 인터페이스 구현 (PascalCase 적용)
+        public ObjectPoolSpawner ObjectPoolSpawner { get; set; }
 
-    protected virtual void OnDisable()
-    {
-        // 자동 복귀 타이머 중지
-        _lifeTimeCts?.Cancel();
-        _lifeTimeCts?.Dispose();
-        _lifeTimeCts = null;
-
-        // 오브젝트가 비활성화될 때 진행 중인 모든 트윈을 중지하여 리소스를 정리합니다.
-        transform.DOKill();
-    }
-
-    protected virtual void StartFloating()
-    {
-        // 아이템이 스폰된 위치를 중심으로 위아래로 떠다니도록 시퀀스를 생성합니다.
-        // 이는 아이템이 맵 경계 근처에 스폰되더라도 맵 밖으로 나갈 확률을 줄여줍니다.
-        var sequence = DOTween.Sequence();
+        [Header("플로팅 효과 설정")]
+        [Tooltip("아이템이 위아래로 떠다니는 최대 높이")]
+        [FormerlySerializedAs("floatHeight")]
+        [SerializeField] protected float m_floatHeight = 0.5f;
         
-        // 1. 위로 절반 이동
-        sequence.Append(transform.DOLocalMoveY(floatHeight / 2f, floatDuration / 4, false)
-            .SetRelative(true).SetEase(Ease.Linear));
-        // 2. 아래로 전체 높이만큼 이동 (중심점 아래까지)
-        sequence.Append(transform.DOLocalMoveY(-floatHeight, floatDuration / 2, false)
-            .SetRelative(true).SetEase(Ease.Linear));
-        // 3. 다시 위로 절반 이동하여 중심으로 복귀
-        sequence.Append(transform.DOLocalMoveY(floatHeight / 2f, floatDuration / 4, false)
-            .SetRelative(true).SetEase(Ease.Linear));
+        [Tooltip("한 번 위아래(Yoyo) 왕복하는 시간")]
+        [FormerlySerializedAs("floatDuration")]
+        [SerializeField] protected float m_floatDuration = 1.0f;
+
+        [Header("회전 효과 설정")]
+        [Tooltip("회전 각도 (Y축 기준, 3D 느낌 연출 시 사용)")]
+        [FormerlySerializedAs("rotationAngle")]
+        [SerializeField] protected float m_rotationAngle = 180f;
         
-        sequence.SetLoops(-1).SetTarget(transform); // 루프 설정 및 트윈에 타겟 연결
+        [Tooltip("회전 지속 시간")]
+        [FormerlySerializedAs("rotationDuration")]
+        [SerializeField] protected float m_rotationDuration = 2.0f;
 
-        // 좌우 회전 효과를 추가합니다. 이 트윈은 상하 이동과 별개로 동작합니다.
-        transform.DOLocalRotate(new Vector3(0, rotationAngle, 0), rotationDuration / 2)
-            .SetEase(Ease.InOutSine)
-            .SetLoops(-1, LoopType.Yoyo)
-            .SetTarget(transform);
-    }
-    
-    private void StartReturnToPoolTimer()
-    {
-        _lifeTimeCts = new CancellationTokenSource();
-        ReturnToPoolAfterDelay(_lifeTimeCts.Token).Forget();
-    }
+        [Header("생명주기 설정")]
+        [Tooltip("자동으로 사라지기까지의 시간 (초)")]
+        [FormerlySerializedAs("lifeTime")]
+        [SerializeField] protected float m_lifeTime = 30f;
 
-    private async UniTaskVoid ReturnToPoolAfterDelay(CancellationToken token)
-    {
-        try
+        // 내부 변수
+        private CancellationTokenSource m_lifeTimeCts;
+        private Tween m_floatTween;
+        private Tween m_rotateTween;
+        private Vector3 m_initialLocalScale; // 스케일 복구용
+
+        #endregion
+
+        #region Unity 라이프사이클
+
+        protected virtual void Awake()
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(lifeTime), cancellationToken: token);
+            // 풀링 시 크기가 변형될 수 있으므로 초기 크기 저장
+            m_initialLocalScale = transform.localScale;
+        }
 
-            if (objectPoolSpawner != null)
+        protected virtual void OnEnable()
+        {
+            // 상태 초기화
+            transform.localScale = m_initialLocalScale;
+            transform.rotation = Quaternion.identity;
+
+            // 효과 및 타이머 시작
+            StartVisualEffects();
+            StartReturnTimer();
+        }
+
+        protected virtual void OnDisable()
+        {
+            // 타이머 취소
+            if (m_lifeTimeCts != null)
             {
-                objectPoolSpawner.ReturnObject(gameObject);
+                m_lifeTimeCts.Cancel();
+                m_lifeTimeCts.Dispose();
+                m_lifeTimeCts = null;
+            }
+
+            // 트윈 정리 (SetLink를 썼지만 명시적 종료가 풀링에서 더 안전함)
+            m_floatTween?.Kill();
+            m_rotateTween?.Kill();
+        }
+
+        #endregion
+
+        #region 비주얼 이펙트 (DOTween)
+
+        protected virtual void StartVisualEffects()
+        {
+            // 1. 플로팅 효과 (위아래 둥둥)
+            // Sequence 대신 단일 Tween + Yoyo Loop 사용으로 최적화
+            // SetRelative(true)를 사용하여 현재 위치 기준으로 움직임
+            m_floatTween = transform.DOLocalMoveY(m_floatHeight, m_floatDuration)
+                .SetRelative(true)
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetLink(gameObject); // 오브젝트 파괴 시 자동 Kill
+
+            // 2. 회전 효과
+            // 2D 게임에서 Y축 회전은 동전이 뒤집히는 듯한 연출을 줍니다.
+            m_rotateTween = transform.DOLocalRotate(new Vector3(0, m_rotationAngle, 0), m_rotationDuration, RotateMode.FastBeyond360)
+                .SetRelative(true)
+                .SetEase(Ease.Linear)
+                .SetLoops(-1, LoopType.Incremental) // 계속해서 회전
+                .SetLink(gameObject);
+        }
+
+        #endregion
+
+        #region 생명주기 관리 (UniTask)
+
+        private void StartReturnTimer()
+        {
+            // 이전 CTS가 남아있다면 정리
+            m_lifeTimeCts?.Cancel();
+            m_lifeTimeCts?.Dispose();
+            m_lifeTimeCts = new CancellationTokenSource();
+
+            ReturnToPoolAfterDelayAsync(m_lifeTimeCts.Token).Forget();
+        }
+
+        private async UniTaskVoid ReturnToPoolAfterDelayAsync(CancellationToken token)
+        {
+            try
+            {
+                // 지정된 시간만큼 대기
+                await UniTask.Delay(TimeSpan.FromSeconds(m_lifeTime), cancellationToken: token);
+
+                // 대기 후 반환 로직
+                ReturnToPool();
+            }
+            catch (OperationCanceledException)
+            {
+                // OnDisable에 의해 취소된 경우 (정상 동작)
+            }
+        }
+
+        /// <summary>
+        /// 아이템을 풀로 반환하거나 파괴합니다.
+        /// </summary>
+        public void ReturnToPool()
+        {
+            // 이미 비활성화된 경우 중복 반환 방지
+            if (!gameObject.activeSelf) return;
+
+            if (ObjectPoolSpawner != null)
+            {
+                ObjectPoolSpawner.ReturnObject(gameObject);
             }
             else
             {
                 Destroy(gameObject);
             }
         }
-        catch (OperationCanceledException)
-        {
-            // 타이머가 정상적으로 취소된 경우 (예: 플레이어가 아이템을 주웠을 때)
-        }
+
+        #endregion
     }
+    
 }

@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 4859486950128097578}
   - component: {fileID: 7148867924126193655}
   - component: {fileID: 7277039563286419475}
-  m_Layer: 0
+  - component: {fileID: -3557827515463443056}
+  m_Layer: 1
   m_Name: BigExp
   m_TagString: Exp
   m_Icon: {fileID: 0}
@@ -101,10 +102,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2709c06c63540654aac063bc3fe1bf8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  floatHeight: 0.5
-  floatDuration: 1.5
-  rotationAngle: 10
-  rotationDuration: 2
+  m_floatHeight: 0.5
+  m_floatDuration: 1.5
+  m_rotationAngle: 0
+  m_rotationDuration: 0
+  m_lifeTime: 30
   <ExpValue>k__BackingField: 10
 --- !u!61 &7277039563286419475
 BoxCollider2D:
@@ -152,3 +154,30 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.79, y: 0.79}
   m_EdgeRadius: 0
+--- !u!50 &-3557827515463443056
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4286598514131204860}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 1
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4

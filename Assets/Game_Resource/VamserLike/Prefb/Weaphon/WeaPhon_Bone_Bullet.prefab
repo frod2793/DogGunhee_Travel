@@ -115,7 +115,7 @@ MonoBehaviour:
   m_explosionDamage: 10
   m_mobLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
 --- !u!58 &2167751140473522919
 CircleCollider2D:
   m_ObjectHideFlags: 0

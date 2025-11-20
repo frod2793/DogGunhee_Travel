@@ -2,77 +2,113 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using DG.Tweening;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DogGuns_Games.vamsir
 {
+    /// <summary>
+    /// 플레이어의 이동, 공격, 카메라 추적 등을 제어하는 메인 컨트롤러입니다.
+    /// 조이스틱 입력 또는 자동 공격 모드를 지원합니다.
+    /// </summary>
     public class VamPlayerControll : MonoBehaviour
     {
-        
-        #region 필드 및 변수 
+        #region 인스펙터 필드
 
         [Header("오브젝트 참조")]
-        [Tooltip("실제 움직임을 담당하는 플레이어의 부모 오브젝트입니다.")]
+        [Tooltip("실제 움직임을 담당하는 플레이어의 부모 오브젝트")]
         [FormerlySerializedAs("player")]
         [SerializeField] private GameObject m_playerObject;
-        [Tooltip("애니메이션과 캐릭터 로직을 담당하는 자식 오브젝트입니다.")]
+        
+        [Tooltip("애니메이션과 캐릭터 로직을 담당하는 자식 오브젝트")]
         [FormerlySerializedAs("playerCharactor")]
         [SerializeField] private PlayerBase m_playerCharacter;
-        [Tooltip("플레이어 머리 위에 표시될 HP 슬라이더 프리팹입니다.")]
-        [FormerlySerializedAs("playerHpSliderPrefab")] [SerializeField]
-        private Slider m_playerHpSliderPrefab;
-        [Tooltip("플레이어의 이동 범위를 제한하는 맵의 SpriteRenderer입니다.")]
+        
+        [Tooltip("HP 슬라이더 프리팹")]
+        [FormerlySerializedAs("playerHpSliderPrefab")] 
+        [SerializeField] private Slider m_playerHpSliderPrefab;
+        
+        [Tooltip("이동 제한 맵")]
         [FormerlySerializedAs("mapRange")]
         [SerializeField] private SpriteRenderer m_mapRange;
 
-        [Header("입력 및 UI")]
-        [Tooltip("플레이어 이동에 사용될 조이스틱입니다.")]
-        private const float k_joystickInputThreshold = 0.1f;
-
-        [Header("카메라 이동")]
-        [Tooltip("카메라가 플레이어를 따라가는 부드러운 정도입니다. 값이 작을수록 빠르게 따라갑니다.")]
+        [Header("카메라 설정")]
+        [Tooltip("카메라 추적 부드러움 정도")]
         [FormerlySerializedAs("moveDuration")]
         [SerializeField] private float m_cameraSmoothTime = 0.1f;
 
-        [Header("<color=green>자동 공격 설정")] 
-        [Tooltip("자동 공격 시 탐지할 적의 레이어")]
+        [Header("자동 공격 설정")] 
+        [Tooltip("적 탐지 레이어")]
         [FormerlySerializedAs("enemyLayer")]
         [SerializeField] private LayerMask m_enemyLayer;
-        [Tooltip("자동 공격 시 적을 탐지하는 최대 반경")]
+        
+        [Tooltip("적 탐지 반경")]
         [FormerlySerializedAs("detectionRadius")]
-        [SerializeField] private float m_detectionRadius = 30f;
-        [Tooltip("자동 공격 시 플레이어가 멈추는 거리(공격 사거리)")]
+        [SerializeField] private float m_detectionRadius = 10f; // 30f는 너무 클 수 있어 조정 권장
+        
+        [Tooltip("공격 사거리 (이 거리 안에서 멈춤)")]
         [FormerlySerializedAs("attackRadius")]
         [SerializeField] private float m_attackRadius = 1.5f;
-        [Tooltip("자동 공격 시 이동 속도 배율")]
-        [FormerlySerializedAs("autoAttackMoveSpeedMultiplier")]
-        [SerializeField] private float m_autoAttackMoveSpeedMultiplier = 1.0f;
 
-        // Private 상태 변수
+        #endregion
+
+        #region 내부 상태 변수
+
+        // 상수
+        private const float k_JoystickInputThreshold = 0.1f;
+        private const int k_MaxEnemyColliders = 20; // 탐지할 최대 적 수
+
+        // 외부 참조
         private VamserLikeGameManager m_gameManager;
         private Animator m_playerAnimator;
-        private Camera m_camera;
-        private Slider m_playerHpSlider;
-        private bool m_isGameStarted = false;
-        private bool m_isAttacking = false;
-        private bool m_isAutoAttackActive = false;
-        private GameObject m_currentTarget;
-        private CancellationTokenSource m_autoMoveAttackCTS;
-        private Vector3 m_autoMoveDirection; // 자동 공격 시 이동 방향
-        private Vector3 m_cameraVelocity = Vector3.zero; // SmoothDamp를 위한 속도 변수
-        private ContactFilter2D m_contactFilter;
+        private Camera m_mainCamera;
+        private VariableJoystick m_joystick;
 
-        public Vector3 MoveDirection { get; private set; } // 현재 조이스틱 입력에 따른 이동 방향
+        // UI
+        private Slider m_playerHpSlider;
+
+        // 상태 플래그
+        private bool m_isGameStarted;
+        private bool m_isAttacking;
+        private bool m_isAutoAttackActive;
+        private bool m_autoAttackEnabledByToggle;
+
+        // 자동 공격 관련
+        private CancellationTokenSource m_autoMoveAttackCts;
+        private Vector3 m_autoMoveDirection;
+        private GameObject m_currentTarget;
         
+        // 물리 및 카메라
+        private Vector3 m_cameraVelocity = Vector3.zero;
+        private ContactFilter2D m_contactFilter;
+        private readonly Collider2D[] m_enemyColliders = new Collider2D[k_MaxEnemyColliders]; // 캐싱된 배열
+
+        // 프로퍼티
+        public Vector3 MoveDirection { get; private set; }
+
+        public bool AutoAttackEnabledByToggle
+        {
+            get => m_autoAttackEnabledByToggle;
+            set
+            {
+                if (m_autoAttackEnabledByToggle == value) return;
+                m_autoAttackEnabledByToggle = value;
+
+                if (!m_autoAttackEnabledByToggle && m_isAutoAttackActive)
+                {
+                    DisableAutoMoveAttack();
+                }
+            }
+        }
+
         #endregion
 
         #region Unity 라이프사이클
 
         private void Awake()
         {
-            m_contactFilter.useTriggers = true; // 몹의 isTrigger 콜라이더를 감지
+            // ContactFilter 초기화
+            m_contactFilter.useTriggers = true;
             m_contactFilter.SetLayerMask(m_enemyLayer);
             m_contactFilter.useLayerMask = true;
         }
@@ -80,402 +116,26 @@ namespace DogGuns_Games.vamsir
         private void Start()
         {
             m_gameManager = VamserLikeGameManager.Instance;
-            PlayStateManager.OnGameStart += PlayerInit;
-            PlayStateManager.OnGamePause += Pause;
-            PlayStateManager.OnGameResume += Resume;
-            PlayStateManager.OnGameOver += OnGameOver;
+            m_joystick = m_gameManager.Joystick;
+            
+            SubscribeEvents();
         }
 
         private void OnDisable()
         {
-            PlayStateManager.OnGameStart -= PlayerInit;
-            PlayStateManager.OnGamePause -= Pause;
-            PlayStateManager.OnGameResume -= Resume;
-            PlayStateManager.OnGameOver -= OnGameOver;
-
-            if (m_playerCharacter != null)
-            {
-                m_playerCharacter.OnHealthChanged -= UpdatePlayerHpSlider;
-            }
-        }
-
-        private void OnGameOver()
-        {
+            UnsubscribeEvents();
             DisableAutoMoveAttack();
-            m_isAutoAttackActive = false;
         }
 
         private void FixedUpdate()
         {
-            if (m_isGameStarted)
-            {
-                HandleMovementInput();
-                ProcessMovement();
-                
-                FollowCamera();
-            }
+            if (!m_isGameStarted) return;
+
+            HandleMovementInput();
+            ProcessMovement();
+            FollowCamera();
         }
 
-        #endregion
-        
-        #region 게임 상태 관리
-
-        private void PlayerInit()
-        {
-            m_isGameStarted = true;
-        }
-
-        public void AssignCharacter(PlayerBase character)
-        {
-            if (m_playerCharacter == null && character != null)
-            {
-                m_playerCharacter = character;
-                m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
-                m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
-                m_camera = VamserLikeGameManager.Instance.MainCamera;
-                LogManager.Log(m_camera != null ? $"캐릭터 할당 성공: {character.name}, 카메라 할당 성공" : $"캐릭터 할당 성공: {character.name}, 그러나 카메라 할당 실패", 
-                    LogManager.LogCategory.PlayerBase);
-                
-                SetPlayerHpSlider();
-                
-                // 체력 변경 이벤트 구독
-                m_playerCharacter.OnHealthChanged += UpdatePlayerHpSlider;
-            }
-        }
-
-        private void Pause()
-        {
-            m_isGameStarted = false;
-        }
-
-        private void Resume()
-        {
-            m_isGameStarted = true;
-        }
-
-        #endregion
-
-        #region UI 설정
-
-        private void SetPlayerHpSlider()
-        {
-            m_playerHpSlider = Instantiate(m_playerHpSliderPrefab, m_playerObject.transform);
-            m_playerHpSlider.transform.localPosition = new Vector3(0, -0.4f, 0);
-            m_playerHpSlider.maxValue = m_playerCharacter.MaxHealth;
-            m_playerHpSlider.value = m_playerCharacter.CurrentHealth;
-        }
-
-        /// <summary>
-        /// PlayerBase의 OnHealthChanged 이벤트에 의해 호출됩니다.
-        /// </summary>
-        private void UpdatePlayerHpSlider(float currentHealth, float maxHealth)
-        {
-            if (m_playerHpSlider != null)
-            {
-                m_playerHpSlider.value = currentHealth;
-                m_playerHpSlider.maxValue = maxHealth;
-            }
-        }
-
-        #endregion
-
-        #region 플레이어 제어
-        
-        /// <summary>
-        /// FixedUpdate에서 입력을 처리하고 이동 방향을 결정합니다.
-        /// </summary>
-        private void HandleMovementInput()
-        {
-            MoveDirection = GetJoystickInputDirection(); // 현재 이동 방향 업데이트
-            bool isJoystickActive = MoveDirection.magnitude > k_joystickInputThreshold;
-
-            if (isJoystickActive)
-            {
-                // 수동 조작 시 자동 공격 비활성화
-                if (m_isAutoAttackActive)
-                {
-                    DisableAutoMoveAttack();
-                }
-                TryAttack(MoveDirection);
-                // 조이스틱 입력이 있을 때는 수동 이동이므로, 여기서 return하지 않고 ProcessMovement로 넘어갑니다.
-            }
-            else
-            {
-                // 조이스틱 입력이 없을 때 자동 공격 활성화 조건 체크
-                if (AutoAttackEnabledByToggle && !m_isAutoAttackActive)
-                {
-                    EnableAutoMoveAttack();
-                }
-                
-                // 조이스틱 입력이 없고, 자동 공격도 비활성 상태일 때 애니메이션 정지
-                if (!m_isAutoAttackActive)
-                {
-                    MoveDirection = Vector3.zero;
-                }
-                else
-                {
-                    // 자동 공격이 활성화 상태일 때는 AutoMoveAttackLoop에서 계산된 방향을 사용
-                    MoveDirection = m_autoMoveDirection;
-                }
-            }
-            
-            LogManager.Log($"[Movement] Final MoveDirection: {MoveDirection}", LogManager.LogCategory.PlayerBase);
-            
-            UpdateAnimationState(MoveDirection.magnitude);
-        }
-
-        /// <summary>
-        /// FixedUpdate에서 최종 이동 방향에 따라 실제 위치를 변경합니다.
-        /// </summary>
-        private void ProcessMovement()
-        {
-            if (m_playerObject == null || m_playerCharacter == null || MoveDirection == Vector3.zero)
-            {
-                return;
-            }
-
-            float deltaSpeed = m_playerCharacter.MoveSpeed * Time.fixedDeltaTime;
-            Vector3 currentPos = m_playerObject.transform.position; // GameManager 대신 직접 참조
-            Vector3 targetPosition = currentPos + MoveDirection * deltaSpeed;
-
-            // Rigidbody가 있다면 MovePosition을 사용하는 것이 더 좋습니다.
-            // 여기서는 기존 구조를 유지하여 transform.position을 직접 변경합니다.
-            m_playerObject.transform.position = ClampPositionToMap(targetPosition);
-
-            UpdateCharacterRotation(MoveDirection);
-        }
-
-        private Vector3 GetJoystickInputDirection()
-        {
-            // GameManager를 통해 중앙에서 관리되는 조이스틱 참조를 사용합니다.
-            var joystick = VamserLikeGameManager.Instance?.Joystick;
-            if (joystick != null)
-            {
-                Vector3 direction = new Vector3(joystick.Horizontal, joystick.Vertical, 0);
-                if (direction.magnitude > k_joystickInputThreshold)
-                {
-                    LogManager.Log($"[Input] Joystick Input: ({joystick.Horizontal:F2}, {joystick.Vertical:F2})", LogManager.LogCategory.PlayerBase);
-                }
-                return direction.normalized;
-            }
-            else
-            {
-                LogManager.LogWarning("[Input] Joystick is not available.", LogManager.LogCategory.PlayerBase);
-                return Vector3.zero;
-            }
-        }
-
-        private Vector3 ClampPositionToMap(Vector3 position)
-        {
-            if (m_mapRange == null) return position;
-
-            Bounds mapBounds = m_mapRange.bounds;
-            return new Vector3(
-                Mathf.Clamp(position.x, mapBounds.min.x, mapBounds.max.x),
-                Mathf.Clamp(position.y, mapBounds.min.y, mapBounds.max.y),
-                0f // 플레이어의 z 위치를 항상 0으로 고정합니다.
-            );
-        }
-
-        private void UpdateAnimationState(float moveMagnitude)
-        {
-            if (m_playerAnimator != null)
-            {
-                m_playerAnimator.SetFloat("Walk", moveMagnitude);
-            }
-        }
-
-        private void TryAttack(Vector3 moveDirection)
-        {
-            if (moveDirection.magnitude > k_joystickInputThreshold && !m_isAttacking)
-            {
-                PlayerAttack(moveDirection).Forget();
-            }
-        }
-
-        private void UpdateCharacterRotation(Vector3 moveDirection)
-        {
-            if (moveDirection != Vector3.zero && m_playerCharacter != null)
-            {
-                float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
-                float yRotation = (angle > 90 || angle < -90) ? 0f : 180f;
-                m_playerCharacter.transform.rotation = Quaternion.Euler(0, yRotation, 0);
-            }
-        }
-
-        private async UniTask PlayerAttack(Vector3 attackAngle)
-        {
-            if (m_playerCharacter == null || m_playerCharacter.WeaphonBase == null) return;
-
-            m_isAttacking = true;
-            
-            // Weaphon_base의 AttackAngle에 의존하지 않고, 컨트롤러에서 직접 공격 방향을 전달합니다.
-            // 이를 통해 수동 조작과 자동 공격의 방향 결정 로직이 명확하게 분리됩니다.
-            m_playerCharacter.WeaphonBase.Weaphon_Attack(attackAngle);
-
-            // 공격 쿨타임 또는 애니메이션 시간에 따른 딜레이
-            // Weaphon_base의 coolTime을 사용하는 것이 더 정확할 수 있습니다.
-            await UniTask.Delay(TimeSpan.FromSeconds(m_playerCharacter.WeaphonBase.coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
-            
-            m_isAttacking = false;
-        }
-
-        #endregion
-
-        #region 카메라 제어
-
-        private void FollowCamera()
-        {
-            if (m_playerObject == null || m_camera == null || m_mapRange == null)
-            {
-                if (m_camera == null)
-                {
-                    LogManager.LogWarning("[Camera] Main Camera is not assigned. Camera cannot follow.", LogManager.LogCategory.PlayerBase);
-                }
-                return;
-            }
-            
-            Vector3 targetPosition = new Vector3(m_playerObject.transform.position.x, m_playerObject.transform.position.y, m_camera.transform.position.z);
-            Bounds mapBounds = m_mapRange.bounds;
-            float cameraHalfWidth = m_camera.orthographicSize * m_camera.aspect;
-            float cameraHalfHeight = m_camera.orthographicSize;
-
-            targetPosition.x = Mathf.Clamp(targetPosition.x, mapBounds.min.x + cameraHalfWidth, mapBounds.max.x - cameraHalfWidth);
-            targetPosition.y = Mathf.Clamp(targetPosition.y, mapBounds.min.y + cameraHalfHeight, mapBounds.max.y - cameraHalfHeight);
-            
-            LogManager.Log($"[Camera] Following player to Target Position: {targetPosition}", LogManager.LogCategory.PlayerBase);
-
-            m_camera.transform.position = Vector3.SmoothDamp(m_camera.transform.position, targetPosition, ref m_cameraVelocity, m_cameraSmoothTime);
-        }
-
-        #endregion
-
-        #region 자동 이동 및 공격 설정
-
-        private bool _autoAttackEnabledByToggle = false;
-        public bool AutoAttackEnabledByToggle
-        {
-            get => _autoAttackEnabledByToggle;
-            set
-            {
-                if (_autoAttackEnabledByToggle == value) return;
-                _autoAttackEnabledByToggle = value;
-
-                if (!_autoAttackEnabledByToggle && m_isAutoAttackActive)
-                {
-                    DisableAutoMoveAttack();
-                }
-            }
-        }
-        
-        public void EnableAutoMoveAttack()
-        {
-            if (m_isAutoAttackActive) return;
-            m_isAutoAttackActive = true;
-            
-            m_autoMoveAttackCTS?.Cancel();
-            m_autoMoveAttackCTS?.Dispose();
-            
-            m_autoMoveAttackCTS = new CancellationTokenSource();
-            AutoMoveAttackLoop(m_autoMoveAttackCTS.Token).Forget();
-        }
-
-        public void DisableAutoMoveAttack()
-        {
-            if (!m_isAutoAttackActive) return;
-            m_isAutoAttackActive = false;
-            
-            if (m_autoMoveAttackCTS != null)
-            {
-                m_autoMoveAttackCTS.Cancel();
-                m_autoMoveAttackCTS.Dispose();
-                m_autoMoveAttackCTS = null;
-            }
-            m_currentTarget = null;
-            LogManager.Log("자동 공격 비활성화됨.", LogManager.LogCategory.PlayerBase);
-        }
-
-        private async UniTaskVoid AutoMoveAttackLoop(CancellationToken token)
-        {
-            LogManager.Log("자동 공격 활성화됨.", LogManager.LogCategory.PlayerBase);
-            while (!token.IsCancellationRequested)
-            {
-                if (!m_isGameStarted || m_playerCharacter == null || !m_isAutoAttackActive)
-                {
-                    await UniTask.Yield();
-                    continue;
-                }
-
-                VamserMobBase closestEnemy = FindClosestEnemy();
-                if (closestEnemy != null)
-                {
-                    if (closestEnemy.gameObject != m_currentTarget)
-                    {
-                        m_currentTarget = closestEnemy.gameObject;
-                        LogManager.Log($"자동 공격, 새 타겟 지정: {closestEnemy.name}", LogManager.LogCategory.PlayerBase);
-                    }
-
-                    Vector3 enemyPos = closestEnemy.transform.position;
-                    // 이동 주체인 GameManager로부터 현재 위치를 가져옵니다.
-                    Vector3 playerPos = m_gameManager.PlayerPos();
-                    Vector3 dir = (enemyPos - playerPos).normalized;
-
-                    // 1. 이동: 항상 이상적인 공격 위치로 부드럽게 이동합니다.
-                    float distanceToEnemy = Vector3.Distance(playerPos, enemyPos);
-                    
-                    // 공격 사거리보다 멀리 있을 때만 적으로 이동
-                    m_autoMoveDirection = distanceToEnemy > m_attackRadius ? dir : Vector3.zero;
-                    
-                    // 3. 공격: 사거리 내에 들어오면 공격을 시작합니다.
-                    float distance = Vector3.Distance(m_gameManager.PlayerPos(), enemyPos);
-                    if (distance <= m_attackRadius * 1.1f) // 약간의 버퍼를 주어 안정적으로 공격하게 함
-                    {
-                        if (!m_isAttacking)
-                        {
-                            await PlayerAttack(dir);
-                        }
-                    }
-                }
-                else
-                {
-                    if (m_currentTarget != null) m_currentTarget = null;
-                    m_autoMoveDirection = Vector3.zero;
-                }
-
-                await UniTask.Yield();
-            }
-        }
-
-        private VamserMobBase FindClosestEnemy()
-        {
-            Vector2 searchPosition = m_playerObject.transform.position;
-            int count = Physics2D.OverlapCircle(searchPosition, m_detectionRadius, m_contactFilter, _enemyColliders);
-            
-            VamserMobBase closest = null;
-            float minDist = float.MaxValue;
-            
-            for (int i = 0; i < count; i++)
-            {
-                var enemyCollider = _enemyColliders[i];
-                if (enemyCollider.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
-                {
-                    float dist = Vector2.Distance(searchPosition, mob.transform.position);
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                        closest = mob;
-                    }
-                }
-            }
-            
-            System.Array.Clear(_enemyColliders, 0, count);
-            return closest;
-        }
-        
-        // GC Alloc을 피하기 위해 배열을 캐싱합니다.
-        private readonly Collider2D[] _enemyColliders = new Collider2D[50];
-
-        #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
             if (m_playerObject == null) return;
@@ -486,8 +146,311 @@ namespace DogGuns_Games.vamsir
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(m_playerObject.transform.position, m_attackRadius);
         }
-        #endif
+
+        #endregion
         
+        #region 초기화 및 이벤트 관리
+
+        private void SubscribeEvents()
+        {
+            PlayStateManager.OnGameStart += OnGameStart;
+            PlayStateManager.OnGamePause += OnGamePause;
+            PlayStateManager.OnGameResume += OnGameResume;
+            PlayStateManager.OnGameOver += OnGameOver;
+        }
+
+        private void UnsubscribeEvents()
+        {
+            PlayStateManager.OnGameStart -= OnGameStart;
+            PlayStateManager.OnGamePause -= OnGamePause;
+            PlayStateManager.OnGameResume -= OnGameResume;
+            PlayStateManager.OnGameOver -= OnGameOver;
+
+            if (m_playerCharacter != null)
+            {
+                m_playerCharacter.OnHealthChanged -= UpdatePlayerHpSlider;
+            }
+        }
+
+        public void AssignCharacter(PlayerBase character)
+        {
+            if (character == null) return;
+
+            m_playerCharacter = character;
+            m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
+            m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
+            m_mainCamera = VamserLikeGameManager.Instance.MainCamera;
+            
+            LogManager.Log($"[Controller] Character Assigned: {character.name}", LogManager.LogCategory.PlayerBase);
+            
+            CreateHpSlider();
+            m_playerCharacter.OnHealthChanged += UpdatePlayerHpSlider;
+        }
+
+        private void CreateHpSlider()
+        {
+            if (m_playerHpSliderPrefab == null) return;
+
+            m_playerHpSlider = Instantiate(m_playerHpSliderPrefab, m_playerObject.transform);
+            m_playerHpSlider.transform.localPosition = new Vector3(0, -0.8f, 0); // 위치 조정
+            UpdatePlayerHpSlider(m_playerCharacter.CurrentHealth, m_playerCharacter.MaxHealth);
+        }
+
+        private void UpdatePlayerHpSlider(float current, float max)
+        {
+            if (m_playerHpSlider != null)
+            {
+                m_playerHpSlider.value = current;
+                m_playerHpSlider.maxValue = max;
+            }
+        }
+
+        #endregion
+
+        #region 게임 상태 핸들러
+
+        private void OnGameStart() => m_isGameStarted = true;
+        private void OnGamePause() => m_isGameStarted = false;
+        private void OnGameResume() => m_isGameStarted = true;
+        
+        private void OnGameOver()
+        {
+            m_isGameStarted = false;
+            DisableAutoMoveAttack();
+            m_isAutoAttackActive = false;
+        }
+
+        #endregion
+
+        #region 이동 및 조작 로직
+
+        private void HandleMovementInput()
+        {
+            // 조이스틱 입력 확인
+            Vector3 joystickDir = GetJoystickInputDirection();
+            bool isJoystickActive = joystickDir.sqrMagnitude > k_JoystickInputThreshold * k_JoystickInputThreshold;
+
+            if (isJoystickActive)
+            {
+                // 수동 조작 시 자동 공격 해제
+                if (m_isAutoAttackActive) DisableAutoMoveAttack();
+                
+                MoveDirection = joystickDir;
+                TryAttack(MoveDirection);
+            }
+            else
+            {
+                // 입력 없으면 자동 공격 체크
+                if (m_autoAttackEnabledByToggle && !m_isAutoAttackActive)
+                {
+                    EnableAutoMoveAttack();
+                }
+
+                MoveDirection = m_isAutoAttackActive ? m_autoMoveDirection : Vector3.zero;
+            }
+
+            UpdateAnimationState(MoveDirection.magnitude);
+        }
+
+        private Vector3 GetJoystickInputDirection()
+        {
+            if (m_joystick == null) return Vector3.zero;
+            return new Vector3(m_joystick.Horizontal, m_joystick.Vertical, 0).normalized;
+        }
+
+        private void ProcessMovement()
+        {
+            if (m_playerObject == null || m_playerCharacter == null || MoveDirection == Vector3.zero) return;
+
+            float speed = m_playerCharacter.MoveSpeed * Time.fixedDeltaTime;
+            Vector3 targetPos = m_playerObject.transform.position + MoveDirection * speed;
+
+            // 맵 범위 제한 적용 후 이동
+            m_playerObject.transform.position = ClampPositionToMap(targetPos);
+
+            UpdateCharacterRotation(MoveDirection);
+        }
+
+        private Vector3 ClampPositionToMap(Vector3 position)
+        {
+            if (m_mapRange == null) return position;
+
+            Bounds bounds = m_mapRange.bounds;
+            float x = Mathf.Clamp(position.x, bounds.min.x, bounds.max.x);
+            float y = Mathf.Clamp(position.y, bounds.min.y, bounds.max.y);
+            return new Vector3(x, y, 0f);
+        }
+
+        private void UpdateCharacterRotation(Vector3 dir)
+        {
+            if (dir.sqrMagnitude > 0.01f && m_playerCharacter != null)
+            {
+                // 단순히 x축 방향에 따라 뒤집기 (Flip)
+                float yRot = dir.x < 0 ? 0f : 180f; // 원본 스프라이트 방향에 따라 0/180 조정 필요
+                m_playerCharacter.transform.rotation = Quaternion.Euler(0, yRot, 0);
+            }
+        }
+
+        private void UpdateAnimationState(float speed)
+        {
+            if (m_playerAnimator != null)
+            {
+                m_playerAnimator.SetFloat("Walk", speed);
+            }
+        }
+
+        #endregion
+
+        #region 공격 시스템
+
+        private void TryAttack(Vector3 dir)
+        {
+            if (!m_isAttacking)
+            {
+                PerformAttackAsync(dir).Forget();
+            }
+        }
+
+        private async UniTask PerformAttackAsync(Vector3 dir)
+        {
+            if (m_playerCharacter == null || m_playerCharacter.WeaphonBase == null) return;
+
+            m_isAttacking = true;
+            
+            m_playerCharacter.WeaphonBase.Weaphon_Attack(dir);
+
+            // 쿨타임 대기
+            float coolTime = m_playerCharacter.WeaphonBase.coolTime;
+            if (coolTime > 0)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
+            }
+            
+            m_isAttacking = false;
+        }
+
+        #endregion
+
+        #region 자동 공격 시스템 (Auto Play)
+
+        private void EnableAutoMoveAttack()
+        {
+            if (m_isAutoAttackActive) return;
+            m_isAutoAttackActive = true;
+
+            m_autoMoveAttackCts?.Cancel();
+            m_autoMoveAttackCts = new CancellationTokenSource();
+            
+            AutoAttackLoopAsync(m_autoMoveAttackCts.Token).Forget();
+        }
+
+        private void DisableAutoMoveAttack()
+        {
+            if (!m_isAutoAttackActive) return;
+            m_isAutoAttackActive = false;
+            m_autoMoveDirection = Vector3.zero;
+
+            m_autoMoveAttackCts?.Cancel();
+            m_autoMoveAttackCts?.Dispose();
+            m_autoMoveAttackCts = null;
+        }
+
+        private async UniTaskVoid AutoAttackLoopAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                if (!m_isGameStarted || m_playerCharacter == null)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    continue;
+                }
+
+                VamserMobBase target = FindClosestEnemy();
+                
+                if (target != null)
+                {
+                    Vector3 targetPos = target.transform.position;
+                    Vector3 myPos = m_playerObject.transform.position;
+                    Vector3 dirToTarget = (targetPos - myPos).normalized;
+                    float dist = Vector3.Distance(myPos, targetPos);
+
+                    // 1. 이동 결정 (사거리 밖이면 이동)
+                    // 공격 사거리보다 약간 여유를 두고 멈춤
+                    if (dist > m_attackRadius * 0.9f)
+                    {
+                        m_autoMoveDirection = dirToTarget;
+                    }
+                    else
+                    {
+                        m_autoMoveDirection = Vector3.zero;
+                    }
+
+                    // 2. 공격 시도 (사거리 내)
+                    if (dist <= m_attackRadius * 1.2f && !m_isAttacking)
+                    {
+                        await PerformAttackAsync(dirToTarget);
+                    }
+                }
+                else
+                {
+                    // 타겟 없으면 정지
+                    m_autoMoveDirection = Vector3.zero;
+                }
+
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+        }
+
+        private VamserMobBase FindClosestEnemy()
+        {
+            if (m_playerObject == null) return null;
+
+   
+            int count = Physics2D.OverlapCircle(m_playerObject.transform.position, m_detectionRadius, m_contactFilter, m_enemyColliders);
+            
+            VamserMobBase closest = null;
+            float minDstSqr = float.MaxValue;
+            Vector3 myPos = m_playerObject.transform.position;
+
+            for (int i = 0; i < count; i++)
+            {
+                var col = m_enemyColliders[i];
+                if (col.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
+                {
+                    float dstSqr = (mob.transform.position - myPos).sqrMagnitude;
+                    if (dstSqr < minDstSqr)
+                    {
+                        minDstSqr = dstSqr;
+                        closest = mob;
+                    }
+                }
+            }
+
+            // 배열 초기화 불필요 (덮어쓰기 방식)
+            return closest;
+        }
+        #endregion
+
+        #region 카메라 추적
+
+        private void FollowCamera()
+        {
+            if (m_mainCamera == null || m_playerObject == null || m_mapRange == null) return;
+
+            Vector3 targetPos = m_playerObject.transform.position;
+            targetPos.z = m_mainCamera.transform.position.z;
+
+            // 맵 범위 제한
+            Bounds bounds = m_mapRange.bounds;
+            float camHeight = m_mainCamera.orthographicSize;
+            float camWidth = camHeight * m_mainCamera.aspect;
+
+            targetPos.x = Mathf.Clamp(targetPos.x, bounds.min.x + camWidth, bounds.max.x - camWidth);
+            targetPos.y = Mathf.Clamp(targetPos.y, bounds.min.y + camHeight, bounds.max.y - camHeight);
+
+            m_mainCamera.transform.position = Vector3.SmoothDamp(m_mainCamera.transform.position, targetPos, ref m_cameraVelocity, m_cameraSmoothTime);
+        }
+
         #endregion
     }
 }

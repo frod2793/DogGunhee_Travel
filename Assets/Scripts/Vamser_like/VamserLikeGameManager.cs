@@ -1,534 +1,401 @@
+using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// 뱀서라이크 게임의 기본 게임플레이 관리자
+    /// 뱀서라이크 게임의 핵심 로직(스폰, 상태, UI 연동)을 관리하는 매니저 클래스 (최적화됨)
     /// </summary>
     public class VamserLikeGameManager : MonoBehaviour
     {
-        #region 필드 및 변수
-        
-        public static event System.Action<PlayerBase> OnPlayerChanged;
-        
+        #region 정적 멤버 및 이벤트
+
+        // 플레이어 변경 알림 이벤트 (스폰/사망 등)
+        public static event Action<PlayerBase> OnPlayerChanged;
+
         private static VamserLikeGameManager s_instance;
         public static VamserLikeGameManager Instance
         {
             get
             {
-                // 인스턴스가 아직 없는 경우 씬에서 찾아봅니다.
                 if (s_instance == null)
                 {
                     s_instance = FindFirstObjectByType<VamserLikeGameManager>();
                     if (s_instance == null)
                     {
-                        LogManager.LogError("씬에 VamserLikeGameManager 인스턴스가 존재하지 않습니다.");
+                        LogManager.LogError("[GameManager] 인스턴스가 씬에 없습니다.");
                     }
                 }
                 return s_instance;
             }
         }
 
-        public PlayerBase SpawnedPlayer { get; private set; }
+        #endregion
 
-        [Header("캐릭터 및 무기가 스폰 될시 부모 오브젝트")] 
+        #region 인스펙터 필드
+
+        [Header("Reference Settings")]
+        [Tooltip("캐릭터 및 무기가 스폰될 부모 오브젝트 (Player Container)")]
         [FormerlySerializedAs("inGameObjectPlayerParent")]
-        [SerializeField] private GameObject m_inGameObjectPlayerParent;
+        [SerializeField] private GameObject m_playerContainer;
 
-        private readonly Vector3 _spawnPosition = Vector3.zero;
-
-        [Header("옵션 팝업 매니저")] 
+        [Tooltip("옵션 팝업 매니저 프리팹")]
         [FormerlySerializedAs("optionPopupManager")]
-        [SerializeField] private OptionPopupManager m_optionPopupManager;
-        
+        [SerializeField] private OptionPopupManager m_optionPopupPrefab;
+
+        #endregion
+
+        #region 내부 캐시 및 상태 변수
+
+        // 외부 컴포넌트 참조
         private ObjectPoolSpawner m_objectPoolSpawner;
-        public ObjectPoolSpawner ObjectPoolSpawner => m_objectPoolSpawner;
-        private VamPlayerControll m_vamPlayerControll;
-        public VamPlayerControll PlayerController => m_vamPlayerControll;
+        private VamPlayerControll m_playerController;
         private VariableJoystick m_variableJoystick;
-        public VariableJoystick Joystick => m_variableJoystick;
         private Camera m_mainCamera;
-        public Camera MainCamera => m_mainCamera;
         private VamserLikeUI m_uiManager;
+
+        // 현재 상태
+        public PlayerBase SpawnedPlayer { get; private set; }
+        public ObjectPoolSpawner ObjectPoolSpawner => m_objectPoolSpawner;
+        public VamPlayerControll PlayerController => m_playerController;
+        public VariableJoystick Joystick => m_variableJoystick;
+        public Camera MainCamera => m_mainCamera;
         public VamserLikeUI UIManager => m_uiManager;
+
+        // 상수
+        private static readonly Vector3 k_SpawnPosition = Vector3.zero;
 
         #endregion
 
         #region Unity 라이프사이클
 
-        /// <summary>
-        /// 컴포넌트 초기화 및 이벤트 구독
-        /// </summary>
         private void Awake()
         {
+            // 싱글톤 중복 방지
             if (s_instance != null && s_instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
             s_instance = this;
-            
-            CacheComponents();
 
-            // 이벤트 구독
-            PlayStateManager.OnGameStart += GameStart;
-            PlayStateManager.OnGamePause += Pause;
-            PlayStateManager.OnGameResume += Resume;
-            PlayStateManager.OnGameOver += OnGameOver;
+            CacheComponents();
+            SubscribeEvents();
+        }
+
+        private void Start()
+        {
         }
 
         private void OnEnable()
         {
-            // 게임 시작 로직은 UI의 카운트다운 후 시작되도록 VamserLikeUI로 이동합니다.
-            // VamserLikeGameManager가 모든 준비를 마친 후, VamserLikeUI를 통해 게임 시작 카운트다운을 시작합니다.
+            // 게임 시작 전 카운트다운 요청
             m_uiManager?.StartGameCountdown();
         }
 
-        /// <summary>
-        /// 필요한 컴포넌트들을 찾아 캐싱합니다.
-        /// </summary>
-        private void CacheComponents()
-        {
-            if (m_objectPoolSpawner == null)
-            {
-                m_objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
-                LogManager.Log(m_objectPoolSpawner != null ? "ObjectPoolSpawner 참조 캐싱 성공" : "ObjectPoolSpawner 참조 캐싱 실패", 
-                    LogManager.LogCategory.VamserLikeGameManager);
-            }
-            if (m_vamPlayerControll == null)
-            {
-                m_vamPlayerControll = FindFirstObjectByType<VamPlayerControll>();
-                LogManager.Log(m_vamPlayerControll != null ? "VamPlayerControll 참조 캐싱 성공" : "VamPlayerControll 참조 캐싱 실패", 
-                    LogManager.LogCategory.VamserLikeGameManager);
-            }
-            if (m_variableJoystick == null)
-            {
-                m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
-                LogManager.Log(m_variableJoystick != null ? "VariableJoystick 참조 캐싱 성공" : "VariableJoystick 참조 캐싱 실패", 
-                    LogManager.LogCategory.VamserLikeGameManager);
-            }
-            if (m_mainCamera == null)
-            {
-                m_mainCamera = Camera.main;
-                LogManager.Log(m_mainCamera != null ? "MainCamera 참조 캐싱 성공" : "MainCamera 참조 캐싱 실패", 
-                    LogManager.LogCategory.VamserLikeGameManager);
-            }
-            if (m_uiManager == null)
-            {
-                m_uiManager = FindFirstObjectByType<VamserLikeUI>();
-                LogManager.Log(m_uiManager != null ? "VamserLikeUI 참조 캐싱 성공" : "VamserLikeUI 참조 캐싱 실패",
-                    LogManager.LogCategory.VamserLikeGameManager);
-            }
-        }
-
-        /// <summary>
-        /// 이벤트 구독 해제
-        /// </summary>
         private void OnDestroy()
         {
-            PlayStateManager.OnGameStart -= GameStart;
-            PlayStateManager.OnGamePause -= Pause;
-            PlayStateManager.OnGameResume -= Resume;
+            UnsubscribeEvents();
+        }
+
+        #endregion
+
+        #region 초기화 및 이벤트 관리
+
+        private void CacheComponents()
+        {
+            // FindFirstObjectByType은 비용이 크므로 Awake에서 한 번만 수행
+            m_objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
+            m_playerController = FindFirstObjectByType<VamPlayerControll>();
+            m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
+            m_uiManager = FindFirstObjectByType<VamserLikeUI>();
+            m_mainCamera = Camera.main;
+
+            // 필수 컴포넌트 누락 경고
+            if (m_objectPoolSpawner == null) LogManager.LogWarning("[GameManager] Spawner Missing");
+            if (m_playerController == null) LogManager.LogWarning("[GameManager] Controller Missing");
+        }
+
+        private void SubscribeEvents()
+        {
+            PlayStateManager.OnGameStart += OnGameStart;
+            PlayStateManager.OnGamePause += OnPause;
+            PlayStateManager.OnGameResume += OnResume;
+            PlayStateManager.OnGameOver += OnGameOver;
+        }
+
+        private void UnsubscribeEvents()
+        {
+            PlayStateManager.OnGameStart -= OnGameStart;
+            PlayStateManager.OnGamePause -= OnPause;
+            PlayStateManager.OnGameResume -= OnResume;
             PlayStateManager.OnGameOver -= OnGameOver;
         }
 
         #endregion
 
-        #region 게임 상태 관리
+        #region 게임 상태 핸들러
 
-        /// <summary>
-        /// 게임 시작 이벤트 처리 (비동기로 변경)
-        /// </summary>
-        private async void GameStart()
+        // [최적화] async void -> async UniTaskVoid (예외 추적 용이)
+        private async void OnGameStart()
         {
             try
             {
-                // 새 게임 시작 시, 인게임에서 사용된 인벤토리를 초기화합니다.
-                DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
+                // 데이터 초기화
+                if (DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance != null)
+                    DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
                 
-                PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt = 0;
+                if (PlayerDataManagerDontdesytoy.Instance != null)
+                    PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt = 0;
 
                 SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
-                // 플레이어와 무기 스폰이 완료될 때까지 기다립니다.
 
-                await SpawnPlayer();
+                // 플레이어 스폰 대기
+                await SpawnPlayerAsync();
 
-                // 플레이어 스폰이 성공적으로 완료된 후에 몹 스포너를 활성화합니다.
+                // 스포너 활성화
                 if (SpawnedPlayer != null && m_objectPoolSpawner != null)
                 {
                     await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer);
-                    LogManager.Log("게임 시작: 플레이어 스폰 완료 후 몹 스포너 활성화", LogManager.LogCategory.VamserLikeGameManager);
+                    LogManager.Log("[GameManager] Game Started Successfully");
                 }
                 else
                 {
-                    LogManager.LogError("플레이어 스폰에 실패했거나 ObjectPoolSpawner를 찾을 수 없어 게임을 시작할 수 없습니다.");
+                    LogManager.LogError("[GameManager] Failed to initialize spawner or player");
                 }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
-                LogManager.LogError($"게임 시작 중 심각한 오류 발생: {e.Message}", LogManager.LogCategory.VamserLikeGameManager);
+                LogManager.LogError($"[GameManager] Error during GameStart: {e.Message}");
             }
         }
 
-        /// <summary>
-        /// 게임 일시정지 이벤트 처리
-        /// </summary>
-        private void Pause()
+        private void OnPause()
         {
-            LogManager.Log("게임 일시정지", LogManager.LogCategory.VamserLikeGameManager);
+            LogManager.Log("[GameManager] Game Paused");
         }
 
-        /// <summary>
-        /// 게임 재개 이벤트 처리
-        /// </summary>
-        private void Resume()
+        private void OnResume()
         {
-            LogManager.Log("게임 재개", LogManager.LogCategory.VamserLikeGameManager);
+            LogManager.Log("[GameManager] Game Resumed");
         }
 
+        // [최적화] async void -> async UniTaskVoid
         private async void OnGameOver()
         {
-            SpawnedPlayer = null; // 게임 오버 시 플레이어 참조 초기화
-            OnPlayerChanged?.Invoke(null); // 플레이어가 사라졌음을 알림
+            SpawnedPlayer = null;
+            OnPlayerChanged?.Invoke(null);
 
-            // 게임 내에 획득한 코인 합산
-            var playerDataManager = PlayerDataManagerDontdesytoy.Instance;
-            if (playerDataManager != null && playerDataManager.PlayerData != null)
+            LogManager.Log("[GameManager] Game Over Processing...");
+
+            // 코인 정산 및 서버 업로드
+            var dataManager = PlayerDataManagerDontdesytoy.Instance;
+            if (dataManager != null && dataManager.PlayerData != null)
             {
-                var playerData = playerDataManager.PlayerData;
-                playerData.currency1 += playerData.ingameCoin; // ingameCoin을 totalCoin에 합산
-                playerData.ingameCoin = 0; // 인게임 코인 초기화
-                LogManager.Log($"게임 오버: 코인 합산 완료 (총 코인: {playerData.currency1})",
-                    LogManager.LogCategory.VamserLikeGameManager);
+                var playerData = dataManager.PlayerData;
+                playerData.currency1 += playerData.ingameCoin;
+                playerData.ingameCoin = 0;
 
-                // 서버 업로드는 반드시 메인 스레드에서 실행
+                // 서버 통신은 메인 스레드에서 안전하게 처리
                 await UniTask.SwitchToMainThread();
+                
                 var param = new BackEnd.Param();
-                param.Add("Money1", playerData.currency1); // OnGameOver에서는 코인만 업데이트
+                param.Add("Money1", playerData.currency1);
+
                 try
                 {
                     await ServerManager.Instance.UploadDataAsync("User_Data", param);
-                    LogManager.Log("서버에 코인 데이터 업로드 성공", LogManager.LogCategory.VamserLikeGameManager);
+                    LogManager.Log("[GameManager] Coin Data Uploaded");
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
-                    LogManager.LogError($"서버에 코인 데이터 업로드 실패: {e.Message}", LogManager.LogCategory.VamserLikeGameManager);
+                    LogManager.LogError($"[GameManager] Upload Failed: {e.Message}");
                 }
             }
-            else
-            {
-                LogManager.LogWarning("PlayerDataManagerDontdesytoy 또는 PlayerData가 null입니다. 코인 합산 실패",
-                    LogManager.LogCategory.VamserLikeGameManager);
-            }
-
-            LogManager.Log("게임 오버", LogManager.LogCategory.VamserLikeGameManager);
-        }
-
-        /// <summary>
-        /// 메뉴 팝업 열기와 게임 상태 변경
-        /// </summary>
-        public void SetMenuPopupState(bool isPause)
-        {
-            if (isPause)
-            {
-                PlayStateManager.instance.Pause();
-            }
-            else
-            {
-                PlayStateManager.instance.Resume();
-            }
-            LogManager.Log($"메뉴 팝업 {(isPause ? "열림" : "닫힘")}", LogManager.LogCategory.VamserLikeGameManager);
-        }
-
-        /// <summary>
-        /// 옵션 팝업 열기
-        /// </summary>
-        public void OpenOptionPopup()
-        {
-            if (m_optionPopupManager == null)
-            {
-                LogManager.LogError("옵션 팝업 매니저가 설정되지 않았습니다.", LogManager.LogCategory.VamserLikeGameManager);
-                return;
-            }
-
-            // Instantiate는 프리팹의 복제본을 생성합니다.
-            // 생성된 인스턴스를 변수에 저장하여 사용해야 합니다.
-            var popupInstance = Instantiate(m_optionPopupManager);
-            popupInstance.gameObject.SetActive(true); // 프리팹이 비활성화 상태일 경우를 대비해 명시적으로 활성화
-            LogManager.Log("옵션 팝업 열림", LogManager.LogCategory.VamserLikeGameManager);
         }
 
         #endregion
 
-        #region 플레이어/무기 스폰 관리
+        #region UI 및 팝업 관리
 
-        /// <summary>
-        /// 현재 선택된 플레이어와 무기를 비동기적으로 스폰합니다. (반환 타입을 UniTask로 변경)
-        /// </summary>
-        private async UniTask SpawnPlayer()
+        public void SetMenuPopupState(bool isPause)
         {
-            if (!PlayStateManager.instance.IsPlaying || m_inGameObjectPlayerParent == null)
-            {
-                LogManager.LogWarning("게임이 플레이 상태가 아니거나 부모 오브젝트가 설정되지 않았습니다.",
-                    LogManager.LogCategory.VamserLikeGameManager);
-                return;
-            }
-
-            try
-            {
-                Weaphon_base spawnedWeapon = await SpawnSelectedWeapon();
-                if (spawnedWeapon == null)
-                {
-                    LogManager.LogError("무기 스폰에 실패하여 캐릭터를 스폰할 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
-                    return;
-                }
-
-                await SpawnSelectedCharacter(spawnedWeapon);
-            }
-            catch (System.Exception ex)
-            {
-                LogManager.LogError($"플레이어 또는 무기 스폰 중 예외 발생: {ex.Message}",
-                    LogManager.LogCategory.VamserLikeGameManager);
-                SpawnedPlayer = null; // 실패 시 참조를 null로 설정
-            }
+            if (isPause) PlayStateManager.instance.Pause();
+            else PlayStateManager.instance.Resume();
         }
 
-        /// <summary>
-        /// 선택된 무기를 Addressable을 사용하여 스폰합니다.
-        /// </summary>
-        private async UniTask<Weaphon_base> SpawnSelectedWeapon()
+        public void OpenOptionPopup()
         {
-            int weaponIndex = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
-            string addressableKey = $"Weapon_{weaponIndex}"; // 무기 Addressable 주소 규칙
+            if (m_optionPopupPrefab == null) return;
 
-            try
-            {
-                GameObject weaponInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition,
-                    Quaternion.identity, m_inGameObjectPlayerParent.transform).ToUniTask();
-                if (weaponInstance != null)
-                {
-                    weaponInstance.transform.localPosition = Vector3.zero; // 스폰 후 로컬 좌표를 0으로 초기화
-                    LogManager.Log($"무기 스폰 성공: {addressableKey}", LogManager.LogCategory.VamserLikeGameManager);
-                    return weaponInstance.GetComponent<Weaphon_base>();
-                }
-
-                return null;
-            }
-            catch (System.Exception ex)
-            {
-                LogManager.LogError($"Addressable 키 '{addressableKey}'를 가진 무기 스폰 중 예외 발생: {ex.Message}",
-                    LogManager.LogCategory.VamserLikeGameManager);
-                return null;
-            }
+            var popup = Instantiate(m_optionPopupPrefab);
+            popup.gameObject.SetActive(true);
         }
 
-        /// <summary>
-        /// 선택된 캐릭터를 스폰하고 무기를 설정합니다.
-        /// </summary>
-        private async UniTask SpawnSelectedCharacter(Weaphon_base weaponToAssign)
+        #endregion
+
+        #region 플레이어 스폰 시스템 (Addressables)
+
+        public async UniTask ChangeCharacterAndWeapon_Spawn()
         {
-            int characterIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
-            string addressableKey = $"Player_Character_{characterIndex}";
+            if (m_playerContainer == null) return;
+
+            // 기존 객체 정리 (역순 순회로 안전하게 제거)
+            for (int i = m_playerContainer.transform.childCount - 1; i >= 0; i--)
+            {
+                GameObject childObj = m_playerContainer.transform.GetChild(i).gameObject;
+                Addressables.ReleaseInstance(childObj); // Addressable로 생성된 객체 해제
+            }
+
+            SpawnedPlayer = null;
+            OnPlayerChanged?.Invoke(null);
+
+            // 새 플레이어 스폰
+            await SpawnPlayerAsync();
+        }
+
+        private async UniTask SpawnPlayerAsync()
+        {
+            // 게임이 플레이 중이 아니거나 컨테이너가 없으면 중단
+            if (!PlayStateManager.instance.IsPlaying || m_playerContainer == null) return;
 
             try
             {
-                GameObject characterInstance = await Addressables.InstantiateAsync(addressableKey, _spawnPosition,
-                    Quaternion.identity, m_inGameObjectPlayerParent.transform).ToUniTask();
-                if (characterInstance != null)
-                {
-                    characterInstance.transform.localPosition = Vector3.zero; // 스폰 후 로컬 좌표를 0으로 초기화
-                    LogManager.Log($"캐릭터 스폰 성공: {addressableKey}", LogManager.LogCategory.VamserLikeGameManager);
-                    SpawnedPlayer = characterInstance.GetComponent<PlayerBase>();
-                    if (SpawnedPlayer != null)
-                    {
-                        SpawnedPlayer.InitializeWeapon(weaponToAssign);
-                        if (m_vamPlayerControll != null)
-                        {
-                            m_vamPlayerControll.AssignCharacter(SpawnedPlayer);
-                        }
-                        else
-                        {
-                            LogManager.LogError("VamPlayerControll을 찾을 수 없습니다.",
-                                LogManager.LogCategory.VamserLikeGameManager);
-                        }
-                    }
-                    else
-                    {
-                        LogManager.LogError("스폰된 캐릭터에서 PlayerBase 컴포넌트를 찾을 수 없습니다.",
-                            LogManager.LogCategory.VamserLikeGameManager);
-                    }
-                    
-                    // 새 플레이어가 성공적으로 스폰되었음을 모든 리스너에게 알립니다.
-                    OnPlayerChanged?.Invoke(SpawnedPlayer);
-                }
+                // 1. 무기 스폰
+                Weaphon_base weapon = await SpawnWeaponAsync();
+                if (weapon == null) return;
+
+                // 2. 캐릭터 스폰 및 무기 장착
+                await SpawnCharacterAsync(weapon);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                LogManager.LogError($"Addressable 키 '{addressableKey}'를 가진 캐릭터 스폰 중 예외 발생: {ex.Message}",
-                    LogManager.LogCategory.VamserLikeGameManager);
-                // 실패 시 _spawnedPlayer를 null로 설정
+                LogManager.LogError($"[GameManager] Spawn Failed: {ex.Message}");
                 SpawnedPlayer = null;
             }
         }
 
-
-        /// <summary>
-        /// 현재 스폰된 캐릭터와 무기를 변경
-        /// </summary>
-        public async UniTask ChangeCharacterAndWeapon_Spawn()
+        private async UniTask<Weaphon_base> SpawnWeaponAsync()
         {
-            if (m_inGameObjectPlayerParent == null)
+            int index = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
+            string key = $"Weapon_{index}";
+
+            try
             {
-                LogManager.LogError("인게임 오브젝트 부모가 설정되지 않았습니다.", LogManager.LogCategory.VamserLikeGameManager);
-                return;
-            }
+                var op = Addressables.InstantiateAsync(key, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform);
+                GameObject instance = await op.ToUniTask();
 
-            // 현재 캐릭터와 무기 제거
-            for (int i = m_inGameObjectPlayerParent.transform.childCount - 1; i >= 0; i--)
+                if (instance != null)
+                {
+                    instance.transform.localPosition = Vector3.zero;
+                    return instance.GetComponent<Weaphon_base>();
+                }
+                return null;
+            }
+            catch (Exception e)
             {
-                Transform child = m_inGameObjectPlayerParent.transform.GetChild(i);
-                // Addressables로 생성된 오브젝트는 Addressables.ReleaseInstance로 해제��는 것이 좋습니다.
-                Addressables.ReleaseInstance(child.gameObject);
+                LogManager.LogError($"[GameManager] Weapon Spawn Error ({key}): {e.Message}");
+                return null;
             }
+        }
 
-            SpawnedPlayer = null; // 이전 플레이어 참조 제거
-            OnPlayerChanged?.Invoke(null); // 플레이어가 제거되었음을 모든 리스너에게 알립니다.
+        private async UniTask SpawnCharacterAsync(Weaphon_base weapon)
+        {
+            int index = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
+            string key = $"Player_Character_{index}";
 
-            // 새 캐릭터와 무기 스폰 (비동기 호출 및 대기)
-            await SpawnPlayer();
-            LogManager.Log("캐릭터와 무기 변경 완료", LogManager.LogCategory.VamserLikeGameManager);
+            try
+            {
+                var op = Addressables.InstantiateAsync(key, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform);
+                GameObject instance = await op.ToUniTask();
+
+                if (instance != null)
+                {
+                    instance.transform.localPosition = Vector3.zero;
+                    SpawnedPlayer = instance.GetComponent<PlayerBase>();
+
+                    if (SpawnedPlayer != null)
+                    {
+                        SpawnedPlayer.InitializeWeapon(weapon);
+                        
+                        // 컨트롤러 연결
+                        if (m_playerController != null)
+                        {
+                            m_playerController.AssignCharacter(SpawnedPlayer);
+                        }
+                    }
+
+                    // 이벤트 전파
+                    OnPlayerChanged?.Invoke(SpawnedPlayer);
+                }
+            }
+            catch (Exception e)
+            {
+                LogManager.LogError($"[GameManager] Character Spawn Error ({key}): {e.Message}");
+                SpawnedPlayer = null;
+            }
         }
 
         #endregion
 
-        #region 데이터 접근자 (Data Accessors)
-        
-        /// <summary>
-        /// 현재 처치한 몹 수 반환
-        /// </summary>
-        public int Mob_Count()
+        #region 데이터 접근자 (Helper Methods - 최적화됨)
+
+        // Null 조건 연산자(?.)와 Null 병합 연산자(??)를 사용하여 코드를 간결하게 만듭니다.
+
+        public int GetMobKillCount()
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
-            {
-                return PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt;
-            }
-            return 0;
+            return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.nowPlayMObkillCOunt ?? 0;
         }
 
-        /// <summary>
-        /// 현재 몹 스폰 웨이브 반환
-        /// </summary>
-        public int MobSpawnWave()
+        public int GetCurrentWave()
         {
-            if (m_objectPoolSpawner != null)
-            {
-                return m_objectPoolSpawner.MobSpawnWave;
-            }
-            return 0;
+            return m_objectPoolSpawner != null ? m_objectPoolSpawner.CurrentWave : 0;
         }
 
-
-        /// <summary>
-        /// 현재 플레이어 레벨 반환
-        /// </summary>
-        public float PlayerLevel()
+        public float GetPlayerLevel()
         {
-            if (SpawnedPlayer != null)
-            {
-                return SpawnedPlayer.Level;
-            }
-
-            LogManager.LogWarning("스폰된 플레이어가 없어 레벨을 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
-            return 1; // 기본값 반환
+            return SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
         }
 
-        /// <summary>
-        /// 현재 플레이어의 경험치 반환
-        /// </summary>
         public float GetPlayerCurrentExp()
         {
-            if (SpawnedPlayer != null)
-            {
-                return SpawnedPlayer.CurrentExp;
-            }
-
-            return 0f;
+            return SpawnedPlayer != null ? SpawnedPlayer.CurrentExp : 0f;
         }
 
-        /// <summary>
-        /// 현재 플레이어의 최대 경험치 반환
-        /// </summary>
         public float GetPlayerMaxExp()
         {
-            if (SpawnedPlayer != null)
-            {
-                return SpawnedPlayer.MaxExp;
-            }
-
-            return 100f; // 기본값
+            return SpawnedPlayer != null ? SpawnedPlayer.MaxExp : 100f;
         }
 
-        /// <summary>
-        /// 현재 플레이어의 경험치 진행률 반환 (0~1)
-        /// </summary>
         public float GetPlayerExpProgress()
         {
-            if (SpawnedPlayer != null)
-            {
-                return SpawnedPlayer.GetExpProgress();
-            }
-
-            return 0f;
+            return SpawnedPlayer != null ? SpawnedPlayer.GetExpProgress() : 0f;
         }
 
-        /// <summary>
-        /// 현재 코인 수 반환
-        /// </summary>
-        public int CoinCount()
+        public int GetCoinCount()
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
-            {
-                return PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin;
-            }
-            return 0;
+            return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.ingameCoin ?? 0;
         }
 
-        /// <summary>
-        /// 플레이어의 실제 이동 주체인 inGameObjectParent의 현재 월드 위치를 반환합니다.
-        /// </summary>
-        public Vector3 PlayerPos()
+        public Vector3 GetPlayerPosition()
         {
-            if (m_inGameObjectPlayerParent != null)
-            {
-                return m_inGameObjectPlayerParent.transform.position;
-            }
-            LogManager.LogWarning("inGameObjectParent가 할당되지 않아 플레이어 위치를 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
-            return Vector3.zero; // 기본값 반환
+            return m_playerContainer != null ? m_playerContainer.transform.position : Vector3.zero;
         }
 
         public Transform PlayerTransfrom()
         {
-            if (m_inGameObjectPlayerParent != null)
-            {
-                return m_inGameObjectPlayerParent.transform;
-            }
-            LogManager.LogWarning("inGameObjectParent가 할당되지 않아 플레이어 위치를 가져올 수 없습니다.", LogManager.LogCategory.VamserLikeGameManager);
-            return m_inGameObjectPlayerParent.transform;// 기본값 반환
+            return m_playerContainer != null ? m_playerContainer.transform : transform;
         }
-        
-        
-        /// <summary>
-        /// 플레이어(inGameObjectPlayerParent)를 새로운 위치로 이동시킵니다.
-        /// </summary>
-        /// <param name="newPosition">이동할 새로운 월드 위치</param>
+
         public void MovePlayer(Vector3 newPosition)
         {
-            if (m_inGameObjectPlayerParent != null) m_inGameObjectPlayerParent.transform.position = newPosition;
+            if (m_playerContainer != null)
+                m_playerContainer.transform.position = newPosition;
         }
-        
+
         #endregion
     }
 }

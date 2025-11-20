@@ -4,38 +4,54 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 지속적으로 틱 데미지를 주는 웅덩이를 생성하는 무기입니다.
-    /// 특정 장신구 장착 시, 범위가 증가하고 적에게 슬로우 효과를 부여합니다.
-    /// </summary>
-    public class WeaphonStrongBlackWater : Weaphon_base
+    public class WeaponStrongBlackWater : Weaphon_base
     {
-        #region 필드 및 변수
+        #region 인스펙터 필드
 
         [Header("기본 공격 설정")]
-        [Tooltip("공격이 지속되는 시간입니다.")]
-        [SerializeField] private float attackDuration = 3f;
         [Tooltip("틱 데미지가 들어가는 간격입니다.")]
-        [SerializeField] private float damageTickInterval = 0.5f;
+        [FormerlySerializedAs("damageTickInterval")]
+        [SerializeField] private float m_damageTickInterval = 0.5f;
 
-        [Header("업그레이드 설정 (장신구)")]
-        [Tooltip("업그레이드 활성화 여부입니다.")]
-        [SerializeField] private bool isUpgraded = false;
-        [Tooltip("업그레이드 시 공격 범위 증가 배율입니다.")]
-        [SerializeField] private float rangeMultiplier = 1.5f;
-        [Tooltip("적의 이동 속도를 감소시키는 비율입니다. (0.3 = 30% 감소)")]
-        [SerializeField] [Range(0f, 1f)] private float slowAmount = 0.3f;
-        [Tooltip("슬로우 효과가 지속되는 시간입니다.")]
-        [SerializeField] private float slowDuration = 1.0f;
+        [Header("업그레이드 스탯 설정")]
+        // [삭제됨] 크기 배율 변수 제거
+        // [SerializeField] private float m_rangeMultiplier = 1.5f;
+        
+        [Tooltip("적의 이동 속도를 감소시키는 비율 (0.3 = 30% 감소)")]
+        [FormerlySerializedAs("slowAmount")]
+        [SerializeField] [Range(0f, 1f)] private float m_slowAmount = 0.3f;
+        
+        [FormerlySerializedAs("slowDuration")]
+        [SerializeField] private float m_slowDuration = 1.0f;
 
-        private bool _isAttacking; // 중복 호출 방지 플래그
-        private Collider2D _collider2D;
-        private Vector3 _originalScale;
-        private readonly List<VamserMobBase> _mobsInRange = new List<VamserMobBase>();
-        private CancellationTokenSource _attackCts;
+        [Header("감지 및 비주얼 설정")]
+        [Tooltip("공격 대상 레이어 (Mob)")]
+        [SerializeField] private LayerMask m_targetLayer;
+
+        [Tooltip("자식 오브젝트에 있는 애니메이터 컴포넌트")]
+        [SerializeField] private Animator m_animator;
+
+        [Tooltip("자식 오브젝트에 있는 공격 판정용 콜라이더")]
+        [SerializeField] private Collider2D m_collider2D;
+
+        #endregion
+
+        #region 내부 변수
+
+        private bool m_isAttacking;
+        private Vector3 m_originalScale;
+        
+        private bool m_currentLevelState = false; 
+
+        private ContactFilter2D m_contactFilter;
+        private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20); 
+
+        private static readonly int k_AnimStateLevel1 = Animator.StringToHash("Level1");
+        private static readonly int k_AnimTriggerLevel2 = Animator.StringToHash("Level2"); 
 
         #endregion
 
@@ -43,23 +59,49 @@ namespace DogGuns_Games.vamsir
 
         private void Awake()
         {
-            _collider2D = GetComponent<Collider2D>();
-            _originalScale = transform.localScale;
-            _collider2D.enabled = false;
+            if (m_collider2D == null)
+                m_collider2D = GetComponentInChildren<Collider2D>();
+
+            if (m_collider2D == null)
+            {
+                Debug.LogError("[WeaponStrongBlackWater] Collider2D Missing!");
+            }
+            else
+            {
+                m_collider2D.enabled = false;
+                m_collider2D.isTrigger = true; 
+            }
+
+            if (m_animator == null)
+                m_animator = GetComponentInChildren<Animator>();
+
+            m_originalScale = transform.localScale;
+
+            m_contactFilter.NoFilter();
+            m_contactFilter.useTriggers = true;
+            m_contactFilter.SetLayerMask(m_targetLayer);
+            m_contactFilter.useLayerMask = true;
         }
 
         protected override void OnEnable()
         {
-            base.OnEnable();
-            mobStunTime = 0.5f;
+            base.OnEnable(); 
+            
+            if (m_collider2D != null) m_collider2D.enabled = false;
+            // 항상 초기 크기로 시작
+            transform.localScale = m_originalScale;
+            m_isAttacking = false;
+            
+            m_currentLevelState = this.isUpgradelv2;
+            
+            AttackRoutineAsync().Forget();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
-            // 오브젝트 비활성화 시 진행중인 공격 로직을 안전하게 취소합니다.
-            // Dispose는 작업을 시작한 ActivateBlackWater가 담당하므로, 여기서는 Cancel 신호만 보냅니다.
-            _attackCts?.Cancel();
-            transform.DOKill(); // 스케일 트윈이 있을 경우를 대비
+            base.OnDisable();
+            transform.DOKill(); 
+            m_isAttacking = false;
         }
 
         #endregion
@@ -69,123 +111,119 @@ namespace DogGuns_Games.vamsir
         public override void Weaphon_Attack(Vector3 attackAngle)
         {
             base.Weaphon_Attack(attackAngle);
-
-            if (!_isAttacking)
+            if (!m_isAttacking && gameObject.activeInHierarchy)
             {
-                ActivateBlackWater().Forget();
+                AttackRoutineAsync().Forget();
             }
         }
 
         #endregion
 
-        #region 공격 구현
+        #region 공격 로직 (UniTask)
 
-        private async UniTask ActivateBlackWater()
+        private async UniTaskVoid AttackRoutineAsync()
         {
-            _isAttacking = true;
+            m_isAttacking = true;
+            var token = this.GetCancellationTokenOnDestroy();
+
+            // 초기 상태 적용
+            UpdateWeaponState(); 
+            if (m_collider2D != null) m_collider2D.enabled = true;
             
-            // 이 공격 실행의 생명주기를 관리하는 CancellationTokenSource를 생성합니다.
-            var cts = new CancellationTokenSource();
-            _attackCts = cts; // OnDisable에서 참조할 수 있도록 필드에 할당합니다.
+            // 등장 이펙트 (0 -> 원래 크기)
+            transform.DOScale(m_originalScale, 0.3f).From(Vector3.zero).SetEase(Ease.OutBack);
 
             try
             {
-                // 업그레이드 시 범위 증가
-                if (isUpgraded)
+                while (!token.IsCancellationRequested)
                 {
-                    transform.localScale = _originalScale * rangeMultiplier;
+                    CheckLevelUpState();
+
+                    ProcessTickDamage();
+                    
+                    float speed = this.attackSpeed > 0 ? this.attackSpeed : 1f;
+                    float tickDelay = m_damageTickInterval / speed;
+
+                    await UniTask.Delay(TimeSpan.FromSeconds(tickDelay), cancellationToken: token);
                 }
-
-                _collider2D.enabled = true;
-                // TODO: 웅덩이 생성 비주얼 이펙트 (예: transform.DOScale, DOFade 등)
-
-                // 틱 데미지 루프 시작 (오브젝트 파괴 시 함께 취소되도록 링크)
-                var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, this.GetCancellationTokenOnDestroy()).Token;
-                DealTickDamageLoop(linkedToken).Forget();
-
-                // 공격 지속 시간만큼 대기
-                await UniTask.Delay(TimeSpan.FromSeconds(attackDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
-            }
-            catch (OperationCanceledException)
-            {
-                // UniTask.Delay가 오브젝트 파괴로 인해 취소된 경우. 정상적인 흐름입니다.
-                // finally 블록에서 정리 작업이 수행되므로, 여기서는 아무것도 할 필요가 없습니다.
-                return;
             }
             finally
             {
-                // 성공, 예외, 취소 등 어떤 경우에도 반드시 실행되는 정리 블록입니다.
-                cts.Cancel(); // 틱 데미지 루프 등 이 공격과 관련된 모든 작업을 취소합니다.
-
-                _collider2D.enabled = false;
-                _mobsInRange.Clear(); // 범위 내 몹 리스트 초기화
-                transform.localScale = _originalScale; // 원래 크기로 복원
-                // TODO: 웅덩이 소멸 비주얼 이펙트
-
-                // 이 공격에 사용된 CTS를 정리합니다.
-                if (_attackCts == cts) _attackCts = null;
-                cts.Dispose();
-            }
-
-            // 재공격 쿨타임
-            // 공격이 정상적으로 완료된 후, 재공격 쿨타임을 시작합니다.
-            try
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
-                _isAttacking = false;
-            }
-            catch (OperationCanceledException)
-            {
-                // 쿨타임 중 오브젝트가 파괴된 경우
-                _isAttacking = false;
+                if (m_collider2D != null) m_collider2D.enabled = false;
+                m_isAttacking = false;
             }
         }
 
-        private async UniTask DealTickDamageLoop(CancellationToken token)
+        private void CheckLevelUpState()
         {
-            while (!token.IsCancellationRequested)
+            if (m_currentLevelState != this.isUpgradelv2)
             {
-                // 리스트의 복사본을 만들어 순회 (순회 중 리스트 변경에 따른 오류 방지)
-                var mobsToDamage = new List<VamserMobBase>(_mobsInRange);
-                foreach (var mob in mobsToDamage)
-                {
-                    if (mob != null && !mob.IsDead)
-                    {
-                        // VamserMobBase에 TakeDamage(float) 메서드가 필요합니다.
-                        mob.TakeDamage(attackPower);
+                m_currentLevelState = this.isUpgradelv2;
+                UpdateWeaponState(); 
+            }
+        }
 
-                        // 업그레이드 시 슬로우 효과 적용
-                        if (isUpgraded)
+        /// <summary>
+        /// 현재 레벨(isUpgradelv2)에 맞춰 무기 상태(애니메이션)를 설정합니다.
+        /// [수정됨] 스케일 변경 로직 삭제됨.
+        /// </summary>
+        private void UpdateWeaponState()
+        {
+            // 1. 스케일: 항상 원본 크기 유지
+            // (이전에 있던 if-else 분기 삭제)
+            transform.localScale = m_originalScale;
+
+            // 2. 애니메이션 전환
+            if (m_animator != null)
+            {
+                if (this.isUpgradelv2)
+                {
+                    m_animator.SetTrigger(k_AnimTriggerLevel2);
+                }
+                else
+                {
+                    m_animator.Play(k_AnimStateLevel1);
+                }
+            }
+        }
+
+        private void ProcessTickDamage()
+        {
+            if (m_collider2D == null) return;
+
+            int hitCount = m_collider2D.Overlap(m_contactFilter, m_hitResults);
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                var target = m_hitResults[i];
+                
+                if (target.TryGetComponent(out VamserMobBase mob))
+                {
+                    if (!mob.IsDead) 
+                    {
+                        mob.TakeDamage(attackPower); 
+
+                        if (this.isUpgradelv2)
                         {
-                            // VamserMobBase에 ApplySlow(float, float) 메서드가 필요합니다.
-                            mob.ApplySlow(slowAmount, slowDuration);
+                            mob.ApplySlow(m_slowAmount, m_slowDuration);
                         }
                     }
                 }
-                await UniTask.Delay(TimeSpan.FromSeconds(damageTickInterval), cancellationToken: token);
             }
         }
 
         #endregion
 
-        #region 충돌 처리
-
-        private void OnTriggerEnter2D(Collider2D other)
+        #region 디버그
+        private void OnDrawGizmos()
         {
-            if (other.TryGetComponent<VamserMobBase>(out var mob) && !_mobsInRange.Contains(mob))
+            if (m_collider2D != null && m_collider2D.enabled)
             {
-                _mobsInRange.Add(mob);
+                Gizmos.color = new Color(1, 0, 0, 0.3f);
+                var bounds = m_collider2D.bounds;
+                Gizmos.DrawCube(bounds.center, bounds.size);
             }
         }
-
-        private void OnTriggerExit2D(Collider2D other)
-        {
-            if (other.TryGetComponent<VamserMobBase>(out var mob))
-            {
-                _mobsInRange.Remove(mob);
-            }
-        }
-
         #endregion
     }
 }
