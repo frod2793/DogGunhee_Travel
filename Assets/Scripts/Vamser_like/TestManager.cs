@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.Serialization; // 인스펙터 데이터 보존용
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using TMPro;
 using Cysharp.Threading.Tasks;
@@ -9,9 +9,6 @@ using DogGuns_Games.vamsir;
 
 namespace DogGuns_Games.Test
 {
-    /// <summary>
-    /// 테스트 씬에서 UI를 통해 캐릭터와 무기를 동적으로 변경하는 관리자 클래스입니다.
-    /// </summary>
     public class TestManager : MonoBehaviour
     {
         #region 인스펙터 필드 (UI 요소)
@@ -53,12 +50,10 @@ namespace DogGuns_Games.Test
         private VamserLikeGameManager m_gameManager;
         private RectTransform m_panelRectTransform;
         
-        // 패널 상태
         private Vector2 m_panelOriginalPos;
         private bool m_isPanelOpen = false;
         private bool m_isPanelAnimating = false;
         
-        // 로직 상태
         private bool m_isChanging = false;
 
         #endregion
@@ -74,7 +69,6 @@ namespace DogGuns_Games.Test
 
         private void OnDestroy()
         {
-            // 씬 전환이나 객체 파괴 시 실행 중인 트윈 제거 (메모리 누수 방지)
             if (m_panelRectTransform != null)
             {
                 m_panelRectTransform.DOKill();
@@ -98,14 +92,12 @@ namespace DogGuns_Games.Test
 
         private void InitializeUI()
         {
-            // 버튼 리스너 등록
             if (m_changeButton != null)
                 m_changeButton.onClick.AddListener(() => ChangeCharacterAndWeaponAsync().Forget());
 
             if (m_testPanelToggleBtn != null)
                 m_testPanelToggleBtn.onClick.AddListener(() => TogglePanelAsync().Forget());
 
-            // 초기값 설정
             UpdateInputFields();
         }
 
@@ -115,10 +107,6 @@ namespace DogGuns_Games.Test
             {
                 m_panelRectTransform = m_testPanel.GetComponent<RectTransform>();
                 m_panelOriginalPos = m_panelRectTransform.anchoredPosition;
-                
-                // 시작 시 닫힌 상태라면 비활성화하여 성능 최적화
-                // (현재 로직상 닫혀있다고 가정)
-                // m_testPanel.SetActive(false); 
             }
         }
 
@@ -126,6 +114,7 @@ namespace DogGuns_Games.Test
         {
             if (m_changeButton != null) m_changeButton.interactable = isInteractable;
             if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = isInteractable;
+            if (m_isWeaponUpgradeToggle != null) m_isWeaponUpgradeToggle.interactable = isInteractable; // [추가] 토글도 제어
         }
 
         #endregion
@@ -148,43 +137,39 @@ namespace DogGuns_Games.Test
 
         #region 패널 애니메이션
 
-        /// <summary>
-        /// 패널 열기/닫기 애니메이션 처리
-        /// </summary>
         private async UniTaskVoid TogglePanelAsync()
         {
             if (m_testPanel == null || m_isPanelAnimating) return;
 
             m_isPanelAnimating = true;
             m_isPanelOpen = !m_isPanelOpen;
+            
+            // 버튼 상호작용 잠시 차단 (애니메이션 중 중복 클릭 방지)
+            if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = false;
 
-            // 애니메이션 중복 방지를 위해 기존 트윈 제거
             m_panelRectTransform.DOKill();
 
             try
             {
-                if (m_isPanelOpen)
-                {
-                    m_testPanel.SetActive(true);
-                    float targetX = m_panelOriginalPos.x + m_panelRectTransform.rect.width;
-                    
-                    await m_panelRectTransform.DOAnchorPosX(targetX, m_animationDuration)
-                        .SetEase(Ease.OutQuad)
-                        .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-                }
-                else
-                {
-                    await m_panelRectTransform.DOAnchorPosX(m_panelOriginalPos.x, m_animationDuration)
-                        .SetEase(Ease.InQuad)
-                        .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-                    
-                    // 닫힌 후 비활성화 (드로우 콜 절약)
-                    // m_testPanel.SetActive(false); 
-                }
+                float targetX = m_isPanelOpen 
+                    ? m_panelOriginalPos.x + m_panelRectTransform.rect.width 
+                    : m_panelOriginalPos.x;
+
+                Ease easeType = m_isPanelOpen ? Ease.OutQuad : Ease.InQuad;
+
+                if (m_isPanelOpen) m_testPanel.SetActive(true);
+
+                await m_panelRectTransform.DOAnchorPosX(targetX, m_animationDuration)
+                    .SetEase(easeType)
+                    .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+
+                // 닫힌 후 비활성화는 선택 사항 (자주 열고 닫으면 굳이 안 꺼도 됨)
+                // if (!m_isPanelOpen) m_testPanel.SetActive(false);
             }
             finally
             {
                 m_isPanelAnimating = false;
+                if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = true;
             }
         }
 
@@ -192,14 +177,10 @@ namespace DogGuns_Games.Test
 
         #region 데이터 변경 로직
 
-        /// <summary>
-        /// 캐릭터 및 무기 변경 프로세스
-        /// </summary>
         private async UniTaskVoid ChangeCharacterAndWeaponAsync()
         {
             if (m_isChanging || m_gameManager == null) return;
 
-            // 1. 입력값 유효성 검사 및 파싱
             if (!TryParseInputs(out int charIndex, out int wpIndex))
             {
                 Debug.LogWarning("[TestManager] 유효하지 않은 입력값입니다.");
@@ -207,11 +188,10 @@ namespace DogGuns_Games.Test
             }
 
             m_isChanging = true;
-            if (m_changeButton != null) m_changeButton.interactable = false;
+            SetInteractable(false); // 모든 UI 잠금
 
             try
             {
-                // 2. 데이터 매니저 업데이트
                 var dataManager = PlayerDataManagerDontdesytoy.Instance;
                 if (dataManager != null)
                 {
@@ -219,10 +199,8 @@ namespace DogGuns_Games.Test
                     dataManager.SelectWeaponIndex = wpIndex;
                 }
 
-                // 3. 게임 매니저에 변경 요청
                 await m_gameManager.ChangeCharacterAndWeapon_Spawn();
 
-                // 4. 무기 업그레이드 상태 적용
                 ApplyWeaponUpgradeState();
             }
             catch (System.Exception e)
@@ -232,13 +210,10 @@ namespace DogGuns_Games.Test
             finally
             {
                 m_isChanging = false;
-                if (m_changeButton != null) m_changeButton.interactable = true;
+                SetInteractable(true); // UI 잠금 해제
             }
         }
 
-        /// <summary>
-        /// 입력 필드의 값을 파싱합니다.
-        /// </summary>
         private bool TryParseInputs(out int charIndex, out int wpIndex)
         {
             charIndex = 0;
@@ -252,9 +227,6 @@ namespace DogGuns_Games.Test
             return isCharValid && isWpValid;
         }
 
-        /// <summary>
-        /// 생성된 플레이어의 무기에 업그레이드 상태를 적용합니다.
-        /// </summary>
         private void ApplyWeaponUpgradeState()
         {
             if (m_gameManager.SpawnedPlayer == null || m_isWeaponUpgradeToggle == null) return;
@@ -263,6 +235,10 @@ namespace DogGuns_Games.Test
             if (weapon != null)
             {
                 weapon.isUpgradelv2 = m_isWeaponUpgradeToggle.isOn;
+                
+                // [추가] 업그레이드 상태 변경 후 무기 상태 갱신 (필요시)
+                // 만약 무기 스크립트가 OnEnable에서만 상태를 설정한다면, 여기서 수동으로 갱신 메서드를 호출해야 할 수도 있습니다.
+                // 예: weapon.RefreshState(); 
                 
                 LogManager.Log(
                     $"무기({weapon.name}) 업그레이드 설정: {m_isWeaponUpgradeToggle.isOn}", 
