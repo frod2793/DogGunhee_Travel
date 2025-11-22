@@ -262,7 +262,7 @@ PolygonCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -312,11 +312,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9166418300668064937}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0064552436, y: -0.0026586829, z: -0.92462325, w: 0.38081908}
+  m_LocalRotation: {x: -0.38082835, y: -0.9246457, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 493704129453035729}
   m_Father: {fileID: 1592704573348993371}
-  m_LocalEulerAnglesHint: {x: 0, y: -0.8, z: -135.23}
+  m_LocalEulerAnglesHint: {x: -180, y: 0, z: -135.23}
