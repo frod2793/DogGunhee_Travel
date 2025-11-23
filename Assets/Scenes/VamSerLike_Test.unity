@@ -3906,10 +3906,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1494696855346538114, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
-      propertyPath: m_SortingOrder
-      value: 11
-      objectReference: {fileID: 0}
+    - target: {fileID: 655824500097842060, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 757d1359c8fc30742b9091d50e1485dd, type: 2}
     - target: {fileID: 4308062601247789848, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
       propertyPath: m_Name
       value: BoomerangProjectile
@@ -4083,6 +4083,10 @@ PrefabInstance:
     - target: {fileID: 4354728564479912810, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
       propertyPath: m_Name
       value: WeaPhon_Bumarang
+      objectReference: {fileID: 0}
+    - target: {fileID: 4354728564479912810, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6836460676566652473, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
       propertyPath: m_LocalPosition.x

@@ -6,35 +6,68 @@ using System.Collections.Generic;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 실제 날아가는 부메랑 투사체입니다.
-    /// 페이드 인/아웃 효과, 관통 공격, 플레이어 추적 복귀 로직이 포함되어 있습니다.
-    /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
+    [RequireComponent(typeof(TrailRenderer))] // [추가] TrailRenderer 필수
     public class BoomerangProjectile : MonoBehaviour
     {
         private IObjectPool<BoomerangProjectile> m_pool;
         private Transform m_playerTransform;
-        private SpriteRenderer m_spriteRenderer; // 페이드 효과를 위해 추가
-        
+        private SpriteRenderer m_spriteRenderer;
+        private TrailRenderer m_trailRenderer; // [추가]
+
         // 스탯
         private float m_damage;
         private float m_stunTime;
-        private float m_speed; 
-        private float m_distance; 
-        private float m_outDuration; 
+        private float m_speed;
+        private float m_distance;
+        private float m_outDuration;
 
         private bool m_isReturning;
         
-        // 트윈 참조 (중복 실행 방지 및 정리용)
         private Tween m_rotateTween;
         private Tween m_fadeTween;
 
         private readonly HashSet<int> m_hitHistory = new HashSet<int>();
 
+        [Header("Visual Settings")]
+        [SerializeField] private float m_trailTime = 0.2f; // 잔상이 남는 시간
+        [SerializeField] private float m_trailStartWidth = 0.5f; // 잔상 시작 두께
+        [SerializeField] private Color m_trailColor = new Color(1, 1, 1, 0.5f); // 잔상 색상
+
         private void Awake()
         {
             m_spriteRenderer = GetComponent<SpriteRenderer>();
+            m_trailRenderer = GetComponent<TrailRenderer>();
+            
+            // [추가] Trail Renderer 기본 설정 (코드에서 강제 설정)
+            SetupTrail();
+        }
+
+        private void SetupTrail()
+        {
+            if (m_trailRenderer == null) return;
+
+            m_trailRenderer.time = m_trailTime;
+            m_trailRenderer.startWidth = m_trailStartWidth;
+            m_trailRenderer.endWidth = 0f; // 끝은 뾰족하게
+            m_trailRenderer.autodestruct = false;
+            
+            // 머티리얼이 없으면 기본 스프라이트 머티리얼 사용 (분홍색 네모 방지)
+            if (m_trailRenderer.material == null || m_trailRenderer.material.name == "Default-Material")
+            {
+                m_trailRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            }
+
+            // 그라데이션 설정 (시작색 -> 투명)
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(m_trailColor, 0.0f), new GradientColorKey(m_trailColor, 1.0f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(m_trailColor.a, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+            );
+            m_trailRenderer.colorGradient = gradient;
+            
+            // Sorting Layer를 스프라이트보다 한 단계 뒤로 (가려지지 않게)
+            m_trailRenderer.sortingOrder = m_spriteRenderer.sortingOrder - 1;
         }
 
         public void Initialize(IObjectPool<BoomerangProjectile> pool, Transform player, float damage, float stunTime, float speed, float distance)
@@ -46,13 +79,17 @@ namespace DogGuns_Games.vamsir
             m_speed = speed;
             m_distance = distance;
             
-            // 거리 비례 시간 계산 (최소 0.5초)
             m_outDuration = Mathf.Max(0.5f, distance / speed);
-
             m_isReturning = false;
             m_hitHistory.Clear();
 
-            // 회전 트윈 시작
+            // [추가] 궤적 초기화 (이전 위치에서 선이 이어지는 현상 방지)
+            if (m_trailRenderer != null)
+            {
+                m_trailRenderer.Clear();
+                m_trailRenderer.emitting = true; // 발사 시 궤적 생성 시작
+            }
+
             m_rotateTween?.Kill();
             m_rotateTween = transform.DORotate(new Vector3(0, 0, 720), 0.5f, RotateMode.FastBeyond360)
                 .SetEase(Ease.Linear).SetLoops(-1, LoopType.Incremental);
@@ -64,70 +101,55 @@ namespace DogGuns_Games.vamsir
         {
             var token = this.GetCancellationTokenOnDestroy();
 
-            // 0. [Fade In] 시작 시 투명하게 시작해서 빠르게 나타남
             if (m_spriteRenderer != null)
             {
-                // 알파값 0으로 초기화
                 Color c = m_spriteRenderer.color;
                 c.a = 0f;
                 m_spriteRenderer.color = c;
-
-                // 0.15초 동안 알파값 1로 페이드 인
                 m_fadeTween?.Kill();
                 m_fadeTween = m_spriteRenderer.DOFade(1f, 0.15f).SetEase(Ease.OutQuad);
             }
 
-            // 1. [Outward] 밖으로 던지기
             Vector3 targetPos = transform.position + transform.up * m_distance;
 
             try
             {
+                // [Outward]
                 await transform.DOMove(targetPos, m_outDuration)
                     .SetEase(Ease.OutSine)
                     .ToUniTask(cancellationToken: token);
 
-                // 2. [Turn] 복귀 준비
+                // [Turn]
                 m_isReturning = true;
-                m_hitHistory.Clear(); // 돌아올 때 다시 타격 가능하도록 초기화
+                m_hitHistory.Clear();
                 
                 await UniTask.Delay(100, cancellationToken: token);
 
-                // 3. [Return] 플레이어 추적 복귀
-                bool hasStartedFadeOut = false; // 페이드 아웃 시작 여부 체크
+                // [Return]
+                bool hasStartedFadeOut = false;
 
                 while (true)
                 {
-                    if (m_playerTransform == null)
-                    {
-                        ReleaseToPool();
-                        return;
-                    }
+                    if (m_playerTransform == null) { ReleaseToPool(); return; }
 
                     Vector3 myPos = transform.position;
                     Vector3 playerPos = m_playerTransform.position;
                     float distToPlayer = Vector3.Distance(myPos, playerPos);
                     
-                    // 이동 (갈 때보다 1.5배 빠르게 복귀)
                     float step = m_speed * 1.5f * Time.deltaTime;
                     transform.position = Vector3.MoveTowards(myPos, playerPos, step);
 
-                    // [Fade Out] 플레이어에게 가까워지면 페이드 아웃 시작 (회수 직전)
                     if (!hasStartedFadeOut && distToPlayer <= 1.5f)
                     {
                         hasStartedFadeOut = true;
                         if (m_spriteRenderer != null)
                         {
                             m_fadeTween?.Kill();
-                            // 남은 거리에 비례해 빠르게 사라짐 (0.2초)
                             m_fadeTween = m_spriteRenderer.DOFade(0f, 0.2f).SetEase(Ease.InQuad);
                         }
                     }
 
-                    // 회수 판정 (거리가 0.5 이내면 잡은 것으로 간주)
-                    if (distToPlayer < 0.5f)
-                    {
-                        break;
-                    }
+                    if (distToPlayer < 0.5f) break;
 
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                 }
@@ -143,8 +165,6 @@ namespace DogGuns_Games.vamsir
             if (other.CompareTag("Mob"))
             {
                 int id = other.gameObject.GetInstanceID();
-                
-                // 갈 때 한 번, 올 때 한 번 타격 가능
                 if (!m_hitHistory.Contains(id))
                 {
                     if (other.TryGetComponent(out VamserMobBase mob))
@@ -158,11 +178,15 @@ namespace DogGuns_Games.vamsir
 
         private void ReleaseToPool()
         {
-            // 트윈 정리
             m_rotateTween?.Kill();
             m_fadeTween?.Kill();
 
-            // 알파값 원복 (혹시 모르니 1로 복구해두고 반환)
+            // [추가] 궤적 생성 중지 및 초기화
+            if (m_trailRenderer != null)
+            {
+                m_trailRenderer.emitting = false;
+            }
+
             if (m_spriteRenderer != null)
             {
                 Color c = m_spriteRenderer.color;
