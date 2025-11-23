@@ -236,9 +236,6 @@ namespace DogGuns_Games.Test
             {
                 weapon.isUpgradelv2 = m_isWeaponUpgradeToggle.isOn;
                 
-                // [추가] 업그레이드 상태 변경 후 무기 상태 갱신 (필요시)
-                // 만약 무기 스크립트가 OnEnable에서만 상태를 설정한다면, 여기서 수동으로 갱신 메서드를 호출해야 할 수도 있습니다.
-                // 예: weapon.RefreshState(); 
                 
                 LogManager.Log(
                     $"무기({weapon.name}) 업그레이드 설정: {m_isWeaponUpgradeToggle.isOn}", 

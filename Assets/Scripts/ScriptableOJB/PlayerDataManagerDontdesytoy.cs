@@ -19,7 +19,18 @@ namespace DogGuns_Games
         [Tooltip("플레이어 데이터를 담고 있는 ScriptableObject 입니다.")]
         [SerializeField] private PlayerData m_scriptableobjPlayerData;
 
-        public PlayerData PlayerData => m_scriptableobjPlayerData;
+        public PlayerData PlayerData
+        {
+            get
+            {
+                if (m_scriptableobjPlayerData == null)
+                {
+                    m_scriptableobjPlayerData = ScriptableObject.CreateInstance<PlayerData>();
+                    LogManager.LogWarning("PlayerData ScriptableObject가 없어 새로 생성합니다.", LogManager.LogCategory.PlayerDataManager);
+                }
+                return m_scriptableobjPlayerData;
+            }
+        }
 
         public string RsaPublicKey => _rsaPublicKey;
         public string RsaPrivateKey => _rsaPrivateKey;
@@ -34,14 +45,14 @@ namespace DogGuns_Games
         // 플레이어 데이터 속성에 대한 접근자
         public int SelectWeaponIndex
         {
-            get => m_scriptableobjPlayerData.selelcWeaponIndex;
-            set => m_scriptableobjPlayerData.selelcWeaponIndex = value;
+            get => PlayerData.selelcWeaponIndex;
+            set => PlayerData.selelcWeaponIndex = value;
         }
 
         public int SelectCharacterIndex
         {
-            get => m_scriptableobjPlayerData.selectCharacterIndex;
-            set => m_scriptableobjPlayerData.selectCharacterIndex = value;
+            get => PlayerData.selectCharacterIndex;
+            set => PlayerData.selectCharacterIndex = value;
         }
 
         #endregion
@@ -87,9 +98,9 @@ namespace DogGuns_Games
             s_instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // PlayerData 초기화
-            if (m_scriptableobjPlayerData == null)
-                m_scriptableobjPlayerData = ScriptableObject.CreateInstance<PlayerData>();
+            // PlayerData 초기화 (프로퍼티에서 처리하므로 여기서 중복 호출할 필요 없음)
+            // if (m_scriptableobjPlayerData == null)
+            //     m_scriptableobjPlayerData = ScriptableObject.CreateInstance<PlayerData>();
 
             // 암호화 객체 초기화
             _encryption = new HybridEncryption();
@@ -143,12 +154,12 @@ namespace DogGuns_Games
             try
             {
                 var savePath = Path.Combine(Application.persistentDataPath, k_EncryptedDataPath);
-                if (m_scriptableobjPlayerData == null)
+                if (PlayerData == null)
                 {
                     LogManager.LogWarning("저장할 플레이어 데이터가 null입니다.", LogManager.LogCategory.PlayerDataManager);
                     return;
                 }
-                var jsonData = JsonUtility.ToJson(m_scriptableobjPlayerData, true);
+                var jsonData = JsonUtility.ToJson(PlayerData, true);
                 EncryptedPacket encryptedPacket = _encryption.Encrypt(jsonData, _rsaPublicKey);
                 string packetJson = JsonUtility.ToJson(encryptedPacket);
                 File.WriteAllText(savePath, packetJson);
@@ -173,7 +184,7 @@ namespace DogGuns_Games
                     string packetJson = File.ReadAllText(savePath);
                     EncryptedPacket encryptedPacket = JsonUtility.FromJson<EncryptedPacket>(packetJson);
                     string decryptedJson = _encryption.Decrypt(encryptedPacket, _rsaPrivateKey);
-                    JsonUtility.FromJsonOverwrite(decryptedJson, m_scriptableobjPlayerData);
+                    JsonUtility.FromJsonOverwrite(decryptedJson, PlayerData);
                     LogManager.Log("로컬에서 플레이어 데이터를 성공적으로 로드했습니다.", LogManager.LogCategory.PlayerDataManager);
                 }
                 else
@@ -223,7 +234,7 @@ namespace DogGuns_Games
 
                 // 로컬 데이터 로드
                 LoadPlayerData();
-                PlayerData localData = m_scriptableobjPlayerData;
+                PlayerData localData = PlayerData;
                 PlayerData finalData = ResolveDataConflict(serverData, localData);
 
                 UpdatePlayerData(finalData);
@@ -278,12 +289,12 @@ namespace DogGuns_Games
         public async UniTask UploadDataToServerAsync()
         {
             Param param = new Param();
-            param.Add("nickname", m_scriptableobjPlayerData.nickname);
-            param.Add("uid", m_scriptableobjPlayerData.UID);
-            param.Add("Money1", m_scriptableobjPlayerData.currency1);
-            param.Add("Money2", m_scriptableobjPlayerData.currency2);
-            param.Add("experience", m_scriptableobjPlayerData.experience);
-            param.Add("level", m_scriptableobjPlayerData.level);
+            param.Add("nickname", PlayerData.nickname);
+            param.Add("uid", PlayerData.UID);
+            param.Add("Money1", PlayerData.currency1);
+            param.Add("Money2", PlayerData.currency2);
+            param.Add("experience", PlayerData.experience);
+            param.Add("level", PlayerData.level);
 
             try
             {

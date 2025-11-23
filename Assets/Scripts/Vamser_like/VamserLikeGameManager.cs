@@ -1,19 +1,21 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// 뱀서라이크 게임의 핵심 로직(스폰, 상태, UI 연동)을 관리하는 매니저 클래스 (최적화됨)
+    /// 뱀서라이크 게임의 핵심 로직(스폰, 상태 관리, UI 연동, 데이터 관리)을 총괄하는 매니저 클래스입니다.
     /// </summary>
     public class VamserLikeGameManager : MonoBehaviour
     {
         #region 정적 멤버 및 이벤트
 
-        // 플레이어 변경 알림 이벤트 (스폰/사망 등)
+        // 플레이어 변경 알림 이벤트 (스폰/사망/교체 시 발생)
         public static event Action<PlayerBase> OnPlayerChanged;
 
         private static VamserLikeGameManager s_instance;
@@ -26,7 +28,7 @@ namespace DogGuns_Games.vamsir
                     s_instance = FindFirstObjectByType<VamserLikeGameManager>();
                     if (s_instance == null)
                     {
-                        LogManager.LogError("[GameManager] 인스턴스가 씬에 없습니다.");
+                        LogManager.LogError("[GameManager] 씬에 VamserLikeGameManager 인스턴스가 없습니다.");
                     }
                 }
                 return s_instance;
@@ -36,6 +38,13 @@ namespace DogGuns_Games.vamsir
         #endregion
 
         #region 인스펙터 필드
+
+        [Header("Editor Start Settings (에디터 전용)")]
+        [Tooltip("에디터 플레이 모드 시작 시 적용할 캐릭터 인덱스")]
+        [SerializeField] private int m_startCharacterIndex = 0;
+
+        [Tooltip("에디터 플레이 모드 시작 시 적용할 무기 인덱스")]
+        [SerializeField] private int m_startWeaponIndex = 0;
 
         [Header("Reference Settings")]
         [Tooltip("캐릭터 및 무기가 스폰될 부모 오브젝트 (Player Container)")]
@@ -50,14 +59,14 @@ namespace DogGuns_Games.vamsir
 
         #region 내부 캐시 및 상태 변수
 
-        // 외부 컴포넌트 참조
+        // 외부 컴포넌트 참조 캐싱
         private ObjectPoolSpawner m_objectPoolSpawner;
         private VamPlayerControll m_playerController;
         private VariableJoystick m_variableJoystick;
         private Camera m_mainCamera;
         private VamserLikeUI m_uiManager;
 
-        // 현재 상태
+        // 현재 상태 프로퍼티
         public PlayerBase SpawnedPlayer { get; private set; }
         public ObjectPoolSpawner ObjectPoolSpawner => m_objectPoolSpawner;
         public VamPlayerControll PlayerController => m_playerController;
@@ -82,17 +91,31 @@ namespace DogGuns_Games.vamsir
             }
             s_instance = this;
 
+            // 에디터 모드에서만 시작 인덱스 설정 (테스트 편의성)
+#if UNITY_EDITOR
+            if (Application.isPlaying) // 에디터에서 플레이 버튼을 눌렀을 때
+            {
+                if (PlayerDataManagerDontdesytoy.Instance != null)
+                {
+                    PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_startCharacterIndex;
+                    PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = m_startWeaponIndex;
+                    LogManager.Log($"[Editor] 시작 설정 적용: Char({m_startCharacterIndex}), Wep({m_startWeaponIndex})");
+                }
+            }
+#endif
+
             CacheComponents();
             SubscribeEvents();
         }
 
         private void Start()
         {
+            // 초기화 로직은 Awake나 OnGameStart 이벤트에서 처리됨
         }
 
         private void OnEnable()
         {
-            // 게임 시작 전 카운트다운 요청
+            // 게임 시작 전 카운트다운 요청 (UI 매니저에게 위임)
             m_uiManager?.StartGameCountdown();
         }
 
@@ -107,16 +130,16 @@ namespace DogGuns_Games.vamsir
 
         private void CacheComponents()
         {
-            // FindFirstObjectByType은 비용이 크므로 Awake에서 한 번만 수행
+            // 비용이 큰 FindFirstObjectByType은 Awake에서 한 번만 수행
             m_objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
             m_playerController = FindFirstObjectByType<VamPlayerControll>();
             m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
             m_uiManager = FindFirstObjectByType<VamserLikeUI>();
             m_mainCamera = Camera.main;
 
-            // 필수 컴포넌트 누락 경고
-            if (m_objectPoolSpawner == null) LogManager.LogWarning("[GameManager] Spawner Missing");
-            if (m_playerController == null) LogManager.LogWarning("[GameManager] Controller Missing");
+            // 필수 컴포넌트 누락 시 경고
+            if (m_objectPoolSpawner == null) LogManager.LogWarning("[GameManager] ObjectPoolSpawner Missing");
+            if (m_playerController == null) LogManager.LogWarning("[GameManager] VamPlayerControll Missing");
         }
 
         private void SubscribeEvents()
@@ -139,12 +162,12 @@ namespace DogGuns_Games.vamsir
 
         #region 게임 상태 핸들러
 
-        // [최적화] async void -> async UniTaskVoid (예외 추적 용이)
+        // [비동기] 게임 시작 로직
         private async void OnGameStart()
         {
             try
             {
-                // 데이터 초기화
+                // 1. 데이터 초기화
                 if (DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance != null)
                     DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
                 
@@ -153,14 +176,14 @@ namespace DogGuns_Games.vamsir
 
                 SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
 
-                // 플레이어 스폰 대기
+                // 2. 플레이어 및 무기 스폰 대기
                 await SpawnPlayerAsync();
 
-                // 스포너 활성화
+                // 3. 몹 스포너 활성화
                 if (SpawnedPlayer != null && m_objectPoolSpawner != null)
                 {
                     await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer);
-                    LogManager.Log("[GameManager] Game Started Successfully");
+                    LogManager.Log("[GameManager] Game Started Successfully & Spawner Initialized");
                 }
                 else
                 {
@@ -183,11 +206,11 @@ namespace DogGuns_Games.vamsir
             LogManager.Log("[GameManager] Game Resumed");
         }
 
-        // [최적화] async void -> async UniTaskVoid
+        // [비동기] 게임 오버 로직
         private async void OnGameOver()
         {
             SpawnedPlayer = null;
-            OnPlayerChanged?.Invoke(null);
+            OnPlayerChanged?.Invoke(null); // 플레이어 소멸 알림
 
             LogManager.Log("[GameManager] Game Over Processing...");
 
@@ -196,6 +219,8 @@ namespace DogGuns_Games.vamsir
             if (dataManager != null && dataManager.PlayerData != null)
             {
                 var playerData = dataManager.PlayerData;
+                
+                // 획득한 인게임 코인을 전체 코인에 합산
                 playerData.currency1 += playerData.ingameCoin;
                 playerData.ingameCoin = 0;
 
@@ -208,7 +233,7 @@ namespace DogGuns_Games.vamsir
                 try
                 {
                     await ServerManager.Instance.UploadDataAsync("User_Data", param);
-                    LogManager.Log("[GameManager] Coin Data Uploaded");
+                    LogManager.Log("[GameManager] Coin Data Uploaded Successfully");
                 }
                 catch (Exception e)
                 {
@@ -239,6 +264,9 @@ namespace DogGuns_Games.vamsir
 
         #region 플레이어 스폰 시스템 (Addressables)
 
+        /// <summary>
+        /// 런타임 중 캐릭터와 무기를 교체하고 다시 스폰합니다.
+        /// </summary>
         public async UniTask ChangeCharacterAndWeapon_Spawn()
         {
             if (m_playerContainer == null) return;
@@ -266,14 +294,18 @@ namespace DogGuns_Games.vamsir
             {
                 // 1. 무기 스폰
                 Weaphon_base weapon = await SpawnWeaponAsync();
-                if (weapon == null) return;
+                if (weapon == null) 
+                {
+                    LogManager.LogError("[GameManager] Weapon Spawn Failed");
+                    return;
+                }
 
                 // 2. 캐릭터 스폰 및 무기 장착
                 await SpawnCharacterAsync(weapon);
             }
             catch (Exception ex)
             {
-                LogManager.LogError($"[GameManager] Spawn Failed: {ex.Message}");
+                LogManager.LogError($"[GameManager] Spawn Process Failed: {ex.Message}");
                 SpawnedPlayer = null;
             }
         }
@@ -281,7 +313,7 @@ namespace DogGuns_Games.vamsir
         private async UniTask<Weaphon_base> SpawnWeaponAsync()
         {
             int index = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
-            string key = $"Weapon_{index}";
+            string key = $"Weapon_{index}"; // Addressable Key
 
             try
             {
@@ -305,7 +337,7 @@ namespace DogGuns_Games.vamsir
         private async UniTask SpawnCharacterAsync(Weaphon_base weapon)
         {
             int index = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
-            string key = $"Player_Character_{index}";
+            string key = $"Player_Character_{index}"; // Addressable Key
 
             try
             {
@@ -319,6 +351,7 @@ namespace DogGuns_Games.vamsir
 
                     if (SpawnedPlayer != null)
                     {
+                        // 무기 장착
                         SpawnedPlayer.InitializeWeapon(weapon);
                         
                         // 컨트롤러 연결
@@ -327,8 +360,12 @@ namespace DogGuns_Games.vamsir
                             m_playerController.AssignCharacter(SpawnedPlayer);
                         }
                     }
+                    else
+                    {
+                        LogManager.LogError($"[GameManager] PlayerBase component missing on {instance.name}");
+                    }
 
-                    // 이벤트 전파
+                    // 이벤트 전파 (UI 업데이트 등)
                     OnPlayerChanged?.Invoke(SpawnedPlayer);
                 }
             }
@@ -343,7 +380,7 @@ namespace DogGuns_Games.vamsir
 
         #region 데이터 접근자 (Helper Methods - 최적화됨)
 
-        // Null 조건 연산자(?.)와 Null 병합 연산자(??)를 사용하여 코드를 간결하게 만듭니다.
+        // Null 조건 연산자(?.)와 Null 병합 연산자(??)를 사용하여 안전하게 데이터 반환
 
         public int GetMobKillCount()
         {
@@ -359,16 +396,7 @@ namespace DogGuns_Games.vamsir
         {
             return SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
         }
-
-        public float GetPlayerCurrentExp()
-        {
-            return SpawnedPlayer != null ? SpawnedPlayer.CurrentExp : 0f;
-        }
-
-        public float GetPlayerMaxExp()
-        {
-            return SpawnedPlayer != null ? SpawnedPlayer.MaxExp : 100f;
-        }
+        
 
         public float GetPlayerExpProgress()
         {
@@ -379,22 +407,13 @@ namespace DogGuns_Games.vamsir
         {
             return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.ingameCoin ?? 0;
         }
-
-        public Vector3 GetPlayerPosition()
-        {
-            return m_playerContainer != null ? m_playerContainer.transform.position : Vector3.zero;
-        }
+        
 
         public Transform PlayerTransfrom()
         {
             return m_playerContainer != null ? m_playerContainer.transform : transform;
         }
-
-        public void MovePlayer(Vector3 newPosition)
-        {
-            if (m_playerContainer != null)
-                m_playerContainer.transform.position = newPosition;
-        }
+        
 
         #endregion
     }
