@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using System.Collections.Generic;
 
-// 네임스페이스는 프로젝트 환경에 맞게 수정해주세요.
 namespace DogGuns_Games.vamsir
 {
     [RequireComponent(typeof(ParticleSystem), typeof(EdgeCollider2D))]

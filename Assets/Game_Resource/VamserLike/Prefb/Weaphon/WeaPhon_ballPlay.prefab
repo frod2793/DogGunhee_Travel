@@ -109,6 +109,7 @@ MonoBehaviour:
   weaphonIndex: 6
   isUpgradelv2: 0
   weaphonState: 0
-  ballPrefab: {fileID: 3161447472614057110, guid: 4464f6a372c6942469f7ea34158454b6, type: 3}
-  ballCount: 2
-  rotationRadius: 0.7
+  m_ballPrefab: {fileID: 3161447472614057110, guid: 4464f6a372c6942469f7ea34158454b6, type: 3}
+  m_ballCount: 3
+  m_rotationRadius: 1
+  m_ballRotationOffset: -90

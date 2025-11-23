@@ -1,58 +1,62 @@
 using UnityEngine;
-using System.Collections.Generic;
+using UnityEngine.Serialization;
 using UnityEngine.Pool;
+using System.Collections.Generic;
 
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// 플레이어 주변을 회전하는 공으로 적에게 지속적인 피해를 주는 무기입니다.
-    /// Weaphon_base의 attackSpeed를 회전 속도로 사용하며, 레벨업 시 이 값을 조절하여 속도를 높일 수 있습니다.
+    /// 플레이어 주변을 회전하는 공(Ball)을 생성하고 관리하는 무기입니다.
+    /// 반시계 방향으로 회전하며, 공 자체도 궤도에 맞춰 회전합니다. (오프셋 보정 가능)
     /// </summary>
-    public class WeaphonBallplay : Weaphon_base
+    public class WeaponBallplay : Weaphon_base
     {
+        #region 인스펙터 필드
+
         [Header("공 설정")]
-        [Tooltip("회전하는 공의 프리팹. BallDamageDealer 컴포넌트가 있어야 합니다.")]
-        [SerializeField] private GameObject ballPrefab;
+        [Tooltip("회전하는 공의 프리팹 (BallDamageDealer 컴포넌트 필수)")]
+        [FormerlySerializedAs("ballPrefab")]
+        [SerializeField] private GameObject m_ballPrefab;
 
         [Tooltip("생성할 공의 개수")]
-        [SerializeField] private int ballCount = 2;
+        [FormerlySerializedAs("ballCount")]
+        [SerializeField] private int m_ballCount = 2;
 
         [Tooltip("플레이어로부터 공까지의 회전 반경")]
-        [SerializeField] private float rotationRadius = 2.5f;
+        [FormerlySerializedAs("rotationRadius")]
+        [SerializeField] private float m_rotationRadius = 2.5f;
 
-        private float _currentAngle = 0f;
+        [Header("시각 보정 설정")]
+        [Tooltip("공 스프라이트의 Z축 회전 보정값 (기본 0). 이미지가 90도 돌아가 있다면 여기서 조절하세요.")]
+        [SerializeField] private float m_ballRotationOffset = 0f; // [추가됨]
+
+        #endregion
+
+        #region 내부 상태 변수
+
+        private float m_currentAngle = 0f;
         
-        // 오브젝트 풀링을 위한 필드
-        private IObjectPool<BallDamageDealer> _ballPool;
-        private readonly List<BallDamageDealer> _activeBalls = new List<BallDamageDealer>();
+        // 오브젝트 풀 및 활성 리스트
+        private IObjectPool<BallDamageDealer> m_ballPool;
+        private readonly List<BallDamageDealer> m_activeBalls = new List<BallDamageDealer>();
+
+        #endregion
+
+        #region Unity 라이프사이클
 
         private void Awake()
         {
-            // 오브젝트 풀 초기화
-            _ballPool = new ObjectPool<BallDamageDealer>(
-                createFunc: CreateBall,
-                actionOnGet: OnGetBall,
-                actionOnRelease: OnReleaseBall,
-                actionOnDestroy: OnDestroyBall,
-                maxSize: ballCount * 2 // 예상 최대 개수보다 넉넉하게 설정
-            );
+            InitializePool();
         }
 
         protected override void OnEnable()
         {
             base.OnEnable();
             
-            _currentAngle = 0f; // 회전 각도 초기화
-            ClearBalls(); // 이전 게임의 공이 남아있을 경우 풀에 반환
+            m_currentAngle = 0f; // 각도 초기화
             
-            if (ballPrefab != null)
-            {
-                SpawnBalls();
-            }
-            else
-            {
-                LogManager.LogError("Ball Prefab이 할당되지 않았습니다!", LogManager.LogCategory.Weapon, this);
-            }
+            ClearBalls(); 
+            SpawnBalls();
         }
 
         protected override void OnDisable()
@@ -63,9 +67,7 @@ namespace DogGuns_Games.vamsir
 
         private void OnDestroy()
         {
-            // 오브젝트가 파괴될 때 풀도 함께 정리합니다.
-            // IObjectPool<T> 인터페이스에는 Dispose가 없으므로, IDisposable로 캐스팅하여 호출합니다.
-            if (_ballPool is System.IDisposable disposablePool)
+            if (m_ballPool is System.IDisposable disposablePool)
             {
                 disposablePool.Dispose();
             }
@@ -73,60 +75,113 @@ namespace DogGuns_Games.vamsir
 
         private void Update()
         {
-            // 이 오브젝트는 더 이상 회전하지 않습니다. 대신 각 공의 위치를 직접 계산하여 업데이트합니다.
+            if (m_activeBalls.Count == 0) return;
 
-            // 1. 플레이어의 좌우 반전에 따른 회전 방향 보정
-            float rotationDirectionCorrection = Mathf.Sign(transform.forward.z);
-
-            // 2. 회전 각도 업데이트 (시계 방향: 음수)
-            _currentAngle += -attackSpeed * rotationDirectionCorrection * Time.deltaTime;
-
-            if (_activeBalls.Count == 0) return;
-
-            // 3. 각 공의 위치를 새로운 각도에 맞춰 재계산
-            float angleStep = 360f / _activeBalls.Count;
-            for (int i = 0; i < _activeBalls.Count; i++)
+            // 1. 회전 각도 업데이트 (반시계 방향)
+            float rotationDelta = attackSpeed * Time.deltaTime;
+            
+            // 플레이어가 좌우 반전(Scale X < 0)되었을 때 시각적 보정
+            if (transform.lossyScale.x < 0)
             {
-                float angle = _currentAngle + (i * angleStep);
-                Vector3 newPosition = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad), 0) * rotationRadius;
-                _activeBalls[i].transform.localPosition = newPosition;
+                rotationDelta *= -1;
             }
+
+            m_currentAngle = (m_currentAngle + rotationDelta) % 360f;
+
+            // 2. 공 위치 및 회전 업데이트
+            UpdateBallPositions();
         }
+
+        #endregion
+
+        #region 공 관리 로직
 
         private void SpawnBalls()
         {
-            float angleStep = 360f / ballCount;
-
-            for (int i = 0; i < ballCount; i++)
+            if (m_ballPrefab == null)
             {
-                var ball = _ballPool.Get();
-                // OnGetBall에서 초기화가 처리됩니다.
+                LogManager.LogError("[WeaponBallplay] 공(Ball) 프리팹이 할당되지 않았습니다!", LogManager.LogCategory.Weapon);
+                return;
+            }
+
+            for (int i = 0; i < m_ballCount; i++)
+            {
+                var ball = m_ballPool.Get();
+                ball.Initialize(this);
+                m_activeBalls.Add(ball);
+            }
+
+            UpdateBallPositions();
+        }
+
+        private void UpdateBallPositions()
+        {
+            int count = m_activeBalls.Count;
+            if (count == 0) return;
+
+            float angleStep = 360f / count;
+            float radius = m_rotationRadius;
+
+            for (int i = 0; i < count; i++)
+            {
+                // 현재 공의 궤도 각도 (Degree)
+                float orbitalAngle = m_currentAngle + (i * angleStep);
+                
+                // 위치 계산 (Radian)
+                float angleRad = orbitalAngle * Mathf.Deg2Rad;
+                Vector3 newPos = new Vector3(Mathf.Cos(angleRad), Mathf.Sin(angleRad), 0) * radius;
+                m_activeBalls[i].transform.localPosition = newPos;
+
+                // [수정됨] 회전 설정 (자전 + 오프셋 보정)
+                // 공이 궤도를 돌면서 자신의 머리가 궤도 바깥쪽(또는 안쪽)을 향하게 하려면 오프셋을 조절하면 됩니다.
+                // 예: 스프라이트가 위를 보고 있다면 -90, 오른쪽을 보고 있다면 0 등
+                m_activeBalls[i].transform.localRotation = Quaternion.Euler(0, 0, orbitalAngle + m_ballRotationOffset);
             }
         }
 
         private void ClearBalls()
         {
-            // 활성화된 모든 공을 풀에 반환합니다.
-            foreach (var ball in _activeBalls)
+            foreach (var ball in m_activeBalls)
             {
-                _ballPool.Release(ball);
+                if (ball != null)
+                {
+                    m_ballPool.Release(ball);
+                }
             }
-            _activeBalls.Clear();
+            m_activeBalls.Clear();
         }
 
-        #region Object Pool Methods
+        #endregion
+
+        #region 오브젝트 풀링
+
+        private void InitializePool()
+        {
+            m_ballPool = new ObjectPool<BallDamageDealer>(
+                createFunc: CreateBall,
+                actionOnGet: OnGetBall,
+                actionOnRelease: OnReleaseBall,
+                actionOnDestroy: OnDestroyBall,
+                collectionCheck: false,
+                defaultCapacity: m_ballCount,
+                maxSize: m_ballCount * 2
+            );
+        }
 
         private BallDamageDealer CreateBall()
         {
-            GameObject ballInstance = Instantiate(ballPrefab, transform);
-            return ballInstance.GetComponent<BallDamageDealer>();
+            GameObject ballInstance = Instantiate(m_ballPrefab, transform);
+            var comp = ballInstance.GetComponent<BallDamageDealer>();
+            if (comp == null)
+            {
+                LogManager.LogError("[WeaponBallplay] 프리팹에 BallDamageDealer 컴포넌트가 없습니다!", LogManager.LogCategory.Weapon);
+            }
+            return comp;
         }
 
         private void OnGetBall(BallDamageDealer ball)
         {
-            ball.Initialize(this);
             ball.gameObject.SetActive(true);
-            _activeBalls.Add(ball);
         }
 
         private void OnReleaseBall(BallDamageDealer ball)
@@ -136,7 +191,7 @@ namespace DogGuns_Games.vamsir
 
         private void OnDestroyBall(BallDamageDealer ball)
         {
-            Destroy(ball.gameObject);
+            if (ball != null) Destroy(ball.gameObject);
         }
 
         #endregion

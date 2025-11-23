@@ -4,118 +4,98 @@ using System.Collections.Generic;
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// WeaphonBallplay에 의해 생성된 공의 피해 처리를 담당합니다.
-    /// 적과 충돌 시 지정된 공격력과 쿨타임에 따라 지속적인 피해를 줍니다.
+    /// WeaphonBallplay에 의해 생성된 공의 물리적 충돌과 데미지를 담당하는 클래스입니다.
+    /// [수정됨] 궤적(Trail/Line) 기능이 삭제되었습니다. 오직 충돌 판정만 처리합니다.
     /// </summary>
-    [RequireComponent(typeof(Collider2D), typeof(TrailRenderer))]
+    [RequireComponent(typeof(PolygonCollider2D))]
     public class BallDamageDealer : Weaphon_base
     {
-        private float _attackPower;
-        private float _coolTime;
-        private TrailRenderer _trailRenderer;
+        #region 내부 변수
 
-        // 피해를 입은 적과 다음 피해 가능 시간을 추적 (Key: InstanceID, Value: Time.time + coolTime)
-        private readonly Dictionary<int, float> _damageCooldowns = new Dictionary<int, float>();
+        private PolygonCollider2D m_polygonCollider;
+        
+        // 피해 쿨타임 관리 (Key: InstanceID, Value: NextAttackTime)
+        private readonly Dictionary<int, float> m_damageCooldowns = new Dictionary<int, float>();
 
-        [Header("궤적 이펙트 설정")]
-        [Tooltip("궤적에 적용할 머티리얼. 비어있을 경우 경고가 표시됩니다.")]
-        [SerializeField] private Material trailMaterial;
-        [Tooltip("궤적의 지속 시간(초)")]
-        [SerializeField] private float trailTime = 0.3f;
-        [Tooltip("궤적의 시작 두께")]
-        [SerializeField] private float trailStartWidth = 0.2f;
+        #endregion
+
+        #region Unity 라이프사이클
 
         private void Awake()
         {
-            var col = GetComponent<Collider2D>();
-            if (!col.isTrigger)
+            // PolygonCollider2D 가져오기
+            m_polygonCollider = GetComponent<PolygonCollider2D>();
+            
+            // 만약 없다면 추가 (안전장치)
+            if (m_polygonCollider == null)
             {
-                LogManager.LogWarning($"'{name}'의 Collider2D가 Trigger로 설정되지 않았습니다. 피해 감지가 동작하지 않을 수 있습니다.", LogManager.LogCategory.Weapon, this);
+                m_polygonCollider = gameObject.AddComponent<PolygonCollider2D>();
             }
 
-            _trailRenderer = GetComponent<TrailRenderer>();
-            SetupTrailRenderer();
-        }
-
-        /// <summary>
-        /// WeaphonBallplay에서 이 공의 스탯을 초기화합니다.
-        /// </summary>
-        public void Initialize(Weaphon_base parentWeapon)
-        {
-            isUpgradelv2 = parentWeapon.isUpgradelv2;
-            attackPower = parentWeapon.attackPower;
-            mobStunTime = parentWeapon.mobStunTime;
-
-            // 무기가 활성화/비활성화 될 때 궤적이 초기화되도록 합니다.
-            if (_trailRenderer != null)
+            // Trigger 설정 강제
+            if (!m_polygonCollider.isTrigger)
             {
-                _trailRenderer.Clear();
+                Debug.LogWarning($"[BallDamageDealer] '{name}'의 Collider가 Trigger가 아닙니다. 강제로 설정합니다.");
+                m_polygonCollider.isTrigger = true;
             }
         }
 
-        private void OnDisable()
+        protected override void OnEnable()
         {
-            // 비활성화 시 쿨다운 목록과 궤적을 정리하여 메모리 누수 및 시각적 오류를 방지합니다.
-            _damageCooldowns.Clear();
-            if (_trailRenderer != null)
-            {
-                _trailRenderer.Clear();
-            }
+            base.OnEnable();
+            // 활성화 시 쿨타임 초기화가 필요하다면 여기서 처리 (현재는 OnDisable에서 처리 중)
         }
 
-        /// <summary>
-        /// TrailRenderer의 시각적 속성을 코드에서 설정합니다.
-        /// </summary>
-        private void SetupTrailRenderer()
+        protected override void OnDisable()
         {
-            _trailRenderer.time = trailTime;
-            _trailRenderer.startWidth = trailStartWidth;
-            _trailRenderer.endWidth = 0f;
-            _trailRenderer.autodestruct = false; // 오브젝트 풀링을 사용하므로 자동으로 파괴하지 않음
-
-            // 그라데이션: 시작은 불투명, 끝은 투명하게 설정하여 자연스럽게 사라지는 효과를 줍니다.
-            var colorGradient = new Gradient();
-            colorGradient.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(Color.white, 0.0f), new GradientColorKey(Color.white, 1.0f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
-            );
-            _trailRenderer.colorGradient = colorGradient;
-
-            // 렌더링 순서: 공 스프라이트보다 뒤에 그려지도록 설정
-            if (TryGetComponent<SpriteRenderer>(out var spriteRenderer))
-            {
-                _trailRenderer.sortingOrder = spriteRenderer.sortingOrder - 1;
-            }
-
-            // 머티리얼 설정: 인스펙터에서 할당된 머티리얼을 우선적으로 사용합니다.
-            if (trailMaterial != null)
-            {
-                _trailRenderer.material = trailMaterial;
-            }
-            else
-            {
-                LogManager.LogWarning($"'Trail Material'이 할당되지 않았습니다. TrailRenderer에 적절한 머티리얼을 할당해주세요.", LogManager.LogCategory.Weapon, this);
-            }
+            base.OnDisable();
+            // 데이터 정리
+            m_damageCooldowns.Clear();
         }
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (!other.TryGetComponent<VamserMobBase>(out var enemy)) return;
+            if (!other.CompareTag("Mob")) return;
 
             int enemyId = other.GetInstanceID();
 
-            if (_damageCooldowns.TryGetValue(enemyId, out float nextDamageTime) && Time.time < nextDamageTime)
+            // 쿨타임 체크
+            if (!m_damageCooldowns.TryGetValue(enemyId, out float nextTime) || Time.time >= nextTime)
             {
-                return; // 아직 쿨다운 중
-            }
+                if (other.TryGetComponent(out VamserMobBase mob))
+                {
+                    if (!mob.IsDead)
+                    {
+                        // 데미지 적용
+                        mob.TakeDamage(attackPower, mobStunTime);
 
-            _damageCooldowns[enemyId] = Time.time + _coolTime;
+                        // 쿨타임 갱신
+                        m_damageCooldowns[enemyId] = Time.time + coolTime;
+                    }
+                }
+            }
         }
 
         private void OnTriggerExit2D(Collider2D other)
         {
-            // 적이 충돌 범위에서 벗어나면 쿨다운 목록에서 제거하여 메모리 관리
-            if (other.TryGetComponent<VamserMobBase>(out _)) _damageCooldowns.Remove(other.GetInstanceID());
+            if (other.CompareTag("Mob"))
+            {
+                m_damageCooldowns.Remove(other.GetInstanceID());
+            }
         }
+
+        #endregion
+
+        #region 초기화
+
+        public void Initialize(Weaphon_base parentWeapon)
+        {
+            this.isUpgradelv2 = parentWeapon.isUpgradelv2;
+            this.attackPower = parentWeapon.attackPower;
+            this.mobStunTime = parentWeapon.mobStunTime;
+            this.coolTime = parentWeapon.coolTime;
+        }
+
+        #endregion
     }
 }
