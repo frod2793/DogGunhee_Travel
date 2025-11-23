@@ -354,7 +354,6 @@ namespace DogGuns_Games.vamsir
             {
                 PlayStateManager.instance.PlayState = PlayStateManager.GameState.GameOver;
             }
-            gameObject.SetActive(false);
         }
 
         protected virtual void PlayHitEffect() { }

@@ -31,7 +31,7 @@ namespace DogGuns_Games.vamsir
         
         protected override void PlayHitEffect()
         {
-            EffectManager.Instance.PlayImmediateFlashEffect(m_playerSpriteRenderer);
+         //   EffectManager.Instance.PlayImmediateFlashEffect(m_playerSpriteRenderer);
             SoundManager.PlaySound(Sound.SFX, SoundKeys.playerHit, false);
         }
     }
