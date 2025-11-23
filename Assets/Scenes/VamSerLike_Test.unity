@@ -4348,6 +4348,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: player_DogGun
       objectReference: {fileID: 0}
+    - target: {fileID: 1989101733439538212, guid: 8c6a7642feb521b4d9465614d4c03ff6, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6155638956145482786, guid: 8c6a7642feb521b4d9465614d4c03ff6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -4767,18 +4771,6 @@ PrefabInstance:
     - target: {fileID: 1170362487552334879, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_Name
       value: '[ - GAME - ]'
-      objectReference: {fileID: 0}
-    - target: {fileID: 1170362487552334879, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_startWeaponIndex
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_startWeaponUpgradeLv2
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y

@@ -1135,7 +1135,6 @@ MonoBehaviour:
   isUpgradelv2: 0
   weaphonState: 0
   m_damageTickInterval: 0.5
-  m_rangeMultiplier: 1.5
   m_slowAmount: 0.3
   m_slowDuration: 1
   m_targetLayer:
@@ -4777,6 +4776,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba2e1479d42afc645ab7173157cf7f64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_startCharacterIndex: 0
+  m_startWeaponIndex: 0
+  m_startWeaponUpgradeLv2: 0
   m_playerContainer: {fileID: 3904192412624442642}
   m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
 --- !u!114 &4441102585319734577
