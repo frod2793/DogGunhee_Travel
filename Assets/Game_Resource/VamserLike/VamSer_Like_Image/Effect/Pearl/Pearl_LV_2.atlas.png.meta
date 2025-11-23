@@ -1,0 +1,663 @@
+fileFormatVersion: 2
+guid: 8b8c9741eb88269439136a7edd426100
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2539888344349338928
+    second: Pearl_LV_2.atlas_0
+  - first:
+      213: -2649606373815210854
+    second: Pearl_LV_2.atlas_1
+  - first:
+      213: 5637432035072890548
+    second: Pearl_LV_2.atlas_2
+  - first:
+      213: 602303196684602718
+    second: Pearl_LV_2.atlas_3
+  - first:
+      213: 4706115406756522868
+    second: Pearl_LV_2.atlas_4
+  - first:
+      213: 1345767190996117463
+    second: Pearl_LV_2.atlas_5
+  - first:
+      213: -8674087109315554555
+    second: Pearl_LV_2.atlas_6
+  - first:
+      213: -4344616070698114477
+    second: Pearl_LV_2.atlas_7
+  - first:
+      213: 3856461177306648485
+    second: Pearl_LV_2.atlas_8
+  - first:
+      213: 6179496561459770644
+    second: Pearl_LV_2.atlas_9
+  - first:
+      213: -6984315693062732999
+    second: Pearl_LV_2.atlas_10
+  - first:
+      213: 8778059694002515457
+    second: Pearl_LV_2.atlas_11
+  - first:
+      213: -1135605133494435740
+    second: Pearl_LV_2.atlas_12
+  - first:
+      213: 4405287791643692384
+    second: Pearl_LV_2.atlas_13
+  - first:
+      213: 2691576659264206399
+    second: Pearl_LV_2.atlas_14
+  - first:
+      213: 6223575242020387250
+    second: Pearl_LV_2.atlas_15
+  - first:
+      213: -7386180645568590964
+    second: Pearl_LV_2.atlas_16
+  - first:
+      213: -435199816330177910
+    second: Pearl_LV_2.atlas_17
+  - first:
+      213: -8268460729099576817
+    second: Pearl_LV_2.atlas_18
+  - first:
+      213: 6320319707166176344
+    second: Pearl_LV_2.atlas_19
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_0
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 6
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d217e9f10180ccd0800000000000000
+      internalID: -2539888344349338928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_1
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 5
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9c222e8a05ba3bd0800000000000000
+      internalID: -2649606373815210854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_2
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b65de7419e2c3e40800000000000000
+      internalID: 5637432035072890548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_3
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5dc775f09fcb5800800000000000000
+      internalID: 602303196684602718
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_4
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47b27b3470b7f4140800000000000000
+      internalID: 4706115406756522868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_5
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 6
+        width: 14
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d7e2b941202da210800000000000000
+      internalID: 1345767190996117463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_6
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 503937a3bb37f9780800000000000000
+      internalID: -8674087109315554555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_7
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 352e594d3b2d4b3c0800000000000000
+      internalID: -4344616070698114477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_8
+      rect:
+        serializedVersion: 2
+        x: 182
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5af82732207e48530800000000000000
+      internalID: 3856461177306648485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_9
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 5
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 415be8cd16bf1c550800000000000000
+      internalID: 6179496561459770644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_10
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 6
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9334fc3b1e9b21f90800000000000000
+      internalID: -6984315693062732999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_11
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 5
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10ea13698cee1d970800000000000000
+      internalID: 8778059694002515457
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_12
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46044f4d5258d30f0800000000000000
+      internalID: -1135605133494435740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_13
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06d894208e9b22d30800000000000000
+      internalID: 4405287791643692384
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_14
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f36fc2506b66a5520800000000000000
+      internalID: 2691576659264206399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_15
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 6
+        width: 14
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b97a8d65b49e5650800000000000000
+      internalID: 6223575242020387250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_16
+      rect:
+        serializedVersion: 2
+        x: 358
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8bc40626d30f7990800000000000000
+      internalID: -7386180645568590964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_17
+      rect:
+        serializedVersion: 2
+        x: 380
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a821355a21cd5f9f0800000000000000
+      internalID: -435199816330177910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_18
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 5
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0a90ca66c6804d80800000000000000
+      internalID: -8268460729099576817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pearl_LV_2.atlas_19
+      rect:
+        serializedVersion: 2
+        x: 423
+        y: 5
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8547a84894946b750800000000000000
+      internalID: 6320319707166176344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Pearl_LV_2.atlas_0: -2539888344349338928
+      Pearl_LV_2.atlas_1: -2649606373815210854
+      Pearl_LV_2.atlas_10: -6984315693062732999
+      Pearl_LV_2.atlas_11: 8778059694002515457
+      Pearl_LV_2.atlas_12: -1135605133494435740
+      Pearl_LV_2.atlas_13: 4405287791643692384
+      Pearl_LV_2.atlas_14: 2691576659264206399
+      Pearl_LV_2.atlas_15: 6223575242020387250
+      Pearl_LV_2.atlas_16: -7386180645568590964
+      Pearl_LV_2.atlas_17: -435199816330177910
+      Pearl_LV_2.atlas_18: -8268460729099576817
+      Pearl_LV_2.atlas_19: 6320319707166176344
+      Pearl_LV_2.atlas_2: 5637432035072890548
+      Pearl_LV_2.atlas_3: 602303196684602718
+      Pearl_LV_2.atlas_4: 4706115406756522868
+      Pearl_LV_2.atlas_5: 1345767190996117463
+      Pearl_LV_2.atlas_6: -8674087109315554555
+      Pearl_LV_2.atlas_7: -4344616070698114477
+      Pearl_LV_2.atlas_8: 3856461177306648485
+      Pearl_LV_2.atlas_9: 6179496561459770644
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

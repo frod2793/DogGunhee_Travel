@@ -45,6 +45,10 @@ namespace DogGuns_Games.vamsir
 
         [Tooltip("에디터 플레이 모드 시작 시 적용할 무기 인덱스")]
         [SerializeField] private int m_startWeaponIndex = 0;
+        
+        // [추가] 시작 시 무기 레벨 2 적용 여부
+        [Tooltip("에디터 시작 시 무기 레벨 2 적용 여부")]
+        [SerializeField] private bool m_startWeaponUpgradeLv2 = false;
 
         [Header("Reference Settings")]
         [Tooltip("캐릭터 및 무기가 스폰될 부모 오브젝트 (Player Container)")]
@@ -91,26 +95,37 @@ namespace DogGuns_Games.vamsir
             }
             s_instance = this;
 
-            // 에디터 모드에서만 시작 인덱스 설정 (테스트 편의성)
-#if UNITY_EDITOR
-            if (Application.isPlaying) // 에디터에서 플레이 버튼을 눌렀을 때
-            {
-                if (PlayerDataManagerDontdesytoy.Instance != null)
-                {
-                    PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_startCharacterIndex;
-                    PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = m_startWeaponIndex;
-                    LogManager.Log($"[Editor] 시작 설정 적용: Char({m_startCharacterIndex}), Wep({m_startWeaponIndex})");
-                }
-            }
-#endif
-
             CacheComponents();
             SubscribeEvents();
         }
 
         private void Start()
         {
-            // 초기화 로직은 Awake나 OnGameStart 이벤트에서 처리됨
+            // [중요] 에디터 테스트 설정 적용 (Awake 대신 Start 사용)
+            // PlayerDataManager 등 다른 싱글톤이 초기화된 후 실행되어야 안전합니다.
+#if UNITY_EDITOR
+            if (Application.isPlaying)
+            {
+                if (PlayerDataManagerDontdesytoy.Instance != null)
+                {
+                    PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_startCharacterIndex;
+                    PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = m_startWeaponIndex;
+                    LogManager.Log($"[Editor] 시작 설정 적용: Char({m_startCharacterIndex}), Wep({m_startWeaponIndex})");
+                    
+                    // 무기 레벨 설정 이벤트 구독 (일회성)
+                    void ApplyStartLevel(PlayerBase player)
+                    {
+                        if (player != null && player.WeaphonBase != null)
+                        {
+                            player.WeaphonBase.isUpgradelv2 = m_startWeaponUpgradeLv2;
+                            LogManager.Log($"[Editor] 시작 무기 레벨 적용: {(m_startWeaponUpgradeLv2 ? "Lv2" : "Lv1")}");
+                        }
+                        OnPlayerChanged -= ApplyStartLevel;
+                    }
+                    OnPlayerChanged += ApplyStartLevel;
+                }
+            }
+#endif
         }
 
         private void OnEnable()
@@ -407,13 +422,14 @@ namespace DogGuns_Games.vamsir
         {
             return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.ingameCoin ?? 0;
         }
-        
+
+    
 
         public Transform PlayerTransfrom()
         {
             return m_playerContainer != null ? m_playerContainer.transform : transform;
         }
-        
+
 
         #endregion
     }

@@ -8,8 +8,8 @@ namespace DogGuns_Games.vamsir
 {
     /// <summary>
     /// VamserLikeGameManager의 커스텀 에디터.
-    /// 플레이 전: 시작 캐릭터/무기 설정
-    /// 플레이 중: 실시간 캐릭터/무기 교체 테스트
+    /// 플레이 전: 시작 캐릭터/무기/레벨 설정
+    /// 플레이 중: 실시간 캐릭터/무기/레벨 교체 테스트
     /// </summary>
     [CustomEditor(typeof(VamserLikeGameManager))]
     public class VamserLikeGameManagerEditor : Editor
@@ -18,9 +18,12 @@ namespace DogGuns_Games.vamsir
 
         private SerializedProperty m_startCharacterIndexProp;
         private SerializedProperty m_startWeaponIndexProp;
+        private SerializedProperty m_startWeaponUpgradeLv2Prop; // [추가]
 
         private int m_runtimeCharacterIndex;
         private int m_runtimeWeaponIndex;
+        private bool m_runtimeWeaponUpgradeLv2; // [추가]
+        
         private bool m_isChanging; // 비동기 작업 진행 상태
 
         #endregion
@@ -32,6 +35,7 @@ namespace DogGuns_Games.vamsir
             // 매니저 스크립트의 변수와 연결
             m_startCharacterIndexProp = serializedObject.FindProperty("m_startCharacterIndex");
             m_startWeaponIndexProp = serializedObject.FindProperty("m_startWeaponIndex");
+            m_startWeaponUpgradeLv2Prop = serializedObject.FindProperty("m_startWeaponUpgradeLv2"); // [추가]
 
             // 런타임 중이라면 현재 적용된 값으로 초기화
             if (Application.isPlaying)
@@ -42,7 +46,6 @@ namespace DogGuns_Games.vamsir
 
         public override void OnInspectorGUI()
         {
-            // 기본 인스펙터(스크립트 필드 등) 그리기
             base.OnInspectorGUI();
 
             serializedObject.Update();
@@ -51,12 +54,10 @@ namespace DogGuns_Games.vamsir
             
             if (Application.isPlaying)
             {
-                // 플레이 중: 즉시 교체 기능
                 DrawRuntimeControls();
             }
             else
             {
-                // 플레이 전: 시작 설정 기능
                 DrawEditorControls();
             }
 
@@ -74,14 +75,16 @@ namespace DogGuns_Games.vamsir
         {
             EditorGUILayout.LabelField("🛠️ 에디터 테스트 설정", EditorStyles.boldLabel);
             
-            // 박스 스타일로 감싸기
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             
-            EditorGUILayout.HelpBox("게임을 시작할 때 적용될 캐릭터와 무기를 설정합니다.", MessageType.None);
+            EditorGUILayout.HelpBox("게임을 시작할 때 적용될 설정을 입력하세요.", MessageType.None);
             EditorGUILayout.Space(5);
 
             EditorGUILayout.PropertyField(m_startCharacterIndexProp, new GUIContent("시작 캐릭터 ID"));
             EditorGUILayout.PropertyField(m_startWeaponIndexProp, new GUIContent("시작 무기 ID"));
+            
+            // [추가] 레벨업 토글
+            EditorGUILayout.PropertyField(m_startWeaponUpgradeLv2Prop, new GUIContent("무기 레벨 2 적용"));
 
             EditorGUILayout.EndVertical();
         }
@@ -95,23 +98,26 @@ namespace DogGuns_Games.vamsir
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             
-            EditorGUILayout.HelpBox("게임 실행 중에 캐릭터와 무기를 즉시 교체합니다.", MessageType.None);
+            EditorGUILayout.HelpBox("게임 실행 중에 캐릭터와 무기를 즉시 교체하거나 레벨을 변경합니다.", MessageType.None);
             EditorGUILayout.Space(5);
 
             m_runtimeCharacterIndex = EditorGUILayout.IntField("교체할 캐릭터 ID", m_runtimeCharacterIndex);
             m_runtimeWeaponIndex = EditorGUILayout.IntField("교체할 무기 ID", m_runtimeWeaponIndex);
+            
+            // [추가] 런타임 레벨업 토글
+            m_runtimeWeaponUpgradeLv2 = EditorGUILayout.Toggle("무기 레벨 2 적용", m_runtimeWeaponUpgradeLv2);
 
             EditorGUILayout.Space(10);
 
             EditorGUI.BeginDisabledGroup(m_isChanging);
             
-            GUI.backgroundColor = Color.green; // 버튼 강조
-            if (GUILayout.Button("캐릭터 및 무기 즉시 변경", GUILayout.Height(30)))
+            GUI.backgroundColor = Color.green; 
+            if (GUILayout.Button("설정 즉시 적용 (Respawn)", GUILayout.Height(30)))
             {
                 VamserLikeGameManager manager = (VamserLikeGameManager)target;
                 ChangeCharacterAndWeaponAsync(manager).Forget();
             }
-            GUI.backgroundColor = Color.white; // 색상 복구
+            GUI.backgroundColor = Color.white;
 
             EditorGUI.EndDisabledGroup();
             
@@ -119,7 +125,7 @@ namespace DogGuns_Games.vamsir
         }
 
         /// <summary>
-        /// PlayerDataManager의 현재 값으로 런타임 변수를 동기화합니다.
+        /// 현재 게임 상태값으로 런타임 변수를 동기화합니다.
         /// </summary>
         private void SyncDataFromManager()
         {
@@ -128,17 +134,24 @@ namespace DogGuns_Games.vamsir
                 m_runtimeCharacterIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
                 m_runtimeWeaponIndex = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
             }
+
+            // [추가] 현재 스폰된 플레이어의 무기 레벨 상태 가져오기
+            var manager = (VamserLikeGameManager)target;
+            if (manager.SpawnedPlayer != null && manager.SpawnedPlayer.WeaphonBase != null)
+            {
+                m_runtimeWeaponUpgradeLv2 = manager.SpawnedPlayer.WeaphonBase.isUpgradelv2;
+            }
         }
 
         /// <summary>
-        /// 캐릭터와 무기를 비동기적으로 변경합니다. (런타임 전용)
+        /// 캐릭터, 무기, 레벨을 비동기적으로 변경합니다. (런타임 전용)
         /// </summary>
         private async UniTaskVoid ChangeCharacterAndWeaponAsync(VamserLikeGameManager gameManager)
         {
             if (m_isChanging) return;
 
             m_isChanging = true;
-            Repaint(); // 버튼 비활성화 즉시 반영
+            Repaint();
 
             try
             {
@@ -148,14 +161,21 @@ namespace DogGuns_Games.vamsir
                     return;
                 }
 
-                // 데이터 설정
+                // 1. 캐릭터/무기 인덱스 설정
                 PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_runtimeCharacterIndex;
                 PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = m_runtimeWeaponIndex;
 
-                Debug.Log($"[Editor] 변경 요청: Char({m_runtimeCharacterIndex}), Wep({m_runtimeWeaponIndex})");
+                Debug.Log($"[Editor] 변경 요청: Char({m_runtimeCharacterIndex}), Wep({m_runtimeWeaponIndex}), Lv2({m_runtimeWeaponUpgradeLv2})");
 
-                // 실제 게임 로직 호출
+                // 2. 리스폰 (캐릭터/무기 교체)
                 await gameManager.ChangeCharacterAndWeapon_Spawn();
+
+                // 3. [추가] 스폰 완료 후 무기 레벨 적용
+                if (gameManager.SpawnedPlayer != null && gameManager.SpawnedPlayer.WeaphonBase != null)
+                {
+                    gameManager.SpawnedPlayer.WeaphonBase.isUpgradelv2 = m_runtimeWeaponUpgradeLv2;
+                    Debug.Log($"[Editor] 무기 레벨 설정 완료: Lv {(m_runtimeWeaponUpgradeLv2 ? 2 : 1)}");
+                }
             }
             catch (Exception e)
             {
@@ -164,7 +184,7 @@ namespace DogGuns_Games.vamsir
             finally
             {
                 m_isChanging = false;
-                Repaint(); // 버튼 활성화 반영
+                Repaint();
             }
         }
 

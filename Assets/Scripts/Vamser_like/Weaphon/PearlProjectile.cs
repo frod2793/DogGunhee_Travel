@@ -1,111 +1,201 @@
 using UnityEngine;
+using System.Collections.Generic;
+
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// 진주 투사체의 이동, 벽 반사, 적 충돌 로직을 관리합니다.
-    /// 이 스크립트는 진주 프리팹에 부착되어야 합니다.
+    /// 화면 가장자리에서 튕기며 이동하는 진주 투사체입니다.
+    /// 레벨에 따라 애니메이션과 궤적 색상이 변경됩니다.
     /// </summary>
-    [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D))]
-    public class PearlProjectile : Weaphon_base
+    [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
+    [RequireComponent(typeof(TrailRenderer), typeof(Animator))] 
+    public class PearlProjectile : MonoBehaviour
     {
-        private Rigidbody2D _rb;
-        private Camera _mainCamera;
+        #region 내부 변수
+
+        private Vector3 m_velocity;
+        private float m_damage;
+        private float m_stunTime;
+        private bool m_isUpgraded;
+
+        private Camera m_mainCamera;
+        private TrailRenderer m_trailRenderer;
+        private Animator m_animator; // [추가]
+
+        // 중복 타격 방지 쿨타임
+        private readonly Dictionary<int, float> m_hitCooldowns = new Dictionary<int, float>();
+        private const float k_HitCooldown = 0.5f;
+
+        // 애니메이션 해시
+        private static readonly int k_AnimTriggerLv1 = Animator.StringToHash("Level1");
+        private static readonly int k_AnimTriggerLv2 = Animator.StringToHash("Level2");
+
+        #endregion
+
+        #region 인스펙터 설정 (Visual)
+
+        [Header("Trail Settings")]
+        [SerializeField] private float m_trailTime = 0.3f;
+        [SerializeField] private float m_trailStartWidth = 0.4f;
+        [SerializeField] private float m_trailEndWidth = 0.0f;
+
+        [Header("Level Colors")]
+        [Tooltip("레벨 1 궤적 색상 (기본 흰색)")]
+        [SerializeField] private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
         
+        [Tooltip("레벨 2 궤적 색상 (보라색/분홍색)")]
+        [SerializeField] private Color m_trailColorLv2 = new Color(1f, 0f, 1f, 0.5f); // Magenta
+
+        #endregion
+
+        #region Unity 라이프사이클
 
         private void Awake()
         {
-            _rb = GetComponent<Rigidbody2D>();
-            _rb.gravityScale = 0;
-            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            GetComponent<CircleCollider2D>().isTrigger = true; // 충돌 시 멈추지 않고 통과하도록 트리거로 설정
-            _mainCamera = Camera.main;
+            m_mainCamera = Camera.main;
+            m_trailRenderer = GetComponent<TrailRenderer>();
+            m_animator = GetComponent<Animator>(); // [추가]
+
+            var col = GetComponent<Collider2D>();
+            if (col != null) col.isTrigger = true;
+            
+            // 초기 궤적 설정 (색상은 Initialize에서 덮어씌워짐)
+            SetupTrailBase();
+        }
+
+        private void OnEnable()
+        {
+            m_hitCooldowns.Clear();
+            if (m_trailRenderer != null) m_trailRenderer.Clear();
+        }
+
+        private void Update()
+        {
+            // 이동 및 회전
+            transform.position += m_velocity * Time.deltaTime;
+            
+            float rotateSpeed = 360f * Time.deltaTime;
+            transform.Rotate(0, 0, -rotateSpeed);
+
+            BounceOffScreenEdges();
+        }
+
+        #endregion
+
+        #region 초기화 및 비주얼 업데이트
+
+        public void Initialize(Weaphon_base weapon, Vector3 initialVelocity)
+        {
+            m_damage = weapon.attackPower;
+            m_stunTime = weapon.mobStunTime;
+            m_isUpgraded = weapon.isUpgradelv2;
+            m_velocity = initialVelocity;
+            
+            transform.rotation = Quaternion.identity;
+
+            // [핵심] 레벨에 따른 비주얼(애니메이션 + 색상) 업데이트
+            UpdateVisualsByLevel();
+        }
+
+        private void UpdateVisualsByLevel()
+        {
+            // 1. 애니메이션 트리거 발동
+            if (m_animator != null)
+            {
+                int trigger = m_isUpgraded ? k_AnimTriggerLv2 : k_AnimTriggerLv1;
+                m_animator.SetTrigger(trigger);
+            }
+
+            // 2. 궤적 색상 변경
+            if (m_trailRenderer != null)
+            {
+                Color targetColor = m_isUpgraded ? m_trailColorLv2 : m_trailColorLv1;
+                SetTrailColor(targetColor);
+            }
+        }
+
+        private void SetupTrailBase()
+        {
+            if (m_trailRenderer == null) return;
+
+            m_trailRenderer.time = m_trailTime;
+            m_trailRenderer.startWidth = m_trailStartWidth;
+            m_trailRenderer.endWidth = m_trailEndWidth;
+            m_trailRenderer.autodestruct = false;
+            
+            if (TryGetComponent(out SpriteRenderer sr))
+            {
+                m_trailRenderer.sortingLayerID = sr.sortingLayerID;
+                m_trailRenderer.sortingOrder = sr.sortingOrder - 1;
+            }
+
+            if (m_trailRenderer.material == null || m_trailRenderer.material.name == "Default-Material")
+            {
+                Shader shader = Shader.Find("Sprites/Default");
+                if (shader != null) m_trailRenderer.material = new Material(shader);
+            }
         }
 
         /// <summary>
-        /// 진주를 초기화하고 발사합니다.
+        /// 궤적의 색상(그라데이션)을 변경합니다.
         /// </summary>
-        public void Initialize(Weaphon_base parentWeapon)
+        private void SetTrailColor(Color color)
         {
-            isUpgradelv2 = parentWeapon.isUpgradelv2;
-            attackPower = parentWeapon.attackPower;
-            mobStunTime = parentWeapon.mobStunTime;
-            attackSpeed = parentWeapon.attackSpeed;
-            
-            
-            // 랜덤한 초기 방향으로 발사
-            Vector2 randomDirection = UnityEngine.Random.insideUnitCircle.normalized;
-            _rb.linearVelocity = randomDirection * attackSpeed;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(color, 0.0f), new GradientColorKey(color, 1.0f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(color.a, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+            );
+            m_trailRenderer.colorGradient = gradient;
         }
 
-        private void FixedUpdate()
+        #endregion
+
+        #region 물리 및 충돌
+
+        private void BounceOffScreenEdges()
         {
-            // 카메라 시야 경계에 닿으면 반사
-            BounceOffCameraView();
-        }
+            if (m_mainCamera == null) return;
 
-        private void BounceOffCameraView()
-        {
-            if (_mainCamera == null) 
-            {
-                // 메인 카메라가 없는 경우에 대한 방어 코드
-                _mainCamera = Camera.main;
-                if (_mainCamera == null) return;
-            }
-
-            // 카메라의 월드 좌표 기준 경계를 계산합니다. (Orthographic 카메라 기준)
-            float cameraHeight = _mainCamera.orthographicSize * 2;
-            float cameraWidth = cameraHeight * _mainCamera.aspect;
-            Vector3 cameraPosition = _mainCamera.transform.position;
-
-            float minX = cameraPosition.x - cameraWidth / 2;
-            float maxX = cameraPosition.x + cameraWidth / 2;
-            float minY = cameraPosition.y - cameraHeight / 2;
-            float maxY = cameraPosition.y + cameraHeight / 2;
+            Vector3 viewPos = m_mainCamera.WorldToViewportPoint(transform.position);
             
-            Vector2 currentVelocity = _rb.linearVelocity;
-            Vector3 currentPosition = transform.position;
+            if ((viewPos.x <= 0.02f && m_velocity.x < 0) || (viewPos.x >= 0.98f && m_velocity.x > 0))
+                m_velocity.x *= -1;
 
-            // 위치가 경계를 넘어섰는지 확인하고 속도 방향을 반전시킵니다.
-            if ((currentPosition.x <= minX && currentVelocity.x < 0) || (currentPosition.x >= maxX && currentVelocity.x > 0))
-            {
-                currentVelocity.x *= -1;
-            }
-            if ((currentPosition.y <= minY && currentVelocity.y < 0) || (currentPosition.y >= maxY && currentVelocity.y > 0))
-            {
-                currentVelocity.y *= -1;
-            }
-
-            _rb.linearVelocity = currentVelocity;
+            if ((viewPos.y <= 0.02f && m_velocity.y < 0) || (viewPos.y >= 0.98f && m_velocity.y > 0))
+                m_velocity.y *= -1;
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.TryGetComponent<VamserMobBase>(out var mob))
+            if (other.CompareTag("Mob"))
             {
-                if (!mob.IsDead)
+                int id = other.gameObject.GetInstanceID();
+                
+                if (!m_hitCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
                 {
-                    // 진주가 몹에게 데미지를 입힙니다.
-                    mob.TakeDamage(attackPower);
-            
-                    // 업그레이드 시 스턴 효과 적용
-                    if (isUpgradelv2)
+                    if (other.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
                     {
-                        mob.StunTime = mobStunTime;
-                        // [수정] 변수 직접 접근 대신 public 메서드 사용
-                        mob.SetState(VamserMobBase.MobState.Stun); 
+                        float appliedStun = m_isUpgraded ? m_stunTime : 0f;
+                        mob.TakeDamage(m_damage, appliedStun);
+                        m_hitCooldowns[id] = Time.time + k_HitCooldown;
                     }
                 }
             }
         }
-
-        private void OnDisable()
+        /// <summary>
+        /// 이미 활동 중인 진주의 상태(공격력, 레벨 비주얼 등)를 갱신합니다.
+        /// </summary>
+        public void UpdateState(Weaphon_base weapon)
         {
-            // 풀로 돌아갈 때 물리력을 초기화하여 다음 사용에 영향을 주지 않도록 합니다.
-            if (_rb != null)
-            {
-                _rb.linearVelocity = Vector2.zero;
-                _rb.angularVelocity = 0f;
-            }
+            // 스탯 갱신
+            m_damage = weapon.attackPower;
+            m_stunTime = weapon.mobStunTime;
+            m_isUpgraded = weapon.isUpgradelv2;
+
+            // 비주얼(색상, 애니메이션) 즉시 업데이트
+            UpdateVisualsByLevel();
         }
+        #endregion
     }
 }

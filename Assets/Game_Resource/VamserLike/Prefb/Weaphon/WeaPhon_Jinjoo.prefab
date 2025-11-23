@@ -109,4 +109,5 @@ MonoBehaviour:
   weaphonIndex: 3
   isUpgradelv2: 0
   weaphonState: 0
-  pearlPrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+  m_pearlPrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+  m_pearlSpeed: 5
