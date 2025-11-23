@@ -45,6 +45,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ffe1ae531407134cbfb751aeb0a6331
+    m_Address: Weapon_7
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 34e464a5122a245aa9d83bd61f1fe434
     m_Address: Assets/Scenes/LoadResourceScene.unity
     m_ReadOnly: 0
@@ -55,8 +60,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3870babb907260340a8eeef11ad9609e
+    m_Address: Assets/Game_Resource/VamserLike/Prefb/Weaphon/BoomerangProjectile.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 440271337e4a6df43a3314571b76e325
     m_Address: Weapon_5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4464f6a372c6942469f7ea34158454b6
+    m_Address: Weaphon/ballPlay .prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

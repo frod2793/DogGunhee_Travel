@@ -61,7 +61,7 @@ namespace DogGuns_Games.vamsir
         private Transform m_playerTransform;
         
         // 오브젝트 풀
-        private IObjectPool<BoomerangProjectile> m_boomerangPool;
+        private IObjectPool<shieldProjectile> m_boomerangPool;
         private IObjectPool<ShieldShockwave> m_shockwavePool;
 
         private bool m_isAnimShield;
@@ -256,8 +256,8 @@ namespace DogGuns_Games.vamsir
         {
             if (m_boomerangPrefab == null) return;
 
-            m_boomerangPool = new ObjectPool<BoomerangProjectile>(
-                createFunc: () => Instantiate(m_boomerangPrefab).GetComponent<BoomerangProjectile>(),
+            m_boomerangPool = new ObjectPool<shieldProjectile>(
+                createFunc: () => Instantiate(m_boomerangPrefab).GetComponent<shieldProjectile>(),
                 actionOnGet: (p) => p.gameObject.SetActive(true),
                 actionOnRelease: (p) => p.gameObject.SetActive(false),
                 actionOnDestroy: (p) => Destroy(p.gameObject),
