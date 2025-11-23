@@ -25,7 +25,7 @@
 Unity에 최적화된 **UniTask**를 활용하여 에셋 로딩 파이프라인을 비동기적으로 구축했습니다. 전투 중에도 프리징 현상 없이 필요한 리소스를 실시간으로 불러와 부드러운 게임 플레이를 제공합니다.
 
 ```csharp
-// UniTask와 Addressables를 활용한 실제 캐릭터 스폰 예시 (VamserLikeGameManager.cs)
+// UniTask와 Addressables를 활용한 실제 캐릭터 스폰 (VamserLikeGameManager.cs)
 private async UniTask SpawnCharacterAsync(Weaphon_base weapon)
 {
     int index = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
@@ -79,7 +79,7 @@ private async UniTask SpawnCharacterAsync(Weaphon_base weapon)
 - **팩토리 패턴**: 오브젝트를 **'생성하는 코드'**와 **'사용하는 코드'**를 명확히 분리했습니다. 그 결과, 새로운 몬스터나 아이템을 추가할 때 기존 코드 수정 없이 팩토리 클래스에 새로운 생성 로직만 추가하면 되므로, **유지보수성과 확장성**이 크게 향상되었습니다.
 
 ```csharp
-// 오브젝트 풀을 활용하여 획득한 경험치 오브젝트를 반환하는 실제 코드 (PlayerBase.cs)
+// 오브젝트 풀을 활용하여 획득한 경험치 오브젝트를 반환하는 코드 (PlayerBase.cs)
 private void HandleExpCollision(GameObject expObject)
 {
     bool hasComponent = expObject.TryGetComponent(out EXP_Obj expObj);
@@ -104,7 +104,7 @@ private void HandleExpCollision(GameObject expObject)
 - **서버를 통한 데이터 영속성**: 암호화된 데이터는 JSON으로 직렬화하여 **뒤끝(TheBackend.io)** 서버에 백업합니다. 이를 통해 로컬 데이터가 조작되더라도 서버의 데이터를 통해 즉시 복구할 수 있어 치팅을 방지하고 사용자의 자산을 안전하게 보호합니다.
 
 ```csharp
-// 실제 사용 중인 하이브리드 암호화/복호화 로직 (HybridEncryption.cs)
+//하이브리드 암호화/복호화 로직 (HybridEncryption.cs)
 
 /// <summary>
 /// 암호화된 데이터와 세션 키를 포함하며, JSON 직렬화를 지원하는 하이브리드 암호화 패킷 클래스입니다.
