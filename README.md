@@ -25,7 +25,7 @@
 Unity에 최적화된 **UniTask**를 활용하여 에셋 로딩 파이프라인을 비동기적으로 구축했습니다. 전투 중에도 프리징 현상 없이 필요한 리소스를 실시간으로 불러와 부드러운 게임 플레이를 제공합니다.
 
 ```csharp
-// UniTask와 Addressables를 활용한 실제 캐릭터 스폰 (VamserLikeGameManager.cs)
+// UniTask와 Addressables를 활용한 캐릭터 스폰 (VamserLikeGameManager.cs)
 private async UniTask SpawnCharacterAsync(Weaphon_base weapon)
 {
     int index = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
