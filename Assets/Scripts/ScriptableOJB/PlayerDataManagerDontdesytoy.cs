@@ -16,6 +16,9 @@ namespace DogGuns_Games
         #region 변수, 프로퍼티, 필드
 
         [Header("데이터")]
+        [Tooltip("게임의 전반적인 설정을 관리하는 ScriptableObject 입니다.")]
+        [SerializeField] private SettingsData m_settingsData;
+        
         [Tooltip("플레이어 데이터를 담고 있는 ScriptableObject 입니다.")]
         [SerializeField] private PlayerData m_scriptableobjPlayerData;
 
@@ -98,9 +101,17 @@ namespace DogGuns_Games
             s_instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // PlayerData 초기화 (프로퍼티에서 처리하므로 여기서 중복 호출할 필요 없음)
-            // if (m_scriptableobjPlayerData == null)
-            //     m_scriptableobjPlayerData = ScriptableObject.CreateInstance<PlayerData>();
+            // 설정 파일에서 프레임 레이트 불러와서 적용
+            if (m_settingsData != null)
+            {
+                m_settingsData.LoadSettings();
+                SetTargetFrameRate(m_settingsData.TargetFrameRate);
+            }
+            else
+            {
+                LogManager.LogError("SettingsData가 PlayerDataManager에 할당되지 않았습니다. 기본 프레임으로 실행됩니다.", LogManager.LogCategory.PlayerDataManager);
+                SetTargetFrameRate(120); // 기본값
+            }
 
             // 암호화 객체 초기화
             _encryption = new HybridEncryption();
@@ -109,6 +120,56 @@ namespace DogGuns_Games
             GenerateOrLoadRsaKeys();
         }
 
+        private void OnEnable()
+        {
+            // 설정이 변경될 때마다 자동으로 프레임 설정을 다시 로드하도록 이벤트 구독
+            SettingsData.OnSettingsChanged += ApplyFrameRateSetting;
+        }
+
+        private void OnDisable()
+        {
+            // 오브젝트가 비활성화되거나 파괴될 때 이벤트 구독 해제
+            SettingsData.OnSettingsChanged -= ApplyFrameRateSetting;
+        }
+
+        #endregion
+
+        #region 성능 설정
+
+        /// <summary>
+        /// 게임의 목표 프레임 레이트를 설정합니다.
+        /// </summary>
+        private void ApplyFrameRateSetting()
+        {
+            if (m_settingsData != null)
+            {
+                SetTargetFrameRate(m_settingsData.TargetFrameRate);
+            }
+        }
+        
+        /// <summary>
+        /// 게임의 목표 프레임 레이트를 설정합니다.
+        /// </summary>
+        /// <param name="frameRate">목표 FPS (예: 60, 120)</param>
+        public void SetTargetFrameRate(int frameRate)
+        {
+            // 30 미만의 유효하지 않은 값(단, -1은 '제한 없음'이므로 예외)이 들어오면 무시합니다.
+            if (frameRate < 30 && frameRate != -1)
+            {
+                LogManager.LogWarning($"유효하지 않은 목표 프레임({frameRate})이 요청되어 무시합니다.", LogManager.LogCategory.PlayerDataManager);
+                return;
+            }
+
+            // 현재 설정과 동일한 경우, 불필요한 변경 및 로그를 방지합니다.
+            if (Application.targetFrameRate == frameRate && QualitySettings.vSyncCount == 0)
+            {
+                return;
+            }
+
+            Application.targetFrameRate = frameRate;
+            QualitySettings.vSyncCount = 0; // VSync를 꺼야 targetFrameRate가 제대로 동작합니다.
+            LogManager.Log($"목표 프레임 레이트를 {frameRate}으로 설정했습니다.", LogManager.LogCategory.PlayerDataManager);
+        }
         #endregion
 
         #region 로컬 데이터 관리

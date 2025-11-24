@@ -8,26 +8,26 @@ public class SoundManager : MonoBehaviour
 {
     #region 싱글톤
 
-    private static SoundManager _instance;
+    private static SoundManager s_instance;
 
     public static SoundManager Instance
     {
         get
         {
-            if (_instance == null)
+            if (s_instance == null)
             {
                 // 씬에서 SoundManager를 찾아봅니다.
-                _instance = FindFirstObjectByType<SoundManager>();
+                s_instance = FindFirstObjectByType<SoundManager>();
                 // 씬에 SoundManager가 없다면, 새로 생성하지 않고 경고를 출력합니다.
                 // SoundManager는 씬에 미리 배치하고 SoundData를 할당해야 합니다.
-                if (_instance == null)
+                if (s_instance == null)
                 {
                     LogManager.LogError(
                         "SoundManager instance not found in the scene. Please add SoundManager to your scene and assign SoundData.");
                 }
             }
 
-            return _instance;
+            return s_instance;
         }
     }
 
@@ -39,12 +39,12 @@ public class SoundManager : MonoBehaviour
     [SerializeField] private SoundData m_soundData;
 
     [Tooltip("게임의 사운드 설정 데이터입니다.")]
-    [SerializeField] private SettingsData_oBJ m_settingsData;
+    [SerializeField] private SettingsData m_settingsData;
     
     private AudioSource[] m_audioSources = new AudioSource[(int)Sound.Max];
     private readonly Dictionary<string, AudioClip> m_audioClips = new Dictionary<string, AudioClip>();
-    public float EffectSoundVolume { get; private set; } = 1.0f;
-    public float BgmSoundVolume { get; private set; } = 1.0f;
+    public float EffectSoundVolume { get; private set; } = 1.0f; // 외부에서는 읽기만 가능
+    public float BgmSoundVolume { get; private set; } = 1.0f; // 외부에서는 읽기만 가능
 
     #endregion
 
@@ -67,15 +67,27 @@ public class SoundManager : MonoBehaviour
 
     private void Awake()
     {
-        if (_instance != null && _instance != this)
+        if (s_instance != null && s_instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
-        _instance = this;
+        s_instance = this;
         Init();
         DontDestroyOnLoad(gameObject);
+    }
+    
+    private void OnEnable()
+    {
+        // 설정이 변경될 때마다 자동으로 볼륨을 다시 로드하도록 이벤트 구독
+        SettingsData.OnSettingsChanged += LoadSoundSetting;
+    }
+
+    private void OnDisable()
+    {
+        // 오브젝트가 비활성화되거나 파괴될 때 이벤트 구독 해제
+        SettingsData.OnSettingsChanged -= LoadSoundSetting;
     }
 
     private void Init()
@@ -85,10 +97,10 @@ public class SoundManager : MonoBehaviour
         GameObject root = new GameObject { name = "Sound" };
         root.transform.parent = transform;
 
-        string[] SoundNames = System.Enum.GetNames(typeof(Sound));
-        for (int i = 0; i < SoundNames.Length - 1; i++)
+        string[] soundNames = System.Enum.GetNames(typeof(Sound));
+        for (int i = 0; i < soundNames.Length - 1; i++)
         {
-            GameObject go = new GameObject { name = SoundNames[i] };
+            GameObject go = new GameObject { name = soundNames[i] };
             m_audioSources[i] = go.AddComponent<AudioSource>();
             go.transform.parent = root.transform;
         }
@@ -117,22 +129,21 @@ public class SoundManager : MonoBehaviour
 
     public void LoadSoundSetting()
     {
-        // 데이터 로딩 책임은 OptionPopupManager 또는 게임 시작 시점으로 일원화합니다.
-        // SoundManager는 외부에서 설정된 값을 받아 적용하는 역할만 수행하여 데이터 충돌을 방지합니다.
-        // settingsData.LoadSettings();
-
         if (m_settingsData == null)
         {
-            LogManager.LogError("SettingsData_oBJ가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
+            LogManager.LogError("SettingsData가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
             // settingsData가 없어도 기본 볼륨으로 동작하도록 설정
-            BgmSoundVolume = 1.0f;
-            EffectSoundVolume = 1.0f;
+            SetVolume(Sound.BGM, 1.0f);
+            SetVolume(Sound.SFX, 1.0f);
         }
         else
         {
+            // ScriptableObject에서 직접 최신 데이터를 불러옵니다.
+            m_settingsData.LoadSettings();
+
             // 배경음과 효과음 볼륨 설정
-            BgmSoundVolume = m_settingsData.backgroundSoundVolume;
-            EffectSoundVolume = m_settingsData.effectSoundVolume;
+            SetVolume(Sound.BGM, m_settingsData.BackgroundSoundVolume);
+            SetVolume(Sound.SFX, m_settingsData.EffectSoundVolume);
         }
 
         // 초기 볼륨 설정
@@ -172,11 +183,11 @@ public class SoundManager : MonoBehaviour
             if (audioSource.isPlaying && audioSource.clip == audioClip)
                 return;
             
+            // 다른 BGM이 재생 중이었다면 정지
             if(audioSource.isPlaying)
                 audioSource.Stop();
             
             audioSource.volume = BgmSoundVolume;
-            audioSource.loop = loop;
             audioSource.clip = audioClip;
             audioSource.Play();
             LogManager.Log($"Playing BGM: {audioClip.name} with volume: {BgmSoundVolume}", LogManager.LogCategory.SoundManager);

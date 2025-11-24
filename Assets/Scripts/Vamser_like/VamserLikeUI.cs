@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using R3;
 using UnityEngine;
 using UnityEngine.Serialization;
 using DG.Tweening;
@@ -19,14 +20,14 @@ namespace DogGuns_Games.vamsir
     {
         #region 필드 및 변수 (인스펙터 연결)
 
-        [Header("User Info UI")]
+        [Header("유저 정보 UI")]
         [FormerlySerializedAs("LevelText")] 
         [SerializeField] private TMP_Text m_levelText;
         
         [FormerlySerializedAs("playerLevelSlider")] 
         [SerializeField] private Slider m_playerLevelSlider;
 
-        [Header("HUD Text UI")]
+        [Header("HUD 텍스트 UI")]
         [FormerlySerializedAs("mobWaveText")] 
         [SerializeField] private TMP_Text m_mobWaveText;
         
@@ -42,7 +43,7 @@ namespace DogGuns_Games.vamsir
         [FormerlySerializedAs("expSlider")] 
         [SerializeField] private Slider m_expSlider;
 
-        [Header("Menu UI")]
+        [Header("메뉴 UI")]
         [FormerlySerializedAs("menuBtn")] [SerializeField] private Button m_menuButton;
         [FormerlySerializedAs("menuPanel")] [SerializeField] private GameObject m_menuPanel;
         [FormerlySerializedAs("settingBtn")] [SerializeField] private Button m_settingButton;
@@ -51,7 +52,7 @@ namespace DogGuns_Games.vamsir
         [FormerlySerializedAs("weaponUIList")] public List<GameObject> m_weaponUIList = new List<GameObject>();
         [FormerlySerializedAs("juListUIList")] public List<Image> m_juListUIList = new List<Image>();
 
-        [Header("GameOver UI")]
+        [Header("게임 오버 UI")]
         [FormerlySerializedAs("gameOverPanel")] [SerializeField] private GameObject m_gameOverPanel;
         [FormerlySerializedAs("gameOverExitBtn")] [SerializeField] private Button m_gameOverExitButton;
         [FormerlySerializedAs("gameOverRestartBtn")] [SerializeField] private Button m_gameOverRestartButton;
@@ -60,15 +61,15 @@ namespace DogGuns_Games.vamsir
         [FormerlySerializedAs("gameOverWaveText")] [SerializeField] private TMP_Text m_gameOverWaveText;
         [FormerlySerializedAs("gameOverMobCountText")] [SerializeField] private TMP_Text m_gameOverMobCountText;
 
-        [Header("Controls")]
+        [Header("조작계 UI")]
         [FormerlySerializedAs("variableJoystick")] [SerializeField] private VariableJoystick m_variableJoystick;
         [FormerlySerializedAs("joystickTransform")] [SerializeField] private RectTransform m_joystickTransform;
         [FormerlySerializedAs("autoAttackToggle")] [SerializeField] private Toggle m_autoAttackToggle;
 
-        [Header("Settings")]
-        [FormerlySerializedAs("settingsData")] [SerializeField] private SettingsData_oBJ m_settingsData;
+        [Header("설정 데이터")]
+        [FormerlySerializedAs("settingsData")] [SerializeField] private SettingsData m_settingsData;
 
-        [Header("Skill Selection UI")]
+        [Header("스킬 선택 UI")]
         [FormerlySerializedAs("skillSelectionPanel")] [SerializeField] private GameObject m_skillSelectionPanel;
         [FormerlySerializedAs("refreshButton")] [SerializeField] private Button m_refreshButton;
         [FormerlySerializedAs("skillSelectionButtonPrefab")] [SerializeField] private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
@@ -76,7 +77,7 @@ namespace DogGuns_Games.vamsir
         [FormerlySerializedAs("countdownText")] [SerializeField] private TMP_Text m_countdownText;
         [FormerlySerializedAs("countDownslider")] [SerializeField] private Slider m_countDownSlider;
 
-        [Header("Data")]
+        [Header("데이터")]
         [FormerlySerializedAs("skillDatabase")] [SerializeField] private SkillDatabase m_skillDatabase;
 
         #endregion
@@ -89,6 +90,7 @@ namespace DogGuns_Games.vamsir
         // 비동기 제어
         private CancellationTokenSource m_uiUpdateCts;
         private CancellationTokenSource m_skillSelectionTimerCts;
+        private readonly CompositeDisposable m_disposables = new CompositeDisposable();
         private Tween m_expSliderTween;
 
         // 최적화를 위한 캐시 변수 (Dirty Check용)
@@ -113,6 +115,7 @@ namespace DogGuns_Games.vamsir
         private void Awake()
         {
             m_gameManager = VamserLikeGameManager.Instance;
+            BindUIEvents();
 
 #if UNITY_STANDALONE || UNITY_WEBGL || UNITY_STANDALONE_OSX
             Screen.SetResolution(720, 1280, false);
@@ -130,6 +133,7 @@ namespace DogGuns_Games.vamsir
         private void OnDestroy()
         {
             UnsubscribeFromEvents();
+            m_disposables.Dispose();
             
             m_uiUpdateCts?.Cancel();
             m_uiUpdateCts?.Dispose();
@@ -151,13 +155,7 @@ namespace DogGuns_Games.vamsir
 
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
-            SettingsData_oBJ.OnSettingsChanged += ApplyJoystickSettings;
-
-            if (m_autoAttackToggle != null) 
-                m_autoAttackToggle.onValueChanged.AddListener(OnAutoAttackToggleChanged);
-            
-            if (m_refreshButton != null) 
-                m_refreshButton.onClick.AddListener(GenerateSkillChoices);
+            SettingsData.OnSettingsChanged += ApplyJoystickSettings;
         }
 
         private void UnsubscribeFromEvents()
@@ -169,31 +167,31 @@ namespace DogGuns_Games.vamsir
 
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
-            SettingsData_oBJ.OnSettingsChanged -= ApplyJoystickSettings;
-
-            if (m_autoAttackToggle != null) 
-                m_autoAttackToggle.onValueChanged.RemoveListener(OnAutoAttackToggleChanged);
-            
-            if (m_refreshButton != null) 
-                m_refreshButton.onClick.RemoveListener(GenerateSkillChoices);
+            SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
         }
 
-        private void InitializeButtons()
+        private void BindUIEvents()
         {
-            m_menuButton.onClick.RemoveAllListeners();
-            m_menuButton.onClick.AddListener(TogglePauseMenu);
+            // 메뉴 버튼
+            m_menuButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
+            m_exitButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
+            m_settingButton.OnClickAsObservable().Subscribe(_ => m_gameManager.OpenOptionPopup()).AddTo(m_disposables);
 
-            m_exitButton.onClick.RemoveAllListeners();
-            m_exitButton.onClick.AddListener(TogglePauseMenu);
+            // 게임 오버 버튼
+            m_gameOverExitButton.OnClickAsObservable().Subscribe(_ => ExitToLobby()).AddTo(m_disposables);
+            m_gameOverRestartButton.OnClickAsObservable().Subscribe(_ => RestartGame()).AddTo(m_disposables);
 
-            m_settingButton.onClick.RemoveAllListeners();
-            m_settingButton.onClick.AddListener(() => m_gameManager.OpenOptionPopup());
+            // 스킬 선택 버튼
+            if (m_refreshButton != null)
+            {
+                m_refreshButton.OnClickAsObservable().Subscribe(_ => GenerateSkillChoices()).AddTo(m_disposables);
+            }
 
-            m_gameOverExitButton.onClick.RemoveAllListeners();
-            m_gameOverExitButton.onClick.AddListener(ExitToLobby);
-
-            m_gameOverRestartButton.onClick.RemoveAllListeners();
-            m_gameOverRestartButton.onClick.AddListener(RestartGame);
+            // 자동 공격 토글
+            if (m_autoAttackToggle != null)
+            {
+                m_autoAttackToggle.OnValueChangedAsObservable().Subscribe(OnAutoAttackToggleChanged).AddTo(m_disposables);
+            }
         }
 
         private void InitializeUI()
@@ -224,7 +222,6 @@ namespace DogGuns_Games.vamsir
         private void OnGameStart()
         {
             m_settingsData.LoadSettings();
-            InitializeButtons();
             ApplyJoystickSettings();
             SoundManager.Instance.LoadSoundSetting();
             
@@ -398,12 +395,13 @@ namespace DogGuns_Games.vamsir
         {
             if (m_variableJoystick == null || m_settingsData == null) return;
 
-            m_joystickTransform.localScale = new Vector3(m_settingsData.joystickSize, m_settingsData.joystickSize, 1);
-            m_variableJoystick.SetMode((JoystickType)m_settingsData.joystickType);
+            // [오류 수정] ScriptableObject의 프로퍼티(PascalCase)를 사용합니다.
+            m_joystickTransform.localScale = Vector3.one * m_settingsData.JoystickSize;
+            m_variableJoystick.SetMode((JoystickType)m_settingsData.JoystickType);
 
-            if (IsJoystickVisible(m_settingsData.joystickPos))
+            if (IsJoystickVisible(m_settingsData.JoystickPos))
             {
-                m_joystickTransform.anchoredPosition = m_settingsData.joystickPos;
+                m_joystickTransform.anchoredPosition = m_settingsData.JoystickPos;
             }
             else
             {

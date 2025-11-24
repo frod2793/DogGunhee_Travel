@@ -83,6 +83,9 @@ namespace DogGuns_Games.vamsir
 
             // 비활성화
             obj.gameObject.SetActive(false);
+            
+            // 씬 계층 구조를 깔끔하게 유지하기 위해 풀로 돌아올 때 다시 자식으로 설정합니다.
+            obj.transform.SetParent(m_bulletParent);
         }
 
         // 메서드명을 변경하여 Unity 라이프사이클 메서드와 충돌 방지
@@ -122,6 +125,9 @@ namespace DogGuns_Games.vamsir
             {
                 BoneBullet bullet = WeaphonBoneObjectPool.Get();
                 bullet.transform.position = transform.position;
+                
+                // 발사 시 부모로부터 독립시켜 월드 공간에서 자유롭게 움직이도록 합니다.
+                bullet.transform.SetParent(null);
                 bullet.ThrowBullet(attackAngle);
 
                 await UniTask.Delay(TimeSpan.FromSeconds(coolTime),

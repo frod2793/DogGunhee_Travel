@@ -9,14 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5768cc1ade40654f89d40329fd8b863, type: 3}
+  m_Script: {fileID: 11500000, guid: e82b7df4b0684c44c964e23075543716, type: 3}
   m_Name: SettingsData
   m_EditorClassIdentifier: 
-  backgroundSoundVolume: 0.5
-  effectSoundVolume: 0.5
-  conSmallToggle: 1
-  conNormalToggle: 0
-  conBigBtnToggle: 0
-  joystickType: 0
-  joystickSize: 1
-  joystickPos: {x: 1127.168, y: 806.0931}
+  m_backgroundSoundVolume: 0.5
+  m_effectSoundVolume: 0.5
+  m_conSmallToggle: 1
+  m_conNormalToggle: 0
+  m_conBigBtnToggle: 0
+  m_joystickType: 0
+  m_joystickSize: 1
+  m_joystickPos: {x: 0.5, y: 0.5}
+  m_targetFrameRate: 120

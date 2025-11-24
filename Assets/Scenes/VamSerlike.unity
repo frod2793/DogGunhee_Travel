@@ -408,14 +408,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3038148193590664681, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_soundData
-      value: 
-      objectReference: {fileID: 11400000, guid: bb7bc972af1334ecfae1ae0f4db37e58, type: 2}
-    - target: {fileID: 3038148193590664681, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_settingsData
-      value: 
-      objectReference: {fileID: 11400000, guid: 4c02e581b0798d8469464ed35d84d0f8, type: 2}
     - target: {fileID: 3890279269560482727, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -464,10 +456,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6146297447778857472, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_camera
-      value: 
-      objectReference: {fileID: 1423133477}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

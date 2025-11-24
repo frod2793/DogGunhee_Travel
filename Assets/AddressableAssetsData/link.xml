@@ -10,17 +10,6 @@
     <type fullname="DogGuns_Games.Lobby.Quest_Index" preserve="all" />
     <type fullname="DogGuns_Games.Lobby.Store_Item" preserve="all" />
     <type fullname="DogGuns_Games.PlayerDataManagerDontdesytoy" preserve="all" />
-    <type fullname="DogGuns_Games.Run.BackgroundScrolling" preserve="all" />
-    <type fullname="DogGuns_Games.Run.BiggerObj" preserve="all" />
-    <type fullname="DogGuns_Games.Run.CoinObj" preserve="all" />
-    <type fullname="DogGuns_Games.Run.GroundScroll" preserve="all" />
-    <type fullname="DogGuns_Games.Run.HealObj" preserve="all" />
-    <type fullname="DogGuns_Games.Run.MobBase" preserve="all" />
-    <type fullname="DogGuns_Games.Run.MobDamageManager" preserve="all" />
-    <type fullname="DogGuns_Games.Run.ObjEffectManager" preserve="all" />
-    <type fullname="DogGuns_Games.Run.Playercontroll" preserve="all" />
-    <type fullname="DogGuns_Games.Run.ReSpawnManager" preserve="all" />
-    <type fullname="DogGuns_Games.Run.RunGameUiManager" preserve="all" />
     <type fullname="DogGuns_Games.SkillDatabase" preserve="all" />
     <type fullname="DogGuns_Games.Test.TestManager" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.BallDamageDealer" preserve="all" />
@@ -53,19 +42,18 @@
     <type fullname="DogGuns_Games.vamsir.WeaponPearl" preserve="all" />
     <type fullname="DogGuns_Games.vamsir.WeaponStrongBlackWater" preserve="all" />
     <type fullname="JoyStickPosDragandDrop" preserve="all" />
+    <type fullname="JoystickSetter" preserve="all" />
     <type fullname="JoystickSetterExample" preserve="all" />
-    <type fullname="JoysticSetter" preserve="all" />
     <type fullname="LoadAddresaableManager" preserve="all" />
     <type fullname="LogManager" preserve="all" />
     <type fullname="OptionPopupManager" preserve="all" />
-    <type fullname="SettingsData_oBJ" preserve="all" />
+    <type fullname="SettingsData" preserve="all" />
     <type fullname="SoundData" preserve="all" />
     <type fullname="SoundManager" preserve="all" />
     <type fullname="VariableJoystick" preserve="all" />
     <type fullname="AudioClipInfo" preserve="nothing" serialized="true" />
     <type fullname="DogGuns_Games.SkillData" preserve="nothing" serialized="true" />
     <type fullname="DogGuns_Games.vamsir.EffectMapping" preserve="nothing" serialized="true" />
-    <type fullname="DogGuns_Games.Run.Mobinfo" preserve="nothing" serialized="true" />
   </assembly>
   <assembly fullname="Unity.2D.Animation.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
     <type fullname="UnityEngine.U2D.Animation.SkeletonAsset" preserve="all" />
@@ -136,6 +124,7 @@
     <type fullname="UnityEngine.GameObject" preserve="all" />
     <type fullname="UnityEngine.LightmapSettings" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
+    <type fullname="UnityEngine.MonoBehaviour" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
     <type fullname="UnityEngine.RectTransform" preserve="all" />
     <type fullname="UnityEngine.RenderSettings" preserve="all" />

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using DogGuns_Games;
 using DogGuns_Games.vamsir;
 using R3;
 using TMPro;
@@ -14,10 +14,10 @@ public class OptionPopupManager : MonoBehaviour
     [Header("참조 데이터 및 프리팹")]
     [Tooltip("게임의 전반적인 설정을 관리하는 ScriptableObject입니다.")]
     [FormerlySerializedAs("settingsData")]
-    [SerializeField] private SettingsData_oBJ m_settingsData;
+    [SerializeField] private SettingsData m_settingsData;
     [Tooltip("동적으로 생성할 조이스틱 설정 팝업 프리팹입니다.")]
     [FormerlySerializedAs("joysticSetterPopUpPrefb")]
-    [SerializeField] private JoysticSetter m_joysticSetterPopupPrefab;
+    [SerializeField] private JoystickSetter m_joystickSetterPopupPrefab;
 
     [Header("UI 컴포넌트")]
     [Tooltip("효과음 볼륨을 조절하는 슬라이더입니다.")]
@@ -32,6 +32,10 @@ public class OptionPopupManager : MonoBehaviour
     [Tooltip("조이스틱 설정 팝업을 여는 버튼입니다.")]
     [FormerlySerializedAs("joystickSizeBtn")]
     [SerializeField] private Button m_joystickSizeButton;
+    [Tooltip("게임의 목표 프레임(FPS)을 설정하는 슬라이더입니다.")]
+    [SerializeField] private Slider m_frameRateSlider;
+    [Tooltip("현재 설정된 FPS 값을 표시하는 텍스트입니다.")]
+    [SerializeField] private TMP_Text m_frameRateValueText;
     
     // --- 내부 상태 변수 ---
     /// <summary>
@@ -43,9 +47,16 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private SoundManager m_soundManager;
     /// <summary>
+    /// 전역 데이터 및 설정을 관리하는 PlayerDataManager 인스턴스입니다.
+    /// </summary>
+    private PlayerDataManagerDontdesytoy m_playerDataManager;
+    /// <summary>
     /// 이 팝업이 속한 최상위 Canvas입니다.
     /// </summary>
     private Canvas m_canvas;
+
+    // 프레임 설정 관련 상수
+    private readonly int[] m_frameRateOptions = { 60, 120 };
 
     #endregion
 
@@ -53,7 +64,6 @@ public class OptionPopupManager : MonoBehaviour
 
     private void Awake()
     {
-        // Awake에서 모든 초기화를 한 번만 수행합니다.
         InitializeComponents();
         BindUIEvents();
     }
@@ -80,6 +90,7 @@ public class OptionPopupManager : MonoBehaviour
     private void InitializeComponents()
     {
         m_soundManager = SoundManager.Instance;
+        m_playerDataManager = PlayerDataManagerDontdesytoy.Instance;
         if (m_soundManager == null)
         {
             Debug.LogError("SoundManager를 찾을 수 없습니다. OptionPopupManager가 정상적으로 작동하지 않을 수 있습니다.");
@@ -113,12 +124,31 @@ public class OptionPopupManager : MonoBehaviour
         m_settingsData.LoadSettings();
 
         // UI에 설정값 적용 (R3는 Subscribe에서 값을 발행하므로 SetValueWithoutNotify가 필요합니다)
-        m_effectSoundVolumeSlider.SetValueWithoutNotify(m_settingsData.effectSoundVolume);
-        m_bgmSoundVolumeSlider.SetValueWithoutNotify(m_settingsData.backgroundSoundVolume);
+        m_effectSoundVolumeSlider.SetValueWithoutNotify(m_settingsData.EffectSoundVolume);
+        m_bgmSoundVolumeSlider.SetValueWithoutNotify(m_settingsData.BackgroundSoundVolume);
+        
+        // 저장된 프레임 값으로 슬라이더 설정
+        int savedFrameRate = m_settingsData.TargetFrameRate;
+        int sliderValue = Array.IndexOf(m_frameRateOptions, savedFrameRate);
+        if (sliderValue < 0)
+        {
+            // 저장된 값이 리스트에 없으면 기본값(120 FPS)으로 설정
+            sliderValue = 1; // 120 FPS는 배열의 인덱스 1에 해당합니다.
+            m_settingsData.TargetFrameRate = m_frameRateOptions[sliderValue];
+        }
+        m_frameRateSlider.SetValueWithoutNotify(sliderValue);
+        UpdateFrameRateText(m_settingsData.TargetFrameRate);
 
         // SoundManager에도 즉시 적용
-        SetSoundVolume(Sound.SFX, m_settingsData.effectSoundVolume);
-        SetSoundVolume(Sound.BGM, m_settingsData.backgroundSoundVolume);
+        SetSoundVolume(Sound.SFX, m_settingsData.EffectSoundVolume);
+        SetSoundVolume(Sound.BGM, m_settingsData.BackgroundSoundVolume);
+        
+        SetFrameRate(m_settingsData.TargetFrameRate);
+    }
+
+    private void UpdateFrameRateText(int frameRate)
+    {
+        if (m_frameRateValueText != null) m_frameRateValueText.text = $"{frameRate} FPS";
     }
 
     #endregion
@@ -131,26 +161,43 @@ public class OptionPopupManager : MonoBehaviour
     {
         // 효과음 슬라이더 값이 변경될 때마다 settingsData 업데이트 및 SoundManager에 적용
         m_effectSoundVolumeSlider.OnValueChangedAsObservable()
-            .Do(value => m_settingsData.effectSoundVolume = value) // 스트림을 방해하지 않고 값 업데이트
             .ThrottleFirst(TimeSpan.FromSeconds(0.1)) // 0.1초 간격으로 이벤트 발생 제어
-            .Subscribe(value => SetSoundVolume(Sound.SFX, value))
+            .Subscribe(value =>
+            {
+                m_settingsData.EffectSoundVolume = value;
+                SetSoundVolume(Sound.SFX, value);
+            })
             .AddTo(m_disposables);
 
         // 배경음 슬라이더 값이 변경될 때마다 settingsData 업데이트 및 SoundManager에 적용
         m_bgmSoundVolumeSlider.OnValueChangedAsObservable()
-            .Do(value => m_settingsData.backgroundSoundVolume = value)
             .ThrottleFirst(TimeSpan.FromSeconds(0.1))
-            .Subscribe(value => SetSoundVolume(Sound.BGM, value))
+            .Subscribe(value =>
+            {
+                m_settingsData.BackgroundSoundVolume = value;
+                SetSoundVolume(Sound.BGM, value);
+            })
             .AddTo(m_disposables);
 
         // 나가기 버튼 클릭 시 설정 저장 및 팝업 닫기
         m_exitButton.OnClickAsObservable()
             .Subscribe(_ => SaveAndExit())
             .AddTo(m_disposables);
-
+        
         // 조이스틱 설정 버튼 클릭 시 팝업 열기
         m_joystickSizeButton.OnClickAsObservable()
             .Subscribe(_ => OpenJoystickSettings())
+            .AddTo(m_disposables);
+
+        // 프레임 슬라이더 값이 변경될 때마다 설정 업데이트 및 적용
+        m_frameRateSlider.OnValueChangedAsObservable()
+            .Subscribe(value =>
+            {
+                int selectedFrameRate = m_frameRateOptions[(int)value];
+                m_settingsData.TargetFrameRate = selectedFrameRate;
+                SetFrameRate(selectedFrameRate);
+                UpdateFrameRateText(selectedFrameRate);
+            })
             .AddTo(m_disposables);
     }
 
@@ -175,6 +222,21 @@ public class OptionPopupManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 목표 프레임 레이트를 설정합니다.
+    /// </summary>
+    /// <param name="frameRate">목표 FPS</param>
+    private void SetFrameRate(int frameRate)
+    {
+        if (m_playerDataManager != null)
+        {
+            m_playerDataManager.SetTargetFrameRate(frameRate);
+        }
+        else
+        {
+            Debug.LogWarning("PlayerDataManager를 찾을 수 없습니다.");
+        }
+    }
     #endregion
 
     #region UI 동작 및 팝업 관리
@@ -202,14 +264,14 @@ public class OptionPopupManager : MonoBehaviour
     /// </summary>
     private void OpenJoystickSettings()
     {
-        if (m_joysticSetterPopupPrefab == null)
+        if (m_joystickSetterPopupPrefab == null)
         {
             Debug.LogError("조이스틱 설정 프리팹이 할당되지 않았습니다!");
             return;
         }
 
-        // 조이스틱 설정 팝업 생성
-        var joystickSettingPopup = Instantiate(m_joysticSetterPopupPrefab.gameObject, transform);
+        // 조이스틱 설정 팝업을 최상위 Canvas의 자식으로 생성하여 렌더링 문제를 방지합니다.
+        var joystickSettingPopup = Instantiate(m_joystickSetterPopupPrefab.gameObject, m_canvas.transform);
         joystickSettingPopup.SetActive(true);
     }
 
@@ -224,7 +286,7 @@ public class OptionPopupManager : MonoBehaviour
     {
         if (m_settingsData == null)
         {
-            Debug.LogWarning($"{gameObject.name}: SettingsData가 할당되지 않았습니다.");
+            Debug.LogError($"{gameObject.name}: SettingsData가 할당되지 않았습니다. 인스펙터에서 참조를 연결해주세요.");
         }
     }
 #endif
