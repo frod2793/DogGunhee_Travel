@@ -78,7 +78,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -2879264833779530557, guid: 8c9de773c91b84d6abe5ddfe6ac5dd17, type: 3}
+  m_Sprite: {fileID: -1312295768244404941, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -146,7 +146,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.38
+  m_Radius: 0.33
 --- !u!1 &6292878162832009718
 GameObject:
   m_ObjectHideFlags: 0
@@ -174,7 +174,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6745571464397854502}
@@ -200,9 +200,10 @@ MonoBehaviour:
   isShooting: 0
   weaphonIndex: 1
   isUpgradelv2: 0
+  upgradeItemCode: 0
+  Thumnail: {fileID: 1859045663046494767, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
   weaphonState: 0
   m_damageTickInterval: 0.2
-  m_rangeMultiplier: 1.5
   m_slowAmount: 0.3
   m_slowDuration: 1
   m_targetLayer:

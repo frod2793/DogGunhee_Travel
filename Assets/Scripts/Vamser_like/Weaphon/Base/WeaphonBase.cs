@@ -37,6 +37,9 @@ namespace DogGuns_Games.vamsir
         [FormerlySerializedAs("upgradeItemUmber")]
         [Tooltip("이 무기를 업그레이드하는 데 필요한 패시브 아이템의 고유 코드(SkillCode)입니다.")]
         public int upgradeItemCode;
+        
+        [Tooltip("상단 무기 목록 UI에 표시될 썸네일 이미지입니다.")]
+        public Sprite Thumnail;
 
         /// <summary>
         /// 무기의 현재 상태 (대기, 공격, 재장전)

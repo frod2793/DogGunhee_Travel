@@ -110,6 +110,7 @@ MonoBehaviour:
   weaphonIndex: 0
   isUpgradelv2: 1
   upgradeItemCode: 1
+  Thumnail: {fileID: 21300000, guid: 2ab19c268b3545a41a33a186e031c2e1, type: 3}
   weaphonState: 0
   m_poolSizeBulletCount: 10
   m_bonePrefab: {fileID: 1450392623949166087, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}

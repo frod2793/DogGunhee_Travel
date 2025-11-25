@@ -189,7 +189,7 @@ namespace DogGuns_Games.vamsir
             // 체력 초기화
             m_previousHealth = m_playerCharacter.CurrentHealth;
             
-            LogManager.Log($"[Controller] Character Assigned: {character.name}", LogManager.LogCategory.PlayerBase);
+            LogManager.Log($"[플레이어 컨트롤러] 캐릭터 할당됨: {character.name}", LogManager.LogCategory.PlayerBase);
             
             CreateHpSlider();
             m_playerCharacter.OnHealthChanged += OnPlayerHealthChanged;

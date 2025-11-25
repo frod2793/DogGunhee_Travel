@@ -29,8 +29,11 @@ namespace DogGuns_Games
         [Tooltip("UI에 표시될 스킬의 상세 설명입니다."), TextArea(3, 5)]
         public string skillDescription;
 
-        [Tooltip("UI에 표시될 스킬의 아이콘 이미지입니다.")]
+        [Tooltip("룰렛 UI에 표시될 스킬의 아이콘 이미지입니다.")]
         public Sprite skillIcon;
+        
+        [Tooltip("상단 무기/장신구 목록 UI에 표시될 썸네일 이미지입니다.")]
+        public Sprite Thumnail;
         
         [Header("Weapon-Specific")]
         [Tooltip("스킬 타입이 'Weapon'일 경우, 로드할 무기 프리팹의 Addressable 키입니다.")]

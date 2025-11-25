@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
@@ -29,7 +27,7 @@ namespace DogGuns_Games.vamsir
                     s_instance = FindFirstObjectByType<GameManager>();
                     if (s_instance == null)
                     {
-                        LogManager.LogError("[GameManager] 씬에 GameManager 인스턴스가 없습니다.");
+                        LogManager.LogError("[게임 매니저] 씬에 GameManager 인스턴스가 없습니다.");
                     }
                 }
                 return s_instance;
@@ -111,7 +109,7 @@ namespace DogGuns_Games.vamsir
                 {
                     PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_startCharacterIndex;
                     PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex = m_startWeaponIndex;
-                    LogManager.Log($"[Editor] 시작 설정 적용: Char({m_startCharacterIndex}), Wep({m_startWeaponIndex})");
+                    LogManager.Log($"[에디터] 시작 설정 적용: 캐릭터({m_startCharacterIndex}), 무기({m_startWeaponIndex})");
                     
                     // 무기 레벨 설정 이벤트 구독 (일회성)
                     void ApplyStartLevel(PlayerBase player)
@@ -122,7 +120,7 @@ namespace DogGuns_Games.vamsir
                             if (firstWeapon != null)
                             {
                                 firstWeapon.isUpgradelv2 = m_startWeaponUpgradeLv2;
-                                LogManager.Log($"[Editor] 시작 무기 레벨 적용: {(m_startWeaponUpgradeLv2 ? "Lv2" : "Lv1")}");
+                                LogManager.Log($"[에디터] 시작 무기 레벨 적용: {(m_startWeaponUpgradeLv2 ? "Lv2" : "Lv1")}");
                             }
                         }
                         OnPlayerChanged -= ApplyStartLevel;
@@ -139,7 +137,10 @@ namespace DogGuns_Games.vamsir
             await SpawnPlayerAsync();
             
             // 스폰이 완료된 후 게임 시작 카운트다운을 요청합니다.
-            _mUIManagerManager?.StartGameCountdown();
+            if (_mUIManagerManager != null)
+            {
+                _mUIManagerManager.StartGameCountdown();
+            }
         }
 
         private void OnDestroy()
@@ -161,8 +162,8 @@ namespace DogGuns_Games.vamsir
             m_mainCamera = Camera.main;
 
             // 필수 컴포넌트 누락 시 경고
-            if (m_objectPoolSpawner == null) LogManager.LogWarning("[GameManager] ObjectPoolSpawner Missing");
-            if (m_playerController == null) LogManager.LogWarning("[GameManager] PlayerControll Missing");
+            if (m_objectPoolSpawner == null) LogManager.LogWarning("[게임 매니저] ObjectPoolSpawner가 없습니다.");
+            if (m_playerController == null) LogManager.LogWarning("[게임 매니저] PlayerControll가 없습니다.");
         }
 
         private void SubscribeEvents()
@@ -203,28 +204,28 @@ namespace DogGuns_Games.vamsir
                 if (SpawnedPlayer != null && m_objectPoolSpawner != null)
                 {
                     await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer);
-                    LogManager.Log("[GameManager] Game Started Successfully & Spawner Initialized");
+                    LogManager.Log("[게임 매니저] 게임 시작 및 스포너 초기화 완료");
                 }
                 else
                 {
                     // 플레이어 스폰이 OnEnable에서 실패했을 수 있습니다.
-                    LogManager.LogError("[GameManager] Failed to initialize spawner because player was not spawned.");
+                    LogManager.LogError("[게임 매니저] 플레이어가 스폰되지 않아 스포너를 초기화할 수 없습니다.");
                 }
             }
             catch (Exception e)
             {
-                LogManager.LogError($"[GameManager] Error during GameStart: {e.Message}");
+                LogManager.LogError($"[게임 매니저] 게임 시작 중 오류 발생: {e.Message}");
             }
         }
 
         private void OnPause()
         {
-            LogManager.Log("[GameManager] Game Paused");
+            LogManager.Log("[게임 매니저] 게임 일시정지");
         }
 
         private void OnResume()
         {
-            LogManager.Log("[GameManager] Game Resumed");
+            LogManager.Log("[게임 매니저] 게임 재개");
         }
 
         // [비동기] 게임 오버 로직
@@ -233,7 +234,7 @@ namespace DogGuns_Games.vamsir
             SpawnedPlayer = null;
             OnPlayerChanged?.Invoke(null); // 플레이어 소멸 알림
 
-            LogManager.Log("[GameManager] Game Over Processing...");
+            LogManager.Log("[게임 매니저] 게임 오버 처리 중...");
 
             // 코인 정산 및 서버 업로드
             var dataManager = PlayerDataManagerDontdesytoy.Instance;
@@ -254,11 +255,11 @@ namespace DogGuns_Games.vamsir
                 try
                 {
                     await ServerManager.Instance.UploadDataAsync("User_Data", param);
-                    LogManager.Log("[GameManager] Coin Data Uploaded Successfully");
+                    LogManager.Log("[게임 매니저] 코인 데이터 업로드 성공");
                 }
                 catch (Exception e)
                 {
-                    LogManager.LogError($"[GameManager] Upload Failed: {e.Message}");
+                    LogManager.LogError($"[게임 매니저] 데이터 업로드 실패: {e.Message}");
                 }
             }
         }
@@ -311,7 +312,7 @@ namespace DogGuns_Games.vamsir
             // 컨테이너가 없으면 중단
             if (m_playerContainer == null)
             {
-                LogManager.LogError("[GameManager] Player Container is not set. Cannot spawn player.");
+                LogManager.LogError("[게임 매니저] 플레이어 컨테이너가 설정되지 않았습니다. 플레이어를 스폰할 수 없습니다.");
                 return;
             }
 
@@ -321,7 +322,7 @@ namespace DogGuns_Games.vamsir
                 WeaphonBase weapon = await SpawnWeaponAsync(PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex);
                 if (weapon == null) 
                 {
-                    LogManager.LogError("[GameManager] Initial Weapon Spawn Failed");
+                    LogManager.LogError("[게임 매니저] 초기 무기 스폰에 실패했습니다.");
                     return;
                 }
 
@@ -330,7 +331,7 @@ namespace DogGuns_Games.vamsir
             }
             catch (Exception ex)
             {
-                LogManager.LogError($"[GameManager] Spawn Process Failed: {ex.Message}");
+                LogManager.LogError($"[게임 매니저] 스폰 과정에서 오류 발생: {ex.Message}");
                 SpawnedPlayer = null;
             }
         }
@@ -354,7 +355,7 @@ namespace DogGuns_Games.vamsir
             }
             catch (Exception e)
             {
-                LogManager.LogError($"[GameManager] Weapon Spawn Error ({key}): {e.Message}");
+                LogManager.LogError($"[게임 매니저] 무기 스폰 오류 ({key}): {e.Message}");
                 return null;
             }
         }
@@ -363,7 +364,7 @@ namespace DogGuns_Games.vamsir
         {
             if (skillData.skillType != SkillType.Weapon || string.IsNullOrEmpty(skillData.weaponAddressableKey))
             {
-                LogManager.LogError($"[GameManager] Invalid skill data for spawning a weapon: {skillData.skillName}");
+                LogManager.LogError($"[게임 매니저] 무기 스폰을 위한 스킬 데이터가 유효하지 않습니다: {skillData.skillName}");
                 return null;
             }
             
@@ -371,6 +372,7 @@ namespace DogGuns_Games.vamsir
 
             try
             {
+                // [수정] 스킬로 얻는 무기도 PlayerContainer를 부모로 하여 스폰합니다.
                 var op = Addressables.InstantiateAsync(key, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform);
                 GameObject instance = await op.ToUniTask();
 
@@ -383,7 +385,7 @@ namespace DogGuns_Games.vamsir
             }
             catch (Exception e)
             {
-                LogManager.LogError($"[GameManager] Weapon Spawn Error from Skill ({key}): {e.Message}");
+                LogManager.LogError($"[게임 매니저] 스킬로부터 무기 스폰 오류 ({key}): {e.Message}");
                 return null;
             }
         }
@@ -417,7 +419,7 @@ namespace DogGuns_Games.vamsir
                     }
                     else
                     {
-                        LogManager.LogError($"[GameManager] PlayerBase component missing on {instance.name}");
+                        LogManager.LogError($"[게임 매니저] '{instance.name}'에 PlayerBase 컴포넌트가 없습니다.");
                     }
 
                     // 이벤트 전파 (UI 업데이트 등)
@@ -426,7 +428,7 @@ namespace DogGuns_Games.vamsir
             }
             catch (Exception e)
             {
-                LogManager.LogError($"[GameManager] Character Spawn Error ({key}): {e.Message}");
+                LogManager.LogError($"[게임 매니저] 캐릭터 스폰 오류 ({key}): {e.Message}");
                 SpawnedPlayer = null;
             }
         }
@@ -438,7 +440,7 @@ namespace DogGuns_Games.vamsir
         {
             if (SpawnedPlayer == null)
             {
-                LogManager.LogError("[GameManager] Cannot equip weapon, player is not spawned.");
+                LogManager.LogError("[게임 매니저] 플레이어가 스폰되지 않아 무기를 장착할 수 없습니다.");
                 return;
             }
 
@@ -447,7 +449,7 @@ namespace DogGuns_Games.vamsir
             {
                 newWeapon.transform.SetParent(SpawnedPlayer.transform);
                 SpawnedPlayer.AddWeapon(newWeapon);
-                LogManager.Log($"[GameManager] New weapon equipped: {skillData.skillName}");
+                LogManager.Log($"[게임 매니저] 새로운 무기 장착: {skillData.skillName}");
                 
                 // 레벨업 이펙트 재생
                 EffectManager.Instance.PlayLevelUpEffect(SpawnedPlayer.GetComponent<SpriteRenderer>());
@@ -458,11 +460,13 @@ namespace DogGuns_Games.vamsir
 
         #region 데이터 접근자 (Helper Methods - 최적화됨)
 
-        // Null 조건 연산자(?.)와 Null 병합 연산자(??)를 사용하여 안전하게 데이터 반환
-
         public int GetMobKillCount()
         {
-            return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.nowPlayMObkillCOunt ?? 0;
+            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            {
+                return PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt;
+            }
+            return 0;
         }
 
         public int GetCurrentWave()
@@ -475,7 +479,6 @@ namespace DogGuns_Games.vamsir
             return SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
         }
         
-
         public float GetPlayerExpProgress()
         {
             return SpawnedPlayer != null ? SpawnedPlayer.GetExpProgress() : 0f;
@@ -483,17 +486,18 @@ namespace DogGuns_Games.vamsir
 
         public int GetCoinCount()
         {
-            return PlayerDataManagerDontdesytoy.Instance?.PlayerData?.ingameCoin ?? 0;
+            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            {
+                return PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin;
+            }
+            return 0;
         }
-
-    
 
         public Transform PlayerTransfrom()
         {
             return m_playerContainer != null ? m_playerContainer.transform : transform;
         }
-
-
+        
         #endregion
     }
 }
