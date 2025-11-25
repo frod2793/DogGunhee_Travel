@@ -8,7 +8,7 @@ namespace DogGuns_Games.vamsir
     /// [수정됨] 궤적(Trail/Line) 기능이 삭제되었습니다. 오직 충돌 판정만 처리합니다.
     /// </summary>
     [RequireComponent(typeof(PolygonCollider2D))]
-    public class BallDamageDealer : Weaphon_base
+    public class BallDamageDealer : WeaphonBase
     {
         #region 내부 변수
 
@@ -88,7 +88,7 @@ namespace DogGuns_Games.vamsir
 
         #region 초기화
 
-        public void Initialize(Weaphon_base parentWeapon)
+        public void Initialize(WeaphonBase parentWeapon)
         {
             this.isUpgradelv2 = parentWeapon.isUpgradelv2;
             this.attackPower = parentWeapon.attackPower;

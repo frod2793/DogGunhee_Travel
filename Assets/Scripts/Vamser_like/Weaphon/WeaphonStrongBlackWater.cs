@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
-    public class WeaponStrongBlackWater : Weaphon_base
+    public class WeaponStrongBlackWater : WeaphonBase
     {
         #region 인스펙터 필드
 

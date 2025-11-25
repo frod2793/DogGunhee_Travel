@@ -11,7 +11,7 @@ namespace DogGuns_Games.vamsir
     /// <summary>
     /// 플레이어의 이동, 공격, 카메라 추적, 애니메이션을 제어하는 메인 컨트롤러입니다.
     /// </summary>
-    public class VamPlayerControll : MonoBehaviour
+    public class PlayerControll : MonoBehaviour
     {
         #region 인스펙터 필드
 
@@ -59,7 +59,7 @@ namespace DogGuns_Games.vamsir
         private const int k_MaxEnemyColliders = 20; 
 
         // 외부 참조
-        private VamserLikeGameManager m_gameManager;
+        private GameManager m_gameManager;
         private Animator m_playerAnimator;
         private Camera m_mainCamera;
         private VariableJoystick m_joystick;
@@ -70,7 +70,6 @@ namespace DogGuns_Games.vamsir
 
         // 상태 플래그
         private bool m_isGameStarted;
-        private bool m_isAttacking;
         private bool m_isAutoAttackActive;
         private bool m_autoAttackEnabledByToggle;
 
@@ -121,7 +120,7 @@ namespace DogGuns_Games.vamsir
 
         private void Start()
         {
-            m_gameManager = VamserLikeGameManager.Instance;
+            m_gameManager = GameManager.Instance;
             m_joystick = m_gameManager.Joystick;
             
             SubscribeEvents();
@@ -185,7 +184,7 @@ namespace DogGuns_Games.vamsir
             m_playerCharacter = character;
             m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
             m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
-            m_mainCamera = VamserLikeGameManager.Instance.MainCamera;
+            m_mainCamera = GameManager.Instance.MainCamera;
             
             // 체력 초기화
             m_previousHealth = m_playerCharacter.CurrentHealth;
@@ -194,6 +193,9 @@ namespace DogGuns_Games.vamsir
             
             CreateHpSlider();
             m_playerCharacter.OnHealthChanged += OnPlayerHealthChanged;
+            
+            // 캐릭터 할당 직후 카메라 위치 즉시 설정
+            ResetCameraPosition();
         }
 
         private void CreateHpSlider()
@@ -334,29 +336,22 @@ namespace DogGuns_Games.vamsir
 
         #region 공격 시스템
 
+        /// <summary>
+        /// 보유한 모든 무기의 공격을 시도합니다.
+        /// 각 무기는 자체 쿨타임에 따라 공격 실행 여부를 결정합니다.
+        /// </summary>
+        /// <param name="dir">공격 방향</param>
         private void TryAttack(Vector3 dir)
         {
-            if (!m_isAttacking)
+            if (m_playerCharacter == null || m_playerCharacter.Weapons.Count == 0) return;
+
+            foreach (var weapon in m_playerCharacter.Weapons)
             {
-                PerformAttackAsync(dir).Forget();
+                if (weapon != null)
+                {
+                    weapon.Weaphon_Attack(dir);
+                }
             }
-        }
-
-        private async UniTask PerformAttackAsync(Vector3 dir)
-        {
-            if (m_playerCharacter == null || m_playerCharacter.WeaphonBase == null) return;
-
-            m_isAttacking = true;
-            
-            m_playerCharacter.WeaphonBase.Weaphon_Attack(dir);
-
-            float coolTime = m_playerCharacter.WeaphonBase.coolTime;
-            if (coolTime > 0)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
-            }
-            
-            m_isAttacking = false;
         }
 
         #endregion
@@ -413,9 +408,9 @@ namespace DogGuns_Games.vamsir
                         m_autoMoveDirection = Vector3.zero;
                     }
 
-                    if (dist <= m_attackRadius * 1.2f && !m_isAttacking)
+                    if (dist <= m_attackRadius * 1.2f)
                     {
-                        await PerformAttackAsync(dirToTarget);
+                        TryAttack(dirToTarget);
                     }
                 }
                 else
@@ -456,6 +451,26 @@ namespace DogGuns_Games.vamsir
         #endregion
 
         #region 카메라 추적
+
+        /// <summary>
+        /// 카메라 위치를 플레이어 위치로 즉시 설정합니다. (부드러운 이동 없음)
+        /// </summary>
+        private void ResetCameraPosition()
+        {
+            if (m_mainCamera == null || m_playerObject == null || m_mapRange == null) return;
+
+            Vector3 targetPos = m_playerObject.transform.position;
+            targetPos.z = m_mainCamera.transform.position.z;
+
+            Bounds bounds = m_mapRange.bounds;
+            float camHeight = m_mainCamera.orthographicSize;
+            float camWidth = camHeight * m_mainCamera.aspect;
+
+            targetPos.x = Mathf.Clamp(targetPos.x, bounds.min.x + camWidth, bounds.max.x - camWidth);
+            targetPos.y = Mathf.Clamp(targetPos.y, bounds.min.y + camHeight, bounds.max.y - camHeight);
+
+            m_mainCamera.transform.position = targetPos;
+        }
 
         private void FollowCamera()
         {

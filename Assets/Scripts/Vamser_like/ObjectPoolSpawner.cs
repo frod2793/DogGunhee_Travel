@@ -156,7 +156,7 @@ namespace DogGuns_Games.vamsir
 
         private void SubscribeEvents()
         {
-            VamserLikeGameManager.OnPlayerChanged += OnPlayerChanged;
+            GameManager.OnPlayerChanged += OnPlayerChanged;
             PlayStateManager.OnGamePause += OnPause;
             PlayStateManager.OnGameResume += OnResume;
             PlayStateManager.OnGameOver += OnGameOver;
@@ -164,7 +164,7 @@ namespace DogGuns_Games.vamsir
 
         private void UnsubscribeEvents()
         {
-            VamserLikeGameManager.OnPlayerChanged -= OnPlayerChanged;
+            GameManager.OnPlayerChanged -= OnPlayerChanged;
             PlayStateManager.OnGamePause -= OnPause;
             PlayStateManager.OnGameResume -= OnResume;
             PlayStateManager.OnGameOver -= OnGameOver;

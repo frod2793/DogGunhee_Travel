@@ -8,7 +8,7 @@ namespace DogGuns_Games.vamsir
     /// 화면 내에서 계속 튕기는 단 하나의 영구적인 진주를 발사하는 무기입니다.
     /// [최적화] 실시간 레벨업 반영 기능 추가
     /// </summary>
-    public class WeaponPearl : Weaphon_base
+    public class WeaponPearl : WeaphonBase
     {
         #region 인스펙터 필드
 
@@ -88,7 +88,7 @@ namespace DogGuns_Games.vamsir
 
         private void LaunchPearl(Vector3 direction)
         {
-            var spawner = VamserLikeGameManager.Instance?.ObjectPoolSpawner;
+            var spawner = GameManager.Instance?.ObjectPoolSpawner;
             if (spawner == null || m_pearlPrefab == null)
             {
                 LogManager.LogError("[WeaponPearl] 스포너 또는 프리팹이 없습니다.");
@@ -119,7 +119,7 @@ namespace DogGuns_Games.vamsir
         {
             if (m_activePearlInstance != null)
             {
-                var spawner = VamserLikeGameManager.Instance?.ObjectPoolSpawner;
+                var spawner = GameManager.Instance?.ObjectPoolSpawner;
                 spawner?.ReturnObject(m_activePearlInstance);
                 
                 m_activePearlInstance = null;

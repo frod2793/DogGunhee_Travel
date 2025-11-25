@@ -16,7 +16,7 @@ namespace DogGuns_Games.vamsir
     /// <summary>
     /// 인게임 UI(HUD, 팝업, 조이스틱 등)를 총괄하는 클래스입니다. (메서드명 수정됨)
     /// </summary>
-    public class VamserLikeUI : MonoBehaviour
+    public class UIManager : MonoBehaviour
     {
         #region 필드 및 변수 (인스펙터 연결)
 
@@ -84,8 +84,8 @@ namespace DogGuns_Games.vamsir
 
         #region 내부 상태 변수
 
-        private VamserLikeGameManager m_gameManager;
-        private VamPlayerControll m_playerController;
+        private GameManager m_gameManager;
+        private PlayerControll m_playerController;
         
         // 비동기 제어
         private CancellationTokenSource m_uiUpdateCts;
@@ -114,7 +114,7 @@ namespace DogGuns_Games.vamsir
 
         private void Awake()
         {
-            m_gameManager = VamserLikeGameManager.Instance;
+            m_gameManager = GameManager.Instance;
             BindUIEvents();
 
 #if UNITY_STANDALONE || UNITY_WEBGL || UNITY_STANDALONE_OSX
@@ -509,12 +509,33 @@ namespace DogGuns_Games.vamsir
             foreach (var btn in m_skillButtonPool) btn.gameObject.SetActive(false);
             m_skillChoices.Clear();
 
-            var totalSkills = m_skillDatabase.allSkills.Count;
-            int count = Mathf.Min(3, totalSkills);
+            // 현재 플레이어가 보유한 무기 인덱스 목록 생성
+            var ownedWeaponIndices = new HashSet<int>();
+            if (m_gameManager.SpawnedPlayer != null)
+            {
+                foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
+                {
+                    ownedWeaponIndices.Add(weapon.weaphonIndex);
+                }
+            }
+
+            // 필터링된 스킬 후보 목록 생성
+            var availableSkills = m_skillDatabase.allSkills.Where(skill =>
+            {
+                if (skill.skillType == SkillType.Weapon)
+                {
+                    // 무기 스킬인 경우, 아직 보유하지 않은 무기인지 확인
+                    return !ownedWeaponIndices.Contains(skill.skillCode);
+                }
+                // TODO: 패시브 스킬의 경우, 이미 마스터 레벨인지 확인하는 로직 추가 필요
+                return true;
+            }).ToList();
+            
+            int count = Mathf.Min(3, availableSkills.Count);
             
             while (m_skillChoices.Count < count)
             {
-                var skill = m_skillDatabase.allSkills[Random.Range(0, totalSkills)];
+                var skill = availableSkills[Random.Range(0, availableSkills.Count)];
                 if (!m_skillChoices.Contains(skill)) 
                     m_skillChoices.Add(skill);
             }
@@ -542,10 +563,24 @@ namespace DogGuns_Games.vamsir
         {
             m_skillSelectionTimerCts?.Cancel();
 
-            if (m_gameManager.SpawnedPlayer != null)
+            // 스킬 타입에 따라 다른 로직 수행
+            if (selectedSkill.skillType == SkillType.Weapon)
             {
-                EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
+                // 무기 장착 로직 호출
+                m_gameManager.EquipNewWeapon(selectedSkill).Forget();
             }
+            else // Passive
+            {
+                // 패시브 획득 시 무기 업그레이드 확인
+                CheckForWeaponUpgrade(selectedSkill.skillCode);
+                
+                // 기존 패시브 스킬 적용 로직
+                if (m_gameManager.SpawnedPlayer != null)
+                {
+                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
+                }
+            }
+            
             DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
             m_acquiredAccessorySkills.Add(selectedSkill);
 
@@ -558,6 +593,30 @@ namespace DogGuns_Games.vamsir
             else
             {
                 CloseSkillSelection();
+            }
+        }
+        
+        /// <summary>
+        /// 획득한 패시브 아이템으로 업그레이드할 수 있는 무기가 있는지 확인하고 업그레이드합니다.
+        /// </summary>
+        /// <param name="passiveItemCode">획득한 패시브 아이템의 SkillCode</param>
+        private void CheckForWeaponUpgrade(int passiveItemCode)
+        {
+            if (m_gameManager.SpawnedPlayer == null) return;
+
+            foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
+            {
+                // 업그레이드 조건이 맞고, 아직 업그레이드되지 않은 무기인지 확인
+                if (weapon.upgradeItemCode == passiveItemCode && !weapon.isUpgradelv2)
+                {
+                    weapon.isUpgradelv2 = true;
+                    LogManager.Log($"Weapon '{weapon.name}' upgraded to Lv.2 by item code {passiveItemCode}!", LogManager.LogCategory.VamserLikeUI);
+                    
+                    // TODO: 무기 업그레이드 이펙트 또는 사운드 추가
+                    
+                    // 하나의 패시브는 하나의 무기만 업그레이드한다고 가정하고 반복 종료
+                    break; 
+                }
             }
         }
 

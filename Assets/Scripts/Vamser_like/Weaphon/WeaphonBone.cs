@@ -8,7 +8,7 @@ using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
-    public class WeaphonBone : Weaphon_base
+    public class WeaphonBone : WeaphonBase
     {
         #region 필드 및 변수
 

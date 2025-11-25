@@ -20,10 +20,11 @@ namespace DogGuns_Games.vamsir
         public override void Player_attack(Vector3 attackAngle)
         {
             base.Player_attack(attackAngle);
-            if (WeaphonBase != null)
-            {
-                WeaphonBase.Weaphon_Attack(attackAngle);
-            }
+            // 이 로직은 PlayerControll에서 모든 무기를 대상으로 처리하므로 더 이상 필요하지 않습니다.
+            // if (WeaphonBase != null)
+            // {
+            //     WeaphonBase.Weaphon_Attack(attackAngle);
+            // }
         }
 
         public override void Player_Die()

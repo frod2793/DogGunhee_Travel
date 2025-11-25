@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DogGuns_Games.vamsir
 {
-    public class WeaponCatPunch : Weaphon_base
+    public class WeaponCatPunch : WeaphonBase
     {
         // ... (인스펙터 필드 등 기존과 동일) ...
         #region 인스펙터 필드
@@ -36,7 +36,7 @@ namespace DogGuns_Games.vamsir
         private static readonly int k_AnimTriggerSlash = Animator.StringToHash("Slash");
         
         // [추가] 실시간 회전을 위해 플레이어 컨트롤러 참조 필요 (없으면 GameManager에서 가져옴)
-        private VamPlayerControll m_playerController;
+        private PlayerControll m_playerController;
         #endregion
 
         #region Unity 라이프사이클
@@ -66,8 +66,8 @@ namespace DogGuns_Games.vamsir
             mobStunTime = m_initialMobStunTime;
             
             // 컨트롤러 찾기
-            if (VamserLikeGameManager.Instance != null)
-                m_playerController = VamserLikeGameManager.Instance.PlayerController;
+            if (GameManager.Instance != null)
+                m_playerController = GameManager.Instance.PlayerController;
 
             ResetWeaponState();
         }
@@ -196,9 +196,9 @@ namespace DogGuns_Games.vamsir
                 RotateWeaponToDirection(m_playerController.MoveDirection);
             }
             // 만약 조이스틱 직접 참조가 필요하다면 GameManager.Instance.Joystick 사용
-            else if (VamserLikeGameManager.Instance?.Joystick != null)
+            else if (GameManager.Instance?.Joystick != null)
             {
-                var joystick = VamserLikeGameManager.Instance.Joystick;
+                var joystick = GameManager.Instance.Joystick;
                 Vector3 dir = new Vector3(joystick.Horizontal, joystick.Vertical, 0);
                 if (dir.sqrMagnitude > 0.01f)
                 {

@@ -9,7 +9,7 @@ namespace DogGuns_Games.vamsir
     /// 플레이어 주변을 회전하는 공(Ball)을 생성하고 관리하는 무기입니다.
     /// 반시계 방향으로 회전하며, 공 자체도 궤도에 맞춰 회전합니다. (오프셋 보정 가능)
     /// </summary>
-    public class WeaponBallplay : Weaphon_base
+    public class WeaponBallplay : WeaphonBase
     {
         #region 인스펙터 필드
 

@@ -8,7 +8,7 @@ namespace DogGuns_Games.vamsir
     /// 부메랑 무기 컨트롤러입니다.
     /// 레벨 2가 되면 부메랑 개수가 늘어납니다.
     /// </summary>
-    public class WeaponBoomerang : Weaphon_base
+    public class WeaponBoomerang : WeaphonBase
     {
         [Header("부메랑 설정")]
         [SerializeField] private BoomerangProjectile m_boomerangPrefab;

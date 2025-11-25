@@ -47,7 +47,7 @@ namespace DogGuns_Games.Test
 
         #region 내부 상태 변수
 
-        private VamserLikeGameManager m_gameManager;
+        private GameManager m_gameManager;
         private RectTransform m_panelRectTransform;
         
         private Vector2 m_panelOriginalPos;
@@ -81,11 +81,11 @@ namespace DogGuns_Games.Test
 
         private void InitializeReferences()
         {
-            m_gameManager = VamserLikeGameManager.Instance;
+            m_gameManager = GameManager.Instance;
             
             if (m_gameManager == null)
             {
-                Debug.LogError("[TestManager] VamserLikeGameManager 인스턴스를 찾을 수 없습니다.");
+                Debug.LogError("[TestManager] GameManager 인스턴스를 찾을 수 없습니다.");
                 SetInteractable(false);
             }
         }
@@ -231,7 +231,7 @@ namespace DogGuns_Games.Test
         {
             if (m_gameManager.SpawnedPlayer == null || m_isWeaponUpgradeToggle == null) return;
 
-            var weapon = m_gameManager.SpawnedPlayer.GetComponentInChildren<Weaphon_base>();
+            var weapon = m_gameManager.SpawnedPlayer.GetComponentInChildren<WeaphonBase>();
             if (weapon != null)
             {
                 weapon.isUpgradelv2 = m_isWeaponUpgradeToggle.isOn;

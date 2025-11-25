@@ -38,9 +38,6 @@ namespace DogGuns_Games.vamsir
         private SpriteRenderer m_spriteRenderer;
         private Transform m_cachedTransform;
         
-        private Weaphon_base m_cachedPlayerWeapon;
-        private bool m_isHitByProjectile; 
-
         private bool m_isAiPaused;
 
         #endregion
@@ -51,9 +48,6 @@ namespace DogGuns_Games.vamsir
         {
             m_cachedTransform = transform;
             m_spriteRenderer = GetComponent<SpriteRenderer>();
-
-            // [삭제됨] 몬스터 콜라이더를 강제로 트리거로 만드는 코드를 제거했습니다.
-            // 무기 콜라이더가 트리거라면, 몬스터가 일반 콜라이더여도 OnTriggerEnter2D가 정상 호출됩니다.
         }
 
         private void Start()
@@ -111,7 +105,6 @@ namespace DogGuns_Games.vamsir
             StunTime = m_initialStunTime;
 
             m_aiState = AIState.None;
-            m_cachedPlayerWeapon = null;
             m_isAiPaused = false;
             
             if (m_spriteRenderer != null) m_spriteRenderer.color = Color.white;
@@ -120,12 +113,7 @@ namespace DogGuns_Games.vamsir
         public override void SetTarget(PlayerBase target)
         {
             base.SetTarget(target);
-
-            if (m_player != null)
-            {
-                m_cachedPlayerWeapon = m_player.WeaphonBase;
-                m_isHitByProjectile = m_cachedPlayerWeapon != null && m_cachedPlayerWeapon.isShooting;
-            }
+            // WeaphonBase가 List로 변경됨에 따라 더 이상 특정 무기를 캐싱하지 않음
         }
 
         #endregion
@@ -261,10 +249,9 @@ namespace DogGuns_Games.vamsir
 
         #region 전투 및 피격 처리
 
-        // 무기의 Collider가 Trigger라면, 몬스터가 일반 Collider여도 이 함수가 호출됩니다.
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (m_isHitByProjectile && !IsHit && other.CompareTag("Player_Attack"))
+            if (!IsHit && other.CompareTag("Player_Attack"))
             {
                 ProcessHit(other);
             }
@@ -272,7 +259,7 @@ namespace DogGuns_Games.vamsir
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (!m_isHitByProjectile && !IsHit && other.CompareTag("Player_Attack"))
+            if (!IsHit && other.CompareTag("Player_Attack"))
             {
                 ProcessHit(other);
             }
@@ -280,13 +267,10 @@ namespace DogGuns_Games.vamsir
 
         private void ProcessHit(Collider2D other)
         {
-            if (other.TryGetComponent(out Weaphon_base weapon))
+            // 충돌한 오브젝트에서 직접 WeaphonBase 컴포넌트를 가져와 처리
+            if (other.TryGetComponent(out WeaphonBase weapon))
             {
                 TakeDamage(weapon.attackPower, weapon.mobStunTime);
-            }
-            else if (m_cachedPlayerWeapon != null)
-            {
-                TakeDamage(m_cachedPlayerWeapon.attackPower, m_cachedPlayerWeapon.mobStunTime);
             }
         }
 

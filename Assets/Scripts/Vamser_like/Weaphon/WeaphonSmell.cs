@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace DogGuns_Games.vamsir
 {
     [RequireComponent(typeof(ParticleSystem), typeof(EdgeCollider2D))]
-    public class WeaphonSmell : Weaphon_base
+    public class WeaphonSmell : WeaphonBase
     {
         private struct TrailPoint
         {
@@ -70,9 +70,9 @@ namespace DogGuns_Games.vamsir
         protected override void OnEnable()
         {
             base.OnEnable();
-            if (VamserLikeGameManager.Instance != null)
+            if (GameManager.Instance != null)
             {
-                m_playerTransform = VamserLikeGameManager.Instance.PlayerTransfrom();
+                m_playerTransform = GameManager.Instance.PlayerTransfrom();
                 if (m_playerTransform != null)
                 {
                     m_lastFramePlayerPos = m_playerTransform.position;

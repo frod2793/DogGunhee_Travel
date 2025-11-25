@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
@@ -6,7 +7,7 @@ namespace DogGuns_Games.vamsir
     /// 모든 무기의 기본 클래스입니다.
     /// 무기의 공통적인 능력치, 상태, 동작을 정의합니다.
     /// </summary>
-    public abstract class Weaphon_base : MonoBehaviour
+    public abstract class WeaphonBase : MonoBehaviour
     {
         #region 필드 및 프로퍼티
 
@@ -29,8 +30,13 @@ namespace DogGuns_Games.vamsir
         [Header("상태 및 업그레이드")]
         [Tooltip("현재 무기의 고유 인덱스입니다.")]
         public int weaphonIndex;
+        
         [Tooltip("무기의 2단계 업그레이드 적용 여부입니다.")]
         public bool isUpgradelv2 = false;
+
+        [FormerlySerializedAs("upgradeItemUmber")]
+        [Tooltip("이 무기를 업그레이드하는 데 필요한 패시브 아이템의 고유 코드(SkillCode)입니다.")]
+        public int upgradeItemCode;
 
         /// <summary>
         /// 무기의 현재 상태 (대기, 공격, 재장전)

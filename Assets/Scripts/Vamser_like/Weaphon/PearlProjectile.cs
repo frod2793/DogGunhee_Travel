@@ -84,7 +84,7 @@ namespace DogGuns_Games.vamsir
 
         #region 초기화 및 비주얼 업데이트
 
-        public void Initialize(Weaphon_base weapon, Vector3 initialVelocity)
+        public void Initialize(WeaphonBase weapon, Vector3 initialVelocity)
         {
             m_damage = weapon.attackPower;
             m_stunTime = weapon.mobStunTime;
@@ -186,7 +186,7 @@ namespace DogGuns_Games.vamsir
         /// <summary>
         /// 이미 활동 중인 진주의 상태(공격력, 레벨 비주얼 등)를 갱신합니다.
         /// </summary>
-        public void UpdateState(Weaphon_base weapon)
+        public void UpdateState(WeaphonBase weapon)
         {
             // 스탯 갱신
             m_damage = weapon.attackPower;

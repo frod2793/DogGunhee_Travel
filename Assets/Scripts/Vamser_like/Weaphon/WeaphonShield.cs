@@ -10,7 +10,7 @@ namespace DogGuns_Games.vamsir
     /// 방패를 지면에 내려찍어 충격파로 공격하는 무기 클래스입니다.
     /// Animator를 사용하여 공격 모션을 재생하며, AttackSpeed에 따라 애니메이션 속도와 타격 타이밍이 조절됩니다.
     /// </summary>
-    public class WeaphonShield : Weaphon_base
+    public class WeaphonShield : WeaphonBase
     {
         #region 인스펙터 필드 (데이터 보존)
 
@@ -85,8 +85,8 @@ namespace DogGuns_Games.vamsir
         {
             base.OnEnable();
             
-            if (VamserLikeGameManager.Instance != null)
-                m_playerTransform = VamserLikeGameManager.Instance.PlayerTransfrom();
+            if (GameManager.Instance != null)
+                m_playerTransform = GameManager.Instance.PlayerTransfrom();
 
             ResetShieldState();
         }

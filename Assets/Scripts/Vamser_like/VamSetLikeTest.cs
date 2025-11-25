@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace DogGuns_Games.vamsir
     /// 플레이 전: 시작 캐릭터/무기/레벨 설정
     /// 플레이 중: 실시간 캐릭터/무기/레벨 교체 테스트
     /// </summary>
-    [CustomEditor(typeof(VamserLikeGameManager))]
+    [CustomEditor(typeof(GameManager))]
     public class VamserLikeGameManagerEditor : Editor
     {
         #region 내부 상태 변수
@@ -114,7 +115,7 @@ namespace DogGuns_Games.vamsir
             GUI.backgroundColor = Color.green; 
             if (GUILayout.Button("설정 즉시 적용 (Respawn)", GUILayout.Height(30)))
             {
-                VamserLikeGameManager manager = (VamserLikeGameManager)target;
+                GameManager manager = (GameManager)target;
                 ChangeCharacterAndWeaponAsync(manager).Forget();
             }
             GUI.backgroundColor = Color.white;
@@ -135,18 +136,18 @@ namespace DogGuns_Games.vamsir
                 m_runtimeWeaponIndex = PlayerDataManagerDontdesytoy.Instance.SelectWeaponIndex;
             }
 
-            // [추가] 현재 스폰된 플레이어의 무기 레벨 상태 가져오기
-            var manager = (VamserLikeGameManager)target;
-            if (manager.SpawnedPlayer != null && manager.SpawnedPlayer.WeaphonBase != null)
+            var manager = (GameManager)target;
+            var firstWeapon = manager.SpawnedPlayer?.Weapons.FirstOrDefault();
+            if (firstWeapon != null)
             {
-                m_runtimeWeaponUpgradeLv2 = manager.SpawnedPlayer.WeaphonBase.isUpgradelv2;
+                m_runtimeWeaponUpgradeLv2 = firstWeapon.isUpgradelv2;
             }
         }
 
         /// <summary>
         /// 캐릭터, 무기, 레벨을 비동기적으로 변경합니다. (런타임 전용)
         /// </summary>
-        private async UniTaskVoid ChangeCharacterAndWeaponAsync(VamserLikeGameManager gameManager)
+        private async UniTaskVoid ChangeCharacterAndWeaponAsync(GameManager gameManager)
         {
             if (m_isChanging) return;
 
@@ -170,10 +171,11 @@ namespace DogGuns_Games.vamsir
                 // 2. 리스폰 (캐릭터/무기 교체)
                 await gameManager.ChangeCharacterAndWeapon_Spawn();
 
-                // 3. [추가] 스폰 완료 후 무기 레벨 적용
-                if (gameManager.SpawnedPlayer != null && gameManager.SpawnedPlayer.WeaphonBase != null)
+                // 3. [수정] 스폰 완료 후 첫 번째 무기의 레벨 적용
+                var firstWeapon = gameManager.SpawnedPlayer?.Weapons.FirstOrDefault();
+                if (firstWeapon != null)
                 {
-                    gameManager.SpawnedPlayer.WeaphonBase.isUpgradelv2 = m_runtimeWeaponUpgradeLv2;
+                    firstWeapon.isUpgradelv2 = m_runtimeWeaponUpgradeLv2;
                     Debug.Log($"[Editor] 무기 레벨 설정 완료: Lv {(m_runtimeWeaponUpgradeLv2 ? 2 : 1)}");
                 }
             }

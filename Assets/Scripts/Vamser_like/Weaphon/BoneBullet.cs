@@ -3,7 +3,7 @@ using DG.Tweening;
 using DogGuns_Games.vamsir;
 using UnityEngine;
 
-public class BoneBullet : Weaphon_base
+public class BoneBullet : WeaphonBase
 {
     #region 필드 및 변수
 
@@ -56,7 +56,7 @@ public class BoneBullet : Weaphon_base
 
     protected override void OnEnable()
     {
-        base.OnEnable(); // 부모 클래스(Weaphon_base)의 OnEnable 호출
+        base.OnEnable(); // 부모 클래스(WeaphonBase)의 OnEnable 호출
         
         m_isActive = true;
         SoundManager.PlaySound(Sound.SFX, SoundKeys.Throwbone);
@@ -167,7 +167,7 @@ public class BoneBullet : Weaphon_base
         ObjectPoolSpawner?.WeaphonBoneObjectPool.Release(this);
     }
 
-    public void Initialize(Weaphon_base parentWeapon)
+    public void Initialize(WeaphonBase parentWeapon)
     {
         isUpgradelv2 = parentWeapon.isUpgradelv2;
         attackPower = parentWeapon.attackPower;

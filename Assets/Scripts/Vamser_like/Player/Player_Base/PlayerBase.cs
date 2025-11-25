@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -119,7 +120,9 @@ namespace DogGuns_Games.vamsir
         private float m_damageTickTimer = 0f;
         private const float k_ContactDamageInterval = 1.0f; // 1초마다 데미지
         
-        public Weaphon_base WeaphonBase { get; set; }
+        private List<WeaphonBase> m_weapons = new List<WeaphonBase>();
+        public IReadOnlyList<WeaphonBase> Weapons => m_weapons.AsReadOnly();
+
 
         public PlayerState PlayState
         {
@@ -174,6 +177,7 @@ namespace DogGuns_Games.vamsir
             m_isHit = false;
             m_isColliderActive = true;
             m_damageTickTimer = 0f; // 타이머 초기화
+            m_weapons.Clear();
         }
 
         private void SubscribeEvents()
@@ -208,13 +212,13 @@ namespace DogGuns_Games.vamsir
             m_isColliderActive = false;
         }
 
-        public void InitializeWeapon(Weaphon_base weapon)
+        public void AddWeapon(WeaphonBase weapon)
         {
             if (weapon != null)
             {
-                WeaphonBase = weapon;
-                WeaphonBase.transform.SetParent(transform);
-                WeaphonBase.transform.localPosition = Vector3.zero;
+                m_weapons.Add(weapon);
+                weapon.transform.SetParent(transform);
+                weapon.transform.localPosition = Vector3.zero;
             }
             else
             {
