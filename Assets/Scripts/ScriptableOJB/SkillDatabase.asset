@@ -20,6 +20,7 @@ MonoBehaviour:
       \uC774\uB984\uC774 \uC801\uD600\uC788\uC2B5\uB2C8\uB2E4. \uAD6C\uB458\uC6B4
       \uC544\uB9C8 \uAC70\uC871\uACFC \uB2E4\uB984\uC5C6\uC2B5\uB2C8\uB2E4."
     skillIcon: {fileID: 21300000, guid: bd9ceb3996b279b418e0e8ff04234d1a, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 2
     skillType: 0
@@ -27,6 +28,7 @@ MonoBehaviour:
     skillDescription: "\uCD08\uD2B9\uAC00 \uB3D9\uBBAC\uC6A9 \uD504\uB85C\uD2F4!
       \uBA39\uC73C\uBA74 \uC5C4\uCCAD\uB09C \uD798\uC744 \uAC00\uC9C8\uC218\uC788\uC2B5\uB2C8\uB2E4."
     skillIcon: {fileID: 21300000, guid: ec0f03c1decc0444aa03cb2ed79eef07, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 3
     skillType: 0
@@ -35,6 +37,7 @@ MonoBehaviour:
       \uC798 \uB9DE\uCD98\uB2E4\uBA74 \uACF5\uAE30\uC5ED\uD559 \uC801....\uC74D\uC74D
       !!"
     skillIcon: {fileID: 21300000, guid: 5f1abd29a5908a24eb32cf867a91aa44, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 4
     skillType: 0
@@ -43,6 +46,7 @@ MonoBehaviour:
       \uC5F4\uB9E4\uC785\uB2C8\uB2E4. \uD55C \uC785\uB9CC \uBA39\uC5B4\uB3C4 \uBAB8\uC5D0
       \uC2E0\uBE44\uD55C \uD798\uC774 \uAE43\uB4E0\uB2E4\uACE0 \uC804\uD574\uC9D1\uB2C8\uB2E4."
     skillIcon: {fileID: 21300000, guid: 8500f68d238d28b469698c3154830f8b, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 5
     skillType: 0
@@ -52,6 +56,7 @@ MonoBehaviour:
       \uD558\uC9C0\uB9CC \uC544\uD504\uC9C0 \uC54A\uC73C\uB824\uBA74 \uC5B4\uCA54\uC218
       \uC5C6\uC9C0\uC694."
     skillIcon: {fileID: 21300000, guid: b04a5c6bc25114fcd8e8314ae6e52ace, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 6
     skillType: 0
@@ -60,6 +65,7 @@ MonoBehaviour:
       \uBE60\uC838\uB098\uAC08\uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uC774\uB7F0! \uC628\uD1B5
       \uC4F0\uB808\uAE30\uB9CC \uC7A1\uD788\uB124\uC694."
     skillIcon: {fileID: 21300000, guid: d4681c6ed4a22eb4f8f5bebb5dc3a4f7, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 7
     skillType: 0
@@ -68,6 +74,7 @@ MonoBehaviour:
       \uAE43\uD138\uC774 \uB2EC\uB824 \uC788\uC2B5\uB2C8\uB2E4! \uBC8C\uC368 \uC8FC\uBCC0\uC5D0\uC11C
       \uD638\uAE30\uC2EC\uC758 \uB208\uBE5B\uC774 \uB290\uAEF4\uC9C0\uB124\uC694."
     skillIcon: {fileID: 21300000, guid: 104c13d23f0d8814a828c290cd7664f8, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 8
     skillType: 0
@@ -76,6 +83,7 @@ MonoBehaviour:
       \uB204\uAD70\uAC00\uAC00 \uC5F4\uC2EC\uD788 \uAD00\uB9AC\uD55C\uB4EF, \uBC18\uC9DD\uBC18\uC9DD
       \uAD11\uC774 \uB098\uB294 \uAD70\uC694."
     skillIcon: {fileID: 21300000, guid: bdecb23fa8d5fc744b7c1d5f9154028a, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: 
   - skillCode: 9
     skillType: 1
@@ -83,4 +91,54 @@ MonoBehaviour:
     skillDescription: "\uBA39\uBB3C \uB85C \uC801\uB4E4\uC758 \uC774\uC18D\uC744
       \uB2A6\uCDA5\uB2C8\uB2E4"
     skillIcon: {fileID: 1859045663046494767, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
+    Thumnail: {fileID: 0}
     weaponAddressableKey: Weapon_1
+  - skillCode: 10
+    skillType: 1
+    skillName: "\uACF5\uB180\uC774"
+    skillDescription: "\uACF5\uB180\uC774"
+    skillIcon: {fileID: 285745594254025331, guid: 927f6c43b300b69418ae886561aa7da9, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_6
+  - skillCode: 11
+    skillType: 1
+    skillName: " \uC560\uCC29 \uBF08 "
+    skillDescription: "\uC560\uCC29 \uBF08"
+    skillIcon: {fileID: 21300000, guid: 2ab19c268b3545a41a33a186e031c2e1, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_0
+  - skillCode: 12
+    skillType: 1
+    skillName: "\uBD80\uBA54\uB791"
+    skillDescription: "\uBD80\uBA54\uB791"
+    skillIcon: {fileID: -544337117068343414, guid: c6f0dbf3995bee747a1a0008770e6d83, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_7
+  - skillCode: 12
+    skillType: 1
+    skillName: "\uB0E5\uB0E5\uD380\uCE58"
+    skillDescription: "\uB0E5\uB0E5\uD380\uCE58"
+    skillIcon: {fileID: 1859045663046494767, guid: e2d490ffb05e73847958a015503b89f8, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_4
+  - skillCode: 13
+    skillType: 1
+    skillName: "\uD788\uC5B4\uB85C \uB79C\uB529"
+    skillDescription: "\uD788\uC5B4\uB85C \uB79C\uB529"
+    skillIcon: {fileID: -8406814584331126232, guid: d6429c2db9ac04a9782674a2fd4209f4, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_2
+  - skillCode: 14
+    skillType: 1
+    skillName: "\uC9C4\uC8FC"
+    skillDescription: "\uC9C4\uC8FC"
+    skillIcon: {fileID: -716971934653745236, guid: 95621f00dd6d57c4cae5c1b43d2db354, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_3
+  - skillCode: 15
+    skillType: 1
+    skillName: "\uAF2C\uC21C\uB0B4"
+    skillDescription: "\uAF2C\uC21C\uB0B4"
+    skillIcon: {fileID: 4610275258850785762, guid: 10e9153d132d55547bd8ff5b12ade939, type: 3}
+    Thumnail: {fileID: 0}
+    weaponAddressableKey: Weapon_5
