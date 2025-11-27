@@ -10,13 +10,10 @@ using UnityEngine.Serialization;
 using DG.Tweening;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
-using DogGuns_Games; // SkillDatabase, SkillData가 포함된 네임스페이스
+using DogGuns_Games;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 인게임 UI(HUD, 팝업, 조이스틱 등)를 총괄하는 클래스입니다.
-    /// </summary>
     public class UIManager : MonoBehaviour
     {
         #region 필드 및 변수 (인스펙터 연결)
@@ -38,10 +35,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private Button m_settingButton;
         [SerializeField] private Button m_exitButton;
         
-        [Tooltip("무기 아이콘을 표시할 UI Image 리스트")]
         public List<Image> m_weaponUIList = new List<Image>();
-        
-        [Tooltip("패시브 아이템(장신구) 아이콘을 표시할 UI Image 리스트")]
         public List<Image> m_juListUIList = new List<Image>();
 
         [Header("게임 오버 UI")]
@@ -108,17 +102,12 @@ namespace DogGuns_Games.vamsir
         {
             m_gameManager = GameManager.Instance;
             BindUIEvents();
-
-#if UNITY_STANDALONE || UNITY_WEBGL || UNITY_STANDALONE_OSX
-            Screen.SetResolution(720, 1280, false);
-#endif
         }
 
         private void Start()
         {
             m_playerController = m_gameManager.PlayerController;
             m_variableJoystick = m_gameManager.Joystick;
-
             SubscribeToEvents();
         }
 
@@ -126,7 +115,6 @@ namespace DogGuns_Games.vamsir
         {
             UnsubscribeFromEvents();
             m_disposables.Dispose();
-            
             m_uiUpdateCts?.Cancel();
             m_uiUpdateCts?.Dispose();
             m_skillSelectionTimerCts?.Cancel();
@@ -144,7 +132,6 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGamePause += OnGamePause;
             PlayStateManager.OnGameResume += OnGameResume;
             PlayStateManager.OnGameOver += OnGameOver;
-
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
             SettingsData.OnSettingsChanged += ApplyJoystickSettings;
@@ -157,7 +144,6 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGamePause -= OnGamePause;
             PlayStateManager.OnGameResume -= OnGameResume;
             PlayStateManager.OnGameOver -= OnGameOver;
-
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
             SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
@@ -169,15 +155,12 @@ namespace DogGuns_Games.vamsir
             m_menuButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
             m_exitButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
             m_settingButton.OnClickAsObservable().Subscribe(_ => m_gameManager.OpenOptionPopup()).AddTo(m_disposables);
-
             m_gameOverExitButton.OnClickAsObservable().Subscribe(_ => ExitToLobby()).AddTo(m_disposables);
             m_gameOverRestartButton.OnClickAsObservable().Subscribe(_ => RestartGame()).AddTo(m_disposables);
-
             if (m_refreshButton != null)
             {
                 m_refreshButton.OnClickAsObservable().Subscribe(_ => GenerateSkillChoices()).AddTo(m_disposables);
             }
-
             if (m_autoAttackToggle != null)
             {
                 m_autoAttackToggle.OnValueChangedAsObservable().Subscribe(OnAutoAttackToggleChanged).AddTo(m_disposables);
@@ -189,10 +172,8 @@ namespace DogGuns_Games.vamsir
             m_lastWave = -1;
             m_lastCoin = -1;
             m_lastMobCount = -1;
-
             UpdatePlayerLevelUI(m_gameManager.GetPlayerLevel());
             UpdatePlayerExpUI(m_gameManager.GetPlayerExpProgress());
-            
             m_acquiredAccessorySkills.Clear();
             UpdateCachedItemLists();
             RefreshWeaponDisplay();
@@ -208,9 +189,7 @@ namespace DogGuns_Games.vamsir
             m_settingsData.LoadSettings();
             ApplyJoystickSettings();
             SoundManager.Instance.LoadSoundSetting();
-            
             InitializeUI();
-
             m_uiUpdateCts?.Cancel();
             m_uiUpdateCts = new CancellationTokenSource();
             UpdateUILoopAsync(m_uiUpdateCts.Token).Forget();
@@ -228,16 +207,13 @@ namespace DogGuns_Games.vamsir
         {
             UpdateGameOverUI();
             m_gameOverPanel.SetActive(true);
-
             m_joystickTransform.gameObject.SetActive(false);
             if (m_variableJoystick != null)
             {
                 m_variableJoystick.OnPointerUp(null);
                 m_variableJoystick.enabled = false;
             }
-
             if (m_autoAttackToggle != null) m_autoAttackToggle.isOn = false;
-            
             m_uiUpdateCts?.Cancel();
         }
 
@@ -248,7 +224,6 @@ namespace DogGuns_Games.vamsir
                 PlayStateManager.instance.StartGame();
                 return;
             }
-
             try
             {
                 m_mobWaveText.gameObject.SetActive(true);
@@ -256,7 +231,6 @@ namespace DogGuns_Games.vamsir
                 await ShowWaveTextEffect("2..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("1..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("게임 시작!");
-                
                 PlayStateManager.instance.StartGame();
             }
             catch (Exception ex)
@@ -280,21 +254,18 @@ namespace DogGuns_Games.vamsir
                     m_lastWave = currentWave;
                     ShowWaveTextEffect($"웨이브 {currentWave}").Forget();
                 }
-
                 int currentCoin = m_gameManager.GetCoinCount();
                 if (m_lastCoin != currentCoin)
                 {
                     m_lastCoin = currentCoin;
                     m_coinText.SetText("{0}", currentCoin);
                 }
-
                 int currentMobCount = m_gameManager.GetMobKillCount();
                 if (m_lastMobCount != currentMobCount)
                 {
                     m_lastMobCount = currentMobCount;
                     m_mobCountText.SetText("{0}", currentMobCount);
                 }
-
                 await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
             }
         }
@@ -302,15 +273,12 @@ namespace DogGuns_Games.vamsir
         private async UniTask ShowWaveTextEffect(string text, float holdDuration = 1.0f, float fadeDuration = 0.5f)
         {
             if (m_mobWaveText == null) return;
-            
             m_mobWaveText.text = text;
             m_mobWaveText.alpha = 0f;
             m_mobWaveText.gameObject.SetActive(true);
-            
             await m_mobWaveText.DOFade(1f, fadeDuration).AsyncWaitForCompletion();
             await UniTask.Delay(TimeSpan.FromSeconds(holdDuration));
             await m_mobWaveText.DOFade(0f, fadeDuration).AsyncWaitForCompletion();
-            
             m_mobWaveText.gameObject.SetActive(false);
         }
 
@@ -334,7 +302,6 @@ namespace DogGuns_Games.vamsir
         {
             UpdatePlayerLevelUI(newLevel);
             ShowLevelUpEffect();
-
             if (newLevel >= 2)
             {
                 m_pendingSkillSelections++;
@@ -349,7 +316,6 @@ namespace DogGuns_Games.vamsir
         {
             m_expSliderTween?.Kill();
             m_expSliderTween = m_playerLevelSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
-            
             if (m_expSlider != null)
                 m_expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
         }
@@ -381,10 +347,8 @@ namespace DogGuns_Games.vamsir
         private void ApplyJoystickSettings()
         {
             if (m_variableJoystick == null || m_settingsData == null) return;
-
             m_joystickTransform.localScale = Vector3.one * m_settingsData.JoystickSize;
             m_variableJoystick.SetMode((JoystickType)m_settingsData.JoystickType);
-
             if (IsJoystickVisible(m_settingsData.JoystickPos))
             {
                 m_joystickTransform.anchoredPosition = m_settingsData.JoystickPos;
@@ -399,15 +363,8 @@ namespace DogGuns_Games.vamsir
         {
             var canvas = m_joystickTransform.GetComponentInParent<Canvas>();
             if (canvas == null) return false;
-
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
-            Rect joystickRect = new Rect(
-                pos.x - (m_joystickTransform.rect.width * 0.5f),
-                pos.y - (m_joystickTransform.rect.height * 0.5f),
-                m_joystickTransform.rect.width,
-                m_joystickTransform.rect.height
-            );
-
+            Rect joystickRect = new Rect(pos.x - (m_joystickTransform.rect.width * 0.5f), pos.y - (m_joystickTransform.rect.height * 0.5f), m_joystickTransform.rect.width, m_joystickTransform.rect.height);
             return canvasRect.rect.Overlaps(joystickRect);
         }
 
@@ -417,7 +374,6 @@ namespace DogGuns_Games.vamsir
             m_menuPanel.SetActive(isActive);
             m_gameManager.SetMenuPopupState(isActive);
             m_joystickTransform.gameObject.SetActive(!isActive);
-
             if (isActive)
             {
                 UpdateCachedItemLists();
@@ -457,19 +413,15 @@ namespace DogGuns_Games.vamsir
         {
             const float duration = 6.0f;
             float timer = duration;
-
             m_countdownText.gameObject.SetActive(true);
             m_countDownSlider.gameObject.SetActive(true);
-
             while (timer > 0f && !token.IsCancellationRequested)
             {
                 m_countdownText.text = Mathf.CeilToInt(timer).ToString();
                 m_countDownSlider.value = timer / duration;
-                
                 await UniTask.NextFrame(token);
                 timer -= Time.deltaTime;
             }
-
             if (!token.IsCancellationRequested)
             {
                 await SelectRandomSkill();
@@ -482,13 +434,11 @@ namespace DogGuns_Games.vamsir
             {
                 int randomIndex = Random.Range(0, m_skillChoices.Count);
                 var randomSkill = m_skillChoices[randomIndex];
-
                 var targetBtn = m_skillButtonPool.FirstOrDefault(b => b.gameObject.activeSelf && b.GetCurrentSkillData() == randomSkill);
                 if (targetBtn != null)
                 {
                     await targetBtn.PlaySelectionAnimation();
                 }
-                
                 await OnSkillSelected(randomSkill);
             }
         }
@@ -496,30 +446,30 @@ namespace DogGuns_Games.vamsir
         private void GenerateSkillChoices()
         {
             StartAutoSelectionTimer();
-
             foreach (var btn in m_skillButtonPool) btn.gameObject.SetActive(false);
             m_skillChoices.Clear();
 
-            var ownedWeaponCodes = new HashSet<string>();
-            if (m_gameManager.SpawnedPlayer != null)
-            {
-                foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
-                {
-                    ownedWeaponCodes.Add(weapon.skillCode);
-                }
-            }
+            var ownedWeapons = m_gameManager.SpawnedPlayer?.Weapons.ToDictionary(w => w.skillCode) ?? new Dictionary<string, WeaphonBase>();
+            var acquiredAccessoryCodes = new HashSet<string>(m_acquiredAccessorySkills.Select(s => s.skillCode));
 
             var availableSkills = m_skillDatabase.allSkills.Where(skill =>
             {
                 if (skill.skillType == SkillType.Weapon)
                 {
-                    return !ownedWeaponCodes.Contains(skill.skillCode);
+                    if (ownedWeapons.TryGetValue(skill.skillCode, out var weapon))
+                    {
+                        // 보유 중인 무기는 최대 레벨 및 진화가 아닐 때만 레벨업 대상으로 포함
+                        return weapon.CurrentLevel < WeaphonBase.k_MaxLevel || (weapon.CurrentLevel == WeaphonBase.k_MaxLevel && !weapon.isEvolved);
+                    }
+                    return true; // 미보유 무기는 항상 포함
                 }
-                return true;
+                else // Passive
+                {
+                    return !acquiredAccessoryCodes.Contains(skill.skillCode);
+                }
             }).ToList();
             
             int count = Mathf.Min(3, availableSkills.Count);
-            
             while (m_skillChoices.Count < count)
             {
                 var skill = availableSkills[Random.Range(0, availableSkills.Count)];
@@ -539,7 +489,6 @@ namespace DogGuns_Games.vamsir
                     btn = Instantiate(m_skillSelectionButtonPrefab, m_skillButtonContainer.transform);
                     m_skillButtonPool.Add(btn);
                 }
-
                 btn.gameObject.SetActive(true);
                 btn.Setup(m_skillChoices[i], skill => OnSkillSelected(skill).Forget());
             }
@@ -551,12 +500,23 @@ namespace DogGuns_Games.vamsir
 
             if (selectedSkill.skillType == SkillType.Weapon)
             {
-                await m_gameManager.EquipNewWeapon(selectedSkill);
+                var ownedWeapon = m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.skillCode == selectedSkill.skillCode);
+                if (ownedWeapon != null)
+                {
+                    // 이미 보유한 무기 -> 레벨업
+                    ownedWeapon.UpgradeLevel();
+                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
+                }
+                else
+                {
+                    // 새로운 무기 -> 장착
+                    await m_gameManager.EquipNewWeapon(selectedSkill);
+                }
             }
             else // Passive
             {
                 m_acquiredAccessorySkills.Add(selectedSkill);
-                TryUpgradeWeapon(selectedSkill.skillCode); // [수정] 메서드 호출
+                TryUpgradeWeapon(selectedSkill.skillCode);
                 if (m_gameManager.SpawnedPlayer != null)
                 {
                     EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
@@ -564,13 +524,10 @@ namespace DogGuns_Games.vamsir
             }
             
             DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
-            
             UpdateCachedItemLists();
             RefreshWeaponDisplay();
             RefreshJuListDisplay();
-
             m_pendingSkillSelections--;
-
             if (m_pendingSkillSelections > 0)
             {
                 GenerateSkillChoices();
@@ -581,19 +538,10 @@ namespace DogGuns_Games.vamsir
             }
         }
         
-        /// <summary>
-        /// 획득한 패시브 아이템과 일치하는 무기의 업그레이드를 시도합니다.
-        /// </summary>
-        /// <param name="passiveItemCode">획득한 패시브 아이템의 SkillCode</param>
         private void TryUpgradeWeapon(string passiveItemCode)
         {
             if (m_gameManager.SpawnedPlayer == null) return;
-
-            // upgradeItemCode가 일치하는 무기를 찾습니다.
-            var weaponToUpgrade = m_gameManager.SpawnedPlayer.Weapons
-                .FirstOrDefault(w => w.upgradeItemCode == passiveItemCode);
-
-            // 해당 무기가 존재하면 업그레이드를 시도합니다.
+            var weaponToUpgrade = m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.upgradeItemCode == passiveItemCode);
             if (weaponToUpgrade != null)
             {
                 weaponToUpgrade.UpgradeLevel();
@@ -605,10 +553,8 @@ namespace DogGuns_Games.vamsir
             m_skillSelectionTimerCts?.Cancel();
             m_skillSelectionPanel.SetActive(false);
             m_isSkillSelectionActive = false;
-            
             if (m_countdownText != null) m_countdownText.gameObject.SetActive(false);
             if (m_countDownSlider != null) m_countDownSlider.gameObject.SetActive(false);
-
             m_gameManager.SetMenuPopupState(false);
         }
 
@@ -625,7 +571,6 @@ namespace DogGuns_Games.vamsir
                     }
                 }
             }
-
             m_accessoryIcons.Clear();
             foreach (var skill in m_acquiredAccessorySkills)
             {
@@ -639,7 +584,6 @@ namespace DogGuns_Games.vamsir
             {
                 var slotImage = m_weaponUIList[i];
                 if (slotImage == null) continue;
-
                 if (i < m_weaponThumbnails.Count && m_weaponThumbnails[i] != null)
                 {
                     slotImage.gameObject.SetActive(true);
@@ -658,7 +602,6 @@ namespace DogGuns_Games.vamsir
             {
                 var slot = m_juListUIList[i];
                 if (slot == null) continue;
-
                 if (i < m_accessoryIcons.Count && m_accessoryIcons[i] != null)
                 {
                     slot.gameObject.SetActive(true);
@@ -692,8 +635,7 @@ namespace DogGuns_Games.vamsir
         private void RestartGame()
         {
             m_gameOverPanel.SetActive(false);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(
-                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         }
 
         #endregion

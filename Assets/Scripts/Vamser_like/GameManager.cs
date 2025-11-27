@@ -303,7 +303,9 @@ namespace DogGuns_Games.vamsir
                     if (newWeapon != null)
                     {
                         newWeapon.skillData = skillData;
-                        newWeapon.upgradeItemCode = skillData.upgradeItemCode; // [수정]
+                        newWeapon.skillCode = skillData.skillCode;
+                        newWeapon.upgradeItemCode = skillData.upgradeItemCode;
+                        newWeapon.Thumnail = skillData.skillIcon; // [수정] 썸네일 아이콘 강제 동기화
                         newWeapon.ApplyBaseStats();
                         
                         SpawnedPlayer.AddWeapon(newWeapon);
