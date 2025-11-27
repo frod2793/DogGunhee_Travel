@@ -13,132 +13,154 @@ MonoBehaviour:
   m_Name: SkillDatabase
   m_EditorClassIdentifier: 
   allSkills:
-  - skillCode: 1
-    skillType: 0
+  - skillCode: PS_COLLAR
     skillName: "\uBAA9\uC904"
-    skillDescription: "\uBAA9\uC904\uC5D4 \uC560\uC815\uC744 \uB2F4\uC544 \uC801\uC740
-      \uC774\uB984\uC774 \uC801\uD600\uC788\uC2B5\uB2C8\uB2E4. \uAD6C\uB458\uC6B4
-      \uC544\uB9C8 \uAC70\uC871\uACFC \uB2E4\uB984\uC5C6\uC2B5\uB2C8\uB2E4."
+    skillType: 0
+    flavorText: "\uBAA9\uC904\uC5D4 \uC560\uC815\uC744 \uB2F4\uC544 \uC801\uC740
+      \uC774\uB984\uC774 \uC801\uD600\uC788\uC2B5\uB2C8\uB2E4. \uADF8\uB4E4\uC740
+      \uC774\uBBF8 \uAC00\uC871\uACFC \uB2E4\uB984\uC5C6\uC2B5\uB2C8\uB2E4."
+    skillDescription: "\uACF5\uACA9\uB825 \uC99D\uAC00"
+    stats: "\uACF5\uACA9\uB825"
+    weaponAddressableKey: 
     skillIcon: {fileID: 21300000, guid: bd9ceb3996b279b418e0e8ff04234d1a, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 2
+  - skillCode: PS_PROTEIN
+    skillName: "\uCD08\uD2B9\uAC00 \uB3D9\uBB3C\uC6A9 \uD504\uB85C\uD2F4!"
     skillType: 0
-    skillName: "\uD504\uB85C\uD2F4"
-    skillDescription: "\uCD08\uD2B9\uAC00 \uB3D9\uBBAC\uC6A9 \uD504\uB85C\uD2F4!
-      \uBA39\uC73C\uBA74 \uC5C4\uCCAD\uB09C \uD798\uC744 \uAC00\uC9C8\uC218\uC788\uC2B5\uB2C8\uB2E4."
+    flavorText: "\uBA39\uC73C\uBA74 \uC5C4\uCCAD\uB09C \uBAB8\uC744 \uAC00\uC9C0\uAC8C
+      \uB429\uB2C8\uB2E4."
+    skillDescription: "\uBC29\uC5B4\uB825 \uC99D\uAC00"
+    stats: "\uBC29\uC5B4\uB825"
+    weaponAddressableKey: 
     skillIcon: {fileID: 21300000, guid: ec0f03c1decc0444aa03cb2ed79eef07, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 3
+  - skillCode: PS_FEATHER
+    skillName: "\uB538\uB791\uB538\uB791\uAE43\uD138"
     skillType: 0
-    skillName: "\uC2E0\uBE44\uC758 \uAE43\uD138"
-    skillDescription: "\uC544\uC2DC\uB098\uC694? \uAE43\uD138\uC758 \uBC29\uD5A5\uB9CC
-      \uC798 \uB9DE\uCD98\uB2E4\uBA74 \uACF5\uAE30\uC5ED\uD559 \uC801....\uC74D\uC74D
-      !!"
+    flavorText: "\uACE0\uC591\uC774\uAC00 \uC88B\uC544\uD558\uB294 \uBC29\uC6B8\uACFC
+      \uAE43\uD138\uC774 \uB2EC\uB824\uC788\uC2B5\uB2C8\uB2E4! \uBC8C\uC368 \uC8FC\uBCC0\uC5D0\uC11C
+      \uD638\uAE30\uC2EC\uC758 \uB208\uBE5B\uC774 \uB290\uAEF4\uC9C0\uB124\uC694."
+    skillDescription: "\uACF5\uACA9\uC18D\uB3C4 \uC99D\uAC00"
+    stats: "\uACF5\uACA9\uC18D\uB3C4"
+    weaponAddressableKey: 
     skillIcon: {fileID: 21300000, guid: 5f1abd29a5908a24eb32cf867a91aa44, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 4
+  - skillCode: PS_TREASURE
+    skillName: "\uBC14\uB2E4\uC758 \uBCF4\uBB3C"
     skillType: 0
-    skillName: "\uC2E0\uBE44\uD55C \uC5F4\uB9E4"
-    skillDescription: "\uBC14\uB2E4 \uAE4A\uC740 \uACF3\uC5D0 \uC790\uB77C\uC788\uB358
+    flavorText: "\uBC14\uB2E4 \uAE4A\uC740 \uACF3\uC5D0 \uC790\uB77C\uC788\uB358
       \uC5F4\uB9E4\uC785\uB2C8\uB2E4. \uD55C \uC785\uB9CC \uBA39\uC5B4\uB3C4 \uBAB8\uC5D0
       \uC2E0\uBE44\uD55C \uD798\uC774 \uAE43\uB4E0\uB2E4\uACE0 \uC804\uD574\uC9D1\uB2C8\uB2E4."
+    skillDescription: "\uBC1C\uC0AC\uCCB4 \uC218 \uC99D\uAC00"
+    stats: "\uBC1C\uC0AC\uCCB4 \uC218"
+    weaponAddressableKey: 
     skillIcon: {fileID: 21300000, guid: 8500f68d238d28b469698c3154830f8b, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 5
+  - skillCode: PS_VACCINE
+    skillName: "\uC608\uBC29\uC811\uC885"
     skillType: 0
-    skillName: "\uB9C8\uBC95 \uC8FC\uC0AC\uAE30"
-    skillDescription: "\uC608\uBC29\uC811\uC885\uC740 \uD544\uC218\uC785\uB2C8\uB2E4.
-      \uB3D9\uBB3C \uCE5C\uAD6C\uB4E4\uC740 \uC8FC\uC0AC\uB97C \uBB34\uC11C\uC6CC
-      \uD558\uC9C0\uB9CC \uC544\uD504\uC9C0 \uC54A\uC73C\uB824\uBA74 \uC5B4\uCA54\uC218
-      \uC5C6\uC9C0\uC694."
+    flavorText: "\uC608\uBC29\uC811\uC885\uC740 \uD544\uC218\uC785\uB2C8\uB2E4. \uB3D9\uBB3C
+      \uCE5C\uAD6C\uB4E4\uC740 \uC8FC\uC0AC\uB97C \uBB34\uC11C\uC6CC\uD558\uC9C0\uB9CC,
+      \uC544\uD504\uC9C0 \uC54A\uC73C\uB824\uBA74 \uC5B4\uCA54 \uC218 \uC5C6\uC9C0\uC694."
+    skillDescription: "\uC774\uB3D9 \uC18D\uB3C4 \uC99D\uAC00"
+    stats: "\uC18D\uB3C4"
+    weaponAddressableKey: 
     skillIcon: {fileID: 21300000, guid: b04a5c6bc25114fcd8e8314ae6e52ace, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 6
+  - skillCode: PS_NET
+    skillName: "\uC5B4\uD68D\uADF8\uBB3C"
     skillType: 0
-    skillName: "\uADF8\uBB3C"
-    skillDescription: "\uC774 \uADF8\uBB3C\uC5D0 \uC7A1\uD78C\uAC74 \uBB34\uC5C7\uB3C4
-      \uBE60\uC838\uB098\uAC08\uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uC774\uB7F0! \uC628\uD1B5
+    flavorText: "\uC774 \uADF8\uBB3C\uC5D0 \uC7A1\uD788\uB294\uAC74 \uBB34\uC5C7\uB3C4
+      \uBE60\uC838\uB098\uAC08 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uC774\uB7F0, \uC628\uD1B5
       \uC4F0\uB808\uAE30\uB9CC \uC7A1\uD788\uB124\uC694."
+    skillDescription: "\uBB34\uAE30 \uD06C\uAE30 \uC99D\uAC00"
+    stats: "\uBB34\uAE30\uD06C\uAE30"
+    weaponAddressableKey: 
     skillIcon: {fileID: 21300000, guid: d4681c6ed4a22eb4f8f5bebb5dc3a4f7, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 7
+  - skillCode: PS_SHIELD
+    skillName: "\uB0A1\uC740\uBC29\uD328"
     skillType: 0
-    skillName: "\uACE0\uC591\uC774 \uB09A\uC2EF\uB300"
-    skillDescription: "\uACE0\uC591\uC774\uAC00 \uC88B\uC544\uD558\uB294 \uBC29\uC6B8\uACFC
-      \uAE43\uD138\uC774 \uB2EC\uB824 \uC788\uC2B5\uB2C8\uB2E4! \uBC8C\uC368 \uC8FC\uBCC0\uC5D0\uC11C
-      \uD638\uAE30\uC2EC\uC758 \uB208\uBE5B\uC774 \uB290\uAEF4\uC9C0\uB124\uC694."
-    skillIcon: {fileID: 21300000, guid: 104c13d23f0d8814a828c290cd7664f8, type: 3}
-    Thumnail: {fileID: 0}
+    flavorText: "\uB0A1\uC740 \uBC29\uD328\uC785\uB2C8\uB2E4. \uD558\uC9C0\uB9CC
+      \uB204\uAD70\uAC00 \uC5F4\uC2EC\uD788 \uAD00\uB9AC\uD55C\uB4EF, \uBC18\uC9DD\uBC18\uC9DD
+      \uAD11\uC774 \uB0A9\uB2C8\uB2E4."
+    skillDescription: "\uCFE8\uD0C0\uC784 \uAC10\uC18C"
+    stats: "\uCFE8\uD0C0\uC784 \uAC10\uC18C"
     weaponAddressableKey: 
-  - skillCode: 8
-    skillType: 0
-    skillName: "\uB0A1\uC740 \uBC29\uD328"
-    skillDescription: "\uB0A1\uC740 \uBC29\uD328\uC785\uB2C8\uB2E4. \uD558\uC9C0\uB9CC
-      \uB204\uAD70\uAC00\uAC00 \uC5F4\uC2EC\uD788 \uAD00\uB9AC\uD55C\uB4EF, \uBC18\uC9DD\uBC18\uC9DD
-      \uAD11\uC774 \uB098\uB294 \uAD70\uC694."
     skillIcon: {fileID: 21300000, guid: bdecb23fa8d5fc744b7c1d5f9154028a, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: 
-  - skillCode: 9
+  - skillCode: WP_INK
+    skillName: "\uCD08\uAC15\uB825 \uBA39\uBB3C"
     skillType: 1
-    skillName: "\uAC80\uC740 \uBA39\uBB3C "
-    skillDescription: "\uBA39\uBB3C \uB85C \uC801\uB4E4\uC758 \uC774\uC18D\uC744
-      \uB2A6\uCDA5\uB2C8\uB2E4"
+    flavorText: "\uBA39\uBB3C\uC5D0 \uC2DC\uC57C\uAC00 \uAC00\uB824\uC9C4 \uC801\uB4E4\uC744
+      \uC0B0\uC131\uC744 \uB760\uB294 \uD2B9\uBCC4\uD55C \uB3C5\uACFC \uD568\uAED8\uBFCC\uB824
+      \uC801\uB4E4\uC744 \uB3C4\uB9DD\uCE58\uAC8C \uD569\uB2C8\uB2E4."
+    skillDescription: "\uC801\uB4E4\uC5D0\uAC8C \uBA39\uBB3C\uC744 \uBFCC\uB824 \uD53C\uD574\uB97C
+      \uC8FC\uACE0 \uC774\uB3D9\uC744 \uBC29\uD574\uD569\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30"
+    weaponAddressableKey: Prefab_Weapon_Ink
     skillIcon: {fileID: 1859045663046494767, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_1
-  - skillCode: 10
+  - skillCode: WP_PEARL
+    skillName: "\uC2F8\uAD6C\uB824 \uC9C4\uC8FC"
     skillType: 1
-    skillName: "\uACF5\uB180\uC774"
-    skillDescription: "\uACF5\uB180\uC774"
+    flavorText: "\uBC14\uC218\uB77D\uC758 \uC785 \uC548\uC5D0\uC11C \uB098\uC628
+      \uC9C4\uC8FC\uC785\uB2C8\uB2E4. \uBC14\uC9C0\uB77D \uC548\uC5D0\uC11C \uC9C4\uC8FC\uAC00
+      \uC65C \uB098\uC624\uB0D0\uB9CC\uC740.. \uAC8C\uC784\uC774\uC796\uC544\uC694?"
+    skillDescription: "\uD654\uBA74\uC744 \uB3CC\uC544 \uB2E4\uB2C8\uB294 \uC9C4\uC8FC\uB97C
+      \uB358\uC838 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
+      \uBB34\uAE30\uD06C\uAE30, \uBC1C\uC0AC\uCCB4 \uC218"
+    weaponAddressableKey: Prefab_Weapon_Pearl
     skillIcon: {fileID: 285745594254025331, guid: 927f6c43b300b69418ae886561aa7da9, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_6
-  - skillCode: 11
+  - skillCode: WP_BONE
+    skillName: "\uCD5C\uC560 \uBF08\uB2E4\uADC0"
     skillType: 1
-    skillName: " \uC560\uCC29 \uBF08 "
-    skillDescription: "\uC560\uCC29 \uBF08"
+    flavorText: "\uAC1C\uAC74\uD76C\uAC00 \uAC00\uC7A5 \uC88B\uC544\uD558\uB294 \uBF08\uB2E4\uADC0
+      \uC785\uB2C8\uB2E4. \uC9D1 \uC55E \uB9C8\uB2F9\uC5D0 \uBB3B\uC5B4\uB194\uC11C
+      \uD759\uC774 \uC794\uB729 \uBB3B\uC5B4\uC788\uC2B5\uB2C8\uB2E4."
+    skillDescription: "\uC801\uC5D0\uAC8C \uBF08\uB2E4\uADC0\uB97C \uB0A0\uB824 \uD53C\uD574\uB97C
+      \uC785\uD799\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
+      \uBB34\uAE30\uD06C\uAE30, \uBC1C\uC0AC\uCCB4 \uC218"
+    weaponAddressableKey: Prefab_Weapon_Bone
     skillIcon: {fileID: 21300000, guid: 2ab19c268b3545a41a33a186e031c2e1, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_0
-  - skillCode: 12
+  - skillCode: WP_BOOMERANG
+    skillName: "\uB2E4X\uC18C \uBD80\uB9E4\uB791"
     skillType: 1
-    skillName: "\uBD80\uBA54\uB791"
-    skillDescription: "\uBD80\uBA54\uB791"
+    flavorText: "\uBC14\uB2E5\uC5D0 \uBC84\uB824\uC838\uC788\uB358 \uBD80\uB9E4\uB791\uC785\uB2C8\uB2E4.
+      \uBB54\uAC00 \uC5B4\uB514\uC11C \uC0C0\uB294\uC9C0 \uC54C \uAC83 \uAC19\uC9C0\uB9CC
+      \uB208\uAC10\uC544\uC90D\uC2DC\uB2E4."
+    skillDescription: "\uBD80\uB9E4\uB791\uC744 \uB358\uC838 \uC8FC\uBCC0\uC744 \uB9F4\uB3CC\uBA70
+      \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784\uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
+      \uBB34\uAE30\uD06C\uAE30, \uBC1C\uC0AC\uCCB4 \uC218"
+    weaponAddressableKey: Prefab_Weapon_Boomerang
     skillIcon: {fileID: -544337117068343414, guid: c6f0dbf3995bee747a1a0008770e6d83, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_7
-  - skillCode: 12
+  - skillCode: WP_PUNCH
+    skillName: "\uB0E5\uB0E5 \uD380\uCE58"
     skillType: 1
-    skillName: "\uB0E5\uB0E5\uD380\uCE58"
-    skillDescription: "\uB0E5\uB0E5\uD380\uCE58"
+    flavorText: "\uBED1\uCEA3\uC740 \uC5B8\uC81C\uB098 \uD654\uB9CC \uB0B4\uACE0
+      \uC788\uC2B5\uB2C8\uB2E4. \uBB34\uC2DC\uBB34\uC2DC\uD55C \uC190\uBC14\uB2E5\uC5D0
+      \uB9DE\uAE30 \uC804\uC5D0 \uD654\uB97C \uC7A0\uC7AC\uC6CC\uC57C\uACA0\uB124\uC694."
+    skillDescription: "\uAC00\uAE4C\uC6B4 \uC801\uC5D0\uAC8C \uD380\uCE58\uB97C \uB0A0\uB824
+      \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
+      \uBB34\uAE30\uD06C\uAE30"
+    weaponAddressableKey: Prefab_Weapon_Punch
     skillIcon: {fileID: 1859045663046494767, guid: e2d490ffb05e73847958a015503b89f8, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_4
-  - skillCode: 13
-    skillType: 1
+  - skillCode: WP_LANDING
     skillName: "\uD788\uC5B4\uB85C \uB79C\uB529"
-    skillDescription: "\uD788\uC5B4\uB85C \uB79C\uB529"
+    skillType: 1
+    flavorText: "\uBC29\uCFE4\uB9E8\uC774 \uD568\uAED8\uD558\uB294 \uBC29\uD328\uC785\uB2C8\uB2E4.
+      \uC18C\uBB38\uC73C\uB860 \uC798 \uB54C\uB3C4 \uBC29\uD328\uB97C \uAEF4\uC548\uACE0
+      \uC794\uB2E4\uACE0\uD558\uB124\uC694."
+    skillDescription: "\uC77C\uC815\uC2DC\uAC04 \uD6C4 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C
+      \uC6D0\uD615\uC73C\uB85C \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30"
+    weaponAddressableKey: Prefab_Weapon_Landing
     skillIcon: {fileID: -8406814584331126232, guid: d6429c2db9ac04a9782674a2fd4209f4, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_2
-  - skillCode: 14
+  - skillCode: WP_SMELL
+    skillName: "\uD5A5\uAE0B\uD55C \uAF2C\uC21C\uB0B4"
     skillType: 1
-    skillName: "\uC9C4\uC8FC"
-    skillDescription: "\uC9C4\uC8FC"
-    skillIcon: {fileID: -716971934653745236, guid: 95621f00dd6d57c4cae5c1b43d2db354, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_3
-  - skillCode: 15
-    skillType: 1
-    skillName: "\uAF2C\uC21C\uB0B4"
-    skillDescription: "\uAF2C\uC21C\uB0B4"
+    flavorText: "\uAC15\uC544\uC9C0\uC758 \uAF2C\uC21C\uB0B4\uC5D4 \uADF9\uD55C\uC758
+      \uC911\uB3C5\uC131\uACFC \uADC0\uC5EC\uC6C0\uC774 \uB290\uAEF4\uC9D1\uB2C8\uB2E4.
+      \uB108\uBB34 \uADC0\uC5EC\uC6CC\uC11C \uC790\uC9C0\uB7EC\uC9C0\uB294 \uC790\uB4E4\uC744
+      \uBA87\uBC88 \uBCF8 \uAC83 \uAC19\uAD70\uC694."
+    skillDescription: "\uC8FC\uBCC0\uC5D0 \uB0C4\uC0C8\uB97C \uD37C\uB728\uB824 \uC9C0\uC18D\uC801\uC778
+      \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30"
+    weaponAddressableKey: Prefab_Weapon_Smell
     skillIcon: {fileID: 4610275258850785762, guid: 10e9153d132d55547bd8ff5b12ade939, type: 3}
-    Thumnail: {fileID: 0}
-    weaponAddressableKey: Weapon_5

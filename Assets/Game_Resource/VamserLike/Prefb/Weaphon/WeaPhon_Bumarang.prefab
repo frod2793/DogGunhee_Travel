@@ -50,8 +50,10 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 0
   isShooting: 1
-  weaphonIndex: 7
+  skillCode: 
   isUpgradelv2: 0
+  upgradeItemCode: 
+  Thumnail: {fileID: 0}
   weaphonState: 0
   m_boomerangPrefab: {fileID: 3560256705289553093, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
   m_firePoint: {fileID: 6836460676566652473}

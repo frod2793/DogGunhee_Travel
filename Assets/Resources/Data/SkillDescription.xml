@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SkillDescriptions>
+    <Skill key="WP_BONE">
+        <Name>최애 뼈다귀</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_COLLAR</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Bone</WeaponAddressableKey>
+        <FlavorText>개건희가 가장 좋아하는 뼈다귀 입니다. 집 앞 마당에 묻어놔서 흙이 잔뜩 묻어있습니다.</FlavorText>
+        <Description>적에게 뼈다귀를 날려 피해를 입힙니다.</Description>
+        <Stats>공격력, 쿨타임 감소, 공격속도, 무기크기, 발사체 수</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">15</WeaponStat>
+            <WeaponStat name="Cooldown">1.5</WeaponStat>
+        </StatValues>
+        <Evolution>
+            <Name>용기의 뼈</Name>
+            <FlavorText>그저 지키고 싶다는 마음으로 던진 뼈다귀는 개건희의 염원이 담겨 적들을 확실하게 몰아냅니다.</FlavorText>
+        </Evolution>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="4" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="4" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="5" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="6" stat="ProjectileCount" value="1" mode="add" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_PUNCH">
+        <Name>냥냥 펀치</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_FEATHER</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Punch</WeaponAddressableKey>
+        <FlavorText>뻑캣은 언제나 화만 내고 있습니다. 무시무시한 손바닥에 맞기 전에 화를 잠재워야겠네요.</FlavorText>
+        <Description>가까운 적에게 펀치를 날려 피해를 입힙니다.</Description>
+        <Stats>공격력, 쿨타임 감소, 공격속도, 무기크기</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">25</WeaponStat>
+            <WeaponStat name="Cooldown">1.2</WeaponStat>
+        </StatValues>
+        <Evolution>
+            <Name>슈퍼 냥냥펀치</Name>
+            <FlavorText>강력한 냥냥펀치는 이윽고 극한으로 숙련되어 여러 적들에게 화를낼 수 있게 되었습니다.</FlavorText>
+        </Evolution>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="4" stat="AttackSpeed" value="1.1" mode="multiply" />
+            <Level num="4" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="5" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="6" stat="Damage" value="1.2" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_PEARL">
+        <Name>싸구려 진주</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_NET</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Pearl</WeaponAddressableKey>
+        <FlavorText>바수락의 입 안에서 나온 진주입니다. 바지락 안에서 진주가 왜 나오냐만은.. 게임이잖아요?</FlavorText>
+        <Description>화면을 돌아 다니는 진주를 던져 피해를 줍니다.</Description>
+        <Stats>공격력, 쿨타임 감소, 공격속도, 무기크기, 발사체 수</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">12</WeaponStat>
+            <WeaponStat name="Cooldown">2.0</WeaponStat>
+        </StatValues>
+        <Evolution>
+            <Name>최고급 진주</Name>
+            <FlavorText>극한으로 농축된 최순도의 진주는 이윽고 높은 거래가의 진주가 되었습니다. 물론, 동물친구들에게 돈은 필요 없겠지만요.</FlavorText>
+        </Evolution>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="4" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="4" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="5" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="6" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="6" stat="AttackSpeed" value="1.2" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_LANDING">
+        <Name>히어로 랜딩</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_SHIELD</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Landing</WeaponAddressableKey>
+        <FlavorText>방쿤맨이 함께하는 방패입니다. 소문으론 잘 때도 방패를 껴안고 잔다고하네요.</FlavorText>
+        <Description>일정시간 후 주변 적에게 원형으로 피해를 입힙니다.</Description>
+        <Stats>공격력, 쿨타임 감소, 무기크기</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">40</WeaponStat>
+            <WeaponStat name="Cooldown">3.5</WeaponStat>
+        </StatValues>
+        <Evolution>
+            <Name>캡틴 방쿤맨</Name>
+            <FlavorText>항상 배개로 삼던 히어로 만화책의 영감을 받아 새로 고안해 낸 기술입니다.</FlavorText>
+        </Evolution>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="4" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="5" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="6" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="6" stat="Damage" value="1.1" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_FRIENDS">
+        <Name>내 친구들!</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_PROTEIN</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Friends</WeaponAddressableKey>
+        <FlavorText>친구들과 함께라면 우린 두려운것이 없습니다! 세상에서 가장 믿음직한 친구들과 함께 고난을 헤쳐나갑시다!</FlavorText>
+        <Description>친구들을 불러 하늘에서 떨어집니다. 랜덤한 위치에 피해를 줍니다.</Description>
+        <Stats>공격력, 쿨타임 감소, 무기크기, 발사체 수</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">30</WeaponStat>
+            <WeaponStat name="Cooldown">4.0</WeaponStat>
+        </StatValues>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="4" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="5" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="6" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="6" stat="Damage" value="1.2" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_BOOMERANG">
+        <Name>다X소 부매랑</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_VACCINE</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Boomerang</WeaponAddressableKey>
+        <FlavorText>바닥에 버려져있던 부매랑입니다. 뭔가 어디서 샀는지 알 것 같지만 눈감아줍시다.</FlavorText>
+        <Description>부매랑을 던져 주변을 맴돌며 피해를 줍니다.</Description>
+        <Stats>공격력, 쿨타임감소, 공격속도, 무기크기, 발사체 수</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">18</WeaponStat>
+            <WeaponStat name="Cooldown">1.8</WeaponStat>
+        </StatValues>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="4" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="4" stat="AttackSpeed" value="1.1" mode="multiply" />
+            <Level num="5" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="5" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="6" stat="ProjectileCount" value="1" mode="add" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_FIRE">
+        <Name>신비한 불꽃</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode></UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Fire</WeaponAddressableKey>
+        <FlavorText>타오르는 불꽃입니다. 착한 마음씨를 가진 친구들은 들 수 있지만, 나쁜 마음을 가졌다면 불타게 됩니다.</FlavorText>
+        <Description>불꽃이 퍼져 랜덤한 위치에 지속적인 피해를 줍니다.</Description>
+        <Stats>공격력, 쿨타임 감소, 무기크기, 발사체 수</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">5</WeaponStat>
+            <WeaponStat name="Cooldown">0.5</WeaponStat>
+        </StatValues>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="4" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="4" stat="Cooldown" value="0.9" mode="multiply" />
+            <Level num="5" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="5" stat="ProjectileCount" value="1" mode="add" />
+            <Level num="6" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="6" stat="WeaponSize" value="1.2" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_BALL">
+        <Name>공놀이</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode>PS_TREASURE</UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Ball</WeaponAddressableKey>
+        <FlavorText>다른 집 친구들과 함께 정원에서 함께놀던 공들입니다. 그 친구들은 이제 오지않아 추억으로 간직합니다.</FlavorText>
+        <Description>화면을 튕기는 공을 소환하여 적을 공격합니다.</Description>
+        <Stats>공격력, 무기크기, 공격속도, 쿨타임 감소</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">10</WeaponStat>
+            <WeaponStat name="Cooldown">2.0</WeaponStat>
+        </StatValues>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="4" stat="Cooldown" value="0.7" mode="multiply" />
+            <Level num="5" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="5" stat="AttackSpeed" value="1.2" mode="multiply" />
+            <Level num="6" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="6" stat="WeaponSize" value="1.1" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_INK">
+        <Name>초강력 먹물</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode></UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Ink</WeaponAddressableKey>
+        <FlavorText>먹물에 시야가 가려진 적들을 산성을 띠는 특별한 독과 함께뿌려 적들을 도망치게 합니다.</FlavorText>
+        <Description>적들에게 먹물을 뿌려 피해를 주고 이동을 방해합니다.</Description>
+        <Stats>공격력, 무기크기</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">8</WeaponStat>
+            <WeaponStat name="Cooldown">2.5</WeaponStat>
+        </StatValues>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="4" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="5" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="6" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="6" stat="Damage" value="1.1" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="WP_SMELL">
+        <Name>향긋한 꼬순내</Name>
+        <SkillType>Weapon</SkillType>
+        <UpgradeItemCode></UpgradeItemCode>
+        <WeaponAddressableKey>Prefab_Weapon_Smell</WeaponAddressableKey>
+        <FlavorText>강아지의 꼬순내엔 극한의 중독성과 귀여움이 느껴집니다. 너무 귀여워서 자지러지는 자들을 몇번 본 것 같군요.</FlavorText>
+        <Description>주변에 냄새를 퍼뜨려 지속적인 피해를 입힙니다.</Description>
+        <Stats>공격력, 무기크기</Stats>
+        <StatValues>
+            <WeaponStat name="Damage">5</WeaponStat>
+            <WeaponStat name="Cooldown">0.5</WeaponStat>
+        </StatValues>
+        <Upgrades>
+            <Level num="2" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="3" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="4" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="5" stat="WeaponSize" value="1.1" mode="multiply" />
+            <Level num="6" stat="Damage" value="1.1" mode="multiply" />
+            <Level num="6" stat="WeaponSize" value="1.1" mode="multiply" />
+        </Upgrades>
+    </Skill>
+
+    <Skill key="PS_COLLAR">
+        <Name>목줄</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>목줄엔 애정을 담아 적은 이름이 적혀있습니다. 그들은 이미 가족과 다름없습니다.</FlavorText>
+        <Description>공격력 증가</Description>
+        <Stats>공격력</Stats>
+        <StatValues>
+            <PlayerStat name="AttackPowerMultiplier">0.1</PlayerStat>
+        </StatValues>
+    </Skill>
+
+    <Skill key="PS_FEATHER">
+        <Name>딸랑딸랑깃털</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>고양이가 좋아하는 방울과 깃털이 달려있습니다! 벌써 주변에서 호기심의 눈빛이 느껴지네요.</FlavorText>
+        <Description>공격속도 증가</Description>
+        <Stats>공격속도</Stats>
+        <StatValues>
+            <PlayerStat name="AttackSpeed">0.1</PlayerStat>
+        </StatValues>
+    </Skill>
+
+    <Skill key="PS_NET">
+        <Name>어획그물</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>이 그물에 잡히는건 무엇도 빠져나갈 수 없습니다. 이런, 온통 쓰레기만 잡히네요.</FlavorText>
+        <Description>무기 크기 증가</Description>
+        <Stats>무기크기</Stats>
+        <StatValues>
+            <PlayerStat name="GlobalWeaponSize">0.15</PlayerStat>
+        </StatValues>
+    </Skill>
+
+    <Skill key="PS_SHIELD">
+        <Name>낡은방패</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>낡은 방패입니다. 하지만 누군가 열심히 관리한듯, 반짝반짝 광이 납니다.</FlavorText>
+        <Description>쿨타임 감소</Description>
+        <Stats>쿨타임 감소</Stats>
+        <StatValues>
+            <PlayerStat name="GlobalCooldownReduction">0.05</PlayerStat>
+        </StatValues>
+    </Skill>
+
+    <Skill key="PS_PROTEIN">
+        <Name>초특가 동물용 프로틴!</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>먹으면 엄청난 몸을 가지게 됩니다.</FlavorText>
+        <Description>방어력 증가</Description>
+        <Stats>방어력</Stats>
+        <StatValues>
+            <PlayerStat name="Defense">1</PlayerStat>
+        </StatValues>
+    </Skill>
+
+    <Skill key="PS_VACCINE">
+        <Name>예방접종</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>예방접종은 필수입니다. 동물 친구들은 주사를 무서워하지만, 아프지 않으려면 어쩔 수 없지요.</FlavorText>
+        <Description>이동 속도 증가</Description>
+        <Stats>속도</Stats>
+        <StatValues>
+            <PlayerStat name="MoveSpeed">0.1</PlayerStat>
+        </StatValues>
+    </Skill>
+
+    <Skill key="PS_TREASURE">
+        <Name>바다의 보물</Name>
+        <SkillType>Passive</SkillType>
+        <FlavorText>바다 깊은 곳에 자라있던 열매입니다. 한 입만 먹어도 몸에 신비한 힘이 깃든다고 전해집니다.</FlavorText>
+        <Description>발사체 수 증가</Description>
+        <Stats>발사체 수</Stats>
+        <StatValues>
+            <PlayerStat name="GlobalProjectileCount">1</PlayerStat>
+        </StatValues>
+    </Skill>
+
+</SkillDescriptions>

@@ -5,14 +5,13 @@ using System.Collections.Generic;
 
 namespace DogGuns_Games.vamsir
 {
-    public class WeaponCatPunch : WeaphonBase
+    public class WeaphoneCatPunch : WeaphonBase
     {
-        // ... (인스펙터 필드 등 기존과 동일) ...
         #region 인스펙터 필드
         [Header("고양이 펀치 고유 스탯")]
-        [FormerlySerializedAs("initialAttackPower")] [SerializeField] private float m_initialAttackPower = 20f;
-        [FormerlySerializedAs("initialCoolTime")] [SerializeField] private float m_initialCoolTime = 1.5f;
-        [FormerlySerializedAs("initialMobStunTime")] [SerializeField] private float m_initialMobStunTime = 0.3f;
+        [SerializeField] private float m_initialAttackPower = 20f;
+        [SerializeField] private float m_initialCoolTime = 1.5f;
+        [SerializeField] private float m_initialMobStunTime = 0.3f;
 
         [Header("애니메이션 설정")]
         [SerializeField] private Animator m_weaponAnimator;
@@ -35,7 +34,6 @@ namespace DogGuns_Games.vamsir
         private static readonly int k_AnimTriggerStab = Animator.StringToHash("Stab");
         private static readonly int k_AnimTriggerSlash = Animator.StringToHash("Slash");
         
-        // [추가] 실시간 회전을 위해 플레이어 컨트롤러 참조 필요 (없으면 GameManager에서 가져옴)
         private PlayerControll m_playerController;
         #endregion
 
@@ -58,23 +56,21 @@ namespace DogGuns_Games.vamsir
             m_contactFilter.useLayerMask = true;
         }
 
-        protected override void OnEnable()
+        private void OnEnable()
         {
-            base.OnEnable();
+            SetWeaphonState(WeaphonState.Idle);
             attackPower = m_initialAttackPower;
             coolTime = m_initialCoolTime;
             mobStunTime = m_initialMobStunTime;
             
-            // 컨트롤러 찾기
             if (GameManager.Instance != null)
                 m_playerController = GameManager.Instance.PlayerController;
 
             ResetWeaponState();
         }
 
-        protected override void OnDisable()
+        private void OnDisable()
         {
-            base.OnDisable();
             ResetWeaponState();
         }
         #endregion
@@ -83,7 +79,6 @@ namespace DogGuns_Games.vamsir
         public override void Weaphon_Attack(Vector3 attackAngle)
         {
             if (m_isAttacking) return;
-            // 공격 시작 시 최초 방향 설정
             RotateWeaponToDirection(attackAngle);
             PerformAttackAsync().Forget();
         }
@@ -126,7 +121,7 @@ namespace DogGuns_Games.vamsir
             {
                 if (m_weaponAnimator != null)
                 {
-                    int trigger = isUpgradelv2 ? k_AnimTriggerSlash : k_AnimTriggerStab;
+                    int trigger = isEvolved ? k_AnimTriggerSlash : k_AnimTriggerStab;
                     m_weaponAnimator.speed = (attackSpeed > 0) ? attackSpeed : 1f;
                     m_weaponAnimator.SetTrigger(trigger);
                 }
@@ -155,14 +150,13 @@ namespace DogGuns_Games.vamsir
             {
                 await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                 
-                // [수정] 매 프레임 루프에서 방향 업데이트 호출
                 UpdateWeaponRotation(); 
                 UpdateColliderShape(); 
                 CheckCollision();
 
                 while (m_weaponAnimator.IsInTransition(0))
                 {
-                    UpdateWeaponRotation(); // 트랜지션 중에도 회전
+                    UpdateWeaponRotation();
                     UpdateColliderShape();
                     CheckCollision();
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
@@ -175,7 +169,6 @@ namespace DogGuns_Games.vamsir
 
             while (timer < duration)
             {
-                // [수정] 매 프레임 루프에서 방향 업데이트 호출
                 UpdateWeaponRotation(); 
                 UpdateColliderShape();
                 CheckCollision();
@@ -185,17 +178,12 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// [추가됨] 현재 플레이어의 입력(조이스틱) 방향으로 무기를 실시간 회전시킵니다.
-        /// </summary>
         private void UpdateWeaponRotation()
         {
-            // 컨트롤러나 게임 매니저에서 현재 입력 방향을 가져옵니다.
             if (m_playerController != null && m_playerController.MoveDirection != Vector3.zero)
             {
                 RotateWeaponToDirection(m_playerController.MoveDirection);
             }
-            // 만약 조이스틱 직접 참조가 필요하다면 GameManager.Instance.Joystick 사용
             else if (GameManager.Instance?.Joystick != null)
             {
                 var joystick = GameManager.Instance.Joystick;

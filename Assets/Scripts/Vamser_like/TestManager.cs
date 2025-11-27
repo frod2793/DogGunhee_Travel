@@ -15,29 +15,23 @@ namespace DogGuns_Games.Test
 
         [Header("Input Fields")]
         [Tooltip("캐릭터 인덱스 입력 필드")]
-        [FormerlySerializedAs("characterIndexInput")]
         [SerializeField] private TMP_InputField m_characterIndexInput;
         
         [Tooltip("무기 인덱스 입력 필드")]
-        [FormerlySerializedAs("weaponIndexInput")]
         [SerializeField] private TMP_InputField m_weaponIndexInput;
 
         [Header("Control Buttons")]
         [Tooltip("무기 업그레이드 여부 토글")]
-        [FormerlySerializedAs("isWeaponeUPgrade")]
         [SerializeField] private Toggle m_isWeaponUpgradeToggle;
 
         [Tooltip("설정 변경 실행 버튼")]
-        [FormerlySerializedAs("changeButton")]
         [SerializeField] private Button m_changeButton;
 
         [Header("Test Panel Settings")]
         [Tooltip("슬라이드 애니메이션을 적용할 패널")]
-        [FormerlySerializedAs("testpanel")]
         [SerializeField] private GameObject m_testPanel;
 
         [Tooltip("패널 열기/닫기 토글 버튼")]
-        [FormerlySerializedAs("TestPanelonoffBtn")]
         [SerializeField] private Button m_testPanelToggleBtn;
 
         [Tooltip("패널 애니메이션 지속 시간")]
@@ -114,7 +108,7 @@ namespace DogGuns_Games.Test
         {
             if (m_changeButton != null) m_changeButton.interactable = isInteractable;
             if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = isInteractable;
-            if (m_isWeaponUpgradeToggle != null) m_isWeaponUpgradeToggle.interactable = isInteractable; // [추가] 토글도 제어
+            if (m_isWeaponUpgradeToggle != null) m_isWeaponUpgradeToggle.interactable = isInteractable;
         }
 
         #endregion
@@ -144,7 +138,6 @@ namespace DogGuns_Games.Test
             m_isPanelAnimating = true;
             m_isPanelOpen = !m_isPanelOpen;
             
-            // 버튼 상호작용 잠시 차단 (애니메이션 중 중복 클릭 방지)
             if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = false;
 
             m_panelRectTransform.DOKill();
@@ -162,9 +155,6 @@ namespace DogGuns_Games.Test
                 await m_panelRectTransform.DOAnchorPosX(targetX, m_animationDuration)
                     .SetEase(easeType)
                     .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-
-                // 닫힌 후 비활성화는 선택 사항 (자주 열고 닫으면 굳이 안 꺼도 됨)
-                // if (!m_isPanelOpen) m_testPanel.SetActive(false);
             }
             finally
             {
@@ -188,7 +178,7 @@ namespace DogGuns_Games.Test
             }
 
             m_isChanging = true;
-            SetInteractable(false); // 모든 UI 잠금
+            SetInteractable(false);
 
             try
             {
@@ -210,7 +200,7 @@ namespace DogGuns_Games.Test
             finally
             {
                 m_isChanging = false;
-                SetInteractable(true); // UI 잠금 해제
+                SetInteractable(true);
             }
         }
 
@@ -234,11 +224,10 @@ namespace DogGuns_Games.Test
             var weapon = m_gameManager.SpawnedPlayer.GetComponentInChildren<WeaphonBase>();
             if (weapon != null)
             {
-                weapon.isUpgradelv2 = m_isWeaponUpgradeToggle.isOn;
-                
+                weapon.isEvolved = m_isWeaponUpgradeToggle.isOn;
                 
                 LogManager.Log(
-                    $"무기({weapon.name}) 업그레이드 설정: {m_isWeaponUpgradeToggle.isOn}", 
+                    $"무기({weapon.name}) 진화 설정: {m_isWeaponUpgradeToggle.isOn}", 
                     LogManager.LogCategory.VamserLikeGameManager, 
                     weapon
                 );

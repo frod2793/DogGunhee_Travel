@@ -10,51 +10,40 @@ using Random = UnityEngine.Random;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 뱀서라이크 게임의 오브젝트 풀 관리 및 스폰 시스템 (최적화됨)
-    /// </summary>
     public class ObjectPoolSpawner : MonoBehaviour
     {
         #region 필드 및 속성
 
-        // 외부 의존성
         private PlayerBase m_player;
         private Camera m_mainCamera;
 
-        // [맵 설정] 스폰 범위를 제한할 맵
         [Header("Map Settings")]
-        [Tooltip("몹 스폰 범위를 제한할 맵의 SpriteRenderer")]
         [SerializeField] private SpriteRenderer m_mapRange;
         private Bounds m_mapBounds;
 
-        // 오브젝트 풀 (특정 타입)
         public IObjectPool<VamserMobBase> MobObjectPool { get; private set; }
         public IObjectPool<EXP_Obj> ExpObjectPool { get; private set; }
         public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
 
-        // 오브젝트 풀 (제네릭 프리팹 - 이펙트 등)
         private readonly Dictionary<GameObject, IObjectPool<GameObject>> m_genericPools = new Dictionary<GameObject, IObjectPool<GameObject>>();
         private readonly Dictionary<GameObject, GameObject> m_instanceToPrefabMap = new Dictionary<GameObject, GameObject>();
 
-        // [Header] 몹 설정
         [Header("Mob Settings")]
-        [FormerlySerializedAs("initialMobCount")] [SerializeField] private int m_initialMobCount = 20;
-        [FormerlySerializedAs("mobsPerWave")] [SerializeField] private int m_mobsPerWave = 20;
-        [FormerlySerializedAs("maxPoolSize")] [SerializeField] private int m_maxPoolSize = 100;
-        [FormerlySerializedAs("mobPrefabReference")] [SerializeField] private AssetReferenceGameObject m_mobPrefabReference;
-        [FormerlySerializedAs("mobParent")] [SerializeField] private Transform m_mobParent;
+        [SerializeField] private int m_initialMobCount = 20;
+        [SerializeField] private int m_mobsPerWave = 20;
+        [SerializeField] private int m_maxPoolSize = 100;
+        [SerializeField] private AssetReferenceGameObject m_mobPrefabReference;
+        [SerializeField] private Transform m_mobParent;
 
         public int ActiveMobCount { get; private set; }
         public int CurrentWave { get; private set; }
 
-        // [Header] 아이템 설정
         [Header("Item Settings")]
-        [FormerlySerializedAs("expPrefabReference")] [SerializeField] private AssetReferenceGameObject m_expPrefabReference;
-        [FormerlySerializedAs("bigExpPrefabReference")] [SerializeField] private AssetReferenceGameObject m_bigExpPrefabReference;
-        [FormerlySerializedAs("coinPrefabReference")] [SerializeField] private AssetReferenceGameObject m_coinPrefabReference;
-        [FormerlySerializedAs("coinSpawnPercent")] [SerializeField] private float m_coinSpawnPercent = 25f;
+        [SerializeField] private AssetReferenceGameObject m_expPrefabReference;
+        [SerializeField] private AssetReferenceGameObject m_bigExpPrefabReference;
+        [SerializeField] private AssetReferenceGameObject m_coinPrefabReference;
+        [SerializeField] private float m_coinSpawnPercent = 25f;
 
-        // 내부 상태
         private readonly Dictionary<AssetReferenceGameObject, GameObject> m_loadedPrefabs = new Dictionary<AssetReferenceGameObject, GameObject>();
         private bool m_isSpawningAllowed = true;
         private CancellationTokenSource m_respawnCts;
@@ -67,7 +56,6 @@ namespace DogGuns_Games.vamsir
         {
             m_mainCamera = Camera.main;
 
-            // 맵 범위 자동 찾기 (인스펙터 할당 안 되었을 시)
             if (m_mapRange == null)
             {
                 var mapObj = GameObject.FindGameObjectWithTag("Map");
@@ -80,9 +68,7 @@ namespace DogGuns_Games.vamsir
             }
             else
             {
-                // 맵이 없으면 무한대로 설정 (안전장치)
                 m_mapBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
-                LogManager.LogWarning("[Spawner] Map Range not found. Using default bounds.", LogManager.LogCategory.ObjectPoolSpawner);
             }
         }
 
@@ -99,7 +85,6 @@ namespace DogGuns_Games.vamsir
 
         private void OnDestroy()
         {
-            // 모든 풀 정리
             MobObjectPool?.Clear();
             ExpObjectPool?.Clear();
             CoinObjectPool?.Clear();
@@ -119,27 +104,14 @@ namespace DogGuns_Games.vamsir
         public async UniTask InitializeAndStartSpawning(PlayerBase player)
         {
             m_player = player;
-            if (m_player == null)
-            {
-                LogManager.LogError("[Spawner] Player is null", LogManager.LogCategory.ObjectPoolSpawner);
-                return;
-            }
+            if (m_player == null) return;
 
-            // 리소스 로드
             await LoadAllPrefabsAsync();
 
-            if (!IsAllPrefabsLoaded())
-            {
-                LogManager.LogError("[Spawner] Failed to load prefabs", LogManager.LogCategory.ObjectPoolSpawner);
-                return;
-            }
+            if (!IsAllPrefabsLoaded()) return;
 
-            // 풀 초기화
             InitializePools();
 
-            LogManager.Log("[Spawner] Initialized and starting spawn", LogManager.LogCategory.ObjectPoolSpawner);
-
-            // 게임 시작 시 초기 스폰
             if (PlayStateManager.instance.IsPlaying)
             {
                 SpawnInitialMobs();
@@ -175,7 +147,14 @@ namespace DogGuns_Games.vamsir
         #region 게임 상태 핸들러
 
         private void OnPause() => m_isSpawningAllowed = false;
-        private void OnResume() => m_isSpawningAllowed = true;
+
+        private void OnResume()
+        {
+            m_isSpawningAllowed = true;
+            // [수정] 게임 재개 시, 몹이 0마리인 상태였다면 다음 웨이브를 진행하도록 체크
+            CheckMobCount();
+        }
+
         private void OnGameOver()
         {
             m_isSpawningAllowed = false;
@@ -220,9 +199,6 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// 몹이 줄어들었는지 확인하고 다음 웨이브 예약
-        /// </summary>
         private void CheckMobCount()
         {
             if (ActiveMobCount <= 0 && m_isSpawningAllowed)
@@ -239,7 +215,7 @@ namespace DogGuns_Games.vamsir
         {
             try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(3), cancellationToken: token);
+                await UniTask.Delay(TimeSpan.FromSeconds(3), ignoreTimeScale: true, cancellationToken: token);
                 
                 if (!m_isSpawningAllowed) return;
 
@@ -263,11 +239,9 @@ namespace DogGuns_Games.vamsir
 
             Vector3 pos = deadMob.transform.position;
 
-            // EXP 스폰
             var exp = ExpObjectPool.Get();
             exp.transform.position = pos;
 
-            // Coin 스폰 (확률)
             if (Random.Range(0f, 100f) < m_coinSpawnPercent)
             {
                 var coin = CoinObjectPool.Get();
@@ -277,9 +251,8 @@ namespace DogGuns_Games.vamsir
 
         #endregion
 
-        #region Pool Callbacks (Mob/Item)
+        #region Pool Callbacks
 
-        // -- Create --
         private VamserMobBase CreateMob() => CreatePoolObject<VamserMobBase>(m_mobPrefabReference);
         private EXP_Obj CreateExp()
         {
@@ -288,12 +261,10 @@ namespace DogGuns_Games.vamsir
         }
         private Coin_Obj CreateCoin() => CreatePoolObject<Coin_Obj>(m_coinPrefabReference);
 
-        // -- Get --
         private void OnGetMob(VamserMobBase mob)
         {
             OnGetObject(mob);
             
-            // [핵심] 카메라 밖이면서 맵 내부인 유효한 위치 선정
             Vector3 spawnPos = GetValidSpawnPosition();
             mob.transform.position = spawnPos;
             
@@ -301,7 +272,6 @@ namespace DogGuns_Games.vamsir
             mob.SetTarget(m_player);
         }
 
-        // -- Release --
         private void OnReleaseMob(VamserMobBase mob)
         {
             OnReleaseObject(mob);
@@ -311,7 +281,6 @@ namespace DogGuns_Games.vamsir
             CheckMobCount();   
         }
 
-        // -- Common --
         private void OnGetObject<T>(T obj) where T : MonoBehaviour => obj.gameObject.SetActive(true);
         private void OnReleaseObject<T>(T obj) where T : MonoBehaviour => obj.gameObject.SetActive(false);
         private void OnDestroyObject<T>(T obj) where T : MonoBehaviour
@@ -319,7 +288,6 @@ namespace DogGuns_Games.vamsir
             if (obj != null) Destroy(obj.gameObject);
         }
 
-        // -- Factory --
         private T CreatePoolObject<T>(AssetReferenceGameObject refObj) where T : MonoBehaviour
         {
             if (!m_loadedPrefabs.TryGetValue(refObj, out var prefab) || prefab == null) return null;
@@ -377,7 +345,7 @@ namespace DogGuns_Games.vamsir
 
         #endregion
 
-        #region 유틸리티 (로드 & 위치)
+        #region 유틸리티
 
         private async UniTask LoadAllPrefabsAsync()
         {
@@ -418,50 +386,34 @@ namespace DogGuns_Games.vamsir
                    m_loadedPrefabs.ContainsKey(m_coinPrefabReference);
         }
 
-        /// <summary>
-        /// 카메라 밖이면서 동시에 맵 내부인 유효한 스폰 위치를 반환합니다.
-        /// </summary>
         private Vector3 GetValidSpawnPosition()
         {
             if (m_mainCamera == null) return Vector3.zero;
 
             Vector3 camPos = m_mainCamera.transform.position;
             
-            // 카메라의 뷰포트 크기 계산 (높이 = Size * 2, 너비 = 높이 * 비율)
             float camHeight = m_mainCamera.orthographicSize;
             float camWidth = camHeight * m_mainCamera.aspect;
 
-            // 카메라 화면 밖 최소 거리 (화면 대각선 + 여유분)
-            // 원형으로 밖을 계산하면 모서리에서 너무 멀어질 수 있으므로, 사각형 밖을 기준으로 잡습니다.
-            // 여기서는 간단하게 화면 절반 너비/높이보다 조금 더 먼 곳을 최소 거리로 잡습니다.
             float minSpawnDist = Mathf.Sqrt(camWidth * camWidth + camHeight * camHeight) + 1.5f;
-            
-            // 최대 검색 거리
             float maxSpawnDist = minSpawnDist + 5.0f; 
 
-            int maxAttempts = 20; // 위치 찾기 시도 횟수 제한
+            int maxAttempts = 20;
 
             for (int i = 0; i < maxAttempts; i++)
             {
-                // 1. 랜덤 방향과 거리 생성
                 Vector2 randomDir = Random.insideUnitCircle.normalized;
                 float distance = Random.Range(minSpawnDist, maxSpawnDist);
                 
-                // 2. 후보 위치 계산
                 Vector3 candidatePos = camPos + (Vector3)(randomDir * distance);
                 candidatePos.z = 0;
 
-                // 3. 맵 내부인지 확인 (Bounds.Contains는 3D 기준이므로 Z축 주의)
-                // 2D 게임이므로 Bounds의 Z축이 0을 포함하도록 맵이 설정되어 있어야 함.
-                // 안전을 위해 Bounds의 z값과 상관없이 x,y만 체크하거나, candidatePos.z를 Bounds.center.z로 맞춤
                 if (m_mapBounds.Contains(candidatePos))
                 {
                     return candidatePos;
                 }
             }
 
-            // 4. 시도 실패 시 (예: 카메라가 맵 구석에 박혀있을 때)
-            // 그냥 맵 내부의 랜덤 위치를 반환합니다. (화면에 보일 수도 있지만 스폰 안 되는 것보단 나음)
             return GetRandomPositionInMap();
         }
 
@@ -475,9 +427,6 @@ namespace DogGuns_Games.vamsir
         #endregion
     }
 
-    /// <summary>
-    /// 오브젝트 풀을 사용하는 객체가 구현해야 할 인터페이스
-    /// </summary>
     public interface IObjectPoolUser
     {
         ObjectPoolSpawner ObjectPoolSpawner { set; }

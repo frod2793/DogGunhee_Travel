@@ -17,19 +17,15 @@ namespace DogGuns_Games.vamsir
 
         [Header("기본 냄새 흔적 설정")]
         [Tooltip("흔적의 최대 길이")]
-        [FormerlySerializedAs("maxTrailPoints")]
         [SerializeField] private int m_maxTrailPoints = 50;
         
         [Tooltip("새로운 포인트를 생성하기 위해 이동해야 하는 최소 거리")]
-        [FormerlySerializedAs("pointSpacing")]
         [SerializeField] private float m_pointSpacing = 0.8f;
         
         [Tooltip("흔적의 기본 시각적 크기")]
-        [FormerlySerializedAs("trailWidth")]
         [SerializeField] private float m_trailWidth = 1.5f;
         
         [Tooltip("흔적이 완전히 사라지기까지의 시간")]
-        [FormerlySerializedAs("trailLifetime")]
         [SerializeField] private float m_trailLifetime = 5f;
 
 
@@ -67,9 +63,9 @@ namespace DogGuns_Games.vamsir
             m_trailCollider = GetComponent<EdgeCollider2D>();
         }
 
-        protected override void OnEnable()
+        private void OnEnable()
         {
-            base.OnEnable();
+            SetWeaphonState(WeaphonState.Idle);
             if (GameManager.Instance != null)
             {
                 m_playerTransform = GameManager.Instance.PlayerTransfrom();
@@ -81,9 +77,8 @@ namespace DogGuns_Games.vamsir
             InitializeTrail();
         }
 
-        protected override void OnDisable()
+        private void OnDisable()
         {
-            base.OnDisable();
             ResetTrailData();
         }
 
@@ -93,7 +88,6 @@ namespace DogGuns_Games.vamsir
 
             float currentTime = Time.time;
 
-            // 1. 수명 다한 포인트 제거
             while (m_pointCount > 0 && currentTime - m_points[m_head].CreationTime > m_trailLifetime)
             {
                 m_head = (m_head + 1) % m_maxTrailPoints;
@@ -102,7 +96,6 @@ namespace DogGuns_Games.vamsir
 
             Vector3 currentPos = m_playerTransform.position;
 
-            // 2. 새 포인트 추가 판단
             int lastIndex = (m_tail - 1 + m_maxTrailPoints) % m_maxTrailPoints;
             bool shouldAdd = m_pointCount == 0 || Vector3.Distance(m_points[lastIndex].Position, currentPos) > m_pointSpacing;
 
@@ -121,11 +114,8 @@ namespace DogGuns_Games.vamsir
                 EmitPoisonCloud(currentPos);
             }
 
-            // 3. 콜라이더 업데이트
-            // 플레이어 움직임 감지
             bool playerMoved = Vector3.Distance(currentPos, m_lastFramePlayerPos) > Mathf.Epsilon;
 
-            // 포인트가 있거나 플레이어가 움직였으면 꼬리를 갱신합니다.
             if (m_pointCount > 0 || playerMoved)
             {
                 UpdateColliderWithDynamicTail(currentPos);
@@ -143,13 +133,10 @@ namespace DogGuns_Games.vamsir
 
             if (!m_damageCooldowns.TryGetValue(id, out float nextTime) || currentTime >= nextTime)
             {
-                if (other.TryGetComponent(out VamserMobBase mob))
+                if (other.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
                 {
-                    if (!mob.IsDead)
-                    {
-                        mob.TakeDamage(attackPower, mobStunTime); 
-                        m_damageCooldowns[id] = currentTime + coolTime;
-                    }
+                    mob.TakeDamage(attackPower, mobStunTime); 
+                    m_damageCooldowns[id] = currentTime + coolTime;
                 }
             }
         }
@@ -162,10 +149,8 @@ namespace DogGuns_Games.vamsir
         {
             m_emitParams = new ParticleSystem.EmitParams{};
             
-            // 콜라이더 트리거 설정 및 강제 활성화
             if (m_trailCollider != null)
             {
-                // [강제 설정] 초기화 시 isTrigger를 무조건 true로 설정
                 m_trailCollider.isTrigger = true;
                 m_trailCollider.enabled = true; 
             }
@@ -189,7 +174,6 @@ namespace DogGuns_Games.vamsir
             if (m_trailCollider != null)
             {
                 m_trailCollider.Reset();
-                // [안전 장치] 리셋 시에도 isTrigger가 풀리지 않도록 재설정
                 m_trailCollider.isTrigger = true;
             }
         }
@@ -219,18 +203,15 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        // 동적 꼬리를 포함한 콜라이더 업데이트
         private void UpdateColliderWithDynamicTail(Vector3 currentPlayerPos)
         {
             if (m_trailCollider == null) return;
 
-            // [핵심 방어 코드] 매 업데이트마다 isTrigger 상태를 확인하고 강제로 true로 설정
             if (!m_trailCollider.isTrigger)
             {
                 m_trailCollider.isTrigger = true;
             }
 
-            // 혹시라도 꺼져있다면 켭니다.
             if (!m_trailCollider.enabled)
             {
                 m_trailCollider.enabled = true;
@@ -239,7 +220,6 @@ namespace DogGuns_Games.vamsir
             int idx = m_head;
             m_colliderPointsCache.Clear();
 
-            // 1. 기록된 과거의 점들을 추가
             for (int i = 0; i < m_pointCount; i++)
             {
                 Vector3 worldPos = m_points[idx].Position;
@@ -249,11 +229,9 @@ namespace DogGuns_Games.vamsir
                 idx = (idx + 1) % m_maxTrailPoints;
             }
             
-            // 2. 현재 플레이어의 위치를 리스트의 가장 마지막 점으로 추가 (꼬리 만들기)
             Vector2 localCurrentPos = transform.InverseTransformPoint(currentPlayerPos);
             m_colliderPointsCache.Add(localCurrentPos);
             
-            // 콜라이더에 최종 포인트 적용
             m_trailCollider.SetPoints(m_colliderPointsCache);
         }
 

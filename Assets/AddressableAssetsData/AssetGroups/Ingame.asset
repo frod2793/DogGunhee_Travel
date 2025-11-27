@@ -16,7 +16,7 @@ MonoBehaviour:
   m_GUID: c0218446462d6b744bc070f0277a6ea3
   m_SerializeEntries:
   - m_GUID: 06242541335b81f49a2f66a68f92f2c8
-    m_Address: Weapon_6
+    m_Address: Prefab_Weapon_BallPlay
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1557623e4099d47d0ac20a5355ba603b
-    m_Address: Weapon_3
+    m_Address: Prefab_Weapon_Pearl
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -51,7 +51,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ffe1ae531407134cbfb751aeb0a6331
-    m_Address: Weapon_7
+    m_Address: Prefab_Weapon_Boomerang
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -76,7 +76,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 440271337e4a6df43a3314571b76e325
-    m_Address: Weapon_5
+    m_Address: Prefab_Weapon_Smell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -96,7 +96,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4fff049a21ea62141b5c6bf468f172fb
-    m_Address: Weapon_0
+    m_Address: Prefab_Weapon_Bone
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -111,7 +111,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 821ef9c335b6c144bb5835894543add6
-    m_Address: Weapon_1
+    m_Address: Prefab_Weapon_Ink
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -181,7 +181,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfa6c0fa2195f49668417386ea057ef9
-    m_Address: Weapon_4
+    m_Address: Prefab_Weapon_Punch
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -196,7 +196,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f12391ae88c4b2742944ab27fdce585c
-    m_Address: Weapon_2
+    m_Address: Prefab_Weapon_Landing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

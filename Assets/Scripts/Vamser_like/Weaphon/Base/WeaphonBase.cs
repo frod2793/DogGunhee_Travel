@@ -3,55 +3,34 @@ using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 모든 무기의 기본 클래스입니다.
-    /// 무기의 공통적인 능력치, 상태, 동작을 정의합니다.
-    /// </summary>
     public abstract class WeaphonBase : MonoBehaviour
     {
         #region 필드 및 프로퍼티
 
         [Header("기본 능력치")]
-        [Tooltip("무기의 기본 공격력입니다.")]
         public float attackPower;
-        [Tooltip("공격 후 다음 공격까지의 대기 시간(초)입니다.")]
         public float coolTime;
-        [Tooltip("투사체 속도 또는 공격 애니메이션 속도입니다.")]
         public float attackSpeed;
-        [Tooltip("공격이 닿는 최대 범위입니다.")]
         public float attackRange;
 
         [Header("공격 특성")]
-        [Tooltip("피격 대상에게 부여할 스턴 시간(초)입니다.")]
         public float mobStunTime;
-        [Tooltip("투사체를 사용하는 무기인지 여부입니다.")]
         public bool isShooting;
 
         [Header("상태 및 업그레이드")]
-        [Tooltip("현재 무기의 고유 인덱스입니다.")]
-        public int weaphonIndex;
-        
-        [Tooltip("무기의 2단계 업그레이드 적용 여부입니다.")]
-        public bool isUpgradelv2 = false;
-
-        [FormerlySerializedAs("upgradeItemUmber")]
-        [Tooltip("이 무기를 업그레이드하는 데 필요한 패시브 아이템의 고유 코드(SkillCode)입니다.")]
-        public int upgradeItemCode;
-        
-        [Tooltip("상단 무기 목록 UI에 표시될 썸네일 이미지입니다.")]
+        public string skillCode;
+        public string upgradeItemCode;
         public Sprite Thumnail;
 
-        /// <summary>
-        /// 무기의 현재 상태 (대기, 공격, 재장전)
-        /// </summary>
-        public enum WeaphonState
-        {
-            Idle,
-            Attack,
-            Reload
-        }
+        [Header("레벨 시스템")]
+        [SerializeField] private int m_currentLevel = 1;
+        public int CurrentLevel => m_currentLevel;
+        public const int k_MaxLevel = 6;
+        public bool isEvolved = false;
 
-        [Tooltip("무기의 현재 상태를 나타냅니다.")]
+        public SkillData skillData { get; set; }
+
+        public enum WeaphonState { Idle, Attack, Reload }
         [SerializeField] protected WeaphonState weaphonState;
         public WeaphonState CurrentState => weaphonState;
 
@@ -59,50 +38,98 @@ namespace DogGuns_Games.vamsir
 
         #region Unity 라이프사이클
 
-        protected virtual void OnEnable()
+        protected void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
         }
 
-        protected virtual void OnDisable()
-        {
-            // 자식 클래스에서 필요 시 재정의
-        }
+        protected void OnDisable() { }
 
-        /// <summary>
-        /// 에디터에서 값이 변경될 때 호출됩니다. (플레이 모드에서만 동작)
-        /// </summary>
-        private void OnValidate()
+        #endregion
+
+        #region 초기화 및 스탯 적용
+
+        public void ApplyBaseStats()
         {
-            if (Application.isPlaying)
-            {
-                SetWeaphonState(weaphonState);
-            }
+            if (skillData == null) return;
+
+            if (skillData.BaseStats.TryGetValue("Damage", out float damage))
+                attackPower = damage;
+            
+            if (skillData.BaseStats.TryGetValue("Cooldown", out float cooldown))
+                coolTime = cooldown;
         }
 
         #endregion
 
-        #region 상태 관리
+        #region 레벨업 및 상태 관리
 
-        /// <summary>
-        /// 무기의 상태를 변경하고 해당 상태에 맞는 동작을 호출합니다.
-        /// </summary>
-        /// <param name="state">변경할 새로운 상태</param>
+        public void UpgradeLevel()
+        {
+            if (m_currentLevel < k_MaxLevel)
+            {
+                m_currentLevel++;
+                OnLevelUp(m_currentLevel);
+                LogManager.Log($"무기 '{name}' 레벨 업! -> Lv.{m_currentLevel}", LogManager.LogCategory.Weapon);
+            }
+            else if (m_currentLevel == k_MaxLevel && !isEvolved)
+            {
+                isEvolved = true;
+                OnEvolve();
+                LogManager.Log($"무기 '{name}' 진화!", LogManager.LogCategory.Weapon);
+            }
+        }
+
+        protected virtual void OnLevelUp(int newLevel)
+        {
+            if (skillData == null || !skillData.Upgrades.TryGetValue(newLevel, out var modifications))
+            {
+                return;
+            }
+
+            foreach (var mod in modifications)
+            {
+                ApplyStatModification(mod);
+            }
+        }
+
+        private void ApplyStatModification(StatModification mod)
+        {
+            float value = mod.Value;
+            switch (mod.StatName)
+            {
+                case "Damage":
+                    attackPower = (mod.Mode == ModificationMode.Add) ? attackPower + value : attackPower * value;
+                    break;
+                case "Cooldown":
+                    coolTime = (mod.Mode == ModificationMode.Add) ? coolTime + value : coolTime * value;
+                    break;
+                case "AttackSpeed":
+                    attackSpeed = (mod.Mode == ModificationMode.Add) ? attackSpeed + value : attackSpeed * value;
+                    break;
+                default:
+                    Debug.LogWarning($"[WeaphonBase] 알 수 없는 스탯 이름: {mod.StatName}");
+                    break;
+            }
+        }
+
+        protected virtual void OnEvolve() 
+        {
+            if (skillData?.EvolutionInfo != null)
+            {
+                skillData.skillName = skillData.EvolutionInfo.Name;
+                skillData.flavorText = skillData.EvolutionInfo.FlavorText;
+            }
+        }
+
         public void SetWeaphonState(WeaphonState state)
         {
             weaphonState = state;
             switch (state)
             {
-                case WeaphonState.Idle:
-                    Weaphon_Idle();
-                    break;
-                case WeaphonState.Attack:
-                    // SetWeaphonState는 주로 상태 전환에 사용되므로, 실제 공격 각도는 Weaphon_Attack에서 직접 받습니다.
-                    Weaphon_Attack(Vector3.zero);
-                    break;
-                case WeaphonState.Reload:
-                    Weaphon_Reload();
-                    break;
+                case WeaphonState.Idle: Weaphon_Idle(); break;
+                case WeaphonState.Attack: Weaphon_Attack(Vector3.zero); break;
+                case WeaphonState.Reload: Weaphon_Reload(); break;
             }
         }
 
@@ -110,30 +137,9 @@ namespace DogGuns_Games.vamsir
 
         #region 핵심 동작 (추상)
 
-        /// <summary>
-        /// 무기가 대기 상태일 때의 동작을 정의합니다.
-        /// </summary>
-        public virtual void Weaphon_Idle()
-        {
-            // 자식 클래스에서 재정의
-        }
-
-        /// <summary>
-        /// 무기가 공격 상태일 때의 동작을 정의합니다.
-        /// </summary>
-        /// <param name="attackAngle">공격 방향 벡터</param>
-        public virtual void Weaphon_Attack(Vector3 attackAngle)
-        {
-            // 자식 클래스에서 재정의
-        }
-
-        /// <summary>
-        /// 무기가 재장전 상태일 때의 동작을 정의합니다.
-        /// </summary>
-        public virtual void Weaphon_Reload()
-        {
-            // 자식 클래스에서 재정의
-        }
+        public virtual void Weaphon_Idle() { }
+        public virtual void Weaphon_Attack(Vector3 attackAngle) { }
+        public virtual void Weaphon_Reload() { }
 
         #endregion
     }

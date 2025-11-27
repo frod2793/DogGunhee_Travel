@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 910666853332281391}
@@ -107,8 +107,8 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 0.5
   isShooting: 1
-  weaphonIndex: 0
-  isUpgradelv2: 1
+  skillCode: 
+  isUpgradelv2: 0
   upgradeItemCode: 1
   Thumnail: {fileID: 21300000, guid: 2ab19c268b3545a41a33a186e031c2e1, type: 3}
   weaphonState: 0
@@ -141,7 +141,7 @@ Transform:
   m_GameObject: {fileID: 8177060602824528970}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.1, z: 0}
+  m_LocalPosition: {x: 0, y: -0.078, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -190,7 +190,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingOrder: 15
   m_Sprite: {fileID: 21300000, guid: 2ab19c268b3545a41a33a186e031c2e1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

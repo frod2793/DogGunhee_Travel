@@ -1,42 +1,39 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DogGuns_Games
 {
-    /// <summary>
-    /// 스킬의 종류를 정의합니다. (패시브, 무기 등)
-    /// </summary>
     public enum SkillType
     {
-        Passive, // 패시브 스킬 (스탯 강화 등)
-        Weapon   // 무기 스킬 (새로운 무기 획득)
+        Passive,
+        Weapon
     }
 
-    /// <summary>
-    /// 레벨업 시 선택 가능한 스킬(무기, 장신구, 업그레이드)의 데이터 구조체입니다.
-    /// </summary>
     [System.Serializable]
     public class SkillData
     {
-        [Tooltip("스킬을 식별하는 고유 코드입니다.")]
-        public int skillCode;
+        [Tooltip("XML 데이터와 연결하는 고유 키(Key)입니다. XML의 'key' 속성과 일치해야 합니다.")]
+        public string skillCode;
 
-        [Tooltip("스킬의 종류를 나타냅니다. (패시브 또는 무기)")]
-        public SkillType skillType;
-
-        [Tooltip("UI에 표시될 스킬의 이름입니다.")]
+        // 이 필드들은 XML에서 런타임에 로드됩니다.
         public string skillName;
-
-        [Tooltip("UI에 표시될 스킬의 상세 설명입니다."), TextArea(3, 5)]
+        public SkillType skillType;
+        public string upgradeItemCode; // [추가] 업그레이드에 필요한 아이템 코드
+        public string flavorText;
         public string skillDescription;
+        public string stats;
+        public string weaponAddressableKey;
 
         [Tooltip("룰렛 UI에 표시될 스킬의 아이콘 이미지입니다.")]
         public Sprite skillIcon;
-        
-        [Tooltip("상단 무기/장신구 목록 UI에 표시될 썸네일 이미지입니다.")]
-        public Sprite Thumnail;
-        
-        [Header("Weapon-Specific")]
-        [Tooltip("스킬 타입이 'Weapon'일 경우, 로드할 무기 프리팹의 Addressable 키입니다.")]
-        public string weaponAddressableKey;
+
+        [System.NonSerialized]
+        public Dictionary<string, float> BaseStats = new Dictionary<string, float>();
+
+        [System.NonSerialized]
+        public EvolutionData EvolutionInfo;
+
+        [System.NonSerialized]
+        public Dictionary<int, List<StatModification>> Upgrades = new Dictionary<int, List<StatModification>>();
     }
 }

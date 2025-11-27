@@ -27,9 +27,9 @@ Transform:
   m_GameObject: {fileID: 2323243703256953744}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.116, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: -0.0645, z: 0}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1499702491657628308}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -220,8 +220,10 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 0.5
   isShooting: 0
-  weaphonIndex: 5
+  skillCode: 
   isUpgradelv2: 0
+  upgradeItemCode: 
+  Thumnail: {fileID: 0}
   weaphonState: 0
   m_maxTrailPoints: 50
   m_pointSpacing: 0.1

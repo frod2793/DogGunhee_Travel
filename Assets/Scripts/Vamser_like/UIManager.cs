@@ -10,80 +10,67 @@ using UnityEngine.Serialization;
 using DG.Tweening;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
+using DogGuns_Games; // SkillDatabase, SkillData가 포함된 네임스페이스
 
 namespace DogGuns_Games.vamsir
 {
     /// <summary>
-    /// 인게임 UI(HUD, 팝업, 조이스틱 등)를 총괄하는 클래스입니다. (메서드명 수정됨)
+    /// 인게임 UI(HUD, 팝업, 조이스틱 등)를 총괄하는 클래스입니다.
     /// </summary>
     public class UIManager : MonoBehaviour
     {
         #region 필드 및 변수 (인스펙터 연결)
 
         [Header("유저 정보 UI")]
-        [FormerlySerializedAs("LevelText")] 
         [SerializeField] private TMP_Text m_levelText;
-        
-        [FormerlySerializedAs("playerLevelSlider")] 
         [SerializeField] private Slider m_playerLevelSlider;
 
         [Header("HUD 텍스트 UI")]
-        [FormerlySerializedAs("mobWaveText")] 
         [SerializeField] private TMP_Text m_mobWaveText;
-        
-        [FormerlySerializedAs("coinText")] 
         [SerializeField] private TMP_Text m_coinText;
-        
-        [FormerlySerializedAs("mobCountText")] 
         [SerializeField] private TMP_Text m_mobCountText;
-        
-        [FormerlySerializedAs("playerLevelText")] 
         [SerializeField] private TMP_Text m_playerLevelText_InGame;
-        
-        [FormerlySerializedAs("expSlider")] 
         [SerializeField] private Slider m_expSlider;
 
         [Header("메뉴 UI")]
-        [FormerlySerializedAs("menuBtn")] [SerializeField] private Button m_menuButton;
-        [FormerlySerializedAs("menuPanel")] [SerializeField] private GameObject m_menuPanel;
-        [FormerlySerializedAs("settingBtn")] [SerializeField] private Button m_settingButton;
-        [FormerlySerializedAs("exitBtn")] [SerializeField] private Button m_exitButton;
+        [SerializeField] private Button m_menuButton;
+        [SerializeField] private GameObject m_menuPanel;
+        [SerializeField] private Button m_settingButton;
+        [SerializeField] private Button m_exitButton;
         
         [Tooltip("무기 아이콘을 표시할 UI Image 리스트")]
-        [FormerlySerializedAs("weaponUIList")] 
         public List<Image> m_weaponUIList = new List<Image>();
         
         [Tooltip("패시브 아이템(장신구) 아이콘을 표시할 UI Image 리스트")]
-        [FormerlySerializedAs("juListUIList")] 
         public List<Image> m_juListUIList = new List<Image>();
 
         [Header("게임 오버 UI")]
-        [FormerlySerializedAs("gameOverPanel")] [SerializeField] private GameObject m_gameOverPanel;
-        [FormerlySerializedAs("gameOverExitBtn")] [SerializeField] private Button m_gameOverExitButton;
-        [FormerlySerializedAs("gameOverRestartBtn")] [SerializeField] private Button m_gameOverRestartButton;
-        [FormerlySerializedAs("gameOverText")] [SerializeField] private TMP_Text m_gameOverText;
-        [FormerlySerializedAs("gameOverCoinText")] [SerializeField] private TMP_Text m_gameOverCoinText;
-        [FormerlySerializedAs("gameOverWaveText")] [SerializeField] private TMP_Text m_gameOverWaveText;
-        [FormerlySerializedAs("gameOverMobCountText")] [SerializeField] private TMP_Text m_gameOverMobCountText;
+        [SerializeField] private GameObject m_gameOverPanel;
+        [SerializeField] private Button m_gameOverExitButton;
+        [SerializeField] private Button m_gameOverRestartButton;
+        [SerializeField] private TMP_Text m_gameOverText;
+        [SerializeField] private TMP_Text m_gameOverCoinText;
+        [SerializeField] private TMP_Text m_gameOverWaveText;
+        [SerializeField] private TMP_Text m_gameOverMobCountText;
 
         [Header("조작계 UI")]
-        [FormerlySerializedAs("variableJoystick")] [SerializeField] private VariableJoystick m_variableJoystick;
-        [FormerlySerializedAs("joystickTransform")] [SerializeField] private RectTransform m_joystickTransform;
-        [FormerlySerializedAs("autoAttackToggle")] [SerializeField] private Toggle m_autoAttackToggle;
+        [SerializeField] private VariableJoystick m_variableJoystick;
+        [SerializeField] private RectTransform m_joystickTransform;
+        [SerializeField] private Toggle m_autoAttackToggle;
 
         [Header("설정 데이터")]
-        [FormerlySerializedAs("settingsData")] [SerializeField] private SettingsData m_settingsData;
+        [SerializeField] private SettingsData m_settingsData;
 
         [Header("스킬 선택 UI")]
-        [FormerlySerializedAs("skillSelectionPanel")] [SerializeField] private GameObject m_skillSelectionPanel;
-        [FormerlySerializedAs("refreshButton")] [SerializeField] private Button m_refreshButton;
-        [FormerlySerializedAs("skillSelectionButtonPrefab")] [SerializeField] private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
-        [FormerlySerializedAs("skillButtonContainer")] [SerializeField] private GameObject m_skillButtonContainer;
-        [FormerlySerializedAs("countdownText")] [SerializeField] private TMP_Text m_countdownText;
-        [FormerlySerializedAs("countDownslider")] [SerializeField] private Slider m_countDownSlider;
+        [SerializeField] private GameObject m_skillSelectionPanel;
+        [SerializeField] private Button m_refreshButton;
+        [SerializeField] private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
+        [SerializeField] private GameObject m_skillButtonContainer;
+        [SerializeField] private TMP_Text m_countdownText;
+        [SerializeField] private Slider m_countDownSlider;
 
         [Header("데이터")]
-        [FormerlySerializedAs("skillDatabase")] [SerializeField] private SkillDatabase m_skillDatabase;
+        [SerializeField] private SkillDatabase m_skillDatabase;
 
         #endregion
 
@@ -92,23 +79,19 @@ namespace DogGuns_Games.vamsir
         private GameManager m_gameManager;
         private PlayerControll m_playerController;
         
-        // 비동기 제어
         private CancellationTokenSource m_uiUpdateCts;
         private CancellationTokenSource m_skillSelectionTimerCts;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
         private Tween m_expSliderTween;
 
-        // 최적화를 위한 캐시 변수 (Dirty Check용)
         private int m_lastWave = -1;
         private int m_lastCoin = -1;
         private int m_lastMobCount = -1;
 
-        // 스킬 선택 관련
         private readonly List<SelectSkillBtnPrefab> m_skillButtonPool = new List<SelectSkillBtnPrefab>();
         private readonly List<SkillData> m_skillChoices = new List<SkillData>(3);
         private readonly List<SkillData> m_acquiredAccessorySkills = new List<SkillData>();
         
-        // UI 갱신용 데이터 캐시
         private readonly List<Sprite> m_weaponThumbnails = new List<Sprite>();
         private readonly List<Sprite> m_accessoryIcons = new List<Sprite>();
         
@@ -183,22 +166,18 @@ namespace DogGuns_Games.vamsir
 
         private void BindUIEvents()
         {
-            // 메뉴 버튼
             m_menuButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
             m_exitButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
             m_settingButton.OnClickAsObservable().Subscribe(_ => m_gameManager.OpenOptionPopup()).AddTo(m_disposables);
 
-            // 게임 오버 버튼
             m_gameOverExitButton.OnClickAsObservable().Subscribe(_ => ExitToLobby()).AddTo(m_disposables);
             m_gameOverRestartButton.OnClickAsObservable().Subscribe(_ => RestartGame()).AddTo(m_disposables);
 
-            // 스킬 선택 버튼
             if (m_refreshButton != null)
             {
                 m_refreshButton.OnClickAsObservable().Subscribe(_ => GenerateSkillChoices()).AddTo(m_disposables);
             }
 
-            // 자동 공격 토글
             if (m_autoAttackToggle != null)
             {
                 m_autoAttackToggle.OnValueChangedAsObservable().Subscribe(OnAutoAttackToggleChanged).AddTo(m_disposables);
@@ -521,12 +500,12 @@ namespace DogGuns_Games.vamsir
             foreach (var btn in m_skillButtonPool) btn.gameObject.SetActive(false);
             m_skillChoices.Clear();
 
-            var ownedWeaponIndices = new HashSet<int>();
+            var ownedWeaponCodes = new HashSet<string>();
             if (m_gameManager.SpawnedPlayer != null)
             {
                 foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
                 {
-                    ownedWeaponIndices.Add(weapon.weaphonIndex);
+                    ownedWeaponCodes.Add(weapon.skillCode);
                 }
             }
 
@@ -534,7 +513,7 @@ namespace DogGuns_Games.vamsir
             {
                 if (skill.skillType == SkillType.Weapon)
                 {
-                    return !ownedWeaponIndices.Contains(skill.skillCode);
+                    return !ownedWeaponCodes.Contains(skill.skillCode);
                 }
                 return true;
             }).ToList();
@@ -577,7 +556,7 @@ namespace DogGuns_Games.vamsir
             else // Passive
             {
                 m_acquiredAccessorySkills.Add(selectedSkill);
-                CheckForWeaponUpgrade(selectedSkill.skillCode);
+                TryUpgradeWeapon(selectedSkill.skillCode); // [수정] 메서드 호출
                 if (m_gameManager.SpawnedPlayer != null)
                 {
                     EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
@@ -602,18 +581,22 @@ namespace DogGuns_Games.vamsir
             }
         }
         
-        private void CheckForWeaponUpgrade(int passiveItemCode)
+        /// <summary>
+        /// 획득한 패시브 아이템과 일치하는 무기의 업그레이드를 시도합니다.
+        /// </summary>
+        /// <param name="passiveItemCode">획득한 패시브 아이템의 SkillCode</param>
+        private void TryUpgradeWeapon(string passiveItemCode)
         {
             if (m_gameManager.SpawnedPlayer == null) return;
 
-            foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
+            // upgradeItemCode가 일치하는 무기를 찾습니다.
+            var weaponToUpgrade = m_gameManager.SpawnedPlayer.Weapons
+                .FirstOrDefault(w => w.upgradeItemCode == passiveItemCode);
+
+            // 해당 무기가 존재하면 업그레이드를 시도합니다.
+            if (weaponToUpgrade != null)
             {
-                if (weapon.upgradeItemCode == passiveItemCode && !weapon.isUpgradelv2)
-                {
-                    weapon.isUpgradelv2 = true;
-                    LogManager.Log($"무기 '{weapon.name}'이(가) 아이템 코드 {passiveItemCode}에 의해 2레벨로 업그레이드되었습니다!", LogManager.LogCategory.VamserLikeUI);
-                    break; 
-                }
+                weaponToUpgrade.UpgradeLevel();
             }
         }
 

@@ -1131,7 +1131,7 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 1
   isShooting: 0
-  weaphonIndex: 1
+  skillCode: 
   isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 0}
@@ -4779,10 +4779,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_startCharacterIndex: 0
-  m_startWeaponIndex: 0
-  m_startWeaponUpgradeLv2: 0
+  m_skillDatabase: {fileID: 11400000, guid: 6efa305b409e57449addb4f0370f209d, type: 2}
   m_playerContainer: {fileID: 3904192412624442642}
   m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
+  TestWeapons: []
 --- !u!114 &4441102585319734577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8692,7 +8692,7 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 0
   isShooting: 0
-  weaphonIndex: 0
+  skillCode: 
   isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 0}
@@ -11257,7 +11257,7 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 0.5
   isShooting: 1
-  weaphonIndex: 0
+  skillCode: 
   isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 0}

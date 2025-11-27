@@ -30,37 +30,27 @@ namespace DogGuns_Games.vamsir
 
         #region 초기화 및 오브젝트 풀 관리
 
-        protected override void OnEnable()
+        private void OnEnable()
         {
+            SetWeaphonState(WeaphonState.Idle);
             
-            base.OnEnable();
-            
-            // bulletParent가 할당되지 않았다면, 안전을 위해 현재 트랜스폼을 부모로 사용합니다.
             if (m_bulletParent == null)
             {
                 m_bulletParent = transform;
             }
             
-            //발사체 오브젝트 풀 설정 
             WeaphonBoneObjectPool = new ObjectPool<BoneBullet>(CreateBullet,
                 OnGet, OnRelease, OnDestroyPoolItem, maxSize: m_poolSizeBulletCount);
         }
 
         private BoneBullet CreateBullet()
         {
-            // 총알 생성 최적화
-            // Instantiate 시 부모를 함께 지정하여 불필요한 월드 좌표 변환을 방지합니다.
             GameObject bulletObject = Instantiate(m_bonePrefab, m_bulletParent);
             
             BoneBullet bullet = bulletObject.GetComponent<BoneBullet>();
 
-            // 총알 초기 설정
             bullet.ObjectPoolSpawner = this;
-
-            // 총알 이름 설정으로 디버깅 용이성 향상
             bullet.gameObject.name = $"{m_bonePrefab.name}_{Guid.NewGuid().ToString().Substring(0, 4)}";
-
-            // 초기 상태는 비활성화
             bulletObject.SetActive(false);
 
             return bullet;
@@ -70,9 +60,7 @@ namespace DogGuns_Games.vamsir
         {
             if (obj == null) return;
 
-            // 총알 상태 초기화
             obj.ResetState();
-            // 풀에서 나올 때마다 부모 무기의 최신 스탯으로 갱신합니다.
             obj.Initialize(this);
             obj.gameObject.SetActive(true);
         }
@@ -81,14 +69,10 @@ namespace DogGuns_Games.vamsir
         {
             if (obj == null) return;
 
-            // 비활성화
             obj.gameObject.SetActive(false);
-            
-            // 씬 계층 구조를 깔끔하게 유지하기 위해 풀로 돌아올 때 다시 자식으로 설정합니다.
             obj.transform.SetParent(m_bulletParent);
         }
 
-        // 메서드명을 변경하여 Unity 라이프사이클 메서드와 충돌 방지
         private void OnDestroyPoolItem(BoneBullet obj)
         {
             if (obj != null)
@@ -103,11 +87,8 @@ namespace DogGuns_Games.vamsir
         
         public override void Weaphon_Attack(Vector3 attackAngle)
         {
-            base.Weaphon_Attack(attackAngle);
             ThrowBone(attackAngle).Forget();
         }
-
-   
 
         #endregion
 
@@ -116,7 +97,6 @@ namespace DogGuns_Games.vamsir
 
         private async UniTask ThrowBone(Vector3 attackAngle)
         {
-            // 이미 공격 중이면 무시
             if (m_isAttacking) return;
 
             m_isAttacking = true;
@@ -126,7 +106,6 @@ namespace DogGuns_Games.vamsir
                 BoneBullet bullet = WeaphonBoneObjectPool.Get();
                 bullet.transform.position = transform.position;
                 
-                // 발사 시 부모로부터 독립시켜 월드 공간에서 자유롭게 움직이도록 합니다.
                 bullet.transform.SetParent(null);
                 bullet.ThrowBullet(attackAngle);
 
@@ -135,7 +114,6 @@ namespace DogGuns_Games.vamsir
             }
             catch (Exception ex)
             {
-                // UniTask의 CancellationToken으로 인해 발생하는 예외는 정상적인 종료 과정이므로 로그를 남기지 않습니다.
                 if (ex is not OperationCanceledException)
                 {
                     Debug.LogError($"뼈 발사 중 오류 발생: {ex.Message}");

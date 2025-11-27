@@ -16,17 +16,15 @@ namespace DogGuns_Games.vamsir
         private Vector3 m_velocity;
         private float m_damage;
         private float m_stunTime;
-        private bool m_isUpgraded;
+        private bool m_isEvolved;
 
         private Camera m_mainCamera;
         private TrailRenderer m_trailRenderer;
-        private Animator m_animator; // [추가]
+        private Animator m_animator;
 
-        // 중복 타격 방지 쿨타임
         private readonly Dictionary<int, float> m_hitCooldowns = new Dictionary<int, float>();
         private const float k_HitCooldown = 0.5f;
 
-        // 애니메이션 해시
         private static readonly int k_AnimTriggerLv1 = Animator.StringToHash("Level1");
         private static readonly int k_AnimTriggerLv2 = Animator.StringToHash("Level2");
 
@@ -40,11 +38,8 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private float m_trailEndWidth = 0.0f;
 
         [Header("Level Colors")]
-        [Tooltip("레벨 1 궤적 색상 (기본 흰색)")]
         [SerializeField] private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
-        
-        [Tooltip("레벨 2 궤적 색상 (보라색/분홍색)")]
-        [SerializeField] private Color m_trailColorLv2 = new Color(1f, 0f, 1f, 0.5f); // Magenta
+        [SerializeField] private Color m_trailColorLv2 = new Color(1f, 0f, 1f, 0.5f);
 
         #endregion
 
@@ -54,12 +49,11 @@ namespace DogGuns_Games.vamsir
         {
             m_mainCamera = Camera.main;
             m_trailRenderer = GetComponent<TrailRenderer>();
-            m_animator = GetComponent<Animator>(); // [추가]
+            m_animator = GetComponent<Animator>();
 
             var col = GetComponent<Collider2D>();
             if (col != null) col.isTrigger = true;
             
-            // 초기 궤적 설정 (색상은 Initialize에서 덮어씌워짐)
             SetupTrailBase();
         }
 
@@ -71,7 +65,6 @@ namespace DogGuns_Games.vamsir
 
         private void Update()
         {
-            // 이동 및 회전
             transform.position += m_velocity * Time.deltaTime;
             
             float rotateSpeed = 360f * Time.deltaTime;
@@ -88,28 +81,25 @@ namespace DogGuns_Games.vamsir
         {
             m_damage = weapon.attackPower;
             m_stunTime = weapon.mobStunTime;
-            m_isUpgraded = weapon.isUpgradelv2;
+            m_isEvolved = weapon.isEvolved;
             m_velocity = initialVelocity;
             
             transform.rotation = Quaternion.identity;
 
-            // [핵심] 레벨에 따른 비주얼(애니메이션 + 색상) 업데이트
             UpdateVisualsByLevel();
         }
 
         private void UpdateVisualsByLevel()
         {
-            // 1. 애니메이션 트리거 발동
             if (m_animator != null)
             {
-                int trigger = m_isUpgraded ? k_AnimTriggerLv2 : k_AnimTriggerLv1;
+                int trigger = m_isEvolved ? k_AnimTriggerLv2 : k_AnimTriggerLv1;
                 m_animator.SetTrigger(trigger);
             }
 
-            // 2. 궤적 색상 변경
             if (m_trailRenderer != null)
             {
-                Color targetColor = m_isUpgraded ? m_trailColorLv2 : m_trailColorLv1;
+                Color targetColor = m_isEvolved ? m_trailColorLv2 : m_trailColorLv1;
                 SetTrailColor(targetColor);
             }
         }
@@ -136,9 +126,6 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// 궤적의 색상(그라데이션)을 변경합니다.
-        /// </summary>
         private void SetTrailColor(Color color)
         {
             Gradient gradient = new Gradient();
@@ -176,24 +163,20 @@ namespace DogGuns_Games.vamsir
                 {
                     if (other.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
                     {
-                        float appliedStun = m_isUpgraded ? m_stunTime : 0f;
+                        float appliedStun = m_isEvolved ? m_stunTime : 0f;
                         mob.TakeDamage(m_damage, appliedStun);
                         m_hitCooldowns[id] = Time.time + k_HitCooldown;
                     }
                 }
             }
         }
-        /// <summary>
-        /// 이미 활동 중인 진주의 상태(공격력, 레벨 비주얼 등)를 갱신합니다.
-        /// </summary>
+        
         public void UpdateState(WeaphonBase weapon)
         {
-            // 스탯 갱신
             m_damage = weapon.attackPower;
             m_stunTime = weapon.mobStunTime;
-            m_isUpgraded = weapon.isUpgradelv2;
+            m_isEvolved = weapon.isEvolved;
 
-            // 비주얼(색상, 애니메이션) 즉시 업데이트
             UpdateVisualsByLevel();
         }
         #endregion

@@ -8,24 +8,18 @@ using UnityEngine.Serialization;
 
 namespace DogGuns_Games.vamsir
 {
-    public class WeaponStrongBlackWater : WeaphonBase
+    public class WeaphonStrongBlackWater : WeaphonBase
     {
         #region 인스펙터 필드
 
         [Header("기본 공격 설정")]
         [Tooltip("틱 데미지가 들어가는 간격입니다.")]
-        [FormerlySerializedAs("damageTickInterval")]
         [SerializeField] private float m_damageTickInterval = 0.5f;
 
         [Header("업그레이드 스탯 설정")]
-        // [삭제됨] 크기 배율 변수 제거
-        // [SerializeField] private float m_rangeMultiplier = 1.5f;
-        
         [Tooltip("적의 이동 속도를 감소시키는 비율 (0.3 = 30% 감소)")]
-        [FormerlySerializedAs("slowAmount")]
         [SerializeField] [Range(0f, 1f)] private float m_slowAmount = 0.3f;
         
-        [FormerlySerializedAs("slowDuration")]
         [SerializeField] private float m_slowDuration = 1.0f;
 
         [Header("감지 및 비주얼 설정")]
@@ -45,7 +39,7 @@ namespace DogGuns_Games.vamsir
         private bool m_isAttacking;
         private Vector3 m_originalScale;
         
-        private bool m_currentLevelState = false; 
+        private bool m_currentEvolveState = false; 
 
         private ContactFilter2D m_contactFilter;
         private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20); 
@@ -64,7 +58,7 @@ namespace DogGuns_Games.vamsir
 
             if (m_collider2D == null)
             {
-                Debug.LogError("[WeaponStrongBlackWater] Collider2D Missing!");
+                Debug.LogError("[WeaphonStrongBlackWater] Collider2D Missing!");
             }
             else
             {
@@ -83,23 +77,21 @@ namespace DogGuns_Games.vamsir
             m_contactFilter.useLayerMask = true;
         }
 
-        protected override void OnEnable()
+        private void OnEnable()
         {
-            base.OnEnable(); 
+            SetWeaphonState(WeaphonState.Idle);
             
             if (m_collider2D != null) m_collider2D.enabled = false;
-            // 항상 초기 크기로 시작
             transform.localScale = m_originalScale;
             m_isAttacking = false;
             
-            m_currentLevelState = this.isUpgradelv2;
+            m_currentEvolveState = this.isEvolved;
             
             AttackRoutineAsync().Forget();
         }
 
-        protected override void OnDisable()
+        private void OnDisable()
         {
-            base.OnDisable();
             transform.DOKill(); 
             m_isAttacking = false;
         }
@@ -110,7 +102,6 @@ namespace DogGuns_Games.vamsir
 
         public override void Weaphon_Attack(Vector3 attackAngle)
         {
-            base.Weaphon_Attack(attackAngle);
             if (!m_isAttacking && gameObject.activeInHierarchy)
             {
                 AttackRoutineAsync().Forget();
@@ -126,18 +117,16 @@ namespace DogGuns_Games.vamsir
             m_isAttacking = true;
             var token = this.GetCancellationTokenOnDestroy();
 
-            // 초기 상태 적용
             UpdateWeaponState(); 
             if (m_collider2D != null) m_collider2D.enabled = true;
             
-            // 등장 이펙트 (0 -> 원래 크기)
             transform.DOScale(m_originalScale, 0.3f).From(Vector3.zero).SetEase(Ease.OutBack);
 
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    CheckLevelUpState();
+                    CheckEvolveState();
 
                     ProcessTickDamage();
                     
@@ -154,29 +143,22 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        private void CheckLevelUpState()
+        private void CheckEvolveState()
         {
-            if (m_currentLevelState != this.isUpgradelv2)
+            if (m_currentEvolveState != this.isEvolved)
             {
-                m_currentLevelState = this.isUpgradelv2;
+                m_currentEvolveState = this.isEvolved;
                 UpdateWeaponState(); 
             }
         }
 
-        /// <summary>
-        /// 현재 레벨(isUpgradelv2)에 맞춰 무기 상태(애니메이션)를 설정합니다.
-        /// [수정됨] 스케일 변경 로직 삭제됨.
-        /// </summary>
         private void UpdateWeaponState()
         {
-            // 1. 스케일: 항상 원본 크기 유지
-            // (이전에 있던 if-else 분기 삭제)
             transform.localScale = m_originalScale;
 
-            // 2. 애니메이션 전환
             if (m_animator != null)
             {
-                if (this.isUpgradelv2)
+                if (this.isEvolved)
                 {
                     m_animator.SetTrigger(k_AnimTriggerLevel2);
                 }
@@ -197,16 +179,13 @@ namespace DogGuns_Games.vamsir
             {
                 var target = m_hitResults[i];
                 
-                if (target.TryGetComponent(out VamserMobBase mob))
+                if (target.TryGetComponent(out VamserMobBase mob) && !mob.IsDead) 
                 {
-                    if (!mob.IsDead) 
-                    {
-                        mob.TakeDamage(attackPower); 
+                    mob.TakeDamage(attackPower); 
 
-                        if (this.isUpgradelv2)
-                        {
-                            mob.ApplySlow(m_slowAmount, m_slowDuration);
-                        }
+                    if (this.isEvolved)
+                    {
+                        mob.ApplySlow(m_slowAmount, m_slowDuration);
                     }
                 }
             }

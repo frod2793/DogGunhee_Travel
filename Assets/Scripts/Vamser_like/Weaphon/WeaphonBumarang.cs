@@ -6,13 +6,12 @@ namespace DogGuns_Games.vamsir
 {
     /// <summary>
     /// 부메랑 무기 컨트롤러입니다.
-    /// 레벨 2가 되면 부메랑 개수가 늘어납니다.
     /// </summary>
-    public class WeaponBoomerang : WeaphonBase
+    public class WeaphonBumarang : WeaphonBase
     {
         [Header("부메랑 설정")]
         [SerializeField] private BoomerangProjectile m_boomerangPrefab;
-        [SerializeField] private Transform m_firePoint; // 발사 위치 (보통 플레이어)
+        [SerializeField] private Transform m_firePoint;
 
         [Header("발사체 스탯")]
         [Tooltip("부메랑이 날아가는 최대 거리")]
@@ -32,10 +31,9 @@ namespace DogGuns_Games.vamsir
             InitializePool();
         }
 
-        protected override void OnEnable()
+        private void OnEnable()
         {
-            base.OnEnable();
-            // 플레이어 위치 참조 (없으면 부모)
+            SetWeaphonState(WeaphonState.Idle);
             if (m_firePoint == null) m_firePoint = transform.parent != null ? transform.parent : transform;
         }
 
@@ -50,18 +48,14 @@ namespace DogGuns_Games.vamsir
         {
             m_isAttacking = true;
 
-            // 방향이 없으면 기본 오른쪽
             if (direction == Vector3.zero) direction = Vector3.right;
 
-            // 레벨업 시 발사 개수 증가 (예: +2개)
-            int count = isUpgradelv2 ? m_baseCount + 2 : m_baseCount;
+            int count = isEvolved ? m_baseCount + 2 : m_baseCount;
             
-            // 부채꼴 발사 각도 계산
-            float startAngle = -15f * (count - 1); // 간격 30도 기준
+            float startAngle = -15f * (count - 1);
             float angleStep = (count > 1) ? 30f : 0f;
 
-            // 발사 기준 각도 (입력 방향)
-            float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f; // Sprite Up 기준
+            float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
             for (int i = 0; i < count; i++)
             {
@@ -72,17 +66,13 @@ namespace DogGuns_Games.vamsir
                 projectile.transform.position = m_firePoint.position;
                 projectile.transform.rotation = rotation;
 
-                // 속도 및 거리 등 스탯 적용
-                // attackSpeed가 높을수록 투사체 속도 증가
                 float finalSpeed = m_flySpeed * (attackSpeed > 0 ? attackSpeed : 1f);
                 
                 projectile.Initialize(m_pool, m_firePoint, attackPower, mobStunTime, finalSpeed, m_throwDistance);
 
-                // 연사 간격 (약간의 텀을 두고 발사)
                 await UniTask.Delay(50, cancellationToken: this.GetCancellationTokenOnDestroy());
             }
 
-            // 쿨타임 대기
             await UniTask.Delay(System.TimeSpan.FromSeconds(coolTime), cancellationToken: this.GetCancellationTokenOnDestroy());
             
             m_isAttacking = false;
@@ -117,7 +107,6 @@ namespace DogGuns_Games.vamsir
 
         private void OnDestroy()
         {
-            // IDisposable 패턴으로 풀 정리
             if (m_pool is System.IDisposable disposable) disposable.Dispose();
         }
 

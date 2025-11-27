@@ -174,7 +174,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6745571464397854502}
@@ -198,7 +198,7 @@ MonoBehaviour:
   attackRange: 0
   mobStunTime: 1
   isShooting: 0
-  weaphonIndex: 1
+  skillCode: 
   isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 1859045663046494767, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
