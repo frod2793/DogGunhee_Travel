@@ -53,7 +53,7 @@ namespace DogGuns_Games.vamsir
 
             if (!m_damageCooldowns.TryGetValue(enemyId, out float nextTime) || Time.time >= nextTime)
             {
-                if (other.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
+                if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
                 {
                     mob.TakeDamage(attackPower, mobStunTime);
                     m_damageCooldowns[enemyId] = Time.time + coolTime;

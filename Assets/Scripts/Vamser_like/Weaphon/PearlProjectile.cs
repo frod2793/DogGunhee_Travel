@@ -161,7 +161,7 @@ namespace DogGuns_Games.vamsir
                 
                 if (!m_hitCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
                 {
-                    if (other.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
+                    if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
                     {
                         float appliedStun = m_isEvolved ? m_stunTime : 0f;
                         mob.TakeDamage(m_damage, appliedStun);

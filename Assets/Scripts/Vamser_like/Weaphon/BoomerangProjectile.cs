@@ -167,7 +167,7 @@ namespace DogGuns_Games.vamsir
                 int id = other.gameObject.GetInstanceID();
                 if (!m_hitHistory.Contains(id))
                 {
-                    if (other.TryGetComponent(out VamserMobBase mob))
+                    if (other.TryGetComponent(out MobBase mob))
                     {
                         m_hitHistory.Add(id);
                         mob.TakeDamage(m_damage, m_stunTime);

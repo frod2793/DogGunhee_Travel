@@ -154,7 +154,7 @@
         <Name>신비한 불꽃</Name>
         <SkillType>Weapon</SkillType>
         <UpgradeItemCode></UpgradeItemCode>
-        <WeaponAddressableKey>Prefab_Weapon_Fire</WeaponAddressableKey>
+        <WeaponAddressableKey>WeaPhon_Flame</WeaponAddressableKey>
         <FlavorText>타오르는 불꽃입니다. 착한 마음씨를 가진 친구들은 들 수 있지만, 나쁜 마음을 가졌다면 불타게 됩니다.</FlavorText>
         <Description>불꽃이 퍼져 랜덤한 위치에 지속적인 피해를 줍니다.</Description>
         <Stats>공격력, 쿨타임 감소, 무기크기, 발사체 수</Stats>

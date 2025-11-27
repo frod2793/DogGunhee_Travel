@@ -390,7 +390,7 @@ namespace DogGuns_Games.vamsir
                     continue;
                 }
 
-                VamserMobBase target = FindClosestEnemy();
+                MobBase target = FindClosestEnemy();
                 
                 if (target != null)
                 {
@@ -422,20 +422,20 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        private VamserMobBase FindClosestEnemy()
+        private MobBase FindClosestEnemy()
         {
             if (m_playerObject == null) return null;
 
             int count = Physics2D.OverlapCircle(m_playerObject.transform.position, m_detectionRadius, m_contactFilter, m_enemyColliders);
             
-            VamserMobBase closest = null;
+            MobBase closest = null;
             float minDstSqr = float.MaxValue;
             Vector3 myPos = m_playerObject.transform.position;
 
             for (int i = 0; i < count; i++)
             {
                 var col = m_enemyColliders[i];
-                if (col.TryGetComponent(out VamserMobBase mob) && !mob.IsDead)
+                if (col.TryGetComponent(out MobBase mob) && !mob.IsDead)
                 {
                     float dstSqr = (mob.transform.position - myPos).sqrMagnitude;
                     if (dstSqr < minDstSqr)

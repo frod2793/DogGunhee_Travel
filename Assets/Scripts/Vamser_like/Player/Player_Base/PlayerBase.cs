@@ -281,7 +281,7 @@ namespace DogGuns_Games.vamsir
             // 무적 시간(피격 후 딜레이) 중이면 데미지 무시
             if (m_isHit) return;
 
-            if (mobObject.TryGetComponent(out VamserMobBase mob))
+            if (mobObject.TryGetComponent(out MobBase mob))
             {
                 // 최적화된 프로퍼티 이름 사용 (AttackDamage)
                 float damageAmount = CalculateIncomingDamage(mob.AttackDamage); 

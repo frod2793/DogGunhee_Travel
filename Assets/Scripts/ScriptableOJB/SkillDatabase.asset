@@ -191,3 +191,17 @@ MonoBehaviour:
       \uCFE8\uD0C0\uC784 \uAC10\uC18C"
     weaponAddressableKey: Prefab_Weapon_Ball
     skillIcon: {fileID: -3334053677006557033, guid: 416e69384c17cd448945cd31377de2b8, type: 3}
+  - skillCode: WP_FIRE
+    skillName: "\uC2E0\uBE44\uD55C \uBD88\uAF43"
+    skillType: 1
+    upgradeItemCode: 
+    flavorText: "\uD0C0\uC624\uB974\uB294 \uBD88\uAF43\uC785\uB2C8\uB2E4. \uCC29\uD55C
+      \uB9C8\uC74C\uC528\uB97C \uAC00\uC9C4 \uCE5C\uAD6C\uB4E4\uC740 \uB4E4 \uC218
+      \uC788\uC9C0\uB9CC, \uB098\uC05C \uB9C8\uC74C\uC744 \uAC00\uC84C\uB2E4\uBA74
+      \uBD88\uD0C0\uAC8C \uB429\uB2C8\uB2E4."
+    skillDescription: "\uBD88\uAF43\uC774 \uD37C\uC838 \uB79C\uB364\uD55C \uC704\uCE58\uC5D0
+      \uC9C0\uC18D\uC801\uC778 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
+      \uBC1C\uC0AC\uCCB4 \uC218"
+    weaponAddressableKey: WeaPhon_Flame
+    skillIcon: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}

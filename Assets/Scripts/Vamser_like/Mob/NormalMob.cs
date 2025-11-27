@@ -5,13 +5,9 @@ using UnityEngine;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 일반 몬스터의 AI 및 상태를 관리하는 클래스입니다.
-    /// VamserMobBase(부모)의 최적화된 구조를 상속받습니다.
-    /// </summary>
-    public class NormalMob : VamserMobBase
+    public class NormalMob : MobBase
     {
-        #region 인스펙터 필드 (스탯 및 AI 설정)
+        #region 인스펙터 필드
 
         [Header("몬스터 기본 스탯")]
         [SerializeField] private float m_initialHp = 100f;
@@ -21,8 +17,6 @@ namespace DogGuns_Games.vamsir
 
         [Header("AI 설정")]
         [SerializeField] private float m_searchRange = 8f;
-        
-        [Tooltip("배회 시 도착 후 대기 시간 범위 (최소, 최대)")]
         [SerializeField] private Vector2 m_wanderWaitRange = new Vector2(1f, 3f);
 
         #endregion
@@ -103,17 +97,9 @@ namespace DogGuns_Games.vamsir
             MoveSpeed = m_initialSpeed;
             AttackDamage = m_initialAttackDamage;
             StunTime = m_initialStunTime;
-
             m_aiState = AIState.None;
             m_isAiPaused = false;
-            
             if (m_spriteRenderer != null) m_spriteRenderer.color = Color.white;
-        }
-
-        public override void SetTarget(PlayerBase target)
-        {
-            base.SetTarget(target);
-            // WeaphonBase가 List로 변경됨에 따라 더 이상 특정 무기를 캐싱하지 않음
         }
 
         #endregion
@@ -123,16 +109,12 @@ namespace DogGuns_Games.vamsir
         private async UniTaskVoid StartAILoopAsync()
         {
             var token = this.GetCancellationTokenOnDestroy();
-
             await UniTask.WaitUntil(() => m_player != null && m_player.transform.parent != null, cancellationToken: token);
-            
             m_playerTransform = m_player.transform.parent;
-            
             if (!m_mapBounds.Contains(m_cachedTransform.position))
             {
                 await ReturnToMapAsync(token);
             }
-
             SetState(MobState.Move); 
             ChangeAIState(AIState.Wandering);
         }
@@ -140,14 +122,11 @@ namespace DogGuns_Games.vamsir
         private void ChangeAIState(AIState newState)
         {
             if (m_aiState == newState) return;
-            
             if (m_aiState == AIState.Wandering)
             {
                 m_moveTween?.Kill();
             }
-
             m_aiState = newState;
-            
             if (newState == AIState.Wandering)
             {
                 StartWandering();
@@ -157,10 +136,8 @@ namespace DogGuns_Games.vamsir
         private void CheckPlayerDetection()
         {
             if (m_playerTransform == null) return;
-
             float distSqr = (m_cachedTransform.position - m_playerTransform.position).sqrMagnitude;
             float rangeSqr = m_searchRange * m_searchRange;
-
             if (m_aiState == AIState.Wandering && distSqr <= rangeSqr)
             {
                 ChangeAIState(AIState.Chasing);
@@ -179,50 +156,35 @@ namespace DogGuns_Games.vamsir
         {
             Vector3 targetPos = m_mapBounds.ClosestPoint(m_cachedTransform.position);
             targetPos.z = 0;
-
             float duration = Vector3.Distance(m_cachedTransform.position, targetPos) / (MoveSpeed * 2f);
-            
-            await m_cachedTransform.DOMove(targetPos, duration)
-                .SetEase(Ease.Linear)
-                .SetLink(gameObject)
-                .ToUniTask(cancellationToken: token);
+            await m_cachedTransform.DOMove(targetPos, duration).SetEase(Ease.Linear).SetLink(gameObject).ToUniTask(cancellationToken: token);
         }
 
         private void HandleChasingState()
         {
             if (m_playerTransform == null) return;
-
             Vector3 dir = (m_playerTransform.position - m_cachedTransform.position).normalized;
             Vector3 newPos = m_cachedTransform.position + dir * (MoveSpeed * Time.fixedDeltaTime);
             newPos.z = 0;
-            
             m_cachedTransform.position = newPos;
             FlipTowards(dir.x);
-            
             CheckPlayerDetection();
         }
 
         private void StartWandering()
         {
             if (!IsMoveEnabled || m_aiState != AIState.Wandering || m_isAiPaused) return;
-
             Vector3 dest = GetRandomPositionInMap();
             Vector3 dir = (dest - m_cachedTransform.position).normalized;
             FlipTowards(dir.x);
-
             float duration = Vector3.Distance(m_cachedTransform.position, dest) / MoveSpeed;
-
-            m_moveTween = m_cachedTransform.DOMove(dest, duration)
-                .SetEase(Ease.Linear)
-                .SetLink(gameObject)
-                .OnComplete(() => WaitAndWanderNext().Forget());
+            m_moveTween = m_cachedTransform.DOMove(dest, duration).SetEase(Ease.Linear).SetLink(gameObject).OnComplete(() => WaitAndWanderNext().Forget());
         }
 
         private async UniTaskVoid WaitAndWanderNext()
         {
             float waitTime = UnityEngine.Random.Range(m_wanderWaitRange.x, m_wanderWaitRange.y);
             await UniTask.Delay(TimeSpan.FromSeconds(waitTime), cancellationToken: this.GetCancellationTokenOnDestroy());
-
             if (m_aiState == AIState.Wandering && IsMoveEnabled && !m_isAiPaused)
             {
                 StartWandering();
@@ -267,7 +229,6 @@ namespace DogGuns_Games.vamsir
 
         private void ProcessHit(Collider2D other)
         {
-            // 충돌한 오브젝트에서 직접 WeaphonBase 컴포넌트를 가져와 처리
             if (other.TryGetComponent(out WeaphonBase weapon))
             {
                 TakeDamage(weapon.attackPower, weapon.mobStunTime);
@@ -282,7 +243,12 @@ namespace DogGuns_Games.vamsir
             CurrentHp -= damage;
 
             EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer).Forget();
-            SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
+            
+            // [수정] 사운드 재생 전 쿨다운 확인
+            if (CanPlayHitSound())
+            {
+                SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
+            }
 
             if (CurrentHp <= 0)
             {
@@ -307,7 +273,6 @@ namespace DogGuns_Games.vamsir
             ChangeAIState(AIState.Stunned);
             SetState(MobState.Stun);
             StunTime = duration;
-
             DOVirtual.DelayedCall(duration, () =>
             {
                 if (!IsDead)
@@ -321,25 +286,17 @@ namespace DogGuns_Games.vamsir
         public override void ApplySlow(float slowAmount, float duration)
         {
             m_slowTween?.Kill(true);
-
             float originalSpeed = m_initialSpeed;
             MoveSpeed = originalSpeed * (1f - slowAmount);
-
-            m_slowTween = DOVirtual.DelayedCall(duration, () => 
-            { 
-                MoveSpeed = originalSpeed; 
-            }).SetLink(gameObject);
+            m_slowTween = DOVirtual.DelayedCall(duration, () => { MoveSpeed = originalSpeed; }).SetLink(gameObject);
         }
 
         protected override void OnDie()
         {
             if (IsDead) return;
-            
             ChangeAIState(AIState.Dead);
             KillAllTweens();
-
             SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
-            
             base.OnDie();
         }
 
@@ -364,12 +321,10 @@ namespace DogGuns_Games.vamsir
         protected override void OnResume()
         {
             base.OnResume();
-            
             if (!IsDead && m_aiState != AIState.Stunned)
             {
                 m_moveTween?.Play();
                 m_isAiPaused = false;
-                
                 if (m_aiState == AIState.Wandering && (m_moveTween == null || !m_moveTween.IsActive()))
                 {
                     StartWandering();

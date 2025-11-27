@@ -1402,6 +1402,7 @@ Transform:
   - {fileID: 636282723}
   - {fileID: 1218690319}
   - {fileID: 5775715313959921886}
+  - {fileID: 1847679375264054142}
   m_Father: {fileID: 5051255736179024154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &592687162
@@ -3236,6 +3237,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaPhon_Jinjoo
       objectReference: {fileID: 0}
+    - target: {fileID: 4863939502597022413, guid: 1557623e4099d47d0ac20a5355ba603b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8931045147467785052, guid: 1557623e4099d47d0ac20a5355ba603b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3301,7 +3306,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1001 &1305855044601173389
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3313,6 +3318,10 @@ PrefabInstance:
     - target: {fileID: 296955345432317447, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
       propertyPath: m_Name
       value: WeaPhon_CatPhunch
+      objectReference: {fileID: 0}
+    - target: {fileID: 296955345432317447, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1592704573348993371, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3489,6 +3498,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e61d0c8d684d54340a527039544b7961, type: 3}
+--- !u!4 &1847679375264054142 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+  m_PrefabInstance: {fileID: 8660524717848819324}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1906269120987961682
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3500,6 +3514,10 @@ PrefabInstance:
     - target: {fileID: 6548375471585183168, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
       propertyPath: m_Name
       value: WeaPhon_ballPlay
+      objectReference: {fileID: 0}
+    - target: {fileID: 6548375471585183168, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7133637481206034452, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3613,6 +3631,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaPhon_Bone_Bullet
       objectReference: {fileID: 0}
+    - target: {fileID: 1450392623949166087, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6052296989162048801, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3680,19 +3702,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].stats
-      value: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30"
+      value: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
+        \uBC1C\uC0AC\uCCB4 \uC218"
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].skillCode
-      value: WP_INK
+      value: WP_FIRE
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].skillIcon
       value: 
-      objectReference: {fileID: 1859045663046494767, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
+      objectReference: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].skillName
-      value: "\uCD08\uAC15\uB825 \uBA39\uBB3C"
+      value: "\uC2E0\uBE44\uD55C \uBD88\uAF43"
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].skillType
@@ -3700,18 +3723,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].flavorText
-      value: "\uBA39\uBB3C\uC5D0 \uC2DC\uC57C\uAC00 \uAC00\uB824\uC9C4 \uC801\uB4E4\uC744
-        \uC0B0\uC131\uC744 \uB760\uB294 \uD2B9\uBCC4\uD55C \uB3C5\uACFC \uD568\uAED8\uBFCC\uB824
-        \uC801\uB4E4\uC744 \uB3C4\uB9DD\uCE58\uAC8C \uD569\uB2C8\uB2E4."
+      value: "\uD0C0\uC624\uB974\uB294 \uBD88\uAF43\uC785\uB2C8\uB2E4. \uCC29\uD55C
+        \uB9C8\uC74C\uC528\uB97C \uAC00\uC9C4 \uCE5C\uAD6C\uB4E4\uC740 \uB4E4 \uC218
+        \uC788\uC9C0\uB9CC, \uB098\uC05C \uB9C8\uC74C\uC744 \uAC00\uC84C\uB2E4\uBA74
+        \uBD88\uD0C0\uAC8C \uB429\uB2C8\uB2E4."
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].skillDescription
-      value: "\uC801\uB4E4\uC5D0\uAC8C \uBA39\uBB3C\uC744 \uBFCC\uB824 \uD53C\uD574\uB97C
-        \uC8FC\uACE0 \uC774\uB3D9\uC744 \uBC29\uD574\uD569\uB2C8\uB2E4."
+      value: "\uBD88\uAF43\uC774 \uD37C\uC838 \uB79C\uB364\uD55C \uC704\uCE58\uC5D0
+        \uC9C0\uC18D\uC801\uC778 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
       objectReference: {fileID: 0}
     - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: TestWeapons.Array.data[0].weaponAddressableKey
-      value: Prefab_Weapon_Ink
+      value: WeaPhon_Flame
       objectReference: {fileID: 0}
     - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
@@ -3813,6 +3837,10 @@ PrefabInstance:
     - target: {fileID: 4354728564479912810, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
       propertyPath: m_Name
       value: WeaPhon_Bumarang
+      objectReference: {fileID: 0}
+    - target: {fileID: 4354728564479912810, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6836460676566652473, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3941,6 +3969,10 @@ PrefabInstance:
     - target: {fileID: 6233184834687348559, guid: 4fff049a21ea62141b5c6bf468f172fb, type: 3}
       propertyPath: m_Name
       value: WeaPhon_Bone
+      objectReference: {fileID: 0}
+    - target: {fileID: 6233184834687348559, guid: 4fff049a21ea62141b5c6bf468f172fb, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4110,19 +4142,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6292878162832009718, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
       propertyPath: m_Name
-      value: Strong_blackWater
+      value: WeaPhon_Ink
       objectReference: {fileID: 0}
-    - target: {fileID: 6661751767244316945, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
-      propertyPath: skillCode
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 6661751767244316945, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
-      propertyPath: isShooting
+    - target: {fileID: 6292878162832009718, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
+      propertyPath: m_IsActive
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6661751767244316945, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
-      propertyPath: upgradeItemCode
-      value: PS_NET
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4185,6 +4209,10 @@ PrefabInstance:
     - target: {fileID: 8365072899406657265, guid: 440271337e4a6df43a3314571b76e325, type: 3}
       propertyPath: m_Name
       value: WeaPhon_Smell
+      objectReference: {fileID: 0}
+    - target: {fileID: 8365072899406657265, guid: 440271337e4a6df43a3314571b76e325, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4283,6 +4311,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Weaphon_Hero_landing
       objectReference: {fileID: 0}
+    - target: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4310,6 +4342,63 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1001 &8660524717848819324
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 543239849}
+    m_Modifications:
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6526120700562935947, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8467117305479902176, guid: dd92437f32f12453580b9520586cf517, type: 3}
+      propertyPath: m_Name
+      value: WeaPhon_Flame
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: dd92437f32f12453580b9520586cf517, type: 3}
 --- !u!114 &8697583870933275596
 MonoBehaviour:
   m_ObjectHideFlags: 0

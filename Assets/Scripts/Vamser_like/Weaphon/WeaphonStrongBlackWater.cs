@@ -179,7 +179,7 @@ namespace DogGuns_Games.vamsir
             {
                 var target = m_hitResults[i];
                 
-                if (target.TryGetComponent(out VamserMobBase mob) && !mob.IsDead) 
+                if (target.TryGetComponent(out MobBase mob) && !mob.IsDead) 
                 {
                     mob.TakeDamage(attackPower); 
 

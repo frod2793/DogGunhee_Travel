@@ -21,7 +21,7 @@ namespace DogGuns_Games.vamsir
         [SerializeField] private SpriteRenderer m_mapRange;
         private Bounds m_mapBounds;
 
-        public IObjectPool<VamserMobBase> MobObjectPool { get; private set; }
+        public IObjectPool<MobBase> MobObjectPool { get; private set; }
         public IObjectPool<EXP_Obj> ExpObjectPool { get; private set; }
         public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
 
@@ -121,7 +121,7 @@ namespace DogGuns_Games.vamsir
 
         private void InitializePools()
         {
-            MobObjectPool = new ObjectPool<VamserMobBase>(CreateMob, OnGetMob, OnReleaseMob, OnDestroyObject, maxSize: m_maxPoolSize);
+            MobObjectPool = new ObjectPool<MobBase>(CreateMob, OnGetMob, OnReleaseMob, OnDestroyObject, maxSize: m_maxPoolSize);
             ExpObjectPool = new ObjectPool<EXP_Obj>(CreateExp, OnGetObject, OnReleaseObject, OnDestroyObject, maxSize: m_maxPoolSize);
             CoinObjectPool = new LinkedPool<Coin_Obj>(CreateCoin, OnGetObject, OnReleaseObject, OnDestroyObject, maxSize: m_maxPoolSize);
         }
@@ -233,7 +233,7 @@ namespace DogGuns_Games.vamsir
 
         #region 아이템 스폰
 
-        private void SpawnItems(VamserMobBase deadMob)
+        private void SpawnItems(MobBase deadMob)
         {
             if (!m_isSpawningAllowed) return;
 
@@ -253,7 +253,7 @@ namespace DogGuns_Games.vamsir
 
         #region Pool Callbacks
 
-        private VamserMobBase CreateMob() => CreatePoolObject<VamserMobBase>(m_mobPrefabReference);
+        private MobBase CreateMob() => CreatePoolObject<MobBase>(m_mobPrefabReference);
         private EXP_Obj CreateExp()
         {
             bool isBig = CurrentWave >= 5 && Random.value > 0.9f;
@@ -261,7 +261,7 @@ namespace DogGuns_Games.vamsir
         }
         private Coin_Obj CreateCoin() => CreatePoolObject<Coin_Obj>(m_coinPrefabReference);
 
-        private void OnGetMob(VamserMobBase mob)
+        private void OnGetMob(MobBase mob)
         {
             OnGetObject(mob);
             
@@ -272,7 +272,7 @@ namespace DogGuns_Games.vamsir
             mob.SetTarget(m_player);
         }
 
-        private void OnReleaseMob(VamserMobBase mob)
+        private void OnReleaseMob(MobBase mob)
         {
             OnReleaseObject(mob);
             ActiveMobCount--;

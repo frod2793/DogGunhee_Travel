@@ -85,11 +85,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 45ee4e2d21e66403786be577d941d41d
-    m_Address: Assets/Scenes/RunGame.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4efd0e3627cd2420197c95134841c170
     m_Address: Weaphon/Jinjoo.prefab
     m_ReadOnly: 0
@@ -145,11 +140,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b140c0d8da84b964798561de0f898171
-    m_Address: Assets/Scenes/VamSerLike_Test.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb7bc972af1334ecfae1ae0f4db37e58
     m_Address: Assets/Scripts/ScriptableOJB/SoundData.asset
     m_ReadOnly: 0
@@ -172,6 +162,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d95fefdb30d37fa48a9fa7976868a49c
     m_Address: Assets/Scripts/ScriptableOJB/EffectData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd92437f32f12453580b9520586cf517
+    m_Address: WeaPhon_Flame
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

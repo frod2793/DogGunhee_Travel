@@ -76,7 +76,7 @@ namespace DogGuns_Games.vamsir
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.CompareTag("Mob") && other.TryGetComponent<VamserMobBase>(out var mob))
+            if (other.CompareTag("Mob") && other.TryGetComponent<MobBase>(out var mob))
             {
                 if (!mob.IsDead)
                 {

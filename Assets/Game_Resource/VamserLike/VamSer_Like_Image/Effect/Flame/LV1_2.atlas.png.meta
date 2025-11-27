@@ -1,0 +1,832 @@
+fileFormatVersion: 2
+guid: 1509874b4fce29b4baf9531c0345e081
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -94500175029267313
+    second: LV1_2.atlas_0
+  - first:
+      213: 368012281502828976
+    second: LV1_2.atlas_1
+  - first:
+      213: -6665563741872170160
+    second: LV1_2.atlas_2
+  - first:
+      213: -7492006657082409027
+    second: LV1_2.atlas_3
+  - first:
+      213: 5564702701480676574
+    second: LV1_2.atlas_4
+  - first:
+      213: 825776855000619730
+    second: LV1_2.atlas_5
+  - first:
+      213: 1099663391450325327
+    second: LV1_2.atlas_6
+  - first:
+      213: -391846781210192461
+    second: LV1_2.atlas_7
+  - first:
+      213: -4631221632282331496
+    second: LV1_2.atlas_8
+  - first:
+      213: -8904309952103415251
+    second: LV1_2.atlas_9
+  - first:
+      213: 1432962189493965566
+    second: LV1_2.atlas_10
+  - first:
+      213: -2274027516893623291
+    second: LV1_2.atlas_11
+  - first:
+      213: -3766499221599216060
+    second: LV1_2.atlas_12
+  - first:
+      213: 1402398354473415011
+    second: LV1_2.atlas_13
+  - first:
+      213: 2035560647038000094
+    second: LV1_2.atlas_14
+  - first:
+      213: 8725266392486390921
+    second: LV1_2.atlas_15
+  - first:
+      213: 3085557202764223872
+    second: LV1_2.atlas_16
+  - first:
+      213: -265758616197465050
+    second: LV1_2.atlas_17
+  - first:
+      213: 7473036588937234112
+    second: LV1_2.atlas_18
+  - first:
+      213: -1567443924881905621
+    second: LV1_2.atlas_19
+  - first:
+      213: -9109333032045387508
+    second: LV1_2.atlas_20
+  - first:
+      213: 1178731571291383922
+    second: LV1_2.atlas_21
+  - first:
+      213: -1298451056852906941
+    second: LV1_2.atlas_22
+  - first:
+      213: -4846139125712321165
+    second: LV1_2.atlas_23
+  - first:
+      213: 5245659093858062848
+    second: LV1_2.atlas_24
+  - first:
+      213: 2519118901841191778
+    second: LV1_2.atlas_25
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: LV1_2.atlas_0
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 4
+        width: 38
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f841b2c679440bef0800000000000000
+      internalID: -94500175029267313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_1
+      rect:
+        serializedVersion: 2
+        x: 113
+        y: 4
+        width: 40
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b905ff58317b1500800000000000000
+      internalID: 368012281502828976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_2
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 4
+        width: 41
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05b5cf9a7192f73a0800000000000000
+      internalID: -6665563741872170160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_3
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 4
+        width: 42
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbfbdb5c3ab070890800000000000000
+      internalID: -7492006657082409027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_4
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 4
+        width: 42
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edc896abf9bc93d40800000000000000
+      internalID: 5564702701480676574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_5
+      rect:
+        serializedVersion: 2
+        x: 318
+        y: 4
+        width: 43
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2da1d0aacafb57b00800000000000000
+      internalID: 825776855000619730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_6
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 4
+        width: 43
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f41e5eb370ac24f00800000000000000
+      internalID: 1099663391450325327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_7
+      rect:
+        serializedVersion: 2
+        x: 422
+        y: 4
+        width: 43
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b51697bd61ef8af0800000000000000
+      internalID: -391846781210192461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_8
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 4
+        width: 44
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 896f4b376789abfb0800000000000000
+      internalID: -4631221632282331496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_9
+      rect:
+        serializedVersion: 2
+        x: 526
+        y: 4
+        width: 44
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2286ee86498d6480800000000000000
+      internalID: -8904309952103415251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_10
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 4
+        width: 43
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef29a59e487e2e310800000000000000
+      internalID: 1432962189493965566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_11
+      rect:
+        serializedVersion: 2
+        x: 631
+        y: 4
+        width: 43
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50c871e85080170e0800000000000000
+      internalID: -2274027516893623291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_12
+      rect:
+        serializedVersion: 2
+        x: 683
+        y: 4
+        width: 44
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44e1bc9e9e4babbc0800000000000000
+      internalID: -3766499221599216060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_13
+      rect:
+        serializedVersion: 2
+        x: 735
+        y: 4
+        width: 44
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 361faf78fd1567310800000000000000
+      internalID: 1402398354473415011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_14
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 4
+        width: 43
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edbd675af93cf3c10800000000000000
+      internalID: 2035560647038000094
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_15
+      rect:
+        serializedVersion: 2
+        x: 840
+        y: 4
+        width: 44
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98c2ec63e8f561970800000000000000
+      internalID: 8725266392486390921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_16
+      rect:
+        serializedVersion: 2
+        x: 892
+        y: 4
+        width: 44
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 085d8ec8de912da20800000000000000
+      internalID: 3085557202764223872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_17
+      rect:
+        serializedVersion: 2
+        x: 944
+        y: 4
+        width: 43
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62cfc8552f5df4cf0800000000000000
+      internalID: -265758616197465050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_18
+      rect:
+        serializedVersion: 2
+        x: 995
+        y: 4
+        width: 44
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c6c91d0f2f85b760800000000000000
+      internalID: 7473036588937234112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_19
+      rect:
+        serializedVersion: 2
+        x: 1047
+        y: 4
+        width: 43
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b28e1141e025f3ae0800000000000000
+      internalID: -1567443924881905621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_20
+      rect:
+        serializedVersion: 2
+        x: 1099
+        y: 4
+        width: 43
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c01e334eed5259180800000000000000
+      internalID: -9109333032045387508
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_21
+      rect:
+        serializedVersion: 2
+        x: 1151
+        y: 4
+        width: 43
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2786c507e12bb5010800000000000000
+      internalID: 1178731571291383922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_22
+      rect:
+        serializedVersion: 2
+        x: 1203
+        y: 4
+        width: 43
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34c4d0ea4a9fafde0800000000000000
+      internalID: -1298451056852906941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_23
+      rect:
+        serializedVersion: 2
+        x: 1255
+        y: 4
+        width: 42
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3758bcf142e0fbcb0800000000000000
+      internalID: -4846139125712321165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_24
+      rect:
+        serializedVersion: 2
+        x: 1307
+        y: 4
+        width: 43
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 002153637235cc840800000000000000
+      internalID: 5245659093858062848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LV1_2.atlas_25
+      rect:
+        serializedVersion: 2
+        x: 1359
+        y: 4
+        width: 43
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 263673b5b45b5f220800000000000000
+      internalID: 2519118901841191778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      LV1_2.atlas_0: -94500175029267313
+      LV1_2.atlas_1: 368012281502828976
+      LV1_2.atlas_10: 1432962189493965566
+      LV1_2.atlas_11: -2274027516893623291
+      LV1_2.atlas_12: -3766499221599216060
+      LV1_2.atlas_13: 1402398354473415011
+      LV1_2.atlas_14: 2035560647038000094
+      LV1_2.atlas_15: 8725266392486390921
+      LV1_2.atlas_16: 3085557202764223872
+      LV1_2.atlas_17: -265758616197465050
+      LV1_2.atlas_18: 7473036588937234112
+      LV1_2.atlas_19: -1567443924881905621
+      LV1_2.atlas_2: -6665563741872170160
+      LV1_2.atlas_20: -9109333032045387508
+      LV1_2.atlas_21: 1178731571291383922
+      LV1_2.atlas_22: -1298451056852906941
+      LV1_2.atlas_23: -4846139125712321165
+      LV1_2.atlas_24: 5245659093858062848
+      LV1_2.atlas_25: 2519118901841191778
+      LV1_2.atlas_3: -7492006657082409027
+      LV1_2.atlas_4: 5564702701480676574
+      LV1_2.atlas_5: 825776855000619730
+      LV1_2.atlas_6: 1099663391450325327
+      LV1_2.atlas_7: -391846781210192461
+      LV1_2.atlas_8: -4631221632282331496
+      LV1_2.atlas_9: -8904309952103415251
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

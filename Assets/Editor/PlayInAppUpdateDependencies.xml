@@ -1,0 +1,14 @@
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="androidx.activity:activity:1.2.0">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+      </repositories>
+    </androidPackage>
+    <androidPackage spec="androidx.fragment:fragment:1.3.0">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>

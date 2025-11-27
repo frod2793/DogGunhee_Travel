@@ -58,7 +58,7 @@ public class BoneBullet : WeaphonBase
     {
         if (!m_isActive || !other.CompareTag("Mob")) return;
 
-        if (other.TryGetComponent(out VamserMobBase mob))
+        if (other.TryGetComponent(out MobBase mob))
         {
             mob.TakeDamage(attackPower, mobStunTime);
         }
@@ -102,7 +102,7 @@ public class BoneBullet : WeaphonBase
         
         for (int i = 0; i < numColliders; i++)
         {
-            if (m_overlapResults[i].TryGetComponent(out VamserMobBase mob))
+            if (m_overlapResults[i].TryGetComponent(out MobBase mob))
             {
                 mob.TakeDamage(m_explosionDamage, 0);
             }

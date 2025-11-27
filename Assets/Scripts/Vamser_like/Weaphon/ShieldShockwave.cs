@@ -98,7 +98,7 @@ namespace DogGuns_Games.vamsir
         {
             if (other.CompareTag("Mob"))
             {
-                if (other.TryGetComponent(out VamserMobBase mob))
+                if (other.TryGetComponent(out MobBase mob))
                 {
                     mob.TakeDamage(m_damage, m_stunTime);
                 }
