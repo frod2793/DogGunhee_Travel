@@ -305,11 +305,10 @@ namespace DogGuns_Games.vamsir
                         newWeapon.skillData = skillData;
                         newWeapon.skillCode = skillData.skillCode;
                         newWeapon.upgradeItemCode = skillData.upgradeItemCode;
-                        newWeapon.Thumnail = skillData.skillIcon; // [수정] 썸네일 아이콘 강제 동기화
+                        newWeapon.Thumnail = skillData.skillIcon;
                         newWeapon.ApplyBaseStats();
                         
                         SpawnedPlayer.AddWeapon(newWeapon);
-                        LogManager.Log($"[게임 매니저] 새로운 무기 장착: {skillData.skillName}");
                         if (playEffect)
                         {
                             EffectManager.Instance.PlayLevelUpEffect(SpawnedPlayer.GetComponent<SpriteRenderer>());
@@ -320,6 +319,17 @@ namespace DogGuns_Games.vamsir
             catch (Exception e)
             {
                 LogManager.LogError($"[게임 매니저] 스킬로부터 무기 스폰 오류 ({key}): {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// [추가] 테스트용으로 특정 무기를 제거합니다.
+        /// </summary>
+        public void RemoveWeaponForTest(string skillCode)
+        {
+            if (SpawnedPlayer != null)
+            {
+                SpawnedPlayer.RemoveWeapon(skillCode);
             }
         }
 

@@ -1,239 +1,189 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using System.Linq;
+using DogGuns_Games.vamsir;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using DogGuns_Games;
-using DogGuns_Games.vamsir;
 
 namespace DogGuns_Games.Test
 {
+    /// <summary>
+    /// 인게임 캐릭터 및 무기 테스트를 위한 디버그/치트 패널입니다.
+    /// </summary>
     public class TestManager : MonoBehaviour
     {
-        #region 인스펙터 필드 (UI 요소)
+        [Header("UI References")]
+        [SerializeField] private TMP_Dropdown m_characterDropdown;
+        [SerializeField] private Button m_changeCharacterButton;
+        [Space]
+        [SerializeField] private TMP_Dropdown m_weaponDropdown;
+        [SerializeField] private Button m_addWeaponButton;
+        [Space]
+        [SerializeField] private RectTransform m_ownedWeaponsContainer;
+        [SerializeField] private TestWeaponItem m_ownedWeaponItemPrefab;
 
-        [Header("Input Fields")]
-        [Tooltip("캐릭터 인덱스 입력 필드")]
-        [SerializeField] private TMP_InputField m_characterIndexInput;
-        
-        [Tooltip("무기 인덱스 입력 필드")]
-        [SerializeField] private TMP_InputField m_weaponIndexInput;
-
-        [Header("Control Buttons")]
-        [Tooltip("무기 업그레이드 여부 토글")]
-        [SerializeField] private Toggle m_isWeaponUpgradeToggle;
-
-        [Tooltip("설정 변경 실행 버튼")]
-        [SerializeField] private Button m_changeButton;
-
-        [Header("Test Panel Settings")]
-        [Tooltip("슬라이드 애니메이션을 적용할 패널")]
-        [SerializeField] private GameObject m_testPanel;
-
-        [Tooltip("패널 열기/닫기 토글 버튼")]
-        [SerializeField] private Button m_testPanelToggleBtn;
-
-        [Tooltip("패널 애니메이션 지속 시간")]
+        [Header("Panel Animation")]
+        [SerializeField] private Button m_toggleButton;
+        [SerializeField] private RectTransform m_panelRectTransform;
         [SerializeField] private float m_animationDuration = 0.3f;
 
-        #endregion
-
-        #region 내부 상태 변수
+        [Header("Data")]
+        [SerializeField] private SkillDatabase m_skillDatabase;
 
         private GameManager m_gameManager;
-        private RectTransform m_panelRectTransform;
-        
-        private Vector2 m_panelOriginalPos;
+        private List<SkillData> m_allWeaponSkills;
+        private List<GameObject> m_spawnedWeaponItems = new List<GameObject>();
+
         private bool m_isPanelOpen = false;
-        private bool m_isPanelAnimating = false;
-        
-        private bool m_isChanging = false;
+        private bool m_isAnimating = false;
 
-        #endregion
-
-        #region Unity 라이프사이클
+        private void Awake()
+        {
+            m_gameManager = GameManager.Instance;
+            if (m_gameManager == null)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+        }
 
         private void Start()
         {
-            InitializeReferences();
+            InitializeData();
             InitializeUI();
             InitializePanel();
-        }
-
-        private void OnDestroy()
-        {
-            if (m_panelRectTransform != null)
-            {
-                m_panelRectTransform.DOKill();
-            }
-        }
-
-        #endregion
-
-        #region 초기화
-
-        private void InitializeReferences()
-        {
-            m_gameManager = GameManager.Instance;
             
-            if (m_gameManager == null)
+            GameManager.OnPlayerChanged += (player) => RefreshOwnedWeaponList();
+        }
+
+        private void OnEnable()
+        {
+            if (m_gameManager != null)
             {
-                Debug.LogError("[TestManager] GameManager 인스턴스를 찾을 수 없습니다.");
-                SetInteractable(false);
+                RefreshOwnedWeaponList();
             }
+        }
+
+        private void InitializeData()
+        {
+            if (m_skillDatabase == null) return;
+
+            m_characterDropdown.ClearOptions();
+            m_characterDropdown.AddOptions(new List<string> { "캐릭터 0", "캐릭터 1" }); // 임시
+
+            m_allWeaponSkills = m_skillDatabase.allSkills
+                .Where(s => s.skillType == SkillType.Weapon)
+                .ToList();
+            
+            m_weaponDropdown.ClearOptions();
+            m_weaponDropdown.AddOptions(m_allWeaponSkills.Select(s => s.skillName).ToList());
         }
 
         private void InitializeUI()
         {
-            if (m_changeButton != null)
-                m_changeButton.onClick.AddListener(() => ChangeCharacterAndWeaponAsync().Forget());
-
-            if (m_testPanelToggleBtn != null)
-                m_testPanelToggleBtn.onClick.AddListener(() => TogglePanelAsync().Forget());
-
-            UpdateInputFields();
+            m_changeCharacterButton.onClick.AddListener(OnChangeCharacter);
+            m_addWeaponButton.onClick.AddListener(OnAddWeapon);
+            m_toggleButton.onClick.AddListener(() => TogglePanelAsync().Forget());
         }
 
         private void InitializePanel()
         {
-            if (m_testPanel != null)
-            {
-                m_panelRectTransform = m_testPanel.GetComponent<RectTransform>();
-                m_panelOriginalPos = m_panelRectTransform.anchoredPosition;
-            }
+            if (m_panelRectTransform == null) return;
+            
+            Canvas.ForceUpdateCanvases();
+            
+            // [수정] 피봇을 고려한 정확한 숨김 위치 계산
+            float panelWidth = m_panelRectTransform.rect.width;
+            float pivotX = m_panelRectTransform.pivot.x;
+            float hiddenX = -panelWidth * (1 - pivotX); // 오른쪽 끝이 앵커에 오도록 계산
+            
+            m_panelRectTransform.anchoredPosition = new Vector2(hiddenX, m_panelRectTransform.anchoredPosition.y);
+            m_isPanelOpen = false;
         }
-
-        private void SetInteractable(bool isInteractable)
-        {
-            if (m_changeButton != null) m_changeButton.interactable = isInteractable;
-            if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = isInteractable;
-            if (m_isWeaponUpgradeToggle != null) m_isWeaponUpgradeToggle.interactable = isInteractable;
-        }
-
-        #endregion
-
-        #region UI 로직
-
-        private void UpdateInputFields()
-        {
-            var dataManager = PlayerDataManagerDontdesytoy.Instance;
-            if (dataManager == null) return;
-
-            if (m_characterIndexInput != null)
-                m_characterIndexInput.text = dataManager.SelectCharacterIndex.ToString();
-
-            if (m_weaponIndexInput != null)
-                m_weaponIndexInput.text = dataManager.SelectWeaponIndex.ToString();
-        }
-
-        #endregion
-
-        #region 패널 애니메이션
 
         private async UniTaskVoid TogglePanelAsync()
         {
-            if (m_testPanel == null || m_isPanelAnimating) return;
+            if (m_isAnimating || m_panelRectTransform == null) return;
 
-            m_isPanelAnimating = true;
+            m_isAnimating = true;
             m_isPanelOpen = !m_isPanelOpen;
+
+            Canvas.ForceUpdateCanvases();
             
-            if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = false;
+            // [수정] 피봇을 고려한 정확한 목표 위치 계산
+            float panelWidth = m_panelRectTransform.rect.width;
+            float pivotX = m_panelRectTransform.pivot.x;
+            
+            float shownX = panelWidth * pivotX; // 왼쪽 끝이 앵커에 오도록 계산
+            float hiddenX = -panelWidth * (1 - pivotX); // 오른쪽 끝이 앵커에 오도록 계산
 
-            m_panelRectTransform.DOKill();
+            float targetX = m_isPanelOpen ? shownX : hiddenX;
+            Ease ease = m_isPanelOpen ? Ease.OutCubic : Ease.InCubic;
 
-            try
+            await m_panelRectTransform.DOAnchorPosX(targetX, m_animationDuration)
+                .SetEase(ease)
+                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+
+            m_isAnimating = false;
+        }
+
+        private void RefreshOwnedWeaponList()
+        {
+            foreach (var item in m_spawnedWeaponItems)
             {
-                float targetX = m_isPanelOpen 
-                    ? m_panelOriginalPos.x + m_panelRectTransform.rect.width 
-                    : m_panelOriginalPos.x;
-
-                Ease easeType = m_isPanelOpen ? Ease.OutQuad : Ease.InQuad;
-
-                if (m_isPanelOpen) m_testPanel.SetActive(true);
-
-                await m_panelRectTransform.DOAnchorPosX(targetX, m_animationDuration)
-                    .SetEase(easeType)
-                    .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+                Destroy(item);
             }
-            finally
+            m_spawnedWeaponItems.Clear();
+
+            if (m_gameManager.SpawnedPlayer == null || m_ownedWeaponItemPrefab == null) return;
+
+            foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
             {
-                m_isPanelAnimating = false;
-                if (m_testPanelToggleBtn != null) m_testPanelToggleBtn.interactable = true;
+                TestWeaponItem itemInstance = Instantiate(m_ownedWeaponItemPrefab, m_ownedWeaponsContainer);
+                itemInstance.Setup(weapon, LevelUpWeapon, RemoveWeapon);
+                m_spawnedWeaponItems.Add(itemInstance.gameObject);
             }
         }
 
-        #endregion
-
-        #region 데이터 변경 로직
-
-        private async UniTaskVoid ChangeCharacterAndWeaponAsync()
+        private void OnChangeCharacter()
         {
-            if (m_isChanging || m_gameManager == null) return;
+            int selectedIndex = m_characterDropdown.value;
+            PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = selectedIndex;
+            m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();
+        }
 
-            if (!TryParseInputs(out int charIndex, out int wpIndex))
+        private void OnAddWeapon()
+        {
+            if (m_allWeaponSkills == null || m_allWeaponSkills.Count == 0) return;
+
+            int selectedIndex = m_weaponDropdown.value;
+            SkillData selectedSkill = m_allWeaponSkills[selectedIndex];
+
+            if (m_gameManager.SpawnedPlayer.Weapons.Any(w => w.skillCode == selectedSkill.skillCode))
             {
-                Debug.LogWarning("[TestManager] 유효하지 않은 입력값입니다.");
+                Debug.LogWarning($"[TestManager] 이미 보유한 무기({selectedSkill.skillName})입니다.");
                 return;
             }
 
-            m_isChanging = true;
-            SetInteractable(false);
-
-            try
-            {
-                var dataManager = PlayerDataManagerDontdesytoy.Instance;
-                if (dataManager != null)
-                {
-                    dataManager.SelectCharacterIndex = charIndex;
-                    dataManager.SelectWeaponIndex = wpIndex;
-                }
-
-                await m_gameManager.ChangeCharacterAndWeapon_Spawn();
-
-                ApplyWeaponUpgradeState();
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[TestManager] 변경 중 오류 발생: {e.Message}");
-            }
-            finally
-            {
-                m_isChanging = false;
-                SetInteractable(true);
-            }
+            m_gameManager.EquipNewWeapon(selectedSkill).ContinueWith(RefreshOwnedWeaponList);
         }
 
-        private bool TryParseInputs(out int charIndex, out int wpIndex)
+        private void LevelUpWeapon(string skillCode)
         {
-            charIndex = 0;
-            wpIndex = 0;
-
-            if (m_characterIndexInput == null || m_weaponIndexInput == null) return false;
-
-            bool isCharValid = int.TryParse(m_characterIndexInput.text, out charIndex);
-            bool isWpValid = int.TryParse(m_weaponIndexInput.text, out wpIndex);
-
-            return isCharValid && isWpValid;
-        }
-
-        private void ApplyWeaponUpgradeState()
-        {
-            if (m_gameManager.SpawnedPlayer == null || m_isWeaponUpgradeToggle == null) return;
-
-            var weapon = m_gameManager.SpawnedPlayer.GetComponentInChildren<WeaphonBase>();
+            var weapon = m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.skillCode == skillCode);
             if (weapon != null)
             {
-                weapon.isEvolved = m_isWeaponUpgradeToggle.isOn;
-                
-                LogManager.Log(
-                    $"무기({weapon.name}) 진화 설정: {m_isWeaponUpgradeToggle.isOn}", 
-                    LogManager.LogCategory.VamserLikeGameManager, 
-                    weapon
-                );
+                weapon.UpgradeLevel();
+                RefreshOwnedWeaponList();
             }
         }
 
-        #endregion
+        private void RemoveWeapon(string skillCode)
+        {
+            m_gameManager.RemoveWeaponForTest(skillCode);
+            RefreshOwnedWeaponList();
+        }
     }
 }

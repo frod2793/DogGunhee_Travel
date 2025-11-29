@@ -8,87 +8,54 @@ using UnityEngine.UI;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// 플레이어의 이동, 공격, 카메라 추적, 애니메이션을 제어하는 메인 컨트롤러입니다.
-    /// </summary>
     public class PlayerControll : MonoBehaviour
     {
         #region 인스펙터 필드
 
         [Header("오브젝트 참조")]
-        [Tooltip("실제 움직임을 담당하는 플레이어의 부모 오브젝트")]
-        [FormerlySerializedAs("player")]
         [SerializeField] private GameObject m_playerObject;
-        
-        [Tooltip("애니메이션과 캐릭터 로직을 담당하는 자식 오브젝트")]
-        [FormerlySerializedAs("playerCharactor")]
         [SerializeField] private PlayerBase m_playerCharacter;
-        
-        [Tooltip("HP 슬라이더 프리팹")]
-        [FormerlySerializedAs("playerHpSliderPrefab")] 
         [SerializeField] private Slider m_playerHpSliderPrefab;
-        
-        [Tooltip("이동 제한 맵")]
-        [FormerlySerializedAs("mapRange")]
         [SerializeField] private SpriteRenderer m_mapRange;
 
         [Header("카메라 설정")]
-        [Tooltip("카메라 추적 부드러움 정도")]
-        [FormerlySerializedAs("moveDuration")]
         [SerializeField] private float m_cameraSmoothTime = 0.1f;
 
         [Header("자동 공격 설정")] 
-        [Tooltip("적 탐지 레이어")]
-        [FormerlySerializedAs("enemyLayer")]
         [SerializeField] private LayerMask m_enemyLayer;
-        
-        [Tooltip("적 탐지 반경")]
-        [FormerlySerializedAs("detectionRadius")]
         [SerializeField] private float m_detectionRadius = 10f;
-        
-        [Tooltip("공격 사거리 (이 거리 안에서 멈춤)")]
-        [FormerlySerializedAs("attackRadius")]
         [SerializeField] private float m_attackRadius = 1.5f;
 
         #endregion
 
         #region 내부 상태 변수
 
-        // 상수
         private const float k_JoystickInputThreshold = 0.1f;
         private const int k_MaxEnemyColliders = 20; 
 
-        // 외부 참조
         private GameManager m_gameManager;
         private Animator m_playerAnimator;
         private Camera m_mainCamera;
         private VariableJoystick m_joystick;
 
-        // UI 및 상태
         private Slider m_playerHpSlider;
-        private float m_previousHealth; // 피격 감지용 이전 체력
+        private float m_previousHealth;
 
-        // 상태 플래그
         private bool m_isGameStarted;
         private bool m_isAutoAttackActive;
         private bool m_autoAttackEnabledByToggle;
 
-        // 자동 공격 관련
         private CancellationTokenSource m_autoMoveAttackCts;
         private Vector3 m_autoMoveDirection;
-        private GameObject m_currentTarget;
         
-        // 물리 및 카메라
         private Vector3 m_cameraVelocity = Vector3.zero;
         private ContactFilter2D m_contactFilter;
         private readonly Collider2D[] m_enemyColliders = new Collider2D[k_MaxEnemyColliders]; 
 
-        // 애니메이션 파라미터 해시 (최적화)
-        private static readonly int k_AnimWalk = Animator.StringToHash("Walk"); // Float (0: Idle, >0: Move)
-        private static readonly int k_AnimHit = Animator.StringToHash("Hit");   // Trigger
-        private static readonly int k_AnimDie = Animator.StringToHash("Die");   // Trigger
+        private static readonly int k_AnimWalk = Animator.StringToHash("Walk");
+        private static readonly int k_AnimHit = Animator.StringToHash("Hit");
+        private static readonly int k_AnimDie = Animator.StringToHash("Die");
 
-        // 프로퍼티
         public Vector3 MoveDirection { get; private set; }
 
         public bool AutoAttackEnabledByToggle
@@ -98,7 +65,6 @@ namespace DogGuns_Games.vamsir
             {
                 if (m_autoAttackEnabledByToggle == value) return;
                 m_autoAttackEnabledByToggle = value;
-
                 if (!m_autoAttackEnabledByToggle && m_isAutoAttackActive)
                 {
                     DisableAutoMoveAttack();
@@ -112,7 +78,6 @@ namespace DogGuns_Games.vamsir
 
         private void Awake()
         {
-            // ContactFilter 초기화
             m_contactFilter.useTriggers = true;
             m_contactFilter.SetLayerMask(m_enemyLayer);
             m_contactFilter.useLayerMask = true;
@@ -122,7 +87,6 @@ namespace DogGuns_Games.vamsir
         {
             m_gameManager = GameManager.Instance;
             m_joystick = m_gameManager.Joystick;
-            
             SubscribeEvents();
         }
 
@@ -135,21 +99,9 @@ namespace DogGuns_Games.vamsir
         private void FixedUpdate()
         {
             if (!m_isGameStarted) return;
-
             HandleMovementInput();
             ProcessMovement();
             FollowCamera();
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            if (m_playerObject == null) return;
-
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(m_playerObject.transform.position, m_detectionRadius);
-
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(m_playerObject.transform.position, m_attackRadius);
         }
 
         #endregion
@@ -170,7 +122,6 @@ namespace DogGuns_Games.vamsir
             PlayStateManager.OnGamePause -= OnGamePause;
             PlayStateManager.OnGameResume -= OnGameResume;
             PlayStateManager.OnGameOver -= OnGameOver;
-
             if (m_playerCharacter != null)
             {
                 m_playerCharacter.OnHealthChanged -= OnPlayerHealthChanged;
@@ -180,42 +131,27 @@ namespace DogGuns_Games.vamsir
         public void AssignCharacter(PlayerBase character)
         {
             if (character == null) return;
-
             m_playerCharacter = character;
             m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
             m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
             m_mainCamera = GameManager.Instance.MainCamera;
-            
-            // 체력 초기화
             m_previousHealth = m_playerCharacter.CurrentHealth;
-            
-            LogManager.Log($"[플레이어 컨트롤러] 캐릭터 할당됨: {character.name}", LogManager.LogCategory.PlayerBase);
-            
             CreateHpSlider();
             m_playerCharacter.OnHealthChanged += OnPlayerHealthChanged;
-            
-            // 캐릭터 할당 직후 카메라 위치 즉시 설정
             ResetCameraPosition();
         }
 
         private void CreateHpSlider()
         {
             if (m_playerHpSliderPrefab == null) return;
-
             m_playerHpSlider = Instantiate(m_playerHpSliderPrefab, m_playerObject.transform);
             m_playerHpSlider.transform.localPosition = new Vector3(0, -0.4f, 0); 
             UpdateHpSliderUI(m_playerCharacter.CurrentHealth, m_playerCharacter.MaxHealth);
         }
 
-        /// <summary>
-        /// 플레이어 체력 변경 시 호출 (피격 애니메이션 처리 포함)
-        /// </summary>
         private void OnPlayerHealthChanged(float current, float max)
         {
             UpdateHpSliderUI(current, max);
-
-            // [피격 애니메이션 처리]
-            // 체력이 감소했고, 죽은 상태가 아닐 때만 피격 애니메이션 재생
             if (current < m_previousHealth && current > 0)
             {
                 if (m_playerAnimator != null)
@@ -223,7 +159,6 @@ namespace DogGuns_Games.vamsir
                     m_playerAnimator.SetTrigger(k_AnimHit);
                 }
             }
-
             m_previousHealth = current;
         }
 
@@ -249,8 +184,6 @@ namespace DogGuns_Games.vamsir
             m_isGameStarted = false;
             DisableAutoMoveAttack();
             m_isAutoAttackActive = false;
-
-            // [죽음 애니메이션 처리]
             if (m_playerAnimator != null)
             {
                 m_playerAnimator.SetTrigger(k_AnimDie);
@@ -280,7 +213,6 @@ namespace DogGuns_Games.vamsir
                 }
                 MoveDirection = m_isAutoAttackActive ? m_autoMoveDirection : Vector3.zero;
             }
-
             UpdateAnimationState(MoveDirection.magnitude);
         }
 
@@ -293,10 +225,8 @@ namespace DogGuns_Games.vamsir
         private void ProcessMovement()
         {
             if (m_playerObject == null || m_playerCharacter == null || MoveDirection == Vector3.zero) return;
-
             float speed = m_playerCharacter.MoveSpeed * Time.fixedDeltaTime;
             Vector3 targetPos = m_playerObject.transform.position + MoveDirection * speed;
-
             m_playerObject.transform.position = ClampPositionToMap(targetPos);
             UpdateCharacterRotation(MoveDirection);
         }
@@ -304,7 +234,6 @@ namespace DogGuns_Games.vamsir
         private Vector3 ClampPositionToMap(Vector3 position)
         {
             if (m_mapRange == null) return position;
-
             Bounds bounds = m_mapRange.bounds;
             float x = Mathf.Clamp(position.x, bounds.min.x, bounds.max.x);
             float y = Mathf.Clamp(position.y, bounds.min.y, bounds.max.y);
@@ -320,14 +249,10 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// 이동 속도에 따라 애니메이션 상태(Idle/Move)를 갱신합니다.
-        /// </summary>
         private void UpdateAnimationState(float speed)
         {
             if (m_playerAnimator != null)
             {
-                // Walk 파라미터가 0이면 Idle, 0보다 크면 Move로 전환되도록 Animator 설정 필요
                 m_playerAnimator.SetFloat(k_AnimWalk, speed);
             }
         }
@@ -336,15 +261,9 @@ namespace DogGuns_Games.vamsir
 
         #region 공격 시스템
 
-        /// <summary>
-        /// 보유한 모든 무기의 공격을 시도합니다.
-        /// 각 무기는 자체 쿨타임에 따라 공격 실행 여부를 결정합니다.
-        /// </summary>
-        /// <param name="dir">공격 방향</param>
         private void TryAttack(Vector3 dir)
         {
             if (m_playerCharacter == null || m_playerCharacter.Weapons.Count == 0) return;
-
             foreach (var weapon in m_playerCharacter.Weapons)
             {
                 if (weapon != null)
@@ -356,16 +275,14 @@ namespace DogGuns_Games.vamsir
 
         #endregion
 
-        #region 자동 공격 시스템 (Auto Play)
+        #region 자동 공격 시스템
 
         private void EnableAutoMoveAttack()
         {
             if (m_isAutoAttackActive) return;
             m_isAutoAttackActive = true;
-
             m_autoMoveAttackCts?.Cancel();
             m_autoMoveAttackCts = new CancellationTokenSource();
-            
             AutoAttackLoopAsync(m_autoMoveAttackCts.Token).Forget();
         }
 
@@ -374,7 +291,6 @@ namespace DogGuns_Games.vamsir
             if (!m_isAutoAttackActive) return;
             m_isAutoAttackActive = false;
             m_autoMoveDirection = Vector3.zero;
-
             m_autoMoveAttackCts?.Cancel();
             m_autoMoveAttackCts?.Dispose();
             m_autoMoveAttackCts = null;
@@ -407,7 +323,6 @@ namespace DogGuns_Games.vamsir
                     {
                         m_autoMoveDirection = Vector3.zero;
                     }
-
                     if (dist <= m_attackRadius * 1.2f)
                     {
                         TryAttack(dirToTarget);
@@ -417,7 +332,6 @@ namespace DogGuns_Games.vamsir
                 {
                     m_autoMoveDirection = Vector3.zero;
                 }
-
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
         }
@@ -425,9 +339,7 @@ namespace DogGuns_Games.vamsir
         private MobBase FindClosestEnemy()
         {
             if (m_playerObject == null) return null;
-
             int count = Physics2D.OverlapCircle(m_playerObject.transform.position, m_detectionRadius, m_contactFilter, m_enemyColliders);
-            
             MobBase closest = null;
             float minDstSqr = float.MaxValue;
             Vector3 myPos = m_playerObject.transform.position;
@@ -452,40 +364,29 @@ namespace DogGuns_Games.vamsir
 
         #region 카메라 추적
 
-        /// <summary>
-        /// 카메라 위치를 플레이어 위치로 즉시 설정합니다. (부드러운 이동 없음)
-        /// </summary>
         private void ResetCameraPosition()
         {
             if (m_mainCamera == null || m_playerObject == null || m_mapRange == null) return;
-
             Vector3 targetPos = m_playerObject.transform.position;
             targetPos.z = m_mainCamera.transform.position.z;
-
             Bounds bounds = m_mapRange.bounds;
             float camHeight = m_mainCamera.orthographicSize;
             float camWidth = camHeight * m_mainCamera.aspect;
-
             targetPos.x = Mathf.Clamp(targetPos.x, bounds.min.x + camWidth, bounds.max.x - camWidth);
             targetPos.y = Mathf.Clamp(targetPos.y, bounds.min.y + camHeight, bounds.max.y - camHeight);
-
             m_mainCamera.transform.position = targetPos;
         }
 
         private void FollowCamera()
         {
             if (m_mainCamera == null || m_playerObject == null || m_mapRange == null) return;
-
             Vector3 targetPos = m_playerObject.transform.position;
             targetPos.z = m_mainCamera.transform.position.z;
-
             Bounds bounds = m_mapRange.bounds;
             float camHeight = m_mainCamera.orthographicSize;
             float camWidth = camHeight * m_mainCamera.aspect;
-
             targetPos.x = Mathf.Clamp(targetPos.x, bounds.min.x + camWidth, bounds.max.x - camWidth);
             targetPos.y = Mathf.Clamp(targetPos.y, bounds.min.y + camHeight, bounds.max.y - camHeight);
-
             m_mainCamera.transform.position = Vector3.SmoothDamp(m_mainCamera.transform.position, targetPos, ref m_cameraVelocity, m_cameraSmoothTime);
         }
 
