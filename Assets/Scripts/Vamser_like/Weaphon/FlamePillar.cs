@@ -2,26 +2,21 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine.Pool;
-using System;
 
 namespace DogGuns_Games.vamsir
 {
-    /// <summary>
-    /// WeaphonFlame에 의해 소환되어, 경고 표시 후 불기둥 공격을 수행하는 효과 컨트롤러입니다.
-    /// </summary>
     public class FlamePillar : MonoBehaviour
     {
         [Header("애니메이터")]
         [SerializeField] private Animator m_warningAnimator;
         [SerializeField] private List<Animator> m_flameAnimators;
-        
+
         [Header("공격 판정")]
         [SerializeField] private Collider2D m_damageCollider;
         [SerializeField] private LayerMask m_targetLayer;
         
-        [Header("타이밍 설정")]
-        [Tooltip("불기둥이 활성화되어 피해를 주는 시간입니다.")]
-        [SerializeField] private float m_flameDuration = 1.0f;
+        // [삭제] 고정된 시간 대신 애니메이션 길이를 동적으로 사용
+        // [SerializeField] private float m_flameDuration = 1.0f;
 
         private float m_directDamage;
         private float m_dotDamage;
@@ -56,7 +51,7 @@ namespace DogGuns_Games.vamsir
             gameObject.SetActive(true);
             AttackSequenceAsync().Forget();
         }
-        
+
         private async UniTaskVoid AttackSequenceAsync()
         {
             var token = this.GetCancellationTokenOnDestroy();
@@ -66,45 +61,47 @@ namespace DogGuns_Games.vamsir
             if (m_warningAnimator != null)
             {
                 m_warningAnimator.gameObject.SetActive(true);
-
-                // 애니메이션이 끝날 때까지 대기합니다.
-                // 애니메이터가 다음 프레임에 상태를 업데이트할 시간을 줍니다.
-                await UniTask.Yield(cancellationToken: token);
-                
-                var animatorStateInfo = m_warningAnimator.GetCurrentAnimatorStateInfo(0);
-                float warningAnimationLength = animatorStateInfo.length;
-                
-                await UniTask.Delay(TimeSpan.FromSeconds(warningAnimationLength), ignoreTimeScale: true, cancellationToken: token);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                AnimatorStateInfo warningStateInfo = m_warningAnimator.GetCurrentAnimatorStateInfo(0);
+                float warningAnimLength = warningStateInfo.length / (warningStateInfo.speed > 0 ? warningStateInfo.speed : 1f);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(warningAnimLength), ignoreTimeScale: true, cancellationToken: token);
                 m_warningAnimator.gameObject.SetActive(false);
             }
-            
-            // 2. 랜덤 불기둥 선택 및 활성화
+
+            // 2. 랜덤 불기둥 선택 및 재생
             Animator selectedFlameAnimator = null;
+            float flameAnimLength = 0f;
+
             if (m_flameAnimators != null && m_flameAnimators.Count > 0)
             {
-                int randomIndex = UnityEngine.Random.Range(0, m_flameAnimators.Count);
+                int randomIndex = Random.Range(0, m_flameAnimators.Count);
                 selectedFlameAnimator = m_flameAnimators[randomIndex];
                 selectedFlameAnimator.gameObject.SetActive(true);
-            }
 
-            // 3. 피해 판정 시작
+                // [수정] 불기둥 애니메이션의 실제 재생 시간 계산
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                AnimatorStateInfo flameStateInfo = selectedFlameAnimator.GetCurrentAnimatorStateInfo(0);
+                flameAnimLength = flameStateInfo.length / (flameStateInfo.speed > 0 ? flameStateInfo.speed : 1f);
+            }
+            
+            // 3. 불기둥 애니메이션 시간 동안 피해 판정
             if (m_damageCollider != null) m_damageCollider.enabled = true;
 
             float timer = 0f;
-            while (timer < m_flameDuration)
+            while (timer < flameAnimLength)
             {
                 CheckForDamage();
                 await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
                 timer += Time.fixedDeltaTime;
             }
 
-            // 4. 비활성화 및 오브젝트 풀 반환
             if (m_damageCollider != null) m_damageCollider.enabled = false;
             if (selectedFlameAnimator != null) selectedFlameAnimator.gameObject.SetActive(false);
 
+            // 4. 오브젝트 풀로 반환
             m_pool.Release(this);
         }
-        
+
         private void CheckForDamage()
         {
             int hitCount = m_damageCollider.Overlap(m_contactFilter, m_hitResults);

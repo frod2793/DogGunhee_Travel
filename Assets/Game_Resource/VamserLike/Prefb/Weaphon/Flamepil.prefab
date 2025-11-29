@@ -98,7 +98,7 @@ Animator:
   m_GameObject: {fileID: 71082147661842058}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 7f56bf12d93391b439d5cef90baa19b4, type: 2}
+  m_Controller: {fileID: 9100000, guid: 5e34679272aaec44e945cd023f2d4b6a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -136,7 +136,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4331519501069643151}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -168,8 +168,6 @@ MonoBehaviour:
   m_targetLayer:
     serializedVersion: 2
     m_Bits: 64
-  m_warningDuration: 0.8
-  m_flameDuration: 1
 --- !u!61 &3500131359805260652
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -314,7 +312,7 @@ Animator:
   m_GameObject: {fileID: 4835531233291765288}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 063c07aa116ff854c910b7d48998ddd4, type: 2}
+  m_Controller: {fileID: 9100000, guid: 69447ee5c167822409fb7c76600b713a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -424,7 +422,7 @@ Animator:
   m_GameObject: {fileID: 5146141696936096112}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 8884cd656835a714c88ba925a3adb24d, type: 2}
+  m_Controller: {fileID: 9100000, guid: d5c2f551efa1e8140b824235974c9ce0, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -512,8 +510,8 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_Sprite: {fileID: -9012541153611472367, guid: bd240e77e2f03084480f4a029500e140, type: 3}
+  m_SortingOrder: 14
+  m_Sprite: {fileID: -2855903644327134232, guid: bd240e77e2f03084480f4a029500e140, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -534,7 +532,7 @@ Animator:
   m_GameObject: {fileID: 5273511473396020910}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6e5e23e03cb743346aa8f7edf7fa16f9, type: 2}
+  m_Controller: {fileID: 9100000, guid: e724109396677d14893523b4d9367c83, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
