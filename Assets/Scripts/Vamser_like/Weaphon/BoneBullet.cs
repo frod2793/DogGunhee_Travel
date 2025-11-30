@@ -34,6 +34,7 @@ public class BoneBullet : WeaphonBase
 
     private void Awake()
     {
+        m_contactFilter = new ContactFilter2D();
         m_contactFilter.useTriggers = true; 
         m_contactFilter.SetLayerMask(m_mobLayerMask);
         m_contactFilter.useLayerMask = true;

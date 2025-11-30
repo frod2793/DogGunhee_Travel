@@ -205,7 +205,7 @@ namespace DogGuns_Games.vamsir
         public void OpenOptionPopup()
         {
             if (m_optionPopupPrefab == null) return;
-            var popup = Instantiate(m_optionPopupPrefab);
+            var popup = Instantiate(m_optionPopupPrefab, transform);
             popup.gameObject.SetActive(true);
         }
 
