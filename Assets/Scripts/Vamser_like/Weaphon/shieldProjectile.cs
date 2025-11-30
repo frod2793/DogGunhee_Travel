@@ -2,8 +2,9 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Pool;
+using Vamser_like.Mob.MobBase;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// WeaphonShield에서 발사되는 부메랑 투사체의 동작을 관리합니다.

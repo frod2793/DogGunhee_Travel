@@ -1,4 +1,4 @@
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public enum ModificationMode
     {

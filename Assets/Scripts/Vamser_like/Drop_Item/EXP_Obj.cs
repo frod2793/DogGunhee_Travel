@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.vamsir
 {
     public class EXP_Obj : DropItemBase
     {

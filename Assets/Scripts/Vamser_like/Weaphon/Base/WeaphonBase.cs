@@ -1,7 +1,7 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace DogGuns_Games.vamsir
+
+namespace Vamser_like.Weaphon.Base
 {
     public abstract class WeaphonBase : MonoBehaviour
     {

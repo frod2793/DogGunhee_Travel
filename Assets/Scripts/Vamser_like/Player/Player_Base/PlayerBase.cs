@@ -1,40 +1,89 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.vamsir;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Player.Player_Base
 {
     public class PlayerBase : MonoBehaviour
     {
         #region 플레이어 스탯 (인스펙터)
 
-        [Header("공격 관련 스탯")]
-        [SerializeField] private float m_attackPower = 10f;
-        public float AttackPower { get => m_attackPower; set => m_attackPower = value; }
+        [Header("공격 관련 스탯")] [SerializeField] private float m_attackPower = 10f;
+
+        public float AttackPower
+        {
+            get => m_attackPower;
+            set => m_attackPower = value;
+        }
+
         [SerializeField] private float m_coolTime = 1f;
-        public float CoolTime { get => m_coolTime; set => m_coolTime = value; }
+
+        public float CoolTime
+        {
+            get => m_coolTime;
+            set => m_coolTime = value;
+        }
+
         [SerializeField] private float m_attackSpeed = 1f;
-        public float AttackSpeed { get => m_attackSpeed; set => m_attackSpeed = value; }
+
+        public float AttackSpeed
+        {
+            get => m_attackSpeed;
+            set => m_attackSpeed = value;
+        }
+
         [SerializeField] private float m_weaponSize = 1f;
-        public float WeaponSize { get => m_weaponSize; set => m_weaponSize = value; }
+
+        public float WeaponSize
+        {
+            get => m_weaponSize;
+            set => m_weaponSize = value;
+        }
+
         [SerializeField] private float m_projectileCount = 1f;
-        public float ProjectileCount { get => m_projectileCount; set => m_projectileCount = value; }
-        
-        [Header("방어 및 생존 관련 스탯")]
-        [SerializeField] private float m_maxHealth = 100f;
-        public float MaxHealth { get => m_maxHealth; set { m_maxHealth = value; OnHealthChanged?.Invoke(CurrentHealth, m_maxHealth); } }
+
+        public float ProjectileCount
+        {
+            get => m_projectileCount;
+            set => m_projectileCount = value;
+        }
+
+        [Header("방어 및 생존 관련 스탯")] [SerializeField]
+        private float m_maxHealth = 100f;
+
+        public float MaxHealth
+        {
+            get => m_maxHealth;
+            set
+            {
+                m_maxHealth = value;
+                OnHealthChanged?.Invoke(CurrentHealth, m_maxHealth);
+            }
+        }
+
         public float CurrentHealth { get; private set; }
         [SerializeField] private float m_defense = 0f;
-        public float Defense { get => m_defense; set => m_defense = value; }
-        [SerializeField] private float m_moveSpeed = 5f;
-        public float MoveSpeed { get => m_moveSpeed; set => m_moveSpeed = value; }
 
-        [Header("캐릭터 정보")]
-        public float Level { get; set; } = 1f;
+        public float Defense
+        {
+            get => m_defense;
+            set => m_defense = value;
+        }
+
+        [SerializeField] private float m_moveSpeed = 5f;
+
+        public float MoveSpeed
+        {
+            get => m_moveSpeed;
+            set => m_moveSpeed = value;
+        }
+
+        [Header("캐릭터 정보")] public float Level { get; set; } = 1f;
         public float CurrentExp { get; set; } = 0f;
         public float MaxExp { get; set; } = 100f;
 
@@ -45,12 +94,12 @@ namespace DogGuns_Games.vamsir
         #endregion
 
         #region 내부 상태 관리
-        
+
         private bool m_isHit = false;
         private bool m_isColliderActive = true;
         private float m_damageTickTimer = 0f;
         private const float k_ContactDamageInterval = 1.0f;
-        
+
         private List<WeaphonBase> m_weapons = new List<WeaphonBase>();
         public IReadOnlyList<WeaphonBase> Weapons => m_weapons.AsReadOnly();
 
@@ -143,7 +192,7 @@ namespace DogGuns_Games.vamsir
             {
                 HandleMobCollision(other.gameObject);
                 m_damageTickTimer = 0f;
-            } 
+            }
             else if (other.gameObject.CompareTag("Exp"))
             {
                 HandleExpCollision(other.gameObject);
@@ -179,7 +228,7 @@ namespace DogGuns_Games.vamsir
             if (m_isHit) return;
             if (mobObject.TryGetComponent(out MobBase mob))
             {
-                float damageAmount = CalculateIncomingDamage(mob.AttackDamage); 
+                float damageAmount = CalculateIncomingDamage(mob.AttackDamage);
                 ApplyDamage(damageAmount);
                 EnableHitCooldown(0.5f).Forget();
             }
@@ -231,8 +280,13 @@ namespace DogGuns_Games.vamsir
 
         #region 플레이어 액션
 
-        public virtual void Player_attack(Vector3 attackAngle) { }
-        protected virtual void PlayHitEffect() { }
+        public virtual void Player_attack(Vector3 attackAngle)
+        {
+        }
+
+        protected virtual void PlayHitEffect()
+        {
+        }
 
         public virtual void Player_Die()
         {
@@ -243,7 +297,7 @@ namespace DogGuns_Games.vamsir
         }
 
         #endregion
-        
+
         #region 경험치 시스템
 
         public void AddExperience(float expAmount)
@@ -263,10 +317,12 @@ namespace DogGuns_Games.vamsir
                 leveledUp = true;
                 OnLevelUp?.Invoke(Level);
             }
+
             if (leveledUp)
             {
                 SoundManager.PlaySound(Sound.SFX, SoundKeys.Levelup, false);
             }
+
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
         }
 
@@ -281,7 +337,7 @@ namespace DogGuns_Games.vamsir
         }
 
         #endregion
-        
+
         #region 유틸리티
 
         private async UniTaskVoid EnableHitCooldown(float duration)
@@ -289,7 +345,8 @@ namespace DogGuns_Games.vamsir
             m_isHit = true;
             try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: this.GetCancellationTokenOnDestroy());
+                await UniTask.Delay(TimeSpan.FromSeconds(duration),
+                    cancellationToken: this.GetCancellationTokenOnDestroy());
             }
             finally
             {

@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public class ServerManager : MonoBehaviour
     {

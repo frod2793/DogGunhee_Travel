@@ -2,12 +2,13 @@ using System;
 using System.IO;
 using BackEnd;
 using Cysharp.Threading.Tasks;
-using DogGuns_Games.Manager; // [추가] AppUpdateManager 네임스페이스
+// [추가] AppUpdateManager 네임스페이스
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Vamser_like.Manager;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public class LoginManager : MonoBehaviour
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DogGuns_Games.Lobby
+namespace Vamser_like.Lobby
 {
     /// <summary>
     /// 캐릭터 선택 UI 관리 클래스

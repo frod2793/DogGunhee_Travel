@@ -1,8 +1,7 @@
 using UnityEngine;
-using UnityEngine.Serialization;
-using Cysharp.Threading.Tasks;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// 화면 내에서 계속 튕기는 단 하나의 영구적인 진주를 발사하는 무기입니다.
@@ -32,7 +31,7 @@ namespace DogGuns_Games.vamsir
 
         #region Unity 라이프사이클
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             
@@ -41,7 +40,7 @@ namespace DogGuns_Games.vamsir
             m_currentEvolveState = this.isEvolved;
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             ReturnPearl();
         }

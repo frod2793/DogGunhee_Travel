@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DogGuns_Games.vamsir.Editor
+namespace Vamser_like.vamsir.Editor
 {
     [CustomEditor(typeof(GameManager))]
     public class GameManagerEditor : UnityEditor.Editor

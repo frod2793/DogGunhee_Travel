@@ -3,8 +3,9 @@ using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using System.Collections.Generic;
+using Vamser_like.Mob.MobBase;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     [RequireComponent(typeof(TrailRenderer))] // [추가] TrailRenderer 필수

@@ -2,8 +2,9 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine.Pool;
+using Vamser_like.Mob.MobBase;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     public class FlamePillar : MonoBehaviour
     {

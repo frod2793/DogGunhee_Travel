@@ -1,4 +1,4 @@
-namespace DogGuns_Games.vamsir
+namespace Vamser_like
 {
     /// <summary>
     /// EffectManager에서 사용할 이펙트의 종류를 정의하는 열거형입니다.

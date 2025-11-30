@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like
 {
     public class PlayStateManager : MonoBehaviour
     {

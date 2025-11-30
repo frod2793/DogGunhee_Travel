@@ -1,12 +1,13 @@
-using System;
+
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using DG.Tweening;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.vamsir;
 
-namespace DogGuns_Games.vamsir
+
+namespace Vamser_like.Player.Player_Base
 {
     public class PlayerControll : MonoBehaviour
     {

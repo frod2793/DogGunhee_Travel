@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
-namespace DogGuns_Games.Test.Editor
+namespace Vamser_like.Test.Editor
 {
     /// <summary>
     /// TestManager의 인스펙터를 확장하여, 플레이 모드에서 위치를 저장하는 기능을 추가합니다.

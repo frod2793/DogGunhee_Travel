@@ -1,12 +1,11 @@
 using System;
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Pool;
-using UnityEngine.Serialization;
+using Vamser_like.Weaphon.Base;
 
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     public class WeaphonBone : WeaphonBase
     {
@@ -30,7 +29,7 @@ namespace DogGuns_Games.vamsir
 
         #region 초기화 및 오브젝트 풀 관리
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             

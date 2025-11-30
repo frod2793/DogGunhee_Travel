@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 using System.Collections.Generic;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     [RequireComponent(typeof(ParticleSystem), typeof(EdgeCollider2D))]
     public class WeaphonSmell : WeaphonBase
@@ -63,7 +65,7 @@ namespace DogGuns_Games.vamsir
             m_trailCollider = GetComponent<EdgeCollider2D>();
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             if (GameManager.Instance != null)
@@ -77,7 +79,7 @@ namespace DogGuns_Games.vamsir
             InitializeTrail();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             ResetTrailData();
         }

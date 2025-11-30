@@ -7,7 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace DogGuns_Games.Lobby
+namespace Vamser_like.Lobby
 {
     /// <summary>
     /// 게임 내 우편 시스템을 관리하는 클래스 (헤더 한글화 적용)

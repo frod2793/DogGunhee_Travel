@@ -1,6 +1,7 @@
 using UnityEngine;
+using Vamser_like.Player.Player_Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Player
 {
     public class Player_Octopus : PlayerBase
     {

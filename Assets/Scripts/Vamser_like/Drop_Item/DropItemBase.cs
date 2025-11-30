@@ -5,7 +5,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.vamsir
 {
     /// <summary>
     /// 몬스터가 드랍하는 아이템(코인, 경험치 등)의 베이스 클래스입니다.

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Vamser_like.vamsir;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like
 {
     [System.Serializable]
     public class EffectMapping

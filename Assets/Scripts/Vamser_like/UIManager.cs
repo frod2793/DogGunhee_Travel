@@ -6,13 +6,17 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using R3;
 using UnityEngine;
-using UnityEngine.Serialization;
+
 using DG.Tweening;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
-using DogGuns_Games;
 
-namespace DogGuns_Games.vamsir
+using Vamser_like.Lobby;
+using Vamser_like.Player.Player_Base;
+using Vamser_like.vamsir;
+using Vamser_like.Weaphon.Base;
+
+namespace Vamser_like
 {
     public class UIManager : MonoBehaviour
     {
@@ -523,7 +527,7 @@ namespace DogGuns_Games.vamsir
                 }
             }
             
-            DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
+            InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
             UpdateCachedItemLists();
             RefreshWeaponDisplay();
             RefreshJuListDisplay();

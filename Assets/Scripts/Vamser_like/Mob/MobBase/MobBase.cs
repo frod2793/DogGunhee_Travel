@@ -1,9 +1,12 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using Vamser_like.Player.Player_Base;
+using Vamser_like.vamsir;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Mob.MobBase
 {
+    
     public abstract class MobBase : MonoBehaviour, IObjectPoolUser
     {
         #region 프로퍼티 (공통 스탯)

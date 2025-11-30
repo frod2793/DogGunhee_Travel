@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
+using Vamser_like.Mob.MobBase;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     [RequireComponent(typeof(Animator))]
     [RequireComponent(typeof(Collider2D))]

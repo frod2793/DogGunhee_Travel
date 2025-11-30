@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public class SceneLoader : MonoBehaviour
     {

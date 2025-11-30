@@ -1,14 +1,16 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// 화면 가장자리에서 튕기며 이동하는 진주 투사체입니다.
     /// 레벨에 따라 애니메이션과 궤적 색상이 변경됩니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
-    [RequireComponent(typeof(TrailRenderer), typeof(Animator))] 
+    [RequireComponent(typeof(TrailRenderer), typeof(Animator))]
     public class PearlProjectile : MonoBehaviour
     {
         #region 내부 변수
@@ -32,13 +34,15 @@ namespace DogGuns_Games.vamsir
 
         #region 인스펙터 설정 (Visual)
 
-        [Header("Trail Settings")]
-        [SerializeField] private float m_trailTime = 0.3f;
+        [Header("Trail Settings")] [SerializeField]
+        private float m_trailTime = 0.3f;
+
         [SerializeField] private float m_trailStartWidth = 0.4f;
         [SerializeField] private float m_trailEndWidth = 0.0f;
 
-        [Header("Level Colors")]
-        [SerializeField] private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
+        [Header("Level Colors")] [SerializeField]
+        private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
+
         [SerializeField] private Color m_trailColorLv2 = new Color(1f, 0f, 1f, 0.5f);
 
         #endregion
@@ -53,7 +57,7 @@ namespace DogGuns_Games.vamsir
 
             var col = GetComponent<Collider2D>();
             if (col != null) col.isTrigger = true;
-            
+
             SetupTrailBase();
         }
 
@@ -66,7 +70,7 @@ namespace DogGuns_Games.vamsir
         private void Update()
         {
             transform.position += m_velocity * Time.deltaTime;
-            
+
             float rotateSpeed = 360f * Time.deltaTime;
             transform.Rotate(0, 0, -rotateSpeed);
 
@@ -83,7 +87,7 @@ namespace DogGuns_Games.vamsir
             m_stunTime = weapon.mobStunTime;
             m_isEvolved = weapon.isEvolved;
             m_velocity = initialVelocity;
-            
+
             transform.rotation = Quaternion.identity;
 
             UpdateVisualsByLevel();
@@ -112,7 +116,7 @@ namespace DogGuns_Games.vamsir
             m_trailRenderer.startWidth = m_trailStartWidth;
             m_trailRenderer.endWidth = m_trailEndWidth;
             m_trailRenderer.autodestruct = false;
-            
+
             if (TryGetComponent(out SpriteRenderer sr))
             {
                 m_trailRenderer.sortingLayerID = sr.sortingLayerID;
@@ -145,7 +149,7 @@ namespace DogGuns_Games.vamsir
             if (m_mainCamera == null) return;
 
             Vector3 viewPos = m_mainCamera.WorldToViewportPoint(transform.position);
-            
+
             if ((viewPos.x <= 0.02f && m_velocity.x < 0) || (viewPos.x >= 0.98f && m_velocity.x > 0))
                 m_velocity.x *= -1;
 
@@ -158,7 +162,7 @@ namespace DogGuns_Games.vamsir
             if (other.CompareTag("Mob"))
             {
                 int id = other.gameObject.GetInstanceID();
-                
+
                 if (!m_hitCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
                 {
                     if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
@@ -170,7 +174,8 @@ namespace DogGuns_Games.vamsir
                 }
             }
         }
-        
+
+
         public void UpdateState(WeaphonBase weapon)
         {
             m_damage = weapon.attackPower;
@@ -179,6 +184,7 @@ namespace DogGuns_Games.vamsir
 
             UpdateVisualsByLevel();
         }
+
         #endregion
     }
 }

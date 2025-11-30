@@ -2,9 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using DogGuns_Games.vamsir;
+using Vamser_like.vamsir;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.Test
+namespace Vamser_like.Test
 {
     /// <summary>
     /// TestManager의 소지 무기 목록에 표시될 각 UI 항목을 제어하는 스크립트입니다.

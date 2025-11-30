@@ -2,10 +2,12 @@ using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using Vamser_like.vamsir;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Mob
 {
-    public class NormalMob : MobBase
+    public class NormalMob : MobBase.MobBase
     {
         #region 인스펙터 필드
 

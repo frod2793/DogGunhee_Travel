@@ -4,9 +4,11 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.Serialization;
+using Vamser_like.Lobby;
+using Vamser_like.Player.Player_Base;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like
 {
     public class GameManager : MonoBehaviour
     {
@@ -15,6 +17,7 @@ namespace DogGuns_Games.vamsir
         public static event Action<PlayerBase> OnPlayerChanged;
 
         private static GameManager s_instance;
+
         public static GameManager Instance
         {
             get
@@ -23,6 +26,7 @@ namespace DogGuns_Games.vamsir
                 {
                     s_instance = FindFirstObjectByType<GameManager>();
                 }
+
                 return s_instance;
             }
         }
@@ -31,18 +35,18 @@ namespace DogGuns_Games.vamsir
 
         #region 인스펙터 필드
 
-        [Header("Editor Start Settings (에디터 전용)")]
-        [SerializeField] private int m_startCharacterIndex = 0;
+        [Header("Editor Start Settings (에디터 전용)")] [SerializeField]
+        private int m_startCharacterIndex = 0;
 
-        [Header("Data References")]
-        [SerializeField] private SkillDatabase m_skillDatabase;
+        [Header("Data References")] [SerializeField]
+        private SkillDatabase m_skillDatabase;
 
-        [Header("Reference Settings")]
-        [SerializeField] private GameObject m_playerContainer;
+        [Header("Reference Settings")] [SerializeField]
+        private GameObject m_playerContainer;
+
         [SerializeField] private OptionPopupManager m_optionPopupPrefab;
-        
-        [Header("Debug")]
-        public List<SkillData> TestWeapons = new List<SkillData>();
+
+        [Header("Debug")] public List<SkillData> TestWeapons = new List<SkillData>();
 
         #endregion
 
@@ -74,6 +78,7 @@ namespace DogGuns_Games.vamsir
                 Destroy(gameObject);
                 return;
             }
+
             s_instance = this;
 
             CacheComponents();
@@ -93,7 +98,7 @@ namespace DogGuns_Games.vamsir
         private async void OnEnable()
         {
             await SpawnPlayerAndInitialWeaponsAsync();
-            
+
             if (_mUIManagerManager != null)
             {
                 _mUIManagerManager.StartGameCountdown();
@@ -142,9 +147,9 @@ namespace DogGuns_Games.vamsir
         {
             try
             {
-                if (DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance != null)
-                    DogGuns_Games.Lobby.InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
-                
+                if (InventoryDataManagerDontdestory.Instance != null)
+                    InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
+
                 if (PlayerDataManagerDontdesytoy.Instance != null)
                     PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt = 0;
 
@@ -161,8 +166,13 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        private void OnPause() { }
-        private void OnResume() { }
+        private void OnPause()
+        {
+        }
+
+        private void OnResume()
+        {
+        }
 
         private async void OnGameOver()
         {
@@ -177,7 +187,7 @@ namespace DogGuns_Games.vamsir
                 playerData.ingameCoin = 0;
 
                 await UniTask.SwitchToMainThread();
-                
+
                 var param = new BackEnd.Param();
                 param.Add("Money1", playerData.currency1);
 
@@ -228,7 +238,7 @@ namespace DogGuns_Games.vamsir
 
             await SpawnPlayerAndInitialWeaponsAsync();
         }
-        
+
         private async UniTask SpawnPlayerAndInitialWeaponsAsync()
         {
             if (m_playerContainer == null) return;
@@ -237,10 +247,12 @@ namespace DogGuns_Games.vamsir
             {
                 int charIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
                 string charKey = $"Player_Character_{charIndex}";
-                GameObject charInstance = await Addressables.InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform).ToUniTask();
-                
+                GameObject charInstance = await Addressables
+                    .InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform)
+                    .ToUniTask();
+
                 if (charInstance == null) return;
-                
+
                 charInstance.transform.localPosition = Vector3.zero;
                 SpawnedPlayer = charInstance.GetComponent<PlayerBase>();
 
@@ -251,10 +263,11 @@ namespace DogGuns_Games.vamsir
                 }
 
                 var initialWeapons = new List<SkillData>();
-                
+
                 if (m_skillDatabase != null)
                 {
-                    SkillData defaultWeaponSkill = m_skillDatabase.allSkills.FirstOrDefault(s => s.skillCode == "WP_BONE");
+                    SkillData defaultWeaponSkill =
+                        m_skillDatabase.allSkills.FirstOrDefault(s => s.skillCode == "WP_BONE");
                     if (defaultWeaponSkill != null)
                     {
                         initialWeapons.Add(defaultWeaponSkill);
@@ -272,7 +285,7 @@ namespace DogGuns_Games.vamsir
                 {
                     m_playerController.AssignCharacter(SpawnedPlayer);
                 }
-                
+
                 OnPlayerChanged?.Invoke(SpawnedPlayer);
             }
             catch (Exception ex)
@@ -282,13 +295,15 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true, int startLevel = 1, bool startEvolved = false)
+        public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true, int startLevel = 1,
+            bool startEvolved = false)
         {
-            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon || string.IsNullOrEmpty(skillData.weaponAddressableKey))
+            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon ||
+                string.IsNullOrEmpty(skillData.weaponAddressableKey))
             {
                 return;
             }
-            
+
             string key = skillData.weaponAddressableKey;
 
             try
@@ -307,12 +322,13 @@ namespace DogGuns_Games.vamsir
                         newWeapon.upgradeItemCode = skillData.upgradeItemCode;
                         newWeapon.Thumnail = skillData.skillIcon;
                         newWeapon.ApplyBaseStats();
-                        
+
                         // [추가] 시작 레벨 및 진화 상태 적용
                         for (int i = 1; i < startLevel; i++)
                         {
                             newWeapon.UpgradeLevel();
                         }
+
                         if (startEvolved)
                         {
                             // 최대 레벨까지 올린 후, 한 번 더 호출하여 진화시킴
@@ -320,9 +336,10 @@ namespace DogGuns_Games.vamsir
                             {
                                 newWeapon.UpgradeLevel();
                             }
+
                             newWeapon.UpgradeLevel();
                         }
-                        
+
                         SpawnedPlayer.AddWeapon(newWeapon);
                         if (playEffect)
                         {
@@ -351,10 +368,12 @@ namespace DogGuns_Games.vamsir
 
         public int GetMobKillCount()
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            if (PlayerDataManagerDontdesytoy.Instance != null &&
+                PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
             {
                 return PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt;
             }
+
             return 0;
         }
 
@@ -367,7 +386,7 @@ namespace DogGuns_Games.vamsir
         {
             return SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
         }
-        
+
         public float GetPlayerExpProgress()
         {
             return SpawnedPlayer != null ? SpawnedPlayer.GetExpProgress() : 0f;
@@ -375,10 +394,12 @@ namespace DogGuns_Games.vamsir
 
         public int GetCoinCount()
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            if (PlayerDataManagerDontdesytoy.Instance != null &&
+                PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
             {
                 return PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin;
             }
+
             return 0;
         }
 
@@ -386,7 +407,7 @@ namespace DogGuns_Games.vamsir
         {
             return m_playerContainer != null ? m_playerContainer.transform : transform;
         }
-        
+
         #endregion
     }
 }

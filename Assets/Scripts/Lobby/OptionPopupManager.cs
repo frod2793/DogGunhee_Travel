@@ -1,6 +1,6 @@
 using System;
-using DogGuns_Games;
-using DogGuns_Games.vamsir;
+using Vamser_like;
+using Vamser_like.vamsir;
 using R3;
 using TMPro;
 using UnityEngine;

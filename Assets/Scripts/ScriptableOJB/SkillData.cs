@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public enum SkillType
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace DogGuns_Games.Lobby
+namespace Vamser_like.Lobby
 {
     public class StoreManager : MonoBehaviour
     {

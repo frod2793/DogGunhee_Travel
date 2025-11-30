@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace DogGuns_Games.Lobby
+namespace Vamser_like.Lobby
 {
     public class PostIndex : MonoBehaviour
     {

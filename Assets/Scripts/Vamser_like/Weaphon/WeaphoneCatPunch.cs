@@ -1,9 +1,13 @@
 using UnityEngine;
-using UnityEngine.Serialization;
+
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.Player.Player_Base;
 
-namespace DogGuns_Games.vamsir
+using Vamser_like.Weaphon.Base;
+
+namespace Vamser_like.Weaphon
 {
     public class WeaphoneCatPunch : WeaphonBase
     {
@@ -56,7 +60,7 @@ namespace DogGuns_Games.vamsir
             m_contactFilter.useLayerMask = true;
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             attackPower = m_initialAttackPower;
@@ -69,7 +73,7 @@ namespace DogGuns_Games.vamsir
             ResetWeaponState();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             ResetWeaponState();
         }

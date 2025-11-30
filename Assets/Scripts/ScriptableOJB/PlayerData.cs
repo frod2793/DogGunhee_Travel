@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     [CreateAssetMenu(fileName = "PlayerData", menuName = "GameData/PlayerData")]
     public class PlayerData : ScriptableObject

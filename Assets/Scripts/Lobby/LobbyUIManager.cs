@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Cysharp.Threading.Tasks; // UniTask 활용
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace DogGuns_Games.Lobby
+namespace Vamser_like.Lobby
 {
     /// <summary>
     /// 로비 UI를 관리하는 클래스 (GetReward 오류 수정됨)

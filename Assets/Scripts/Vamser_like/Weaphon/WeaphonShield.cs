@@ -3,8 +3,9 @@ using UnityEngine.Serialization;
 using UnityEngine.Pool;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// 방패를 지면에 내려찍어 충격파로 공격하는 무기 클래스입니다.
@@ -57,7 +58,7 @@ namespace DogGuns_Games.vamsir
             InitializeShockwavePool();
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             
@@ -67,7 +68,7 @@ namespace DogGuns_Games.vamsir
             ResetShieldState();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             transform.DOKill();
         }

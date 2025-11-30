@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BackendTest : MonoBehaviour
+public class BackendConnet : MonoBehaviour
 {
     [Header("UI 컴포넌트")]
     [Tooltip("구글 해시 키 가져오기를 실행할 버튼입니다.")]
@@ -34,10 +34,8 @@ public class BackendTest : MonoBehaviour
 
         Debug.Log("뒤끝 SDK 초기화를 시도합니다...");
 
-        // [수정] new BackendCustomSetting()을 사용하지 않고, 
-        // 에디터 설정을 자동으로 읽어오는 기본 초기화 메서드를 사용합니다.
-        // 파라미터 true는 뒤끝 로그를 사용하겠다는 의미입니다.
-        var bro = Backend.Initialize(); 
+        // BackendAsync 헬퍼와 뒤끝 SDK의 비동기 초기화 메서드를 사용합니다.
+        var bro = await BackendAsync(Backend.InitializeAsync);
 
         if (bro.IsSuccess())
         {

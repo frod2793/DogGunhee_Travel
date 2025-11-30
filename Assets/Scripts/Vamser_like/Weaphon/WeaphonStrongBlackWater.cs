@@ -1,36 +1,33 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Serialization;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     public class WeaphonStrongBlackWater : WeaphonBase
     {
         #region 인스펙터 필드
 
-        [Header("기본 공격 설정")]
-        [Tooltip("틱 데미지가 들어가는 간격입니다.")]
-        [SerializeField] private float m_damageTickInterval = 0.5f;
+        [Header("기본 공격 설정")] [Tooltip("틱 데미지가 들어가는 간격입니다.")] [SerializeField]
+        private float m_damageTickInterval = 0.5f;
 
-        [Header("업그레이드 스탯 설정")]
-        [Tooltip("적의 이동 속도를 감소시키는 비율 (0.3 = 30% 감소)")]
-        [SerializeField] [Range(0f, 1f)] private float m_slowAmount = 0.3f;
-        
+        [Header("업그레이드 스탯 설정")] [Tooltip("적의 이동 속도를 감소시키는 비율 (0.3 = 30% 감소)")] [SerializeField] [Range(0f, 1f)]
+        private float m_slowAmount = 0.3f;
+
         [SerializeField] private float m_slowDuration = 1.0f;
 
-        [Header("감지 및 비주얼 설정")]
-        [Tooltip("공격 대상 레이어 (Mob)")]
-        [SerializeField] private LayerMask m_targetLayer;
+        [Header("감지 및 비주얼 설정")] [Tooltip("공격 대상 레이어 (Mob)")] [SerializeField]
+        private LayerMask m_targetLayer;
 
-        [Tooltip("자식 오브젝트에 있는 애니메이터 컴포넌트")]
-        [SerializeField] private Animator m_animator;
+        [Tooltip("자식 오브젝트에 있는 애니메이터 컴포넌트")] [SerializeField]
+        private Animator m_animator;
 
-        [Tooltip("자식 오브젝트에 있는 공격 판정용 콜라이더")]
-        [SerializeField] private Collider2D m_collider2D;
+        [Tooltip("자식 오브젝트에 있는 공격 판정용 콜라이더")] [SerializeField]
+        private Collider2D m_collider2D;
 
         #endregion
 
@@ -38,14 +35,14 @@ namespace DogGuns_Games.vamsir
 
         private bool m_isAttacking;
         private Vector3 m_originalScale;
-        
-        private bool m_currentEvolveState = false; 
+
+        private bool m_currentEvolveState = false;
 
         private ContactFilter2D m_contactFilter;
-        private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20); 
+        private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20);
 
         private static readonly int k_AnimStateLevel1 = Animator.StringToHash("Level1");
-        private static readonly int k_AnimTriggerLevel2 = Animator.StringToHash("Level2"); 
+        private static readonly int k_AnimTriggerLevel2 = Animator.StringToHash("Level2");
 
         #endregion
 
@@ -63,7 +60,7 @@ namespace DogGuns_Games.vamsir
             else
             {
                 m_collider2D.enabled = false;
-                m_collider2D.isTrigger = true; 
+                m_collider2D.isTrigger = true;
             }
 
             if (m_animator == null)
@@ -77,22 +74,22 @@ namespace DogGuns_Games.vamsir
             m_contactFilter.useLayerMask = true;
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
-            
+
             if (m_collider2D != null) m_collider2D.enabled = false;
             transform.localScale = m_originalScale;
             m_isAttacking = false;
-            
+
             m_currentEvolveState = this.isEvolved;
-            
+
             AttackRoutineAsync().Forget();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
-            transform.DOKill(); 
+            transform.DOKill();
             m_isAttacking = false;
         }
 
@@ -117,9 +114,9 @@ namespace DogGuns_Games.vamsir
             m_isAttacking = true;
             var token = this.GetCancellationTokenOnDestroy();
 
-            UpdateWeaponState(); 
+            UpdateWeaponState();
             if (m_collider2D != null) m_collider2D.enabled = true;
-            
+
             transform.DOScale(m_originalScale, 0.3f).From(Vector3.zero).SetEase(Ease.OutBack);
 
             try
@@ -129,7 +126,7 @@ namespace DogGuns_Games.vamsir
                     CheckEvolveState();
 
                     ProcessTickDamage();
-                    
+
                     float speed = this.attackSpeed > 0 ? this.attackSpeed : 1f;
                     float tickDelay = m_damageTickInterval / speed;
 
@@ -148,7 +145,7 @@ namespace DogGuns_Games.vamsir
             if (m_currentEvolveState != this.isEvolved)
             {
                 m_currentEvolveState = this.isEvolved;
-                UpdateWeaponState(); 
+                UpdateWeaponState();
             }
         }
 
@@ -178,10 +175,10 @@ namespace DogGuns_Games.vamsir
             for (int i = 0; i < hitCount; i++)
             {
                 var target = m_hitResults[i];
-                
-                if (target.TryGetComponent(out MobBase mob) && !mob.IsDead) 
+
+                if (target.TryGetComponent(out MobBase mob) && !mob.IsDead)
                 {
-                    mob.TakeDamage(attackPower); 
+                    mob.TakeDamage(attackPower);
 
                     if (this.isEvolved)
                     {
@@ -194,6 +191,7 @@ namespace DogGuns_Games.vamsir
         #endregion
 
         #region 디버그
+
         private void OnDrawGizmos()
         {
             if (m_collider2D != null && m_collider2D.enabled)
@@ -203,6 +201,7 @@ namespace DogGuns_Games.vamsir
                 Gizmos.DrawCube(bounds.center, bounds.size);
             }
         }
+
         #endregion
     }
 }

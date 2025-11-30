@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 
-namespace DogGuns_Games.Lobby
+namespace Vamser_like.Lobby
 {
     /// <summary>
     /// 상점 아이템 UI 및 구매 로직을 담당합니다.

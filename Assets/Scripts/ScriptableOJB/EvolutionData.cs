@@ -1,4 +1,4 @@
-namespace DogGuns_Games
+namespace Vamser_like
 {
     [System.Serializable]
     public class EvolutionData

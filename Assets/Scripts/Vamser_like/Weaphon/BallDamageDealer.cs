@@ -1,7 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Vamser_like.Mob.MobBase;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// WeaphonBallplay에 의해 생성된 공의 물리적 충돌과 데미지를 담당하는 클래스입니다.
@@ -35,12 +37,12 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             m_damageCooldowns.Clear();
         }

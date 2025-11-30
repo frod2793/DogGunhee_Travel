@@ -3,8 +3,9 @@ using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// 랜덤 위치에 불기둥을 소환하는 무기 컨트롤러입니다.
@@ -37,7 +38,7 @@ namespace DogGuns_Games.vamsir
             InitializePool();
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             
@@ -46,7 +47,7 @@ namespace DogGuns_Games.vamsir
             AttackLoopAsync(m_attackLoopCts.Token).Forget();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             m_attackLoopCts?.Cancel();
         }

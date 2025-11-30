@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.Pool;
 using System.Collections.Generic;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.vamsir
+namespace Vamser_like.Weaphon
 {
     /// <summary>
     /// 플레이어 주변을 회전하는 공(Ball)을 생성하고 관리하는 무기입니다.
@@ -44,7 +44,7 @@ namespace DogGuns_Games.vamsir
             InitializePool();
         }
 
-        private void OnEnable()
+        private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             m_currentAngle = 0f;
@@ -52,7 +52,7 @@ namespace DogGuns_Games.vamsir
             SpawnBalls();
         }
 
-        private void OnDisable()
+        private new void OnDisable()
         {
             ClearBalls();
         }

@@ -3,44 +3,38 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System.Linq;
-using DogGuns_Games.vamsir;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceLocations;
-using System;
+using Vamser_like.Test;
+using Vamser_like.vamsir;
+using Vamser_like.Weaphon.Base;
 
-namespace DogGuns_Games.Test
+namespace Vamser_like
 {
     /// <summary>
     /// 인게임 캐릭터 및 무기 테스트를 위한 디버그/치트 패널입니다.
     /// </summary>
     public class TestManager : MonoBehaviour
     {
-        [Header("UI 참조")]
-        [SerializeField] private TMP_Dropdown m_characterDropdown;
+        [Header("UI 참조")] [SerializeField] private TMP_Dropdown m_characterDropdown;
         [SerializeField] private Button m_changeCharacterButton;
-        [Space]
-        [SerializeField] private TMP_Dropdown m_weaponDropdown;
+        [Space] [SerializeField] private TMP_Dropdown m_weaponDropdown;
         [SerializeField] private Button m_addWeaponButton;
-        [Space]
-        [SerializeField] private RectTransform m_ownedWeaponsContainer;
+        [Space] [SerializeField] private RectTransform m_ownedWeaponsContainer;
         [SerializeField] private TestWeaponItem m_ownedWeaponItemPrefab;
 
-        [Header("무기 생성 옵션")]
-        [SerializeField] private TMP_InputField m_startLevelInput;
+        [Header("무기 생성 옵션")] [SerializeField] private TMP_InputField m_startLevelInput;
         [SerializeField] private Toggle m_startEvolvedToggle;
 
-        [Header("패널 애니메이션")]
-        [SerializeField] private Button m_toggleButton;
+        [Header("패널 애니메이션")] [SerializeField] private Button m_toggleButton;
         public Transform panelTransform;
         public Transform hiddenPosition;
         public Transform shownPosition;
         [SerializeField] private float m_animationDuration = 0.3f;
 
-        [Header("데이터")]
-        [SerializeField] private SkillDatabase m_skillDatabase;
+        [Header("데이터")] [SerializeField] private SkillDatabase m_skillDatabase;
 
         private GameManager m_gameManager;
         private List<SkillData> m_allWeaponSkills;
@@ -71,7 +65,7 @@ namespace DogGuns_Games.Test
             InitializeUI();
             await InitializeDataAsync();
             InitializePanel();
-            
+
             GameManager.OnPlayerChanged += (player) => RefreshOwnedWeaponList();
         }
 
@@ -111,6 +105,7 @@ namespace DogGuns_Games.Test
                         characterNames.Add(charName);
                         Addressables.Release(assetHandle);
                     }
+
                     Addressables.Release(locationsHandle);
                     i++;
                 }
@@ -120,7 +115,7 @@ namespace DogGuns_Games.Test
                     break;
                 }
             }
-            
+
             m_characterDropdown.ClearOptions();
             m_characterDropdown.AddOptions(characterNames);
             m_characterDropdown.interactable = true;
@@ -128,7 +123,7 @@ namespace DogGuns_Games.Test
             m_allWeaponSkills = m_skillDatabase.allSkills
                 .Where(s => s.skillType == SkillType.Weapon)
                 .ToList();
-            
+
             m_weaponDropdown.ClearOptions();
             m_weaponDropdown.AddOptions(m_allWeaponSkills.Select(s => s.skillName).ToList());
         }
@@ -170,6 +165,7 @@ namespace DogGuns_Games.Test
             {
                 Destroy(item);
             }
+
             m_spawnedWeaponItems.Clear();
 
             if (m_gameManager.SpawnedPlayer == null || m_ownedWeaponItemPrefab == null) return;
@@ -188,7 +184,7 @@ namespace DogGuns_Games.Test
             if (selectedIndex < 0 || selectedIndex >= m_loadedCharacters.Count) return;
 
             int characterIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
-            
+
             PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = characterIndexToSpawn;
             m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();
         }
@@ -212,9 +208,11 @@ namespace DogGuns_Games.Test
                 int.TryParse(m_startLevelInput.text, out startLevel);
                 startLevel = Mathf.Clamp(startLevel, 1, WeaphonBase.k_MaxLevel);
             }
+
             bool startEvolved = m_startEvolvedToggle != null && m_startEvolvedToggle.isOn;
 
-            m_gameManager.EquipNewWeapon(selectedSkill, true, startLevel, startEvolved).ContinueWith(RefreshOwnedWeaponList);
+            m_gameManager.EquipNewWeapon(selectedSkill, true, startLevel, startEvolved)
+                .ContinueWith(RefreshOwnedWeaponList);
         }
 
         private void LevelUpWeapon(string skillCode)

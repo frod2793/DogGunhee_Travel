@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public class ChoosegamePopup : MonoBehaviour
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
 
-namespace DogGuns_Games
+namespace Vamser_like
 {
     public class SkillDatabase : ScriptableObject
     {
