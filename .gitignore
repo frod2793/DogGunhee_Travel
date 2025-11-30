@@ -5,8 +5,7 @@
 # This .gitignore file should be placed at the root of your Unity project directory
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
-.plastic/
-.utmp/
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -31,6 +30,10 @@
 # Visual Studio cache directory
 .vs/
 
+
+# Plastic SCM cache directory
+.plastic/
+
 # Gradle cache directory
 .gradle/
 
@@ -41,6 +44,7 @@ ExportedObj/
 *.unityproj
 *.sln
 *.suo
+*.utmp
 *.tmp
 *.user
 *.userprefs
@@ -51,6 +55,10 @@ ExportedObj/
 *.mdb
 *.opendb
 *.VC.db
+
+/.utmp/
+
+/.plastic/
 
 # Unity3D generated meta files
 *.pidb.meta
