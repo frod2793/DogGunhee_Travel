@@ -194,7 +194,7 @@ namespace SingularityGroup.HotReload.Editor {
         public static Dictionary<PartiallySupportedChange, string> partiallySupportedChangeDescriptions = new Dictionary<PartiallySupportedChange, string> {
             {PartiallySupportedChange.LambdaClosure, "A lambda closure was edited (captured variable was added or removed). Changes to it will only be visible to the next created lambda(s)."},
             {PartiallySupportedChange.EditAsyncMethod, "An async method was edited. Changes to it will only be visible the next time this method is called."},
-            {PartiallySupportedChange.AddMonobehaviourMethod, "A new method was added. It will not show up in the Inspector until the next full recompilation."},
+            {PartiallySupportedChange.AddMonobehaviourMethod, "A new method was added or made public. It will not show up in the Inspector until the next full recompilation."},
             {PartiallySupportedChange.EditMonobehaviourField, "A field in a MonoBehaviour was removed or reordered. The inspector will not notice this change until the next full recompilation."},
             {PartiallySupportedChange.EditCoroutine, "An IEnumerator/IEnumerable was edited. When used as a coroutine, changes to it will only be visible the next time the coroutine is created."},
             {PartiallySupportedChange.EditGenericFieldInitializer, "A field initializer inside generic class was edited. Field initializer will not have any effect until the next full recompilation."},

@@ -1,4 +1,3 @@
-#if ENABLE_MONO && (DEVELOPMENT_BUILD || UNITY_EDITOR)
 using System;
 using SingularityGroup.HotReload.DTO;
 
@@ -14,4 +13,3 @@ namespace SingularityGroup.HotReload {
             : base($"Unable to resolve field with name: {t.fieldName} in assembly {t.assemblyName}", inner) { }
     }
 }
-#endif

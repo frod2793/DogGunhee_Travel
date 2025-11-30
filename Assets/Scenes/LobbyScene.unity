@@ -1164,6 +1164,7 @@ MonoBehaviour:
   m_gameSelectPopUp: {fileID: 297852345}
   m_closeGameSelectPopUpBtn: {fileID: 1793167909}
   m_gameStartButton: {fileID: 1785914719}
+  m_gametestStartButton: {fileID: 869423704}
   m_characterSelectUIManager: {fileID: 617242525}
   m_openCharacterSelectButton: {fileID: 845655990}
   m_postManager: {fileID: 378748809}
@@ -3579,8 +3580,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_postBoxPanel: {fileID: 196991696}
-  m_postboxContainer: {fileID: 440166886}
-  m_postboxPrefab: {fileID: 302336552260605802, guid: 8fae60c29b5a65b4ea61032ca96d5277, type: 3}
+  m_postBoxContainer: {fileID: 0}
+  m_postBoxPrefab: {fileID: 0}
   m_postBoxDetailPanel: {fileID: 1765612370}
   m_postBoxDetailText: {fileID: 517755146}
   m_postBoxSenderNameText: {fileID: 1394223268}
@@ -8327,7 +8328,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBE48 \uAC8C\uC784 \uBC84\uD2BC"
+  m_text: "\uAC1C\uAC74\uD76C \uBAA8\uD5D8 \uD14C\uC2A4\uD2B8 \uBC84\uC804\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e9a2487d11d833d4c857956bf1e58bb8, type: 2}
   m_sharedMaterial: {fileID: -6707874958448738504, guid: e9a2487d11d833d4c857956bf1e58bb8, type: 2}

@@ -7,7 +7,7 @@ PluginImporter:
   executionOrder: {}
   defineConstraints:
   - ENABLE_MONO
-  - DEVELOPMENT_BUILD
+  - DEVELOPMENT_BUILD || UNITY_EDITOR
   isPreloaded: 0
   isOverridable: 1
   isExplicitlyReferenced: 1

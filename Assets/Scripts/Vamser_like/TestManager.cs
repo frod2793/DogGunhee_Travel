@@ -6,6 +6,10 @@ using System.Linq;
 using DogGuns_Games.vamsir;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using System;
 
 namespace DogGuns_Games.Test
 {
@@ -14,7 +18,7 @@ namespace DogGuns_Games.Test
     /// </summary>
     public class TestManager : MonoBehaviour
     {
-        [Header("UI References")]
+        [Header("UI 참조")]
         [SerializeField] private TMP_Dropdown m_characterDropdown;
         [SerializeField] private Button m_changeCharacterButton;
         [Space]
@@ -24,20 +28,33 @@ namespace DogGuns_Games.Test
         [SerializeField] private RectTransform m_ownedWeaponsContainer;
         [SerializeField] private TestWeaponItem m_ownedWeaponItemPrefab;
 
-        [Header("Panel Animation")]
+        [Header("무기 생성 옵션")]
+        [SerializeField] private TMP_InputField m_startLevelInput;
+        [SerializeField] private Toggle m_startEvolvedToggle;
+
+        [Header("패널 애니메이션")]
         [SerializeField] private Button m_toggleButton;
-        [SerializeField] private RectTransform m_panelRectTransform;
+        public Transform panelTransform;
+        public Transform hiddenPosition;
+        public Transform shownPosition;
         [SerializeField] private float m_animationDuration = 0.3f;
 
-        [Header("Data")]
+        [Header("데이터")]
         [SerializeField] private SkillDatabase m_skillDatabase;
 
         private GameManager m_gameManager;
         private List<SkillData> m_allWeaponSkills;
         private List<GameObject> m_spawnedWeaponItems = new List<GameObject>();
+        private List<CharacterInfo> m_loadedCharacters = new List<CharacterInfo>();
 
         private bool m_isPanelOpen = false;
         private bool m_isAnimating = false;
+
+        private class CharacterInfo
+        {
+            public int Index;
+            public string Name;
+        }
 
         private void Awake()
         {
@@ -49,10 +66,10 @@ namespace DogGuns_Games.Test
             }
         }
 
-        private void Start()
+        private async void Start()
         {
-            InitializeData();
             InitializeUI();
+            await InitializeDataAsync();
             InitializePanel();
             
             GameManager.OnPlayerChanged += (player) => RefreshOwnedWeaponList();
@@ -66,12 +83,47 @@ namespace DogGuns_Games.Test
             }
         }
 
-        private void InitializeData()
+        private async UniTask InitializeDataAsync()
         {
             if (m_skillDatabase == null) return;
 
+            m_characterDropdown.interactable = false;
+            m_loadedCharacters.Clear();
+            var characterNames = new List<string>();
+
+            int i = 0;
+            while (true)
+            {
+                string key = $"Player_Character_{i}";
+                var locationsHandle = Addressables.LoadResourceLocationsAsync(key);
+                await locationsHandle;
+
+                if (locationsHandle.Status == AsyncOperationStatus.Succeeded && locationsHandle.Result.Count > 0)
+                {
+                    var assetHandle = Addressables.LoadAssetAsync<GameObject>(key);
+                    await assetHandle;
+
+                    if (assetHandle.Status == AsyncOperationStatus.Succeeded && assetHandle.Result != null)
+                    {
+                        GameObject prefab = assetHandle.Result;
+                        string charName = prefab.name.Replace("Player_Character_", "");
+                        m_loadedCharacters.Add(new CharacterInfo { Index = i, Name = charName });
+                        characterNames.Add(charName);
+                        Addressables.Release(assetHandle);
+                    }
+                    Addressables.Release(locationsHandle);
+                    i++;
+                }
+                else
+                {
+                    Addressables.Release(locationsHandle);
+                    break;
+                }
+            }
+            
             m_characterDropdown.ClearOptions();
-            m_characterDropdown.AddOptions(new List<string> { "캐릭터 0", "캐릭터 1" }); // 임시
+            m_characterDropdown.AddOptions(characterNames);
+            m_characterDropdown.interactable = true;
 
             m_allWeaponSkills = m_skillDatabase.allSkills
                 .Where(s => s.skillType == SkillType.Weapon)
@@ -90,39 +142,22 @@ namespace DogGuns_Games.Test
 
         private void InitializePanel()
         {
-            if (m_panelRectTransform == null) return;
-            
-            Canvas.ForceUpdateCanvases();
-            
-            // [수정] 피봇을 고려한 정확한 숨김 위치 계산
-            float panelWidth = m_panelRectTransform.rect.width;
-            float pivotX = m_panelRectTransform.pivot.x;
-            float hiddenX = -panelWidth * (1 - pivotX); // 오른쪽 끝이 앵커에 오도록 계산
-            
-            m_panelRectTransform.anchoredPosition = new Vector2(hiddenX, m_panelRectTransform.anchoredPosition.y);
+            if (panelTransform == null || hiddenPosition == null) return;
+            panelTransform.position = hiddenPosition.position;
             m_isPanelOpen = false;
         }
 
         private async UniTaskVoid TogglePanelAsync()
         {
-            if (m_isAnimating || m_panelRectTransform == null) return;
+            if (m_isAnimating || panelTransform == null || hiddenPosition == null || shownPosition == null) return;
 
             m_isAnimating = true;
             m_isPanelOpen = !m_isPanelOpen;
 
-            Canvas.ForceUpdateCanvases();
-            
-            // [수정] 피봇을 고려한 정확한 목표 위치 계산
-            float panelWidth = m_panelRectTransform.rect.width;
-            float pivotX = m_panelRectTransform.pivot.x;
-            
-            float shownX = panelWidth * pivotX; // 왼쪽 끝이 앵커에 오도록 계산
-            float hiddenX = -panelWidth * (1 - pivotX); // 오른쪽 끝이 앵커에 오도록 계산
-
-            float targetX = m_isPanelOpen ? shownX : hiddenX;
+            Vector3 targetPosition = m_isPanelOpen ? shownPosition.position : hiddenPosition.position;
             Ease ease = m_isPanelOpen ? Ease.OutCubic : Ease.InCubic;
 
-            await m_panelRectTransform.DOAnchorPosX(targetX, m_animationDuration)
+            await panelTransform.DOMove(targetPosition, m_animationDuration)
                 .SetEase(ease)
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
 
@@ -150,7 +185,11 @@ namespace DogGuns_Games.Test
         private void OnChangeCharacter()
         {
             int selectedIndex = m_characterDropdown.value;
-            PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = selectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= m_loadedCharacters.Count) return;
+
+            int characterIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
+            
+            PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = characterIndexToSpawn;
             m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();
         }
 
@@ -167,7 +206,15 @@ namespace DogGuns_Games.Test
                 return;
             }
 
-            m_gameManager.EquipNewWeapon(selectedSkill).ContinueWith(RefreshOwnedWeaponList);
+            int startLevel = 1;
+            if (m_startLevelInput != null && !string.IsNullOrEmpty(m_startLevelInput.text))
+            {
+                int.TryParse(m_startLevelInput.text, out startLevel);
+                startLevel = Mathf.Clamp(startLevel, 1, WeaphonBase.k_MaxLevel);
+            }
+            bool startEvolved = m_startEvolvedToggle != null && m_startEvolvedToggle.isOn;
+
+            m_gameManager.EquipNewWeapon(selectedSkill, true, startLevel, startEvolved).ContinueWith(RefreshOwnedWeaponList);
         }
 
         private void LevelUpWeapon(string skillCode)

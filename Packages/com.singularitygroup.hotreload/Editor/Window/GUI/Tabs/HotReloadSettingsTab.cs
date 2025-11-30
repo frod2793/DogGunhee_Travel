@@ -111,8 +111,10 @@ namespace SingularityGroup.HotReload.Editor {
                                                 RenderAutoRecompileUnsupportedChangesImmediately();
                                                 RenderAutoRecompileUnsupportedChangesOnExitPlayMode();
                                                 RenderAutoRecompileUnsupportedChangesInPlayMode();
+                                                RenderAutoRecompileInspectorFieldEdits();
                                                 RenderAutoRecompilePartiallyUnsupportedChanges();
                                                 RenderDisplayNewMonobehaviourMethodsAsPartiallySupported();
+                                                RenderAutoRecompileUnsupportedChangesInEditMode();
                                             }
                                         }
                                         EditorGUILayout.Space();
@@ -192,6 +194,7 @@ namespace SingularityGroup.HotReload.Editor {
 
                                     DeactivateHotReload();
                                     DisableDetailedErrorReporting();
+                                    PauseHotReloadInEditMode();
                                 }
                             }
                         }
@@ -324,6 +327,19 @@ namespace SingularityGroup.HotReload.Editor {
                 toggleDescription = "Detailed error reporting is disabled.";
             } else {
                 toggleDescription = "Toggle on to disable detailed error reporting.";
+            }
+            EditorGUILayout.LabelField(toggleDescription, HotReloadWindowStyles.WrapStyle);
+            EditorGUILayout.EndToggleGroup();
+            EditorGUILayout.Space(6f);
+        }
+        
+        void PauseHotReloadInEditMode() {
+            HotReloadPrefs.PauseHotReloadInEditMode = EditorGUILayout.BeginToggleGroup(new GUIContent("Pause Hot Reload in Edit Mode"), HotReloadPrefs.PauseHotReloadInEditMode);
+            string toggleDescription;
+            if (HotReloadPrefs.PauseHotReloadInEditMode) {
+                toggleDescription = "Hot Reload is paused in Edit mode. It is recommended to perform a full Unity recompilation manually before entering Play Mode to prevent Hot Reload becoming unusable.";
+            } else {
+                toggleDescription = "Toggle on to pause Hot Reload while in Edit mode. With this setting enabled, it is recommended to perform a full Unity recompilation manually before entering Play Mode to prevent Hot Reload becoming unusable.";
             }
             EditorGUILayout.LabelField(toggleDescription, HotReloadWindowStyles.WrapStyle);
             EditorGUILayout.EndToggleGroup();
@@ -468,6 +484,21 @@ namespace SingularityGroup.HotReload.Editor {
             } else {
                 toggleDescription = "When enabled, recompile happens automatically after code changes that Hot Reload doesn't support.";
             }
+            if (!HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode && !HotReloadPrefs.AutoRecompileUnsupportedChangesInPlayMode) {
+                HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode = true;
+            }
+            EditorGUILayout.LabelField(toggleDescription, HotReloadWindowStyles.WrapStyle);
+            EditorGUILayout.EndToggleGroup();
+        }
+        
+        void RenderAutoRecompileInspectorFieldEdits() {
+            HotReloadPrefs.AutoRecompileInspectorFieldsEdit = EditorGUILayout.BeginToggleGroup(new GUIContent("Auto recompile inspector field edits"), HotReloadPrefs.AutoRecompileInspectorFieldsEdit);
+            string toggleDescription;
+            if (HotReloadPrefs.AutoRecompileInspectorFieldsEdit) {
+                toggleDescription = "Hot Reload will trigger recompilation for inspector field changes that are not supported in Edit mode.";
+            } else {
+                toggleDescription = "Enable to trigger recompilation for inspector field changes that are not supported in Edit mode.";
+            }
             EditorGUILayout.LabelField(toggleDescription, HotReloadWindowStyles.WrapStyle);
             EditorGUILayout.EndToggleGroup();
         }
@@ -515,6 +546,24 @@ namespace SingularityGroup.HotReload.Editor {
                 toggleDescription = "Hot Reload will exit Play Mode to recompile unsupported changes.";
             } else {
                 toggleDescription = "Enable to auto exit Play Mode to recompile unsupported changes.";
+            }
+            if (!HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode && !HotReloadPrefs.AutoRecompileUnsupportedChangesInPlayMode) {
+                HotReloadPrefs.AutoRecompileUnsupportedChanges = false;
+            }
+            EditorGUILayout.LabelField(toggleDescription, HotReloadWindowStyles.WrapStyle);
+            EditorGUILayout.EndToggleGroup();
+        }
+        
+        void RenderAutoRecompileUnsupportedChangesInEditMode() {
+            HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode = EditorGUILayout.BeginToggleGroup(new GUIContent("Recompile in Edit Mode"), HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode);
+            string toggleDescription;
+            if (HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode) {
+                toggleDescription = "Hot Reload recompile unsupported changes when in Edit Mode.";
+            } else {
+                toggleDescription = "Enable to auto recompile unsupported changes in Edit Mode.";
+            }
+            if (!HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode && !HotReloadPrefs.AutoRecompileUnsupportedChangesInPlayMode) {
+                HotReloadPrefs.AutoRecompileUnsupportedChanges = false;
             }
             EditorGUILayout.LabelField(toggleDescription, HotReloadWindowStyles.WrapStyle);
             EditorGUILayout.EndToggleGroup();

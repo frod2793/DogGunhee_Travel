@@ -1,5 +1,4 @@
-﻿#if ENABLE_MONO && (DEVELOPMENT_BUILD || UNITY_EDITOR)
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -249,6 +248,19 @@ namespace SingularityGroup.HotReload {
             return null;
         }
         
+        public static async Task<EditorsWithoutHRResponse> RequestEditorsWithoutHRRunning(int timeoutSeconds = 30) {
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+            var resp = await PostJson(CreateUrl(serverInfo) + "/editorsWithoutHR", "", timeoutSeconds, cts.Token);
+            if (resp.statusCode == HttpStatusCode.OK) {
+                try {
+                    return JsonConvert.DeserializeObject<EditorsWithoutHRResponse>(resp.responseText);
+                } catch {
+                    return null;
+                }
+            }
+            return null;
+        }
+        
         public static async Task<LoginStatusResponse> RequestLogin(string email, string password, int timeoutSeconds) {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
             var json = SerializeRequestBody(new Dictionary<string, object> {
@@ -442,4 +454,3 @@ namespace SingularityGroup.HotReload {
         }
     }
 }
-#endif

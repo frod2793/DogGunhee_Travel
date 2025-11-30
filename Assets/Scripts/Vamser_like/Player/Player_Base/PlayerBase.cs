@@ -72,6 +72,17 @@ namespace DogGuns_Games.vamsir
             UnsubscribeEvents();
         }
 
+        private void LateUpdate()
+        {
+            foreach (var weapon in m_weapons)
+            {
+                if (weapon != null)
+                {
+                    weapon.transform.position = transform.position;
+                }
+            }
+        }
+
         private void InitializeStats()
         {
             Level = 1f;
@@ -107,8 +118,6 @@ namespace DogGuns_Games.vamsir
             if (weapon != null)
             {
                 m_weapons.Add(weapon);
-                weapon.transform.SetParent(transform);
-                weapon.transform.localPosition = Vector3.zero;
             }
         }
 
@@ -129,15 +138,21 @@ namespace DogGuns_Games.vamsir
         public virtual void OnCollisionEnter2D(Collision2D other)
         {
             if (!m_isColliderActive) return;
+
             if (other.gameObject.CompareTag("Mob"))
             {
                 HandleMobCollision(other.gameObject);
                 m_damageTickTimer = 0f;
             } 
-            if (other.gameObject.CompareTag("Exp"))
+            else if (other.gameObject.CompareTag("Exp"))
             {
                 HandleExpCollision(other.gameObject);
-            } 
+            }
+            // [추가] 코인 충돌 처리
+            else if (other.gameObject.CompareTag("Coin"))
+            {
+                HandleCoinCollision(other.gameObject);
+            }
         }
 
         public virtual void OnCollisionStay2D(Collision2D other)
@@ -180,7 +195,7 @@ namespace DogGuns_Games.vamsir
             CurrentHealth -= damageAmount;
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
             EffectManager.Instance?.PlayPlayerHitCameraShake();
-            PlayHitEffect(); // [복원]
+            PlayHitEffect();
             if (CurrentHealth <= 0)
             {
                 Player_Die();
@@ -197,11 +212,25 @@ namespace DogGuns_Games.vamsir
             }
         }
 
+        // [추가] 코인 충돌 처리 메서드
+        private void HandleCoinCollision(GameObject coinObject)
+        {
+            if (coinObject.TryGetComponent(out Coin_Obj coinObj) && coinObj.ObjectPoolSpawner != null)
+            {
+                if (PlayerDataManagerDontdesytoy.Instance != null)
+                {
+                    PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin += 1;
+                }
+
+                coinObj.ObjectPoolSpawner.CoinObjectPool.Release(coinObj);
+                SoundManager.PlaySound(Sound.SFX, SoundKeys.GetCoin, false);
+            }
+        }
+
         #endregion
 
         #region 플레이어 액션
 
-        // [복원] 자식 클래스들이 override 할 수 있도록 virtual 메서드 추가
         public virtual void Player_attack(Vector3 attackAngle) { }
         protected virtual void PlayHitEffect() { }
 

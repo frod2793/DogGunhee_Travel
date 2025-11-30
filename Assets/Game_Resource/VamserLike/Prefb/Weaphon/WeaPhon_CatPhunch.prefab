@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1677979735401813999}
@@ -107,10 +107,11 @@ MonoBehaviour:
   attackRange: 30
   mobStunTime: 1
   isShooting: 0
-  skillCode: 
-  isUpgradelv2: 0
-  upgradeItemCode: 
+  skillCode: PS_FEATHER
+  upgradeItemCode: PS_FEATHER
   Thumnail: {fileID: 0}
+  m_currentLevel: 1
+  isEvolved: 0
   weaphonState: 0
   m_initialAttackPower: 40
   m_initialCoolTime: 0.5
@@ -135,7 +136,7 @@ GameObject:
   - component: {fileID: 5957035982277589330}
   - component: {fileID: 5519907954563318227}
   - component: {fileID: 7427790885210288590}
-  m_Layer: 0
+  m_Layer: 1
   m_Name: CatPhunch
   m_TagString: Untagged
   m_Icon: {fileID: 0}

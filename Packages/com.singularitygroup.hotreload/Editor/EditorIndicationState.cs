@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SingularityGroup.HotReload.DTO;
+using UnityEngine;
 
 namespace SingularityGroup.HotReload.Editor {
     internal static class EditorIndicationState {
@@ -21,6 +22,7 @@ namespace SingularityGroup.HotReload.Editor {
             ActivationFailed,
             FinishRegistration,
             Undetected,
+            Paused,
         }
 
         internal static readonly string greyIconPath = "grey";
@@ -30,6 +32,7 @@ namespace SingularityGroup.HotReload.Editor {
             // grey icon:
             { IndicationStatus.FinishRegistration, greyIconPath },
             { IndicationStatus.Stopped, greyIconPath },
+            { IndicationStatus.Paused, greyIconPath },
             // green icon:
             { IndicationStatus.Started, greenIconPath },
             // log icons:
@@ -60,6 +63,7 @@ namespace SingularityGroup.HotReload.Editor {
             { IndicationStatus.Started, "Waiting for code changes" },
             { IndicationStatus.Stopping, "Stopping Hot Reload" },
             { IndicationStatus.Stopped, "Hot Reload inactive" },
+            { IndicationStatus.Paused, "Hot Reload paused" },
             { IndicationStatus.Installing, "Installing" },
             { IndicationStatus.Starting, "Starting Hot Reload" },
             { IndicationStatus.Reloaded, "Reload finished" },
@@ -127,6 +131,8 @@ namespace SingularityGroup.HotReload.Editor {
                 return IndicationStatus.Compiling;
             if (EditorCodePatcher.Starting && !EditorCodePatcher.Stopping)
                 return IndicationStatus.Starting;
+            if (!Application.isPlaying && HotReloadPrefs.PauseHotReloadInEditMode)
+                return IndicationStatus.Paused;
             if (!EditorCodePatcher.Running)
                 return IndicationStatus.Stopped;
             if (EditorCodePatcher.Status?.isLicensed != true && EditorCodePatcher.Status?.isFree != true && EditorCodePatcher.Status?.freeSessionFinished == true)

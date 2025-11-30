@@ -84,6 +84,10 @@ namespace SingularityGroup.HotReload.Editor.Cli {
                 Arguments = args.cliArguments,
                 UseShellExecute = false,
             });
+            
+            var pidFilePath = CliUtils.GetPidFilePath(args.hotreloadTempDir);
+            // ReSharper disable once PossibleNullReferenceException
+            File.WriteAllText(pidFilePath, process.Id.ToString());
             return Task.CompletedTask;
         }
 

@@ -1,5 +1,4 @@
-﻿#if ENABLE_MONO && (DEVELOPMENT_BUILD || UNITY_EDITOR)
-using System.Net.Http;
+﻿using System.Net.Http;
 
 namespace SingularityGroup.HotReload {
 
@@ -15,5 +14,3 @@ namespace SingularityGroup.HotReload {
 	}
 
 }
-
-#endif

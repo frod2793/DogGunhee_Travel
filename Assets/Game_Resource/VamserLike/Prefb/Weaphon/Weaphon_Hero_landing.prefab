@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 630497876753694219}
   - component: {fileID: 4409687409235855706}
-  m_Layer: 0
+  m_Layer: 1
   m_Name: Weaphon_Hero_landing
   m_TagString: Player_Attack
   m_Icon: {fileID: 0}
@@ -26,8 +26,8 @@ RectTransform:
   m_GameObject: {fileID: 1385746624147376297}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1384079233258847003}
   m_Father: {fileID: 0}
@@ -56,9 +56,10 @@ MonoBehaviour:
   mobStunTime: 3
   isShooting: 1
   skillCode: 
-  isUpgradelv2: 0
   upgradeItemCode: 
   Thumnail: {fileID: 0}
+  m_currentLevel: 1
+  isEvolved: 0
   weaphonState: 0
   m_shieldObj: {fileID: 5826676676712210493}
   m_shieldAnimator: {fileID: 3227818829552517033}
@@ -81,7 +82,7 @@ GameObject:
   - component: {fileID: 6372740228098356419}
   - component: {fileID: 1247562989914852402}
   - component: {fileID: 3227818829552517033}
-  m_Layer: 0
+  m_Layer: 1
   m_Name: shield
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -189,7 +190,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1384079233258847003}
-  m_Layer: 0
+  m_Layer: 1
   m_Name: pivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}

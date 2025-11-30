@@ -240,18 +240,22 @@ namespace SingularityGroup.HotReload.Editor {
                     && (!HotReloadPrefs.AutoRecompilePartiallyUnsupportedChanges || HotReloadTimelineHelper.PartiallySupportedChangesCount == 0)
                 || _compileError 
                 || isPlaying && !HotReloadPrefs.AutoRecompileUnsupportedChangesInPlayMode
+                || !isPlaying && !HotReloadPrefs.AutoRecompileUnsupportedChangesInEditMode
             ) {
                 return false;
             }
+            RecompileUnsupportedChanges();
+            return true;
+        }
 
+        public static void RecompileUnsupportedChanges() {
             if (HotReloadPrefs.ShowCompilingUnsupportedNotifications) {
                 EditorWindowHelper.ShowNotification(EditorWindowHelper.NotificationStatus.NeedsRecompile);
             }
-            if (isPlaying) {
+            if (EditorApplication.isPlaying) {
                 HotReloadState.RecompiledUnsupportedChangesInPlaymode = true;
             }
             HotReloadRunTab.Recompile();
-            return true;
         }
 
         private static DateTime lastPrepareBuildInfo = DateTime.UtcNow;
@@ -389,6 +393,9 @@ namespace SingularityGroup.HotReload.Editor {
             if (response == null || disableServerLogs) {
                 return;
             }
+            if (!Application.isPlaying && HotReloadPrefs.PauseHotReloadInEditMode) {
+                return;
+            }
             foreach (var responseWarning in response.warnings) {
                 if (responseWarning.Contains("Scripts have compile errors")) {
                     if (compileError) {
@@ -430,6 +437,20 @@ namespace SingularityGroup.HotReload.Editor {
             if (!running && !StartedServerRecently()) {
                 // Reset startup progress
                 startupProgress = null;
+            }
+            
+            if (!ServerHealthCheck.I.IsServerHealthy) {
+                stopping = false;
+            }
+            if (startupProgress?.Item1 == 1) {
+                starting = false;
+            }
+            if (!_requestingFlushErrors && Running) {
+                RequestFlushErrors().Forget();
+            }
+            
+            if (!Application.isPlaying && HotReloadPrefs.PauseHotReloadInEditMode) {
+                return;
             }
 
             if (HotReloadPrefs.AutoDisableHotReloadWithDebugger && Debugger.IsAttached) {
@@ -482,15 +503,6 @@ namespace SingularityGroup.HotReload.Editor {
                     CheckInlinedMethods();
                 }
 #endif
-            }
-            if (!ServerHealthCheck.I.IsServerHealthy) {
-                stopping = false;
-            }
-            if (startupProgress?.Item1 == 1) {
-                starting = false;
-            }
-            if (!_requestingFlushErrors && Running) {
-                RequestFlushErrors().Forget();
             }
             CheckEditorSettings();
         }
@@ -780,7 +792,9 @@ namespace SingularityGroup.HotReload.Editor {
                     }
                 }
                 if (lastCompileErrorLog != null) {
-                    Log.Error(lastCompileErrorLog);
+                    if (!disableServerLogs) {
+                        Log.Error(lastCompileErrorLog);
+                    }
                     lastCompileErrorLog = null;
                 }
                 RequestHelper.RequestEditorEventWithRetry(new Stat(StatSource.Client, StatLevel.Debug, StatFeature.Reload, StatEventType.CompileError), new EditorExtraData {
@@ -838,6 +852,15 @@ namespace SingularityGroup.HotReload.Editor {
                     { StatKey.PatchId, response.id },
                 }).Forget();
             }
+            
+            if (!autoRecompiled && patchResult?.inspectorFieldAdded == true && HotReloadPrefs.AutoRecompileInspectorFieldsEdit && !Application.isPlaying) {
+                HotReloadSuggestionsHelper.SetSuggestionsShown(HotReloadSuggestionKind.UnsupportedChanges);
+                RecompileUnsupportedChanges();
+                autoRecompiled = true;
+                HotReloadTimelineHelper.CreateErrorEventEntry("errors: Some inspector field changes require recompilation in Unity. Auto recompiling Unity according to the settings.", entryType: EntryType.Child);
+                HotReloadTimelineHelper.CreateReloadFinishedWithWarningsEventEntry();
+                Log.Info("Some inspector field changes require recompilation in Unity. Auto recompiling Unity according to the settings.");
+            }
 
             // When patching different assembly, compile error will get removed, even though it's still there
             // It's a shortcut we take for simplicity
@@ -846,7 +869,7 @@ namespace SingularityGroup.HotReload.Editor {
             }
 
             foreach (string responseFailure in response.failures) {
-                if (responseFailure.Contains("error CS")) {
+                if (responseFailure.Contains("error CS") && !disableServerLogs) {
                     Log.Error(responseFailure);
                 } else if (autoRecompiled) {
                     Log.Info(responseFailure);
@@ -1123,6 +1146,7 @@ namespace SingularityGroup.HotReload.Editor {
             bool consumptionsChanged = Status?.freeSessionRunning != resp.freeSessionRunning || Status?.freeSessionEndTime != resp.freeSessionEndTime;
             bool expiresAtChanged = Status?.licenseExpiresAt != resp.licenseExpiresAt;
             if (!EditorCodePatcher.LoginNotRequired 
+                && !resp.isLicensed
                 && resp.consumptionsUnavailableReason == ConsumptionsUnavailableReason.UnrecoverableError
                 && Status?.consumptionsUnavailableReason != ConsumptionsUnavailableReason.UnrecoverableError
             ) {

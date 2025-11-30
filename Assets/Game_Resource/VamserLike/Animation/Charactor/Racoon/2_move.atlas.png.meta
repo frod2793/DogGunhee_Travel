@@ -161,6 +161,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -168,10 +181,10 @@ TextureImporter:
       name: 2_move.atlas_0
       rect:
         serializedVersion: 2
-        x: 6
-        y: 3
-        width: 24
-        height: 19
+        x: 7
+        y: 4
+        width: 22
+        height: 17
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -190,10 +203,10 @@ TextureImporter:
       name: 2_move.atlas_1
       rect:
         serializedVersion: 2
-        x: 36
-        y: 3
-        width: 25
-        height: 18
+        x: 42
+        y: 4
+        width: 24
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -212,10 +225,10 @@ TextureImporter:
       name: 2_move.atlas_2
       rect:
         serializedVersion: 2
-        x: 67
-        y: 3
+        x: 78
+        y: 4
         width: 25
-        height: 18
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -234,10 +247,10 @@ TextureImporter:
       name: 2_move.atlas_3
       rect:
         serializedVersion: 2
-        x: 98
-        y: 3
-        width: 25
-        height: 18
+        x: 113
+        y: 4
+        width: 27
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -256,10 +269,10 @@ TextureImporter:
       name: 2_move.atlas_4
       rect:
         serializedVersion: 2
-        x: 128
-        y: 3
-        width: 27
-        height: 17
+        x: 149
+        y: 4
+        width: 28
+        height: 15
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -278,10 +291,10 @@ TextureImporter:
       name: 2_move.atlas_5
       rect:
         serializedVersion: 2
-        x: 159
-        y: 3
-        width: 27
-        height: 17
+        x: 184
+        y: 4
+        width: 30
+        height: 15
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -300,10 +313,10 @@ TextureImporter:
       name: 2_move.atlas_6
       rect:
         serializedVersion: 2
-        x: 189
-        y: 3
-        width: 29
-        height: 17
+        x: 220
+        y: 4
+        width: 31
+        height: 15
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -322,10 +335,10 @@ TextureImporter:
       name: 2_move.atlas_7
       rect:
         serializedVersion: 2
-        x: 220
-        y: 3
-        width: 29
-        height: 17
+        x: 256
+        y: 4
+        width: 31
+        height: 15
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -344,10 +357,10 @@ TextureImporter:
       name: 2_move.atlas_8
       rect:
         serializedVersion: 2
-        x: 251
-        y: 3
-        width: 29
-        height: 17
+        x: 292
+        y: 4
+        width: 31
+        height: 15
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -366,10 +379,10 @@ TextureImporter:
       name: 2_move.atlas_9
       rect:
         serializedVersion: 2
-        x: 283
-        y: 3
-        width: 27
-        height: 17
+        x: 329
+        y: 4
+        width: 29
+        height: 15
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -388,10 +401,10 @@ TextureImporter:
       name: 2_move.atlas_10
       rect:
         serializedVersion: 2
-        x: 314
-        y: 3
-        width: 27
-        height: 18
+        x: 365
+        y: 4
+        width: 28
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -410,10 +423,10 @@ TextureImporter:
       name: 2_move.atlas_11
       rect:
         serializedVersion: 2
-        x: 346
-        y: 3
+        x: 402
+        y: 4
         width: 25
-        height: 18
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -432,10 +445,10 @@ TextureImporter:
       name: 2_move.atlas_12
       rect:
         serializedVersion: 2
-        x: 377
-        y: 3
-        width: 25
-        height: 18
+        x: 438
+        y: 4
+        width: 24
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -454,10 +467,10 @@ TextureImporter:
       name: 2_move.atlas_13
       rect:
         serializedVersion: 2
-        x: 409
-        y: 3
-        width: 24
-        height: 19
+        x: 475
+        y: 4
+        width: 22
+        height: 17
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -476,7 +489,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: af5436d6c1edee747af16efa149ba74f
     internalID: 0
     vertices: []
     indices: 

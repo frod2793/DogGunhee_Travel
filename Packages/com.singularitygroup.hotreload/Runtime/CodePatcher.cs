@@ -1,5 +1,3 @@
-#if ENABLE_MONO && (DEVELOPMENT_BUILD || UNITY_EDITOR)
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,16 +31,17 @@ namespace SingularityGroup.HotReload {
         public List<SField> addedFields = new List<SField>();
         public readonly List<SMethod> patchedSMethods = new List<SMethod>();
         public bool inspectorModified;
+        public bool inspectorFieldAdded;
         public readonly List<Tuple<SMethod, string>> patchFailures = new List<Tuple<SMethod, string>>();
         public readonly List<string> patchExceptions = new List<string>();
     }
 
     class FieldHandler {
-        public readonly Action<Type, FieldInfo> storeField;
+        public readonly Func<Type, FieldInfo, bool> storeField;
         public readonly Action<Type, FieldInfo, FieldInfo> registerInspectorFieldAttributes;
         public readonly Func<Type, string, bool> hideField;
 
-        public FieldHandler(Action<Type, FieldInfo> storeField, Func<Type, string, bool> hideField, Action<Type, FieldInfo, FieldInfo> registerInspectorFieldAttributes) {
+        public FieldHandler(Func<Type, FieldInfo, bool> storeField, Func<Type, string, bool> hideField, Action<Type, FieldInfo, FieldInfo> registerInspectorFieldAttributes) {
             this.storeField = storeField;
             this.hideField = hideField;
             this.registerInspectorFieldAttributes = registerInspectorFieldAttributes;
@@ -414,7 +413,7 @@ namespace SingularityGroup.HotReload {
                 try {
                     var declaringType = SymbolResolver.Resolve(sField.declaringType);
                     var field = SymbolResolver.Resolve(sField);
-                    fieldHandler?.storeField?.Invoke(declaringType, field);
+                    result.inspectorFieldAdded = fieldHandler?.storeField?.Invoke(declaringType, field) ?? false;
                     result.inspectorModified = true;
                 } catch (Exception e) {
                     RequestHelper.RequestEditorEventWithRetry(new Stat(StatSource.Client, StatLevel.Error, StatFeature.Patching, StatEventType.AddInspectorField), new EditorExtraData {
@@ -717,4 +716,3 @@ namespace SingularityGroup.HotReload {
         }
     }
 }
-#endif

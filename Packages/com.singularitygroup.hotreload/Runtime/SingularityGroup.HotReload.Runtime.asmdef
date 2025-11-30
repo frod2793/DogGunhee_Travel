@@ -21,7 +21,8 @@
     ],
     "autoReferenced": false,
     "defineConstraints": [
-        "ENABLE_MONO"
+        "ENABLE_MONO",
+        "DEVELOPMENT_BUILD || UNITY_EDITOR"
     ],
     "versionDefines": [],
     "noEngineReferences": false

@@ -21,13 +21,7 @@ MonoBehaviour:
       m_Value: production
     - m_Suffix: LoadPath
       m_Value: https://38ad3fa3-6150-40c1-92ad-a237c78cf084.client-api.unity3dusercontent.com/client_api/v1/environments/{CcdManager.EnvironmentName}/buckets/{CcdManager.BucketId}/release_by_badge/{CcdManager.Badge}/entry_by_path/content/?path=
-  - m_GroupTypePrefix: Built-In
-    m_Variables:
-    - m_Suffix: BuildPath
-      m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
-    - m_Suffix: LoadPath
-      m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
-  - m_GroupTypePrefix: CCD.38ad3fa3-6150-40c1-92ad-a237c78cf084.91e54eea-5930-491f-84fa-6a336191558b.481c8508-c6da-4f09-96c8-827fd3142e26.latest
+  - m_GroupTypePrefix: Automatic
     m_Variables:
     - m_Suffix: BuildPath
       m_Value: CCDBuildData/91e54eea-5930-491f-84fa-6a336191558b/481c8508-c6da-4f09-96c8-827fd3142e26/latest
@@ -45,6 +39,12 @@ MonoBehaviour:
       m_Value: https://38ad3fa3-6150-40c1-92ad-a237c78cf084.client-api.unity3dusercontent.com/client_api/v1/environments/production/buckets/481c8508-c6da-4f09-96c8-827fd3142e26/release_by_badge/latest/entry_by_path/content/?path=
     - m_Suffix: PromoteOnly
       m_Value: False
+  - m_GroupTypePrefix: Built-In
+    m_Variables:
+    - m_Suffix: BuildPath
+      m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+    - m_Suffix: LoadPath
+      m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
   environments:
   - id: 6083c016-9edb-421f-a11b-ed412b36173a
     projectId: 38ad3fa3-6150-40c1-92ad-a237c78cf084

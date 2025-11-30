@@ -282,7 +282,7 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true)
+        public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true, int startLevel = 1, bool startEvolved = false)
         {
             if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon || string.IsNullOrEmpty(skillData.weaponAddressableKey))
             {
@@ -293,7 +293,7 @@ namespace DogGuns_Games.vamsir
 
             try
             {
-                var op = Addressables.InstantiateAsync(key, SpawnedPlayer.transform);
+                var op = Addressables.InstantiateAsync(key, m_playerContainer.transform);
                 GameObject instance = await op.ToUniTask();
 
                 if (instance != null)
@@ -307,6 +307,21 @@ namespace DogGuns_Games.vamsir
                         newWeapon.upgradeItemCode = skillData.upgradeItemCode;
                         newWeapon.Thumnail = skillData.skillIcon;
                         newWeapon.ApplyBaseStats();
+                        
+                        // [추가] 시작 레벨 및 진화 상태 적용
+                        for (int i = 1; i < startLevel; i++)
+                        {
+                            newWeapon.UpgradeLevel();
+                        }
+                        if (startEvolved)
+                        {
+                            // 최대 레벨까지 올린 후, 한 번 더 호출하여 진화시킴
+                            while (newWeapon.CurrentLevel < WeaphonBase.k_MaxLevel)
+                            {
+                                newWeapon.UpgradeLevel();
+                            }
+                            newWeapon.UpgradeLevel();
+                        }
                         
                         SpawnedPlayer.AddWeapon(newWeapon);
                         if (playEffect)
@@ -322,9 +337,6 @@ namespace DogGuns_Games.vamsir
             }
         }
 
-        /// <summary>
-        /// [추가] 테스트용으로 특정 무기를 제거합니다.
-        /// </summary>
         public void RemoveWeaponForTest(string skillCode)
         {
             if (SpawnedPlayer != null)
@@ -337,12 +349,43 @@ namespace DogGuns_Games.vamsir
 
         #region 데이터 접근자
 
-        public int GetMobKillCount() => PlayerDataManagerDontdesytoy.Instance?.PlayerData?.nowPlayMObkillCOunt ?? 0;
-        public int GetCurrentWave() => m_objectPoolSpawner != null ? m_objectPoolSpawner.CurrentWave : 0;
-        public float GetPlayerLevel() => SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
-        public float GetPlayerExpProgress() => SpawnedPlayer != null ? SpawnedPlayer.GetExpProgress() : 0f;
-        public int GetCoinCount() => PlayerDataManagerDontdesytoy.Instance?.PlayerData?.ingameCoin ?? 0;
-        public Transform PlayerTransfrom() => m_playerContainer != null ? m_playerContainer.transform : transform;
+        public int GetMobKillCount()
+        {
+            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            {
+                return PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt;
+            }
+            return 0;
+        }
+
+        public int GetCurrentWave()
+        {
+            return m_objectPoolSpawner != null ? m_objectPoolSpawner.CurrentWave : 0;
+        }
+
+        public float GetPlayerLevel()
+        {
+            return SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
+        }
+        
+        public float GetPlayerExpProgress()
+        {
+            return SpawnedPlayer != null ? SpawnedPlayer.GetExpProgress() : 0f;
+        }
+
+        public int GetCoinCount()
+        {
+            if (PlayerDataManagerDontdesytoy.Instance != null && PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            {
+                return PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin;
+            }
+            return 0;
+        }
+
+        public Transform PlayerTransfrom()
+        {
+            return m_playerContainer != null ? m_playerContainer.transform : transform;
+        }
         
         #endregion
     }

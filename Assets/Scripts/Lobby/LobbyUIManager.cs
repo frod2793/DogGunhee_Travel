@@ -32,6 +32,7 @@ namespace DogGuns_Games.Lobby
         [SerializeField] private GameObject m_gameSelectPopUp;
         [SerializeField] private Button m_closeGameSelectPopUpBtn;
         [SerializeField] private Button m_gameStartButton;
+        [SerializeField] private Button m_gametestStartButton;
 
         [Header("<color=green>캐릭터 선택 시스템</color>")]
         [SerializeField] private CharacterSelectUIManager m_characterSelectUIManager;
@@ -116,6 +117,7 @@ namespace DogGuns_Games.Lobby
             // 2. 게임 선택 팝업
             m_closeGameSelectPopUpBtn.SetOnClick(CloseTopPopup);
             m_gameStartButton.SetOnClick(() => SceneLoader.Instance.LoadScene("VamSerlike"));
+            m_gametestStartButton.SetOnClick(() => SceneLoader.Instance.LoadScene("VamSerLike_Test"));
 
             // 3. 캐릭터 선택
             m_openCharacterSelectButton.SetOnClick(() => m_characterSelectUIManager.OpenCharacterSelectPanel());
