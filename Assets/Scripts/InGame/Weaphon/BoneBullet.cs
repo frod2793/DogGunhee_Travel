@@ -1,16 +1,17 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using InGame.ObjectPool;
 using UnityEngine;
+using Vamser_like;
 using Vamser_like.Mob.MobBase;
 using Vamser_like.Weaphon.Base;
-
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     public class BoneBullet : WeaphonBase
     {
         #region 필드 및 변수
 
-        public WeaphonBone ObjectPoolSpawner { get; set; }
+        // public WeaphonBone ObjectPoolSpawner { get; set; } // 제거: WeaponPoolManager를 통해 관리
         public float BulletSpeed { get; set; }
 
         [Header("이동 설정")]
@@ -146,10 +147,8 @@ namespace Vamser_like.Weaphon
             m_isActive = false;
             m_moveTween?.Kill();
 
-            if (ObjectPoolSpawner != null)
-            {
-                ObjectPoolSpawner.WeaphonBoneObjectPool.Release(this);
-            }
+            // WeaponPoolManager를 통해 자신을 풀로 반환합니다.
+            WeaponPoolManager.Instance.Release(this);
         }
 
         public void Initialize(WeaphonBase parentWeapon)

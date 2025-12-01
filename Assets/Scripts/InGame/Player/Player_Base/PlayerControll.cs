@@ -200,23 +200,43 @@ namespace Vamser_like.Player.Player_Base
             Vector3 joystickDir = GetJoystickInputDirection();
             bool isJoystickActive = joystickDir.sqrMagnitude > k_JoystickInputThreshold * k_JoystickInputThreshold;
 
+            // --- 1. 이동 방향 결정 및 자동 공격 상태 관리 ---
             if (isJoystickActive)
             {
                 if (m_isAutoAttackActive) DisableAutoMoveAttack();
                 MoveDirection = joystickDir;
-                TryAttack(MoveDirection);
             }
-            else
+            else // 조이스틱 입력 없음
             {
+                // 자동 공격 토글이 켜져 있고, 현재 자동 공격 모드가 아니라면 활성화합니다.
                 if (m_autoAttackEnabledByToggle && !m_isAutoAttackActive)
                 {
                     EnableAutoMoveAttack();
                 }
+                // 자동 공격 모드라면 적 방향으로 이동, 아니면 제자리에 멈춥니다.
                 MoveDirection = m_isAutoAttackActive ? m_autoMoveDirection : Vector3.zero;
             }
             UpdateAnimationState(MoveDirection.magnitude);
-        }
 
+            // --- 2. 공격 방향 결정 및 공격 실행 ---
+            Vector3 attackDirection = Vector3.zero;
+            MobBase closestEnemy = FindClosestEnemy();
+
+            if (closestEnemy != null)
+            {
+                // 가장 가까운 적이 있으면 그 방향으로 공격
+                attackDirection = (closestEnemy.transform.position - m_playerObject.transform.position).normalized;
+            }
+            else if (isJoystickActive)
+            {
+                attackDirection = joystickDir;
+            }
+            if (isJoystickActive && attackDirection != Vector3.zero)
+            {
+                TryAttack(attackDirection);
+            }
+         
+        }
         private Vector3 GetJoystickInputDirection()
         {
             if (m_joystick == null) return Vector3.zero;

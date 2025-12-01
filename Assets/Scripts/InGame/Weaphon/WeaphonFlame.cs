@@ -1,8 +1,9 @@
 using UnityEngine;
-using UnityEngine.Pool;
+using UnityEngine.Pool; // ObjectPool은 더 이상 직접 사용하지 않지만, IObjectPool 인터페이스는 필요할 수 있습니다.
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using InGame.ObjectPool;
 using Vamser_like.Weaphon.Base;
 
 namespace Vamser_like.Weaphon
@@ -26,7 +27,7 @@ namespace Vamser_like.Weaphon
         [Tooltip("지속 피해 틱 횟수")]
         [SerializeField] private int m_dotTicks = 3;
 
-        private IObjectPool<FlamePillar> m_flamePillarPool;
+        // private IObjectPool<FlamePillar> m_flamePillarPool; // WeaponPoolManager가 관리하므로 제거
         private Camera m_mainCamera;
         
         private CancellationTokenSource m_attackLoopCts;
@@ -35,7 +36,7 @@ namespace Vamser_like.Weaphon
         private void Awake()
         {
             m_mainCamera = Camera.main;
-            InitializePool();
+            // InitializePool(); // WeaponPoolManager가 풀을 초기화하므로 제거
         }
 
         private new void OnEnable()
@@ -45,6 +46,15 @@ namespace Vamser_like.Weaphon
             m_attackLoopCts?.Cancel();
             m_attackLoopCts = new CancellationTokenSource();
             AttackLoopAsync(m_attackLoopCts.Token).Forget();
+
+            // WeaponPoolManager를 통해 FlamePillar 풀을 등록합니다.
+            WeaponPoolManager.Instance.GetOrAddPool<FlamePillar>(
+                CreateFlamePillar,
+                OnGetFlamePillar,
+                OnReleaseFlamePillar,
+                OnDestroyFlamePillar,
+                maxSize: m_poolSize
+            );
         }
 
         private new void OnDisable()
@@ -67,12 +77,18 @@ namespace Vamser_like.Weaphon
                 }
 
                 Vector3 randomPosition = GetRandomPositionInView();
-                FlamePillar pillar = m_flamePillarPool.Get();
+                // WeaponPoolManager를 통해 불기둥을 가져옵니다.
+                FlamePillar pillar = WeaponPoolManager.Instance.Get<FlamePillar>();
+                if (pillar == null)
+                {
+                    Debug.LogWarning("Failed to get FlamePillar from pool.");
+                    continue;
+                }
                 
                 float dotDamage = attackPower * m_dotDamageRatio;
                 
-                pillar.Activate(m_flamePillarPool, randomPosition, attackPower, dotDamage, m_dotDuration, m_dotTicks);
-                m_currentActivePillars++;
+                pillar.Activate(randomPosition, attackPower, dotDamage, m_dotDuration, m_dotTicks);
+                // m_currentActivePillars++; // OnGetFlamePillar에서 처리
             }
         }
 
@@ -88,28 +104,34 @@ namespace Vamser_like.Weaphon
             return m_mainCamera.ViewportToWorldPoint(viewportPos);
         }
 
-        #region Object Pooling
+        #region Object Pooling Delegates (WeaponPoolManager에서 사용될 델리게이트)
 
-        private void InitializePool()
+        // private void InitializePool() { ... } // 제거
+
+        private FlamePillar CreateFlamePillar()
         {
             if (m_flamePillarPrefab == null)
             {
                 Debug.LogError("[WeaphonFlame] FlamePillar 프리팹이 할당되지 않았습니다!");
-                return;
+                return null;
             }
-
-            m_flamePillarPool = new ObjectPool<FlamePillar>(
-                createFunc: () => Instantiate(m_flamePillarPrefab),
-                actionOnGet: (p) => { /* Activate에서 처리 */ },
-                actionOnRelease: (p) => 
-                {
-                    p.gameObject.SetActive(false);
-                    m_currentActivePillars--;
-                },
-                actionOnDestroy: (p) => Destroy(p.gameObject),
-                maxSize: m_poolSize
-            );
+            return Instantiate(m_flamePillarPrefab);
         }
+
+        private void OnGetFlamePillar(FlamePillar pillar)
+        {
+            // Activate에서 처리되므로 여기서는 SetActive(true)만
+            pillar.gameObject.SetActive(true);
+            m_currentActivePillars++; // 활성화된 불기둥 개수 증가
+        }
+
+        private void OnReleaseFlamePillar(FlamePillar pillar) 
+        {
+            pillar.gameObject.SetActive(false);
+            m_currentActivePillars--; // 활성화된 불기둥 개수 감소
+        }
+
+        private void OnDestroyFlamePillar(FlamePillar pillar) => Destroy(pillar.gameObject);
 
         #endregion
     }

@@ -2199,6 +2199,8 @@ Transform:
   - {fileID: 1218690319}
   - {fileID: 5775715313959921886}
   - {fileID: 1847679375264054142}
+  - {fileID: 6742427997737363061}
+  - {fileID: 1476115440}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &563115066
@@ -4563,6 +4565,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1427056131}
   m_CullTransparentMesh: 1
+--- !u!1 &1476115439
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1476115440}
+  m_Layer: 1
+  m_Name: FriendCharacter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1476115440
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1476115439}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 543239849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1510490378
 GameObject:
   m_ObjectHideFlags: 0
@@ -7142,47 +7175,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: '[ - GAME - ]'
       objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].stats
-      value: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
-        \uBC1C\uC0AC\uCCB4 \uC218"
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].skillCode
-      value: WP_FIRE
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].skillIcon
-      value: 
-      objectReference: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].skillName
-      value: "\uC2E0\uBE44\uD55C \uBD88\uAF43"
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].skillType
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].flavorText
-      value: "\uD0C0\uC624\uB974\uB294 \uBD88\uAF43\uC785\uB2C8\uB2E4. \uCC29\uD55C
-        \uB9C8\uC74C\uC528\uB97C \uAC00\uC9C4 \uCE5C\uAD6C\uB4E4\uC740 \uB4E4 \uC218
-        \uC788\uC9C0\uB9CC, \uB098\uC05C \uB9C8\uC74C\uC744 \uAC00\uC84C\uB2E4\uBA74
-        \uBD88\uD0C0\uAC8C \uB429\uB2C8\uB2E4."
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].skillDescription
-      value: "\uBD88\uAF43\uC774 \uD37C\uC838 \uB79C\uB364\uD55C \uC704\uCE58\uC5D0
-        \uC9C0\uC18D\uC801\uC778 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-      objectReference: {fileID: 0}
-    - target: {fileID: 1291853853057011082, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: TestWeapons.Array.data[0].weaponAddressableKey
-      value: WeaPhon_Flame
-      objectReference: {fileID: 0}
     - target: {fileID: 1454867752174783473, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -7660,6 +7652,21 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2451720572609908487, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
   m_PrefabInstance: {fileID: 5775715313959921885}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6742427997737363061
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8251057333994063134}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 543239849}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &7292407808102330180
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7844,6 +7851,52 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &8251057333994063134
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6742427997737363061}
+  - component: {fileID: 8251057333994063135}
+  m_Layer: 1
+  m_Name: WeaPhon_Friends
+  m_TagString: Player_Attack
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &8251057333994063135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8251057333994063134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dff70a6fe5ec7843a5c39edbbcd0dc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackPower: 0
+  coolTime: 0
+  attackSpeed: 0
+  attackRange: 0
+  mobStunTime: 0
+  isShooting: 0
+  skillCode: 
+  upgradeItemCode: 
+  Thumnail: {fileID: 0}
+  m_currentLevel: 1
+  isEvolved: 0
+  weaphonState: 0
+  m_friendCharacterPrefab: {fileID: 0}
+  m_friendsPerAttack: 3
+  m_poolSize: 10
+  m_warningAnimator: {fileID: 0}
+  m_warningDelay: 0.5
 --- !u!1001 &8660524717848819324
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7895,10 +7948,6 @@ PrefabInstance:
     - target: {fileID: 8467117305479902176, guid: dd92437f32f12453580b9520586cf517, type: 3}
       propertyPath: m_Name
       value: WeaPhon_Flame
-      objectReference: {fileID: 0}
-    - target: {fileID: 8467117305479902176, guid: dd92437f32f12453580b9520586cf517, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

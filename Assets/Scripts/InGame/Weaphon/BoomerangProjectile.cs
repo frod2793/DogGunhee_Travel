@@ -1,20 +1,20 @@
 using UnityEngine;
-using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+
 using System.Collections.Generic;
+using InGame.ObjectPool;
 using Vamser_like.Mob.MobBase;
 
 namespace Vamser_like.Weaphon
 {
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
-    [RequireComponent(typeof(TrailRenderer))] // [추가] TrailRenderer 필수
+    [RequireComponent(typeof(TrailRenderer))]
     public class BoomerangProjectile : MonoBehaviour
     {
-        private IObjectPool<BoomerangProjectile> m_pool;
         private Transform m_playerTransform;
         private SpriteRenderer m_spriteRenderer;
-        private TrailRenderer m_trailRenderer; // [추가]
+        private TrailRenderer m_trailRenderer;
 
         // 스탯
         private float m_damage;
@@ -31,16 +31,15 @@ namespace Vamser_like.Weaphon
         private readonly HashSet<int> m_hitHistory = new HashSet<int>();
 
         [Header("Visual Settings")]
-        [SerializeField] private float m_trailTime = 0.2f; // 잔상이 남는 시간
-        [SerializeField] private float m_trailStartWidth = 0.5f; // 잔상 시작 두께
-        [SerializeField] private Color m_trailColor = new Color(1, 1, 1, 0.5f); // 잔상 색상
+        [SerializeField] private float m_trailTime = 0.2f;
+        [SerializeField] private float m_trailStartWidth = 0.5f;
+        [SerializeField] private Color m_trailColor = new Color(1, 1, 1, 0.5f);
 
         private void Awake()
         {
             m_spriteRenderer = GetComponent<SpriteRenderer>();
             m_trailRenderer = GetComponent<TrailRenderer>();
             
-            // [추가] Trail Renderer 기본 설정 (코드에서 강제 설정)
             SetupTrail();
         }
 
@@ -50,16 +49,14 @@ namespace Vamser_like.Weaphon
 
             m_trailRenderer.time = m_trailTime;
             m_trailRenderer.startWidth = m_trailStartWidth;
-            m_trailRenderer.endWidth = 0f; // 끝은 뾰족하게
+            m_trailRenderer.endWidth = 0f;
             m_trailRenderer.autodestruct = false;
             
-            // 머티리얼이 없으면 기본 스프라이트 머티리얼 사용 (분홍색 네모 방지)
             if (m_trailRenderer.material == null || m_trailRenderer.material.name == "Default-Material")
             {
                 m_trailRenderer.material = new Material(Shader.Find("Sprites/Default"));
             }
 
-            // 그라데이션 설정 (시작색 -> 투명)
             Gradient gradient = new Gradient();
             gradient.SetKeys(
                 new GradientColorKey[] { new GradientColorKey(m_trailColor, 0.0f), new GradientColorKey(m_trailColor, 1.0f) },
@@ -67,13 +64,13 @@ namespace Vamser_like.Weaphon
             );
             m_trailRenderer.colorGradient = gradient;
             
-            // Sorting Layer를 스프라이트보다 한 단계 뒤로 (가려지지 않게)
             m_trailRenderer.sortingOrder = m_spriteRenderer.sortingOrder - 1;
         }
 
-        public void Initialize(IObjectPool<BoomerangProjectile> pool, Transform player, float damage, float stunTime, float speed, float distance)
+        // Initialize 메서드에서 IObjectPool<BoomerangProjectile> pool 매개변수 제거
+        public void Initialize(Transform player, float damage, float stunTime, float speed, float distance)
         {
-            m_pool = pool;
+            // m_pool = pool; // 제거
             m_playerTransform = player;
             m_damage = damage;
             m_stunTime = stunTime;
@@ -84,11 +81,10 @@ namespace Vamser_like.Weaphon
             m_isReturning = false;
             m_hitHistory.Clear();
 
-            // [추가] 궤적 초기화 (이전 위치에서 선이 이어지는 현상 방지)
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.Clear();
-                m_trailRenderer.emitting = true; // 발사 시 궤적 생성 시작
+                m_trailRenderer.emitting = true;
             }
 
             m_rotateTween?.Kill();
@@ -182,7 +178,6 @@ namespace Vamser_like.Weaphon
             m_rotateTween?.Kill();
             m_fadeTween?.Kill();
 
-            // [추가] 궤적 생성 중지 및 초기화
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.emitting = false;
@@ -197,7 +192,7 @@ namespace Vamser_like.Weaphon
 
             if (gameObject.activeSelf)
             {
-                m_pool.Release(this);
+                WeaponPoolManager.Instance.Release(this);
             }
         }
     }

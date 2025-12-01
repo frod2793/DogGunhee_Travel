@@ -1,7 +1,8 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using InGame.ObjectPool;
 using UnityEngine;
-using UnityEngine.Pool;
+using UnityEngine.Pool; // 더 이상 직접 사용하지 않지만, using은 유지
 using Vamser_like.Mob.MobBase;
 
 namespace Vamser_like.Weaphon
@@ -12,7 +13,7 @@ namespace Vamser_like.Weaphon
     [RequireComponent(typeof(Collider2D))]
     public class shieldProjectile : MonoBehaviour
     {
-        private IObjectPool<shieldProjectile> _pool;
+        // private IObjectPool<shieldProjectile> _pool; // WeaponPoolManager가 관리하므로 제거
         private Transform _playerTransform;
 
         // 부모의 참조 대신 능력치를 직접 저장하여 NullReferenceException을 방지합니다.
@@ -28,9 +29,10 @@ namespace Vamser_like.Weaphon
         /// <summary>
         /// 부메랑을 초기화하고 애니메이션을 시작합니다.
         /// </summary>
-        public void Initialize(IObjectPool<shieldProjectile> pool, float attackPower, float mobStunTime, Transform playerTransform, Vector3 direction, float speed, float distance, float returnDelay, float rotationsPerSecond)
+        // IObjectPool<shieldProjectile> pool 매개변수 제거
+        public void Initialize(float attackPower, float mobStunTime, Transform playerTransform, Vector3 direction, float speed, float distance, float returnDelay, float rotationsPerSecond)
         {
-            _pool = pool;
+            // _pool = pool; // 제거
             _playerTransform = playerTransform;
             _attackPower = attackPower;
             _mobStunTime = mobStunTime;
@@ -70,7 +72,8 @@ namespace Vamser_like.Weaphon
                 // 애니메이션이 끝나거나 취소되면 풀에 반환합니다.
                 if (gameObject.activeInHierarchy)
                 {
-                    _pool.Release(this);
+                    // _pool.Release(this); // 제거
+                    WeaponPoolManager.Instance.Release(this); // WeaponPoolManager를 통해 자신을 풀로 반환
                 }
             }
         }

@@ -1,6 +1,7 @@
 using UnityEngine;
-using UnityEngine.Pool;
+using UnityEngine.Pool; // 더 이상 직접 사용하지 않지만, using은 유지
 using Cysharp.Threading.Tasks;
+using InGame.ObjectPool;
 using Vamser_like.Mob.MobBase;
 
 namespace Vamser_like.Weaphon
@@ -12,7 +13,6 @@ namespace Vamser_like.Weaphon
         #region 내부 변수
         private Animator m_animator;
         private Collider2D m_collider;
-        private IObjectPool<ShieldShockwave> m_pool;
         
         private float m_damage;
         private float m_stunTime;
@@ -32,9 +32,10 @@ namespace Vamser_like.Weaphon
         /// 이펙트 초기화 (공격 속도 포함)
         /// </summary>
         /// <param name="attackSpeed">공격 속도 배율 (기본 1.0)</param>
-        public void Initialize(IObjectPool<ShieldShockwave> pool, float damage, float stunTime, float attackSpeed)
+        // IObjectPool<ShieldShockwave> pool 매개변수 제거
+        public void Initialize(float damage, float stunTime, float attackSpeed)
         {
-            m_pool = pool;
+            // m_pool = pool; // 제거
             m_damage = damage;
             m_stunTime = stunTime;
 
@@ -108,8 +109,7 @@ namespace Vamser_like.Weaphon
 
         private void ReleaseToPool()
         {
-            if (m_pool != null) m_pool.Release(this);
-            else Destroy(gameObject);
+            WeaponPoolManager.Instance.Release(this); 
         }
     }
 }

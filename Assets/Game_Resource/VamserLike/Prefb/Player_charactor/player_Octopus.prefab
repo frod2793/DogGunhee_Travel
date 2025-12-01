@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4.300653, y: 4.300653, z: 4.300653}
+  m_LocalScale: {x: 2.1503265, y: 2.1503265, z: 2.1503265}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -108,16 +108,9 @@ MonoBehaviour:
   m_attackSpeed: 1
   m_weaponSize: 1
   m_projectileCount: 1
-  m_criticalChance: 5
-  m_criticalDamage: 1.5
   m_maxHealth: 100
-  m_healthRegen: 0
   m_defense: 0
   m_moveSpeed: 2.5
-  m_expGain: 1
-  m_goldGain: 1
-  m_itemGainRange: 1
-  m_reroll: 1
 --- !u!95 &3114147942539962820
 Animator:
   serializedVersion: 7

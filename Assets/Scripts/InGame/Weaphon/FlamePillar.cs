@@ -1,7 +1,8 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-using UnityEngine.Pool;
+using InGame.ObjectPool;
+using UnityEngine.Pool; // 더 이상 직접 사용하지 않지만, using은 유지
 using Vamser_like.Mob.MobBase;
 
 namespace Vamser_like.Weaphon
@@ -24,7 +25,7 @@ namespace Vamser_like.Weaphon
         private float m_dotDuration;
         private int m_dotTicks;
 
-        private IObjectPool<FlamePillar> m_pool;
+        // private IObjectPool<FlamePillar> m_pool; // WeaponPoolManager가 관리하므로 제거
         private ContactFilter2D m_contactFilter;
         private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20);
         private readonly HashSet<MobBase> m_hitMobs = new HashSet<MobBase>();
@@ -39,9 +40,10 @@ namespace Vamser_like.Weaphon
             m_flameAnimators?.ForEach(anim => anim.gameObject.SetActive(false));
         }
 
-        public void Activate(IObjectPool<FlamePillar> pool, Vector3 position, float directDamage, float dotDamage, float dotDuration, int dotTicks)
+        // IObjectPool<FlamePillar> pool 매개변수 제거
+        public void Activate(Vector3 position, float directDamage, float dotDamage, float dotDuration, int dotTicks)
         {
-            m_pool = pool;
+            // m_pool = pool; // 제거
             transform.position = position;
             
             m_directDamage = directDamage;
@@ -100,7 +102,8 @@ namespace Vamser_like.Weaphon
             if (selectedFlameAnimator != null) selectedFlameAnimator.gameObject.SetActive(false);
 
             // 4. 오브젝트 풀로 반환
-            m_pool.Release(this);
+            // m_pool.Release(this); // 제거
+            WeaponPoolManager.Instance.Release(this); // WeaponPoolManager를 통해 자신을 풀로 반환
         }
 
         private void CheckForDamage()

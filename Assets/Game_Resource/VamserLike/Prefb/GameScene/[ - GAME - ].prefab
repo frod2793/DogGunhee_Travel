@@ -1132,9 +1132,10 @@ MonoBehaviour:
   mobStunTime: 1
   isShooting: 0
   skillCode: 
-  isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 0}
+  m_currentLevel: 1
+  isEvolved: 0
   weaphonState: 0
   m_damageTickInterval: 0.5
   m_slowAmount: 0.3
@@ -5093,6 +5094,7 @@ Transform:
   - {fileID: 8909315435496517097}
   - {fileID: 8226133265963310142}
   - {fileID: 5885546947019500355}
+  - {fileID: 1693748780595652328}
   m_Father: {fileID: 3890279269560482727}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3096312699230443881
@@ -5570,6 +5572,50 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &3445842017805381484
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1693748780595652328}
+  - component: {fileID: 8751254135602184136}
+  m_Layer: 0
+  m_Name: '[ - WeaphonPoolManager - ]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1693748780595652328
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3445842017805381484}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5033402755607727901}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8751254135602184136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3445842017805381484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b8cfd912b743e943b95651da0973611, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3645499937260719106
 GameObject:
   m_ObjectHideFlags: 0
@@ -8693,10 +8739,12 @@ MonoBehaviour:
   mobStunTime: 0
   isShooting: 0
   skillCode: 
-  isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 0}
+  m_currentLevel: 1
+  isEvolved: 0
   weaphonState: 0
+  m_travelDistance: 20
   m_rotateSpeed: 360
   m_explosionRadius: 1.5
   m_explosionDamage: 10
@@ -11258,9 +11306,10 @@ MonoBehaviour:
   mobStunTime: 0.5
   isShooting: 1
   skillCode: 
-  isUpgradelv2: 0
   upgradeItemCode: 0
   Thumnail: {fileID: 0}
+  m_currentLevel: 1
+  isEvolved: 0
   weaphonState: 0
   m_poolSizeBulletCount: 10
   m_bonePrefab: {fileID: 0}

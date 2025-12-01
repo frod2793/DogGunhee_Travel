@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
+using InGame.ObjectPool;
 using Vamser_like.Weaphon.Base;
 
 namespace Vamser_like.Weaphon
@@ -24,18 +25,28 @@ namespace Vamser_like.Weaphon
         [Tooltip("기본 발사 개수")]
         [SerializeField] private int m_baseCount = 1;
 
-        private IObjectPool<BoomerangProjectile> m_pool;
+        // private IObjectPool<BoomerangProjectile> m_pool; // WeaponPoolManager가 관리하므로 제거
         private bool m_isAttacking;
 
-        private void Awake()
-        {
-            InitializePool();
-        }
+        // private void Awake() // WeaponPoolManager가 풀을 초기화하므로 제거
+        // {
+        //     InitializePool();
+        // }
 
         private new void OnEnable()
         {
             SetWeaphonState(WeaphonState.Idle);
             if (m_firePoint == null) m_firePoint = transform.parent != null ? transform.parent : transform;
+
+            // WeaponPoolManager를 통해 BoomerangProjectile 풀을 등록합니다.
+            WeaponPoolManager.Instance.GetOrAddPool<BoomerangProjectile>(
+                CreateProjectile,
+                OnGetProjectile,
+                OnReleaseProjectile,
+                OnDestroyProjectile,
+                defaultCapacity: 10,
+                maxSize: 20
+            );
         }
 
         public override void Weaphon_Attack(Vector3 attackAngle)
@@ -63,13 +74,21 @@ namespace Vamser_like.Weaphon
                 float currentAngle = baseAngle + startAngle + (angleStep * i);
                 Quaternion rotation = Quaternion.Euler(0, 0, currentAngle);
 
-                var projectile = m_pool.Get();
+                // WeaponPoolManager를 통해 투사체를 가져옵니다.
+                var projectile = WeaponPoolManager.Instance.Get<BoomerangProjectile>();
+                if (projectile == null)
+                {
+                    Debug.LogWarning("Failed to get BoomerangProjectile from pool.");
+                    continue;
+                }
+
                 projectile.transform.position = m_firePoint.position;
                 projectile.transform.rotation = rotation;
 
                 float finalSpeed = m_flySpeed * (attackSpeed > 0 ? attackSpeed : 1f);
                 
-                projectile.Initialize(m_pool, m_firePoint, attackPower, mobStunTime, finalSpeed, m_throwDistance);
+                // BoomerangProjectile의 Initialize 메서드 호출 수정
+                projectile.Initialize(m_firePoint, attackPower, mobStunTime, finalSpeed, m_throwDistance);
 
                 await UniTask.Delay(50, cancellationToken: this.GetCancellationTokenOnDestroy());
             }
@@ -79,19 +98,9 @@ namespace Vamser_like.Weaphon
             m_isAttacking = false;
         }
 
-        #region Object Pooling
+        #region Object Pooling Delegates (WeaponPoolManager에서 사용될 델리게이트)
 
-        private void InitializePool()
-        {
-            m_pool = new ObjectPool<BoomerangProjectile>(
-                CreateProjectile,
-                OnGetProjectile,
-                OnReleaseProjectile,
-                OnDestroyProjectile,
-                defaultCapacity: 10,
-                maxSize: 20
-            );
-        }
+        // private void InitializePool() { ... } // 제거
 
         private BoomerangProjectile CreateProjectile()
         {
@@ -105,11 +114,7 @@ namespace Vamser_like.Weaphon
         {
             if (obj != null) Destroy(obj.gameObject);
         }
-
-        private void OnDestroy()
-        {
-            if (m_pool is System.IDisposable disposable) disposable.Dispose();
-        }
+        
 
         #endregion
     }

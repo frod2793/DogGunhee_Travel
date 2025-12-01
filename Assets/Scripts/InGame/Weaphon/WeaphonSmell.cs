@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 using System.Collections.Generic;
 using Vamser_like.Mob.MobBase;
 using Vamser_like.Weaphon.Base;

@@ -1,11 +1,11 @@
 using System;
 using Cysharp.Threading.Tasks;
+using InGame.ObjectPool;
 using UnityEngine;
-using UnityEngine.Pool;
 using Vamser_like.Weaphon.Base;
 
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     public class WeaphonBone : WeaphonBase
     {
@@ -13,16 +13,14 @@ namespace Vamser_like.Weaphon
 
         [Header("오브젝트 풀 설정")]
         [Tooltip("생성할 총알의 최대 개수입니다.")]
-        
         [SerializeField] private int m_poolSizeBulletCount = 10;
 
         [Header("프리팹 및 부모 설정")]
         [Tooltip("복제하여 사용할 총알 프리팹입니다.")]
         [SerializeField] private GameObject m_bonePrefab;
         [Tooltip("생성된 총알들이 위치할 부모 오브젝트입니다. 지정하지 않으면 이 오브젝트의 자식으로 생성됩니다.")]
-        
         [SerializeField] private Transform m_bulletParent;
-        public IObjectPool<BoneBullet> WeaphonBoneObjectPool { get; private set; }
+        
         private bool m_isAttacking; // 중복 호출 방지 플래그
 
         #endregion
@@ -38,17 +36,22 @@ namespace Vamser_like.Weaphon
                 m_bulletParent = transform;
             }
             
-            WeaphonBoneObjectPool = new ObjectPool<BoneBullet>(CreateBullet,
-                OnGet, OnRelease, OnDestroyPoolItem, maxSize: m_poolSizeBulletCount);
+            WeaponPoolManager.Instance.GetOrAddPool<BoneBullet>(
+                CreateBullet,
+                OnGet,
+                OnRelease,
+                OnDestroyPoolItem,
+                maxSize: m_poolSizeBulletCount
+            );
         }
 
+        // 이 메서드들은 이제 WeaponPoolManager의 델리게이트로 사용됩니다.
         private BoneBullet CreateBullet()
         {
             GameObject bulletObject = Instantiate(m_bonePrefab, m_bulletParent);
             
             BoneBullet bullet = bulletObject.GetComponent<BoneBullet>();
 
-            bullet.ObjectPoolSpawner = this;
             bullet.gameObject.name = $"{m_bonePrefab.name}_{Guid.NewGuid().ToString().Substring(0, 4)}";
             bulletObject.SetActive(false);
 
@@ -60,7 +63,7 @@ namespace Vamser_like.Weaphon
             if (obj == null) return;
 
             obj.ResetState();
-            obj.Initialize(this);
+            obj.Initialize(this); // WeaphonBone 참조는 여전히 필요할 수 있습니다 (예: 공격력 정보)
             obj.gameObject.SetActive(true);
         }
 
@@ -69,7 +72,7 @@ namespace Vamser_like.Weaphon
             if (obj == null) return;
 
             obj.gameObject.SetActive(false);
-            obj.transform.SetParent(m_bulletParent);
+            obj.transform.SetParent(m_bulletParent); // 풀로 돌아갈 때 부모 설정
         }
 
         private void OnDestroyPoolItem(BoneBullet obj)
@@ -102,10 +105,17 @@ namespace Vamser_like.Weaphon
 
             try
             {
-                BoneBullet bullet = WeaphonBoneObjectPool.Get();
+                // WeaponPoolManager를 통해 총알을 가져옵니다.
+                BoneBullet bullet = WeaponPoolManager.Instance.Get<BoneBullet>();
+                if (bullet == null)
+                {
+                    Debug.LogWarning("Failed to get BoneBullet from pool.");
+                    return;
+                }
+
                 bullet.transform.position = transform.position;
                 
-                bullet.transform.SetParent(null);
+                bullet.transform.SetParent(null); // 발사 시 부모 해제
                 bullet.ThrowBullet(attackAngle);
 
                 await UniTask.Delay(TimeSpan.FromSeconds(coolTime),

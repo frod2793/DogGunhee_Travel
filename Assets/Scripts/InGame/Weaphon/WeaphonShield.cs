@@ -1,8 +1,7 @@
 using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.Pool;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
+using InGame.ObjectPool;
 using Vamser_like.Weaphon.Base;
 
 namespace Vamser_like.Weaphon
@@ -38,9 +37,6 @@ namespace Vamser_like.Weaphon
 
         private Transform m_shieldTransform;
         private Transform m_playerTransform;
-        
-        private IObjectPool<shieldProjectile> m_boomerangPool;
-        private IObjectPool<ShieldShockwave> m_shockwavePool;
 
         private bool m_isAnimShield;
         
@@ -53,9 +49,6 @@ namespace Vamser_like.Weaphon
         private void Awake()
         {
             if (m_shieldObj != null) m_shieldTransform = m_shieldObj.transform;
-            
-            InitializeBoomerangPool();
-            InitializeShockwavePool();
         }
 
         private new void OnEnable()
@@ -66,18 +59,33 @@ namespace Vamser_like.Weaphon
                 m_playerTransform = GameManager.Instance.PlayerTransfrom();
 
             ResetShieldState();
+
+            // WeaponPoolManager를 통해 shieldProjectile 풀을 등록합니다.
+            WeaponPoolManager.Instance.GetOrAddPool<shieldProjectile>(
+                CreateBoomerangProjectile,
+                OnGetBoomerangProjectile,
+                OnReleaseBoomerangProjectile,
+                OnDestroyBoomerangProjectile,
+                defaultCapacity: m_boomerangCount,
+                maxSize: m_boomerangCount * 3
+            );
+
+            // WeaponPoolManager를 통해 ShieldShockwave 풀을 등록합니다.
+            WeaponPoolManager.Instance.GetOrAddPool<ShieldShockwave>(
+                CreateShockwave,
+                OnGetShockwave,
+                OnReleaseShockwave,
+                OnDestroyShockwave,
+                defaultCapacity: 2,
+                maxSize: 5
+            );
         }
 
         private new void OnDisable()
         {
             transform.DOKill();
         }
-
-        private void OnDestroy()
-        {
-            if (m_boomerangPool is System.IDisposable bPool) bPool.Dispose();
-            if (m_shockwavePool is System.IDisposable sPool) sPool.Dispose();
-        }
+        
 
 #if UNITY_EDITOR
         private void Update()
@@ -160,14 +168,18 @@ namespace Vamser_like.Weaphon
 
         private void SpawnShockwaveEffect()
         {
-            if (m_shockwavePool == null) return;
-
-            ShieldShockwave effect = m_shockwavePool.Get();
+            // WeaponPoolManager를 통해 충격파 효과를 가져옵니다.
+            ShieldShockwave effect = WeaponPoolManager.Instance.Get<ShieldShockwave>();
+            if (effect == null)
+            {
+                Debug.LogWarning("Failed to get ShieldShockwave from pool.");
+                return;
+            }
             
             effect.transform.position = transform.position; 
             effect.transform.rotation = Quaternion.identity;
 
-            effect.Initialize(m_shockwavePool, this.attackPower, this.mobStunTime, this.attackSpeed);
+            effect.Initialize(this.attackPower, this.mobStunTime, this.attackSpeed);
         }
 
         private void LaunchBoomerangs()
@@ -183,11 +195,17 @@ namespace Vamser_like.Weaphon
                 Quaternion rotation = Quaternion.Euler(0, 0, currentAngle);
                 Vector3 direction = rotation * Vector3.up;
 
-                var boomerang = m_boomerangPool.Get();
+                // WeaponPoolManager를 통해 부메랑을 가져옵니다.
+                var boomerang = WeaponPoolManager.Instance.Get<shieldProjectile>();
+                if (boomerang == null)
+                {
+                    Debug.LogWarning("Failed to get shieldProjectile from pool.");
+                    continue;
+                }
+
                 boomerang.transform.SetPositionAndRotation(spawnPos, rotation);
                 
                 boomerang.Initialize(
-                    m_boomerangPool, 
                     this.attackPower, 
                     this.mobStunTime, 
                     m_playerTransform, 
@@ -202,41 +220,38 @@ namespace Vamser_like.Weaphon
 
         #endregion
 
-        #region 오브젝트 풀링
+        #region Object Pooling Delegates (WeaponPoolManager에서 사용될 델리게이트)
 
-        private void InitializeBoomerangPool()
+        // private void InitializeBoomerangPool() { ... } // 제거
+        // private void InitializeShockwavePool() { ... } // 제거
+
+        private shieldProjectile CreateBoomerangProjectile()
         {
-            if (m_boomerangPrefab == null) return;
-
-            m_boomerangPool = new ObjectPool<shieldProjectile>(
-                createFunc: () => Instantiate(m_boomerangPrefab).GetComponent<shieldProjectile>(),
-                actionOnGet: (p) => p.gameObject.SetActive(true),
-                actionOnRelease: (p) => p.gameObject.SetActive(false),
-                actionOnDestroy: (p) => Destroy(p.gameObject),
-                collectionCheck: false,
-                defaultCapacity: m_boomerangCount,
-                maxSize: m_boomerangCount * 3
-            );
+            if (m_boomerangPrefab == null)
+            {
+                Debug.LogError("[WeaphonShield] Boomerang Prefab이 할당되지 않았습니다!");
+                return null;
+            }
+            return Instantiate(m_boomerangPrefab).GetComponent<shieldProjectile>();
         }
 
-        private void InitializeShockwavePool()
+        private void OnGetBoomerangProjectile(shieldProjectile p) => p.gameObject.SetActive(true);
+        private void OnReleaseBoomerangProjectile(shieldProjectile p) => p.gameObject.SetActive(false);
+        private void OnDestroyBoomerangProjectile(shieldProjectile p) => Destroy(p.gameObject);
+
+        private ShieldShockwave CreateShockwave()
         {
             if (m_shockwavePrefab == null)
             {
-                Debug.LogError("[WeaphonShield] Shockwave Prefab이 할당되지 않았습니다.");
-                return;
+                Debug.LogError("[WeaphonShield] Shockwave Prefab이 할당되지 않았습니다!");
+                return null;
             }
-
-            m_shockwavePool = new ObjectPool<ShieldShockwave>(
-                createFunc: () => Instantiate(m_shockwavePrefab),
-                actionOnGet: (effect) => effect.gameObject.SetActive(true),
-                actionOnRelease: (effect) => effect.gameObject.SetActive(false),
-                actionOnDestroy: (effect) => Destroy(effect.gameObject),
-                collectionCheck: false,
-                defaultCapacity: 2,
-                maxSize: 5
-            );
+            return Instantiate(m_shockwavePrefab);
         }
+
+        private void OnGetShockwave(ShieldShockwave effect) => effect.gameObject.SetActive(true);
+        private void OnReleaseShockwave(ShieldShockwave effect) => effect.gameObject.SetActive(false);
+        private void OnDestroyShockwave(ShieldShockwave effect) => Destroy(effect.gameObject);
 
         #endregion
     }
