@@ -2,10 +2,10 @@ using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
-using Vamser_like.vamsir;
-using Vamser_like.Weaphon.Base;
+using InGame.Manager; // GameManager 사용
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Mob
+namespace InGame.Mob
 {
     public class NormalMob : MobBase.MobBase
     {
@@ -46,23 +46,14 @@ namespace Vamser_like.Mob
             m_spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
-        private void Start()
-        {
-            var mapObj = GameObject.FindGameObjectWithTag("Map");
-            if (mapObj != null && mapObj.TryGetComponent(out SpriteRenderer mapRenderer))
-            {
-                m_mapBounds = mapRenderer.bounds;
-            }
-            else
-            {
-                m_mapBounds = new Bounds(Vector3.zero, Vector3.one * 100f);
-            }
-        }
-
         public override void OnEnable()
         {
             base.OnEnable();
             InitializeMob();
+            if (GameManager.Instance != null)
+            {
+                m_mapBounds = GameManager.Instance.MapBounds;
+            }
             StartAILoopAsync().Forget();
         }
 
@@ -72,20 +63,16 @@ namespace Vamser_like.Mob
             KillAllTweens();
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (!IsMoveEnabled || IsDead || m_aiState == AIState.Stunned || m_aiState == AIState.Dead || m_isAiPaused) 
                 return;
 
-            switch (m_aiState)
+            CheckPlayerDetection();
+
+            if (m_aiState == AIState.Chasing)
             {
-                case AIState.Chasing:
-                    HandleChasingState();
-                    break;
-                
-                case AIState.Wandering:
-                    CheckPlayerDetection();
-                    break;
+                HandleChasingState();
             }
         }
 
@@ -112,34 +99,49 @@ namespace Vamser_like.Mob
         {
             var token = this.GetCancellationTokenOnDestroy();
             await UniTask.WaitUntil(() => m_player != null && m_player.transform.parent != null, cancellationToken: token);
+            
             m_playerTransform = m_player.transform.parent;
+
             if (!m_mapBounds.Contains(m_cachedTransform.position))
             {
                 await ReturnToMapAsync(token);
             }
-            SetState(MobState.Move); 
+            
             ChangeAIState(AIState.Wandering);
         }
 
         private void ChangeAIState(AIState newState)
         {
-            if (m_aiState == newState) return;
-            if (m_aiState == AIState.Wandering)
-            {
-                m_moveTween?.Kill();
-            }
+            if (m_aiState == newState && newState != AIState.Wandering) return;
+
+            m_moveTween?.Kill();
             m_aiState = newState;
-            if (newState == AIState.Wandering)
+
+            switch (newState)
             {
-                StartWandering();
+                case AIState.Wandering:
+                    SetState(MobState.Move);
+                    StartWandering();
+                    break;
+                case AIState.Chasing:
+                    SetState(MobState.Move);
+                    break;
+                case AIState.Stunned:
+                    SetState(MobState.Stun);
+                    break;
+                case AIState.Dead:
+                    SetState(MobState.Die);
+                    break;
             }
         }
 
         private void CheckPlayerDetection()
         {
             if (m_playerTransform == null) return;
+
             float distSqr = (m_cachedTransform.position - m_playerTransform.position).sqrMagnitude;
             float rangeSqr = m_searchRange * m_searchRange;
+
             if (m_aiState == AIState.Wandering && distSqr <= rangeSqr)
             {
                 ChangeAIState(AIState.Chasing);
@@ -164,23 +166,31 @@ namespace Vamser_like.Mob
 
         private void HandleChasingState()
         {
-            if (m_playerTransform == null) return;
+            if (m_playerTransform == null || DOTween.IsTweening(m_cachedTransform)) return;
+
             Vector3 dir = (m_playerTransform.position - m_cachedTransform.position).normalized;
-            Vector3 newPos = m_cachedTransform.position + dir * (MoveSpeed * Time.fixedDeltaTime);
-            newPos.z = 0;
-            m_cachedTransform.position = newPos;
+            Vector3 targetPos = m_cachedTransform.position + dir * 0.5f;
+            
             FlipTowards(dir.x);
-            CheckPlayerDetection();
+            
+            m_moveTween = m_cachedTransform.DOMove(targetPos, 0.5f / MoveSpeed)
+                .SetEase(Ease.Linear)
+                .SetLink(gameObject);
         }
 
         private void StartWandering()
         {
             if (!IsMoveEnabled || m_aiState != AIState.Wandering || m_isAiPaused) return;
+
             Vector3 dest = GetRandomPositionInMap();
             Vector3 dir = (dest - m_cachedTransform.position).normalized;
             FlipTowards(dir.x);
+
             float duration = Vector3.Distance(m_cachedTransform.position, dest) / MoveSpeed;
-            m_moveTween = m_cachedTransform.DOMove(dest, duration).SetEase(Ease.Linear).SetLink(gameObject).OnComplete(() => WaitAndWanderNext().Forget());
+            m_moveTween = m_cachedTransform.DOMove(dest, duration)
+                .SetEase(Ease.Linear)
+                .SetLink(gameObject)
+                .OnComplete(() => WaitAndWanderNext().Forget());
         }
 
         private async UniTaskVoid WaitAndWanderNext()
@@ -215,15 +225,7 @@ namespace Vamser_like.Mob
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!IsHit && other.CompareTag("Player_Attack"))
-            {
-                ProcessHit(other);
-            }
-        }
-
-        private void OnTriggerStay2D(Collider2D other)
-        {
-            if (!IsHit && other.CompareTag("Player_Attack"))
+            if (other.CompareTag("Player_Attack"))
             {
                 ProcessHit(other);
             }
@@ -239,14 +241,15 @@ namespace Vamser_like.Mob
 
         public override void TakeDamage(float damage, float stunTime = 0f)
         {
-            if (IsDead || IsHit) return;
+            if (IsDead) return;
+
+            EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer).Forget();
+
+            if (IsHit) return;
 
             IsHit = true;
             CurrentHp -= damage;
 
-            EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer).Forget();
-            
-            // [수정] 사운드 재생 전 쿨다운 확인
             if (CanPlayHitSound())
             {
                 SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
@@ -266,20 +269,17 @@ namespace Vamser_like.Mob
 
         private async UniTaskVoid ResetHitFlagAsync()
         {
-            await UniTask.Yield(PlayerLoopTiming.FixedUpdate);
+            await UniTask.Yield(PlayerLoopTiming.Update);
             IsHit = false;
         }
 
         private void ApplyStun(float duration)
         {
             ChangeAIState(AIState.Stunned);
-            SetState(MobState.Stun);
-            StunTime = duration;
             DOVirtual.DelayedCall(duration, () =>
             {
                 if (!IsDead)
                 {
-                    SetState(MobState.Move);
                     ChangeAIState(AIState.Wandering);
                 }
             }).SetLink(gameObject);

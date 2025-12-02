@@ -1,13 +1,13 @@
 
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using InGame.Manager;
+using InGame.Mob.MobBase;
 using UnityEngine;
 using UnityEngine.UI;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.vamsir;
+using InGame;
 
-
-namespace Vamser_like.Player.Player_Base
+namespace InGame.Player.Player_Base
 {
     public class PlayerControll : MonoBehaviour
     {
@@ -229,14 +229,17 @@ namespace Vamser_like.Player.Player_Base
             }
             else if (isJoystickActive)
             {
+                // 적이 없고 조이스틱을 움직이면, 그 방향으로 공격
                 attackDirection = joystickDir;
             }
-            if (isJoystickActive && attackDirection != Vector3.zero)
+
+            // [수정] 자동 공격 모드가 아닐 때, 공격 방향이 정해졌다면 공격 실행
+            if (attackDirection != Vector3.zero && !m_isAutoAttackActive)
             {
                 TryAttack(attackDirection);
             }
-         
         }
+        
         private Vector3 GetJoystickInputDirection()
         {
             if (m_joystick == null) return Vector3.zero;

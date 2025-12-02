@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Vamser_like
+namespace InGame.Manager
 {
     public class PlayStateManager : MonoBehaviour
     {

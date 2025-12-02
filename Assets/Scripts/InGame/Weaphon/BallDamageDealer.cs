@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.Weaphon.Base;
+using InGame.Mob.MobBase;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// WeaphonBallplay에 의해 생성된 공의 물리적 충돌과 데미지를 담당하는 클래스입니다.

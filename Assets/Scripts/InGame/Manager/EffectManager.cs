@@ -4,9 +4,9 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Pool;
 using DG.Tweening;
-using Vamser_like.vamsir;
+using InGame.vamsir;
 
-namespace Vamser_like
+namespace InGame
 {
     /// <summary>
     /// 게임 내 모든 시각 효과(VFX)를 관리하는 싱글톤 매니저입니다.

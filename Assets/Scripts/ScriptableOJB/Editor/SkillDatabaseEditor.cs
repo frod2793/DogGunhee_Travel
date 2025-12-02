@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace Vamser_like.Editor
+namespace InGame.Editor
 {
     /// <summary>
     /// SkillDatabase의 Unity 인스펙터를 커스터마이징하는 클래스입니다.

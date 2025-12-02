@@ -4,9 +4,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using InGame;
+using InGame.Lobby;
 
 
-namespace Vamser_like.Lobby
+namespace Lobby
 {
     /// <summary>
     /// 상점 아이템 UI 및 구매 로직을 담당합니다.

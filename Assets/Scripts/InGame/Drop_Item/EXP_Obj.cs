@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Vamser_like.vamsir
+namespace InGame.vamsir
 {
     public class EXP_Obj : DropItemBase
     {

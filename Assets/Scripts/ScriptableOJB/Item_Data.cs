@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Vamser_like
+namespace InGame
 {
     [CreateAssetMenu(fileName = "Item_Data", menuName = "GameData/Item_Data")]
     public class Item_Data : ScriptableObject

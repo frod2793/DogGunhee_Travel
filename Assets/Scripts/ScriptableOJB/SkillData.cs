@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Vamser_like
+namespace InGame
 {
     public enum SkillType
     {

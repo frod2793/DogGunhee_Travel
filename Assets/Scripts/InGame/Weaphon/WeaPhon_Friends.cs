@@ -3,10 +3,9 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 using InGame.ObjectPool;
-using UnityEngine.Serialization;
-using Vamser_like.Weaphon.Base;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// 친구 캐릭터를 소환하여 공격하는 무기 컨트롤러입니다.

@@ -1,13 +1,12 @@
 using UnityEngine;
-
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.Player.Player_Base;
+using InGame.Mob.MobBase;
+using InGame.Player.Player_Base;
+using InGame.Manager;
+using InGame.Weaphon.Base;
 
-using Vamser_like.Weaphon.Base;
-
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     public class WeaphoneCatPunch : WeaphonBase
     {

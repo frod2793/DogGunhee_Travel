@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Vamser_like
+namespace InGame
 {
     [CreateAssetMenu(fileName = "Inventory_Data", menuName = "GameData/Inventory_Data")]
     public class Inventory_Data : ScriptableObject

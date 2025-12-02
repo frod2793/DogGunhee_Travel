@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Lobby;
 using UnityEngine;
 
-namespace Vamser_like.Lobby
+namespace InGame.Lobby
 {
     /// <summary>
     /// 캐릭터 선택 UI 관리 클래스

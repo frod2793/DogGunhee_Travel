@@ -1,7 +1,8 @@
+using InGame.Player.Player_Base;
 using UnityEngine;
-using Vamser_like.Player.Player_Base;
 
-namespace Vamser_like.Player
+namespace InGame.Player
+
 {
     public class Player_Doggun : PlayerBase
     {

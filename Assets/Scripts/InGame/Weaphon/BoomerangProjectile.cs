@@ -1,12 +1,11 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-
 using System.Collections.Generic;
+using InGame.Mob.MobBase;
 using InGame.ObjectPool;
-using Vamser_like.Mob.MobBase;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     [RequireComponent(typeof(TrailRenderer))]
@@ -21,7 +20,6 @@ namespace Vamser_like.Weaphon
         private float m_stunTime;
         private float m_speed;
         private float m_distance;
-        private float m_outDuration;
 
         private bool m_isReturning;
         
@@ -34,6 +32,13 @@ namespace Vamser_like.Weaphon
         [SerializeField] private float m_trailTime = 0.2f;
         [SerializeField] private float m_trailStartWidth = 0.5f;
         [SerializeField] private Color m_trailColor = new Color(1, 1, 1, 0.5f);
+
+        [Header("Movement Settings")]
+        [SerializeField, Tooltip("날아갈 때의 속도 배율")] 
+        private float m_outwardSpeedMultiplier = 1.5f;
+
+        [SerializeField, Tooltip("돌아올 때의 속도 배율")]
+        private float m_returnSpeedMultiplier = 1.2f;
 
         private void Awake()
         {
@@ -67,17 +72,14 @@ namespace Vamser_like.Weaphon
             m_trailRenderer.sortingOrder = m_spriteRenderer.sortingOrder - 1;
         }
 
-        // Initialize 메서드에서 IObjectPool<BoomerangProjectile> pool 매개변수 제거
         public void Initialize(Transform player, float damage, float stunTime, float speed, float distance)
         {
-            // m_pool = pool; // 제거
             m_playerTransform = player;
             m_damage = damage;
             m_stunTime = stunTime;
             m_speed = speed;
             m_distance = distance;
             
-            m_outDuration = Mathf.Max(0.5f, distance / speed);
             m_isReturning = false;
             m_hitHistory.Clear();
 
@@ -111,8 +113,11 @@ namespace Vamser_like.Weaphon
 
             try
             {
-                // [Outward]
-                await transform.DOMove(targetPos, m_outDuration)
+                // [Outward] - 날아가는 속도 조절
+                float outwardSpeed = m_speed * m_outwardSpeedMultiplier;
+                float outDuration = (outwardSpeed > 0) ? m_distance / outwardSpeed : 1f;
+
+                await transform.DOMove(targetPos, outDuration)
                     .SetEase(Ease.OutSine)
                     .ToUniTask(cancellationToken: token);
 
@@ -122,8 +127,9 @@ namespace Vamser_like.Weaphon
                 
                 await UniTask.Delay(100, cancellationToken: token);
 
-                // [Return]
+                // [Return] - 돌아오는 속도 조절
                 bool hasStartedFadeOut = false;
+                float returnSpeed = m_speed * m_returnSpeedMultiplier;
 
                 while (true)
                 {
@@ -133,7 +139,7 @@ namespace Vamser_like.Weaphon
                     Vector3 playerPos = m_playerTransform.position;
                     float distToPlayer = Vector3.Distance(myPos, playerPos);
                     
-                    float step = m_speed * 1.5f * Time.deltaTime;
+                    float step = returnSpeed * Time.deltaTime;
                     transform.position = Vector3.MoveTowards(myPos, playerPos, step);
 
                     if (!hasStartedFadeOut && distToPlayer <= 1.5f)

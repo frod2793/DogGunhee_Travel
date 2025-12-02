@@ -1,11 +1,10 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using InGame.Mob.MobBase;
 using InGame.ObjectPool;
 using UnityEngine;
-using UnityEngine.Pool; // 더 이상 직접 사용하지 않지만, using은 유지
-using Vamser_like.Mob.MobBase;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// WeaphonShield에서 발사되는 부메랑 투사체의 동작을 관리합니다.

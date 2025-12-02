@@ -1,6 +1,6 @@
 using System;
-using Vamser_like;
-using Vamser_like.vamsir;
+using InGame;
+using InGame.vamsir;
 using R3;
 using TMPro;
 using UnityEngine;

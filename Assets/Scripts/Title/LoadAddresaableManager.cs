@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
-using Vamser_like;
+using InGame;
 
 public class LoadAddresaableManager : MonoBehaviour
 {

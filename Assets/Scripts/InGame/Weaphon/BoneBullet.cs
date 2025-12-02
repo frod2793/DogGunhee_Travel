@@ -1,10 +1,11 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using InGame.Mob.MobBase;
 using InGame.ObjectPool;
 using UnityEngine;
-using Vamser_like;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.Weaphon.Base;
+using InGame;
+using InGame.Weaphon.Base;
+
 namespace InGame.Weaphon
 {
     public class BoneBullet : WeaphonBase

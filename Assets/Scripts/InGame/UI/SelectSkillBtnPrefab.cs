@@ -6,7 +6,7 @@ using TMPro;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
-namespace Vamser_like.vamsir // 네임스페이스를 다른 파일과 일치시킵니다.
+namespace InGame.vamsir // 네임스페이스를 다른 파일과 일치시킵니다.
 {
     /// <summary>
     /// 스킬 선택 UI 버튼의 구성 요소를 관리하는 프리팹 스크립트입니다.

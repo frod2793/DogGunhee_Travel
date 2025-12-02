@@ -1,10 +1,9 @@
 using UnityEngine;
-using UnityEngine.Pool; // 더 이상 직접 사용하지 않지만, using은 유지
 using Cysharp.Threading.Tasks;
+using InGame.Mob.MobBase;
 using InGame.ObjectPool;
-using Vamser_like.Mob.MobBase;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     [RequireComponent(typeof(Animator))]
     [RequireComponent(typeof(Collider2D))]

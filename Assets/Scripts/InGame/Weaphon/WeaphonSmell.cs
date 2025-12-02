@@ -1,9 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.Weaphon.Base;
+using InGame.Mob.MobBase;
+using InGame.Manager;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     [RequireComponent(typeof(ParticleSystem), typeof(EdgeCollider2D))]
     public class WeaphonSmell : WeaphonBase

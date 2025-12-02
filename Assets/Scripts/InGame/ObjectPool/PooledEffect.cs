@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace Vamser_like.vamsir
+namespace InGame.vamsir
 {
     /// <summary>
     /// 오브젝트 풀링되는 이펙트 프리팹에 부착되는 컴포넌트입니다.

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using InGame.Manager;
+using InGame.Mob.MobBase;
 using UnityEngine;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.vamsir;
-using Vamser_like.Weaphon.Base;
+using InGame;
+using InGame.vamsir;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Player.Player_Base
+namespace InGame.Player.Player_Base
 {
     public class PlayerBase : MonoBehaviour
     {

@@ -102,7 +102,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackPower: 10
   coolTime: 0
-  attackSpeed: 500
+  attackSpeed: 250
   attackRange: 0
   mobStunTime: 0.5
   isShooting: 0

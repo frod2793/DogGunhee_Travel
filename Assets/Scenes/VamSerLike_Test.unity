@@ -2201,8 +2201,15 @@ Transform:
   - {fileID: 1847679375264054142}
   - {fileID: 6742427997737363061}
   - {fileID: 1476115440}
+  - {fileID: 544118104}
+  - {fileID: 837962144}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &544118104 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+  m_PrefabInstance: {fileID: 4922003340710662826}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &563115066
 GameObject:
   m_ObjectHideFlags: 0
@@ -3122,6 +3129,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 797736756}
   m_CullTransparentMesh: 1
+--- !u!4 &837962144 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+  m_PrefabInstance: {fileID: 1426585000}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &841114377 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4729861070751391221, guid: 4fff049a21ea62141b5c6bf468f172fb, type: 3}
@@ -4435,6 +4447,63 @@ MonoBehaviour:
   m_CropFrameX: 0
   m_CropFrameY: 0
   m_StretchFill: 0
+--- !u!1001 &1426585000
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 543239849}
+    m_Modifications:
+    - target: {fileID: 4308062601247789848, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_Name
+      value: BoomerangProjectile
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417588846088867794, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
 --- !u!1 &1427056131
 GameObject:
   m_ObjectHideFlags: 0
@@ -6994,10 +7063,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaPhon_ballPlay
       objectReference: {fileID: 0}
-    - target: {fileID: 6548375471585183168, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 7133637481206034452, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -7337,10 +7402,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaPhon_Bumarang
       objectReference: {fileID: 0}
-    - target: {fileID: 4354728564479912810, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6836460676566652473, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -7474,6 +7535,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4fff049a21ea62141b5c6bf468f172fb, type: 3}
+--- !u!1001 &4922003340710662826
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 543239849}
+    m_Modifications:
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332572187715335076, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+      propertyPath: m_Name
+      value: Jinjoo
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
 --- !u!4 &5051255736179024154
 Transform:
   m_ObjectHideFlags: 0
@@ -7819,10 +7937,6 @@ PrefabInstance:
     - target: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
       propertyPath: m_Name
       value: Weaphon_Hero_landing
-      objectReference: {fileID: 0}
-    - target: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

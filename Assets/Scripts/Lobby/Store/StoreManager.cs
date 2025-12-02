@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using Lobby;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using InGame.Lobby;
 
-namespace Vamser_like.Lobby
+namespace Lobby
 {
     public class StoreManager : MonoBehaviour
     {

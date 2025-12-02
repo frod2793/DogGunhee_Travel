@@ -1,9 +1,11 @@
 using System;
+using Lobby;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using InGame.Lobby;
 
-namespace Vamser_like.Lobby
+namespace Lobby
 {
     public class QuestPanelManager : MonoBehaviour
     {

@@ -6,44 +6,41 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using R3;
 using UnityEngine;
-
 using DG.Tweening;
+using InGame.Player.Player_Base;
 using UnityEngine.UI;
+using InGame;
 using Random = UnityEngine.Random;
+using InGame.Lobby;
+using InGame.vamsir;
+using InGame.Weaphon.Base;
 
-using Vamser_like.Lobby;
-using Vamser_like.Player.Player_Base;
-using Vamser_like.vamsir;
-using Vamser_like.Weaphon.Base;
-
-namespace Vamser_like
+namespace InGame.Manager
 {
     public class UIManager : MonoBehaviour
     {
         #region 필드 및 변수 (인스펙터 연결)
 
-        [Header("유저 정보 UI")]
-        [SerializeField] private TMP_Text m_levelText;
+        [Header("유저 정보 UI")] [SerializeField] private TMP_Text m_levelText;
         [SerializeField] private Slider m_playerLevelSlider;
 
-        [Header("HUD 텍스트 UI")]
-        [SerializeField] private TMP_Text m_mobWaveText;
+        [Header("HUD 텍스트 UI")] [SerializeField]
+        private TMP_Text m_mobWaveText;
+
         [SerializeField] private TMP_Text m_coinText;
         [SerializeField] private TMP_Text m_mobCountText;
         [SerializeField] private TMP_Text m_playerLevelText_InGame;
         [SerializeField] private Slider m_expSlider;
 
-        [Header("메뉴 UI")]
-        [SerializeField] private Button m_menuButton;
+        [Header("메뉴 UI")] [SerializeField] private Button m_menuButton;
         [SerializeField] private GameObject m_menuPanel;
         [SerializeField] private Button m_settingButton;
         [SerializeField] private Button m_exitButton;
-        
+
         public List<Image> m_weaponUIList = new List<Image>();
         public List<Image> m_juListUIList = new List<Image>();
 
-        [Header("게임 오버 UI")]
-        [SerializeField] private GameObject m_gameOverPanel;
+        [Header("게임 오버 UI")] [SerializeField] private GameObject m_gameOverPanel;
         [SerializeField] private Button m_gameOverExitButton;
         [SerializeField] private Button m_gameOverRestartButton;
         [SerializeField] private TMP_Text m_gameOverText;
@@ -51,24 +48,20 @@ namespace Vamser_like
         [SerializeField] private TMP_Text m_gameOverWaveText;
         [SerializeField] private TMP_Text m_gameOverMobCountText;
 
-        [Header("조작계 UI")]
-        [SerializeField] private VariableJoystick m_variableJoystick;
+        [Header("조작계 UI")] [SerializeField] private VariableJoystick m_variableJoystick;
         [SerializeField] private RectTransform m_joystickTransform;
         [SerializeField] private Toggle m_autoAttackToggle;
 
-        [Header("설정 데이터")]
-        [SerializeField] private SettingsData m_settingsData;
+        [Header("설정 데이터")] [SerializeField] private SettingsData m_settingsData;
 
-        [Header("스킬 선택 UI")]
-        [SerializeField] private GameObject m_skillSelectionPanel;
+        [Header("스킬 선택 UI")] [SerializeField] private GameObject m_skillSelectionPanel;
         [SerializeField] private Button m_refreshButton;
         [SerializeField] private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
         [SerializeField] private GameObject m_skillButtonContainer;
         [SerializeField] private TMP_Text m_countdownText;
         [SerializeField] private Slider m_countDownSlider;
 
-        [Header("데이터")]
-        [SerializeField] private SkillDatabase m_skillDatabase;
+        [Header("데이터")] [SerializeField] private SkillDatabase m_skillDatabase;
 
         #endregion
 
@@ -76,7 +69,7 @@ namespace Vamser_like
 
         private GameManager m_gameManager;
         private PlayerControll m_playerController;
-        
+
         private CancellationTokenSource m_uiUpdateCts;
         private CancellationTokenSource m_skillSelectionTimerCts;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
@@ -89,10 +82,10 @@ namespace Vamser_like
         private readonly List<SelectSkillBtnPrefab> m_skillButtonPool = new List<SelectSkillBtnPrefab>();
         private readonly List<SkillData> m_skillChoices = new List<SkillData>(3);
         private readonly List<SkillData> m_acquiredAccessorySkills = new List<SkillData>();
-        
+
         private readonly List<Sprite> m_weaponThumbnails = new List<Sprite>();
         private readonly List<Sprite> m_accessoryIcons = new List<Sprite>();
-        
+
         private int m_pendingSkillSelections = 0;
         private bool m_isSkillSelectionActive = false;
 
@@ -165,9 +158,11 @@ namespace Vamser_like
             {
                 m_refreshButton.OnClickAsObservable().Subscribe(_ => GenerateSkillChoices()).AddTo(m_disposables);
             }
+
             if (m_autoAttackToggle != null)
             {
-                m_autoAttackToggle.OnValueChangedAsObservable().Subscribe(OnAutoAttackToggleChanged).AddTo(m_disposables);
+                m_autoAttackToggle.OnValueChangedAsObservable().Subscribe(OnAutoAttackToggleChanged)
+                    .AddTo(m_disposables);
             }
         }
 
@@ -217,6 +212,7 @@ namespace Vamser_like
                 m_variableJoystick.OnPointerUp(null);
                 m_variableJoystick.enabled = false;
             }
+
             if (m_autoAttackToggle != null) m_autoAttackToggle.isOn = false;
             m_uiUpdateCts?.Cancel();
         }
@@ -228,6 +224,7 @@ namespace Vamser_like
                 PlayStateManager.instance.StartGame();
                 return;
             }
+
             try
             {
                 m_mobWaveText.gameObject.SetActive(true);
@@ -258,18 +255,21 @@ namespace Vamser_like
                     m_lastWave = currentWave;
                     ShowWaveTextEffect($"웨이브 {currentWave}").Forget();
                 }
+
                 int currentCoin = m_gameManager.GetCoinCount();
                 if (m_lastCoin != currentCoin)
                 {
                     m_lastCoin = currentCoin;
                     m_coinText.SetText("{0}", currentCoin);
                 }
+
                 int currentMobCount = m_gameManager.GetMobKillCount();
                 if (m_lastMobCount != currentMobCount)
                 {
                     m_lastMobCount = currentMobCount;
                     m_mobCountText.SetText("{0}", currentMobCount);
                 }
+
                 await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
             }
         }
@@ -368,7 +368,9 @@ namespace Vamser_like
             var canvas = m_joystickTransform.GetComponentInParent<Canvas>();
             if (canvas == null) return false;
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
-            Rect joystickRect = new Rect(pos.x - (m_joystickTransform.rect.width * 0.5f), pos.y - (m_joystickTransform.rect.height * 0.5f), m_joystickTransform.rect.width, m_joystickTransform.rect.height);
+            Rect joystickRect = new Rect(pos.x - (m_joystickTransform.rect.width * 0.5f),
+                pos.y - (m_joystickTransform.rect.height * 0.5f), m_joystickTransform.rect.width,
+                m_joystickTransform.rect.height);
             return canvasRect.rect.Overlaps(joystickRect);
         }
 
@@ -426,6 +428,7 @@ namespace Vamser_like
                 await UniTask.NextFrame(token);
                 timer -= Time.deltaTime;
             }
+
             if (!token.IsCancellationRequested)
             {
                 await SelectRandomSkill();
@@ -438,11 +441,13 @@ namespace Vamser_like
             {
                 int randomIndex = Random.Range(0, m_skillChoices.Count);
                 var randomSkill = m_skillChoices[randomIndex];
-                var targetBtn = m_skillButtonPool.FirstOrDefault(b => b.gameObject.activeSelf && b.GetCurrentSkillData() == randomSkill);
+                var targetBtn = m_skillButtonPool.FirstOrDefault(b =>
+                    b.gameObject.activeSelf && b.GetCurrentSkillData() == randomSkill);
                 if (targetBtn != null)
                 {
                     await targetBtn.PlaySelectionAnimation();
                 }
+
                 await OnSkillSelected(randomSkill);
             }
         }
@@ -453,7 +458,8 @@ namespace Vamser_like
             foreach (var btn in m_skillButtonPool) btn.gameObject.SetActive(false);
             m_skillChoices.Clear();
 
-            var ownedWeapons = m_gameManager.SpawnedPlayer?.Weapons.ToDictionary(w => w.skillCode) ?? new Dictionary<string, WeaphonBase>();
+            var ownedWeapons = m_gameManager.SpawnedPlayer?.Weapons.ToDictionary(w => w.skillCode) ??
+                               new Dictionary<string, WeaphonBase>();
             var acquiredAccessoryCodes = new HashSet<string>(m_acquiredAccessorySkills.Select(s => s.skillCode));
 
             var availableSkills = m_skillDatabase.allSkills.Where(skill =>
@@ -463,8 +469,10 @@ namespace Vamser_like
                     if (ownedWeapons.TryGetValue(skill.skillCode, out var weapon))
                     {
                         // 보유 중인 무기는 최대 레벨 및 진화가 아닐 때만 레벨업 대상으로 포함
-                        return weapon.CurrentLevel < WeaphonBase.k_MaxLevel || (weapon.CurrentLevel == WeaphonBase.k_MaxLevel && !weapon.isEvolved);
+                        return weapon.CurrentLevel < WeaphonBase.k_MaxLevel ||
+                               (weapon.CurrentLevel == WeaphonBase.k_MaxLevel && !weapon.isEvolved);
                     }
+
                     return true; // 미보유 무기는 항상 포함
                 }
                 else // Passive
@@ -472,12 +480,12 @@ namespace Vamser_like
                     return !acquiredAccessoryCodes.Contains(skill.skillCode);
                 }
             }).ToList();
-            
+
             int count = Mathf.Min(3, availableSkills.Count);
             while (m_skillChoices.Count < count)
             {
                 var skill = availableSkills[Random.Range(0, availableSkills.Count)];
-                if (!m_skillChoices.Contains(skill)) 
+                if (!m_skillChoices.Contains(skill))
                     m_skillChoices.Add(skill);
             }
 
@@ -493,6 +501,7 @@ namespace Vamser_like
                     btn = Instantiate(m_skillSelectionButtonPrefab, m_skillButtonContainer.transform);
                     m_skillButtonPool.Add(btn);
                 }
+
                 btn.gameObject.SetActive(true);
                 btn.Setup(m_skillChoices[i], skill => OnSkillSelected(skill).Forget());
             }
@@ -504,12 +513,14 @@ namespace Vamser_like
 
             if (selectedSkill.skillType == SkillType.Weapon)
             {
-                var ownedWeapon = m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.skillCode == selectedSkill.skillCode);
+                var ownedWeapon =
+                    m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.skillCode == selectedSkill.skillCode);
                 if (ownedWeapon != null)
                 {
                     // 이미 보유한 무기 -> 레벨업
                     ownedWeapon.UpgradeLevel();
-                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
+                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer
+                        .GetComponent<SpriteRenderer>());
                 }
                 else
                 {
@@ -523,10 +534,11 @@ namespace Vamser_like
                 TryUpgradeWeapon(selectedSkill.skillCode);
                 if (m_gameManager.SpawnedPlayer != null)
                 {
-                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer.GetComponent<SpriteRenderer>());
+                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer
+                        .GetComponent<SpriteRenderer>());
                 }
             }
-            
+
             InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
             UpdateCachedItemLists();
             RefreshWeaponDisplay();
@@ -541,11 +553,12 @@ namespace Vamser_like
                 CloseSkillSelection();
             }
         }
-        
+
         private void TryUpgradeWeapon(string passiveItemCode)
         {
             if (m_gameManager.SpawnedPlayer == null) return;
-            var weaponToUpgrade = m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.upgradeItemCode == passiveItemCode);
+            var weaponToUpgrade =
+                m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.upgradeItemCode == passiveItemCode);
             if (weaponToUpgrade != null)
             {
                 weaponToUpgrade.UpgradeLevel();
@@ -575,6 +588,7 @@ namespace Vamser_like
                     }
                 }
             }
+
             m_accessoryIcons.Clear();
             foreach (var skill in m_acquiredAccessorySkills)
             {
@@ -639,7 +653,8 @@ namespace Vamser_like
         private void RestartGame()
         {
             m_gameOverPanel.SetActive(false);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene()
+                .name);
         }
 
         #endregion

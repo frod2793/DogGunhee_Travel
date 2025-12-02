@@ -4,8 +4,10 @@ using Cysharp.Threading.Tasks; // UniTask 활용
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using InGame;
+using InGame.Lobby;
 
-namespace Vamser_like.Lobby
+namespace Lobby
 {
     /// <summary>
     /// 로비 UI를 관리하는 클래스 (GetReward 오류 수정됨)
@@ -70,7 +72,12 @@ namespace Vamser_like.Lobby
         [SerializeField] private PlayerDataManagerDontdesytoy m_playerDataManager;
 
         [Header("Debug")]
-        [SerializeField] private bool m_isDebugMode = false;
+        [SerializeField] private bool m_isDebugMode;
+
+        [Header("<color=green>배경 애니메이션</color>")]
+        [SerializeField] private Animator m_backgroundAnimator;
+        [Tooltip("배경 애니메이션의 재생 속도를 조절합니다.")]
+        [SerializeField] private float m_backgroundAnimationSpeed = 1f;
 
         #endregion
 
@@ -97,6 +104,14 @@ namespace Vamser_like.Lobby
             
             SoundManager.PlaySound(Sound.BGM, SoundKeys.Lobby, true);
             SoundManager.Instance.LoadSoundSetting();
+
+            // 배경 애니메이터 속도 설정
+            if (m_backgroundAnimator != null)
+            {
+                m_backgroundAnimator.speed = m_backgroundAnimationSpeed;
+            }
+
+            PlayBackgroundAnimation("Start"); // 기본 배경 애니메이션 재생
 
             HandleBackButtonAsync(this.GetCancellationTokenOnDestroy()).Forget();
         }
@@ -161,6 +176,34 @@ namespace Vamser_like.Lobby
 
             if (m_goldText) m_goldText.text = data.currency1.ToString("N0");
             if (m_diaText) m_diaText.text = data.currency2.ToString("N0");
+        }
+
+        #endregion
+
+        #region 배경 애니메이션 제어
+
+        /// <summary>
+        /// 지정된 트리거를 사용하여 배경 애니메이션을 재생합니다.
+        /// </summary>
+        /// <param name="triggerName">Animator Controller에 설정된 트리거 이름</param>
+        public void PlayBackgroundAnimation(string triggerName)
+        {
+            if (m_backgroundAnimator != null && !string.IsNullOrEmpty(triggerName))
+            {
+                m_backgroundAnimator.SetTrigger(triggerName);
+            }
+        }
+
+        /// <summary>
+        /// 배경 애니메이션을 정지하거나 초기 상태로 되돌립니다.
+        /// </summary>
+        public void StopBackgroundAnimation()
+        {
+            if (m_backgroundAnimator != null)
+            {
+                m_backgroundAnimator.Rebind(); // 애니메이터를 초기 상태로 리셋
+                m_backgroundAnimator.Update(0f);
+            }
         }
 
         #endregion

@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using Lobby;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-namespace Vamser_like.Lobby
+namespace InGame.Lobby
 {
     public class ItemSelectManager : MonoBehaviour
     {

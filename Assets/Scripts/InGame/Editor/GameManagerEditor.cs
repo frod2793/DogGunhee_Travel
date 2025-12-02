@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using InGame.Manager;
 
-namespace Vamser_like.vamsir.Editor
+namespace InGame.Editor
 {
     [CustomEditor(typeof(GameManager))]
     public class GameManagerEditor : UnityEditor.Editor

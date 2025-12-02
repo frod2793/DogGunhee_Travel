@@ -1,4 +1,4 @@
-namespace Vamser_like
+namespace InGame
 {
     /// <summary>
     /// EffectManager에서 사용할 이펙트의 종류를 정의하는 열거형입니다.

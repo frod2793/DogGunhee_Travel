@@ -1,14 +1,13 @@
 using System;
-using System.IO;
 using BackEnd;
 using Cysharp.Threading.Tasks;
-// [추가] AppUpdateManager 네임스페이스
+using InGame;
+using InGame.Manager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Vamser_like.Manager;
 
-namespace Vamser_like
+namespace Title
 {
     public class LoginManager : MonoBehaviour
     {

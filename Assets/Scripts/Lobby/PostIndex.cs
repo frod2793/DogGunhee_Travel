@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace Vamser_like.Lobby
+namespace InGame.Lobby
 {
     public class PostIndex : MonoBehaviour
     {

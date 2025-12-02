@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Vamser_like
+namespace InGame
 {
     public class ChoosegamePopup : MonoBehaviour
     {

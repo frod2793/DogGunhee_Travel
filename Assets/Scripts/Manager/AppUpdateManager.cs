@@ -7,7 +7,7 @@ using Google.Play.AppUpdate;
 using Google.Play.Common;
 #endif
 
-namespace Vamser_like.Manager
+namespace InGame.Manager
 {
     public class AppUpdateManager : MonoBehaviour
     {

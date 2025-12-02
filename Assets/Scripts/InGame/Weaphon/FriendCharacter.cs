@@ -1,15 +1,10 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using InGame.Mob.MobBase;
 using InGame.ObjectPool;
-using Vamser_like.Mob.MobBase; // 몬스터에게 피해를 주기 위함
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
-    /// <summary>
-    /// 친구 캐릭터의 애니메이션 타입을 정의합니다.
-    /// Animator Controller에 "FriendType" (Int) 파라미터와 "FriendDrop" (Trigger) 파라미터가 필요합니다.
-    /// "FriendType" 값에 따라 다른 애니메이션 상태로 전이되도록 설정해야 합니다.
-    /// </summary>
     public enum FriendAnimationType
     {
         TypeA = 0,
@@ -17,12 +12,9 @@ namespace Vamser_like.Weaphon
         TypeC = 2,
         TypeD = 3
     }
-
-    /// <summary>
-    /// WeaPhon_Friends에서 소환되는 친구 캐릭터의 동작을 관리합니다.
-    /// </summary>
+    
     [RequireComponent(typeof(Animator))]
-    [RequireComponent(typeof(Collider2D))] // 충돌 감지를 위해 Collider2D 필요
+    [RequireComponent(typeof(Collider2D))] 
     public class FriendCharacter : MonoBehaviour
     {
         [SerializeField]

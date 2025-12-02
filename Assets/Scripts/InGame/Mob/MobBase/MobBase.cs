@@ -1,10 +1,11 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using Vamser_like.Player.Player_Base;
-using Vamser_like.vamsir;
+using InGame.Manager;
+using InGame.Player.Player_Base;
+using InGame;
 
-namespace Vamser_like.Mob.MobBase
+namespace InGame.Mob.MobBase
 {
     
     public abstract class MobBase : MonoBehaviour, IObjectPoolUser

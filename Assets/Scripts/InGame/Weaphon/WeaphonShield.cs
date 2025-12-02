@@ -2,9 +2,11 @@ using UnityEngine;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
-using Vamser_like.Weaphon.Base;
+using InGame.Weaphon.Base;
+using System;
+using InGame.Manager;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// 방패를 지면에 내려찍어 충격파로 공격하는 무기 클래스입니다.
@@ -38,7 +40,7 @@ namespace Vamser_like.Weaphon
         private Transform m_shieldTransform;
         private Transform m_playerTransform;
 
-        private bool m_isAnimShield;
+        private bool m_canAttack = true; // 공격 가능 상태 플래그
         
         private static readonly int k_AnimHashAttack = Animator.StringToHash("Attack");
 
@@ -59,6 +61,7 @@ namespace Vamser_like.Weaphon
                 m_playerTransform = GameManager.Instance.PlayerTransfrom();
 
             ResetShieldState();
+            m_canAttack = true; // 활성화 시 공격 가능하도록 초기화
 
             // WeaponPoolManager를 통해 shieldProjectile 풀을 등록합니다.
             WeaponPoolManager.Instance.GetOrAddPool<shieldProjectile>(
@@ -110,6 +113,7 @@ namespace Vamser_like.Weaphon
 
         public override void Weaphon_Attack(Vector3 attackAngle)
         {
+            if (!m_canAttack) return;
             AnimateShieldAttackAsync().Forget();
         }
 
@@ -122,8 +126,6 @@ namespace Vamser_like.Weaphon
                 m_shieldAnimator.Rebind();
                 m_shieldAnimator.speed = 1f;
             }
-
-            m_isAnimShield = false;
         }
 
         #endregion
@@ -132,8 +134,9 @@ namespace Vamser_like.Weaphon
 
         private async UniTaskVoid AnimateShieldAttackAsync()
         {
-            if (m_isAnimShield) return;
-            m_isAnimShield = true;
+            if (!m_canAttack) return;
+            m_canAttack = false;
+            StartCooldownAsync().Forget();
 
             var token = this.GetCancellationTokenOnDestroy();
 
@@ -156,13 +159,28 @@ namespace Vamser_like.Weaphon
 
                 float waitTime = m_impactTriggerTime / speedMultiplier;
                 
-                await UniTask.Delay(System.TimeSpan.FromSeconds(waitTime), cancellationToken: token);
+                await UniTask.Delay(TimeSpan.FromSeconds(waitTime), cancellationToken: token);
 
                 SpawnShockwaveEffect();
             }
             finally
             {
                 ResetShieldState();
+            }
+        }
+
+        private async UniTaskVoid StartCooldownAsync()
+        {
+            var token = this.GetCancellationTokenOnDestroy();
+            try
+            {
+                float finalCoolTime = (this.attackSpeed > 0) ? this.coolTime / this.attackSpeed : this.coolTime;
+                await UniTask.Delay(TimeSpan.FromSeconds(finalCoolTime), cancellationToken: token);
+                m_canAttack = true;
+            }
+            catch (OperationCanceledException)
+            {
+                // 오브젝트 파괴 시 UniTask.Delay가 취소될 때 발생하는 예외입니다. 정상적인 동작이므로 아무것도 하지 않아도 됩니다.
             }
         }
 
@@ -221,9 +239,6 @@ namespace Vamser_like.Weaphon
         #endregion
 
         #region Object Pooling Delegates (WeaponPoolManager에서 사용될 델리게이트)
-
-        // private void InitializeBoomerangPool() { ... } // 제거
-        // private void InitializeShockwavePool() { ... } // 제거
 
         private shieldProjectile CreateBoomerangProjectile()
         {

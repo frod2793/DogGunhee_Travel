@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Pool;
 using System.Collections.Generic;
-using Vamser_like.Weaphon.Base;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// 플레이어 주변을 회전하는 공(Ball)을 생성하고 관리하는 무기입니다.

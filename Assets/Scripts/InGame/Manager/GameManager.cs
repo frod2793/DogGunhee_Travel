@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using InGame.Lobby;
+using InGame.Player.Player_Base;
+using InGame.Weaphon.Base;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using Vamser_like.Lobby;
-using Vamser_like.Player.Player_Base;
-using Vamser_like.Weaphon.Base;
 
-namespace Vamser_like
+namespace InGame.Manager
 {
     public class GameManager : MonoBehaviour
     {
@@ -43,7 +43,7 @@ namespace Vamser_like
 
         [Header("Reference Settings")] [SerializeField]
         private GameObject m_playerContainer;
-
+        [SerializeField] private SpriteRenderer m_mapRange; // 맵 범위 스프라이트 추가
         [SerializeField] private OptionPopupManager m_optionPopupPrefab;
 
         [Header("Debug")] public List<SkillData> TestWeapons = new List<SkillData>();
@@ -64,6 +64,7 @@ namespace Vamser_like
         public VariableJoystick Joystick => m_variableJoystick;
         public Camera MainCamera => m_mainCamera;
         public UIManager UIManagerManager => _mUIManagerManager;
+        public Bounds MapBounds => m_mapRange.bounds; // 맵 경계 반환 프로퍼티 추가
 
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
 

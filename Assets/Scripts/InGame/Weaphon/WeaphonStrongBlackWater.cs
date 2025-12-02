@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using InGame.Mob.MobBase;
+using InGame.Weaphon.Base;
 using UnityEngine;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     public class WeaphonStrongBlackWater : WeaphonBase
     {

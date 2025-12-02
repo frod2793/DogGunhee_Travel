@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using LitJson;
 using UnityEngine;
 
-namespace Vamser_like
+namespace InGame
 {
     public class ServerManager : MonoBehaviour
     {

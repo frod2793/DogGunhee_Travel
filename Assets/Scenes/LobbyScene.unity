@@ -1189,6 +1189,8 @@ MonoBehaviour:
   m_closeItemSelectExpansionButton: {fileID: 2030477381}
   m_playerDataManager: {fileID: 0}
   m_isDebugMode: 0
+  m_backgroundAnimator: {fileID: 1064257346}
+  m_backgroundAnimationSpeed: 0.3
 --- !u!1 &81575512
 GameObject:
   m_ObjectHideFlags: 0

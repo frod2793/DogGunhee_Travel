@@ -45,9 +45,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackPower: 10
-  coolTime: 0.5
-  attackSpeed: 0
-  attackRange: 0
+  coolTime: 1
+  attackSpeed: 4.5
+  attackRange: 1.5
   mobStunTime: 0
   isShooting: 1
   skillCode: 
@@ -58,6 +58,4 @@ MonoBehaviour:
   weaphonState: 0
   m_boomerangPrefab: {fileID: 3560256705289553093, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
   m_firePoint: {fileID: 6836460676566652473}
-  m_throwDistance: 3
-  m_flySpeed: 8
   m_baseCount: 1

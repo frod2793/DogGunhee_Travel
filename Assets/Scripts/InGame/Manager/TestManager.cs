@@ -5,13 +5,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using InGame.Test;
+using InGame.Weaphon.Base;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Vamser_like.Test;
-using Vamser_like.vamsir;
-using Vamser_like.Weaphon.Base;
 
-namespace Vamser_like
+namespace InGame.Manager
 {
     /// <summary>
     /// 인게임 캐릭터 및 무기 테스트를 위한 디버그/치트 패널입니다.

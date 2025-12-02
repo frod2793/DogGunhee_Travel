@@ -1,4 +1,4 @@
-namespace Vamser_like
+namespace InGame
 {
     public enum ModificationMode
     {

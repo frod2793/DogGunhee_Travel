@@ -1,12 +1,11 @@
 using UnityEngine;
-using UnityEngine.Pool; // ObjectPool은 더 이상 직접 사용하지 않지만, IObjectPool 인터페이스는 필요할 수 있습니다.
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 using InGame.ObjectPool;
-using Vamser_like.Weaphon.Base;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// 랜덤 위치에 불기둥을 소환하는 무기 컨트롤러입니다.

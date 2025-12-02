@@ -5,7 +5,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Serialization;
 
-namespace Vamser_like
+namespace InGame
 {
     /// <summary>
     /// 플레이어 데이터를 관리하고 암호화하여 저장/로드하는 매니저 클래스

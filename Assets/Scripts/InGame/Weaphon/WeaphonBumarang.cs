@@ -1,10 +1,9 @@
 using UnityEngine;
-using UnityEngine.Pool;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
-using Vamser_like.Weaphon.Base;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
     /// <summary>
     /// 부메랑 무기 컨트롤러입니다.
@@ -16,22 +15,10 @@ namespace Vamser_like.Weaphon
         [SerializeField] private Transform m_firePoint;
 
         [Header("발사체 스탯")]
-        [Tooltip("부메랑이 날아가는 최대 거리")]
-        [SerializeField] private float m_throwDistance = 5f;
-        
-        [Tooltip("부메랑의 비행 속도")]
-        [SerializeField] private float m_flySpeed = 8f;
-        
         [Tooltip("기본 발사 개수")]
         [SerializeField] private int m_baseCount = 1;
 
-        // private IObjectPool<BoomerangProjectile> m_pool; // WeaponPoolManager가 관리하므로 제거
         private bool m_isAttacking;
-
-        // private void Awake() // WeaponPoolManager가 풀을 초기화하므로 제거
-        // {
-        //     InitializePool();
-        // }
 
         private new void OnEnable()
         {
@@ -85,10 +72,10 @@ namespace Vamser_like.Weaphon
                 projectile.transform.position = m_firePoint.position;
                 projectile.transform.rotation = rotation;
 
-                float finalSpeed = m_flySpeed * (attackSpeed > 0 ? attackSpeed : 1f);
+                // attackSpeed를 직접 비행 속도로 사용합니다. 0 이하일 경우 기본값 1f를 사용합니다.
+                float finalSpeed = (this.attackSpeed > 0) ? this.attackSpeed : 1f;
                 
-                // BoomerangProjectile의 Initialize 메서드 호출 수정
-                projectile.Initialize(m_firePoint, attackPower, mobStunTime, finalSpeed, m_throwDistance);
+                projectile.Initialize(m_firePoint, attackPower, mobStunTime, finalSpeed, this.attackRange);
 
                 await UniTask.Delay(50, cancellationToken: this.GetCancellationTokenOnDestroy());
             }
@@ -99,8 +86,6 @@ namespace Vamser_like.Weaphon
         }
 
         #region Object Pooling Delegates (WeaponPoolManager에서 사용될 델리게이트)
-
-        // private void InitializePool() { ... } // 제거
 
         private BoomerangProjectile CreateProjectile()
         {
@@ -115,7 +100,6 @@ namespace Vamser_like.Weaphon
             if (obj != null) Destroy(obj.gameObject);
         }
         
-
         #endregion
     }
 }

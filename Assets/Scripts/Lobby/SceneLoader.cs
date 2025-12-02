@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace Vamser_like
+namespace InGame
 {
     public class SceneLoader : MonoBehaviour
     {

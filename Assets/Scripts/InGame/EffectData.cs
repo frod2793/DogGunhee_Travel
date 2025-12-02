@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Vamser_like.vamsir;
+using InGame.vamsir;
 
-namespace Vamser_like
+namespace InGame
 {
     [System.Serializable]
     public class EffectMapping

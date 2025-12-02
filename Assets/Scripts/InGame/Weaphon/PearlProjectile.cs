@@ -1,24 +1,28 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Vamser_like.Mob.MobBase;
-using Vamser_like.Weaphon.Base;
+using InGame.Mob.MobBase;
+using InGame.Weaphon.Base;
 
-namespace Vamser_like.Weaphon
+namespace InGame.Weaphon
 {
-    /// <summary>
-    /// 화면 가장자리에서 튕기며 이동하는 진주 투사체입니다.
-    /// 레벨에 따라 애니메이션과 궤적 색상이 변경됩니다.
-    /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     [RequireComponent(typeof(TrailRenderer), typeof(Animator))]
     public class PearlProjectile : MonoBehaviour
     {
+        #region Static Instance
+        
+        public static PearlProjectile Instance { get; private set; }
+
+        #endregion
+
         #region 내부 변수
 
         private Vector3 m_velocity;
         private float m_damage;
         private float m_stunTime;
         private bool m_isEvolved;
+        
+        public float CurrentSpeed => m_velocity.magnitude;
 
         private Camera m_mainCamera;
         private TrailRenderer m_trailRenderer;
@@ -34,15 +38,13 @@ namespace Vamser_like.Weaphon
 
         #region 인스펙터 설정 (Visual)
 
-        [Header("Trail Settings")] [SerializeField]
-        private float m_trailTime = 0.3f;
-
+        [Header("Trail Settings")]
+        [SerializeField] private float m_trailTime = 0.3f;
         [SerializeField] private float m_trailStartWidth = 0.4f;
         [SerializeField] private float m_trailEndWidth = 0.0f;
 
-        [Header("Level Colors")] [SerializeField]
-        private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
-
+        [Header("Level Colors")]
+        [SerializeField] private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
         [SerializeField] private Color m_trailColorLv2 = new Color(1f, 0f, 1f, 0.5f);
 
         #endregion
@@ -63,55 +65,75 @@ namespace Vamser_like.Weaphon
 
         private void OnEnable()
         {
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning("[PearlProjectile] 두 개 이상의 진주가 활성화되려 합니다. 기존 인스턴스를 파괴합니다.");
+                Destroy(Instance.gameObject);
+            }
+            Instance = this;
+
             m_hitCooldowns.Clear();
             if (m_trailRenderer != null) m_trailRenderer.Clear();
+        }
+
+        private void OnDisable()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         private void Update()
         {
             transform.position += m_velocity * Time.deltaTime;
-
-            float rotateSpeed = 360f * Time.deltaTime;
-            transform.Rotate(0, 0, -rotateSpeed);
-
+            transform.Rotate(0, 0, -360f * Time.deltaTime);
             BounceOffScreenEdges();
         }
 
         #endregion
 
-        #region 초기화 및 비주얼 업데이트
+        #region 초기화 및 상태 업데이트
 
         public void Initialize(WeaphonBase weapon, Vector3 initialVelocity)
+        {
+            m_velocity = initialVelocity;
+            UpdateState(weapon);
+            transform.rotation = Quaternion.identity;
+        }
+        
+        public void UpdateState(WeaphonBase weapon)
         {
             m_damage = weapon.attackPower;
             m_stunTime = weapon.mobStunTime;
             m_isEvolved = weapon.isEvolved;
-            m_velocity = initialVelocity;
 
-            transform.rotation = Quaternion.identity;
+            float newSpeed = (weapon.attackSpeed > 0) ? weapon.attackSpeed : 1f;
+            m_velocity = m_velocity.normalized * newSpeed;
 
             UpdateVisualsByLevel();
         }
+        
+        #endregion
 
+        #region 비주얼 및 물리
+        
         private void UpdateVisualsByLevel()
         {
             if (m_animator != null)
             {
-                int trigger = m_isEvolved ? k_AnimTriggerLv2 : k_AnimTriggerLv1;
-                m_animator.SetTrigger(trigger);
+                m_animator.SetTrigger(m_isEvolved ? k_AnimTriggerLv2 : k_AnimTriggerLv1);
             }
 
             if (m_trailRenderer != null)
             {
-                Color targetColor = m_isEvolved ? m_trailColorLv2 : m_trailColorLv1;
-                SetTrailColor(targetColor);
+                SetTrailColor(m_isEvolved ? m_trailColorLv2 : m_trailColorLv1);
             }
         }
 
         private void SetupTrailBase()
         {
             if (m_trailRenderer == null) return;
-
             m_trailRenderer.time = m_trailTime;
             m_trailRenderer.startWidth = m_trailStartWidth;
             m_trailRenderer.endWidth = m_trailEndWidth;
@@ -140,21 +162,35 @@ namespace Vamser_like.Weaphon
             m_trailRenderer.colorGradient = gradient;
         }
 
-        #endregion
-
-        #region 물리 및 충돌
-
+        /// <summary>
+        /// 카메라의 월드 좌표 경계를 계산하여 반사시키는 최종 로직
+        /// </summary>
         private void BounceOffScreenEdges()
         {
             if (m_mainCamera == null) return;
 
-            Vector3 viewPos = m_mainCamera.WorldToViewportPoint(transform.position);
+            // 1. 카메라의 월드 좌표 경계를 직접 계산
+            float camHalfHeight = m_mainCamera.orthographicSize;
+            float camHalfWidth = camHalfHeight * m_mainCamera.aspect;
+            Vector3 camPos = m_mainCamera.transform.position;
 
-            if ((viewPos.x <= 0.02f && m_velocity.x < 0) || (viewPos.x >= 0.98f && m_velocity.x > 0))
+            float minX = camPos.x - camHalfWidth;
+            float maxX = camPos.x + camHalfWidth;
+            float minY = camPos.y - camHalfHeight;
+            float maxY = camPos.y + camHalfHeight;
+
+            Vector3 currentPosition = transform.position;
+
+            // 2. 진주의 월드 좌표와 카메라의 월드 좌표 경계를 비교
+            if ((currentPosition.x <= minX && m_velocity.x < 0) || (currentPosition.x >= maxX && m_velocity.x > 0))
+            {
                 m_velocity.x *= -1;
+            }
 
-            if ((viewPos.y <= 0.02f && m_velocity.y < 0) || (viewPos.y >= 0.98f && m_velocity.y > 0))
+            if ((currentPosition.y <= minY && m_velocity.y < 0) || (currentPosition.y >= maxY && m_velocity.y > 0))
+            {
                 m_velocity.y *= -1;
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -162,29 +198,17 @@ namespace Vamser_like.Weaphon
             if (other.CompareTag("Mob"))
             {
                 int id = other.gameObject.GetInstanceID();
-
                 if (!m_hitCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
                 {
                     if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
                     {
-                        float appliedStun = m_isEvolved ? m_stunTime : 0f;
-                        mob.TakeDamage(m_damage, appliedStun);
+                        mob.TakeDamage(m_damage, m_isEvolved ? m_stunTime : 0f);
                         m_hitCooldowns[id] = Time.time + k_HitCooldown;
                     }
                 }
             }
         }
-
-
-        public void UpdateState(WeaphonBase weapon)
-        {
-            m_damage = weapon.attackPower;
-            m_stunTime = weapon.mobStunTime;
-            m_isEvolved = weapon.isEvolved;
-
-            UpdateVisualsByLevel();
-        }
-
+        
         #endregion
     }
 }

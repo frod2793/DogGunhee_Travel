@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace Vamser_like.Weaphon.Base
+namespace InGame.Weaphon.Base
 {
     public abstract class WeaphonBase : MonoBehaviour
     {

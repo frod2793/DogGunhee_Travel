@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Vamser_like.Lobby
+namespace InGame.Lobby
 {
     public class CharactorSkinIndex : MonoBehaviour
     {

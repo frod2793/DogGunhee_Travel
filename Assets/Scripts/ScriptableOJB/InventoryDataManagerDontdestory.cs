@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEngine.Serialization;
 using Cysharp.Threading.Tasks;
 
-namespace Vamser_like.Lobby
+namespace InGame.Lobby
 {
     /// <summary>
     /// 인벤토리 데이터를 관리하고 암호화하여 저장/로드하는 매니저 클래스

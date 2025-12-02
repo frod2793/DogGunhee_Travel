@@ -2,7 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using UnityEngine;
-using Vamser_like.Weaphon.Base;
+using InGame.Weaphon.Base;
 
 
 namespace InGame.Weaphon
