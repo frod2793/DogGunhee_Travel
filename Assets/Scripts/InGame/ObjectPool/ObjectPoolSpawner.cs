@@ -394,22 +394,24 @@ namespace InGame
             if (m_mainCamera == null) return Vector3.zero;
 
             Vector3 camPos = m_mainCamera.transform.position;
-            
+            camPos.z = 0; // Z축 보정
+
             float camHeight = m_mainCamera.orthographicSize;
             float camWidth = camHeight * m_mainCamera.aspect;
 
-            float minSpawnDist = Mathf.Sqrt(camWidth * camWidth + camHeight * camHeight) + 1.5f;
-            float maxSpawnDist = minSpawnDist + 5.0f; 
+            // 화면 대각선 길이 + 여유분 (확실히 화면 밖으로)
+            float minSpawnDist = Mathf.Sqrt(camWidth * camWidth + camHeight * camHeight) + 2.0f;
+            float maxSpawnDist = minSpawnDist + 8.0f; // 스폰 범위 확장
 
-            int maxAttempts = 20;
+            int maxAttempts = 30; // 시도 횟수 증가
 
+            // 1차 시도: 카메라 주변 랜덤 위치 (도넛 모양)
             for (int i = 0; i < maxAttempts; i++)
             {
                 Vector2 randomDir = Random.insideUnitCircle.normalized;
                 float distance = Random.Range(minSpawnDist, maxSpawnDist);
                 
                 Vector3 candidatePos = camPos + (Vector3)(randomDir * distance);
-                candidatePos.z = 0;
 
                 if (m_mapBounds.Contains(candidatePos))
                 {
@@ -417,6 +419,17 @@ namespace InGame
                 }
             }
 
+            // 2차 시도: 맵 전체 랜덤 위치 중 카메라와 먼 곳 찾기 (Fallback)
+            for (int i = 0; i < 20; i++)
+            {
+                Vector3 randomMapPos = GetRandomPositionInMap();
+                if (Vector3.Distance(camPos, randomMapPos) >= minSpawnDist)
+                {
+                    return randomMapPos;
+                }
+            }
+
+            // 최후의 수단: 그냥 맵 안 랜덤 (극단적인 코너링 상황 등)
             return GetRandomPositionInMap();
         }
 

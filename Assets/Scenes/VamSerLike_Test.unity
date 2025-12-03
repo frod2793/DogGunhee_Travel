@@ -6793,10 +6793,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaPhon_Jinjoo
       objectReference: {fileID: 0}
-    - target: {fileID: 4863939502597022413, guid: 1557623e4099d47d0ac20a5355ba603b, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 8931045147467785052, guid: 1557623e4099d47d0ac20a5355ba603b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

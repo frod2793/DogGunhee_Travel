@@ -20,11 +20,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 876b43e7e9f1b487181bc17ea500e55e
-    m_Address: QuestBox
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 88c51965dbe994453af63584c9c40dc5
     m_Address: Charactor_Index_Button
     m_ReadOnly: 0

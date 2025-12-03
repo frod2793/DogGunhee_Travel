@@ -4781,6 +4781,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_startCharacterIndex: 0
   m_skillDatabase: {fileID: 11400000, guid: 6efa305b409e57449addb4f0370f209d, type: 2}
+  m_settingsData: {fileID: 11400000, guid: 0ccc4344296a87442940a782d2a69a54, type: 2}
   m_playerContainer: {fileID: 3904192412624442642}
   m_mapRange: {fileID: 6380052682920689255}
   m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}

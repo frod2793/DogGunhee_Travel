@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 130be8c60f147e845ba0247850661c42
+    m_Address: Coin
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1557623e4099d47d0ac20a5355ba603b
     m_Address: Prefab_Weapon_Pearl
     m_ReadOnly: 0
@@ -85,6 +90,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9990d404d42a6ae4abc0e629718dadeb
+    m_Address: Exp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9dfc825aed78fcd4ba02077103263b40
     m_Address: Sprite-Unlit-Default
     m_ReadOnly: 0
@@ -92,6 +102,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb7bc972af1334ecfae1ae0f4db37e58
     m_Address: Assets/Scripts/ScriptableOJB/SoundData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c471a13dad9b00644acffbffcbad0eb4
+    m_Address: normal_mob
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf3e8c61dfbfa344b9ca98f921f02227
+    m_Address: BigExp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

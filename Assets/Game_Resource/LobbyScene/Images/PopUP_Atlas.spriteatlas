@@ -44,97 +44,14 @@ SpriteAtlas:
       enableAlphaDilation: 0
     secondaryTextureSettings: {}
     variantMultiplier: 1
-    packables:
-    - {fileID: 102900000, guid: 0db996f0a3c309e4ea74f287ff026010, type: 3}
-    - {fileID: 102900000, guid: 9df9381826bb73d4d885d8162f8d46b0, type: 3}
+    packables: []
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
-    packedSpriteRenderDataKeys:
-    - e1a44d009ae51473aa0efefb5fe3e876: -427087166051188126
-    - 40015f60dd2b6c044bd12aee7ceebcf3: 21300000
-    - 304e0ec0b20a8b549bd8a39606a08272: 21300000
-    - 4b3e9a225fc012f48b11cbf49f40e886: 21300000
-    - b8b45d22ce12e334c95e45b162d41761: 21300000
-    - 7dadb072f401a614f81f3a2489865623: 21300000
-    - 59b277336594449f0bbb44e74d58c58a: 21300000
-    - 0dd6c353624194912a15cb73a3e699d0: 21300000
-    - 52743904f18fd5945885ad08a046c906: 21300000
-    - 0d9401550a41644caa093937163fb004: -6272680934486854694
-    - 4b3c7417de61747109ca2a6d3addd75c: 21300000
-    - 01d1b567f44264ccb87546c27103871e: 4031550798319795281
-    - 7c77819743f4af243992cb323277f51a: 21300000
-    - eb55c358aef8a497eac797ed52f03d9d: 21300000
-    - b3b215b850b774749bfb49ed0d804ff2: 21300000
-    - 8efac4590db919846a13bacb52c4bc2d: 21300000
-    - 7fe2eab94b47d4b60bcec8ff5c32c2d5: 21300000
-    - 4627bc5a1951f5d4d8fe74aff84c5f58: 21300000
-    - 46e75e9b8caada94382b46f89993ad07: 21300000
-    - 9e4e962c11c3c43b9bcf478af0e1334b: 21300000
-    - 755dda7cf1297b94293bdc3b9241e7be: 21300000
-    - 9b10df7c8dd571343a151c110e7638c5: 21300000
-    - d0ee55cd5d535db489212ecf83907e11: 21300000
-    - d3f1ddcdbf85a4aaabd894cca91056ab: 21300000
-    - 8edc11ddd5123504582c1e3446d53472: 21300000
-    - 8edee40f602cd480a8c8e8cd75f81a88: 21300000
-    - cde6fc8f5c28c0a4a910940c3967cf1d: 21300000
+    packedSpriteRenderDataKeys: []
   m_MasterAtlas: {fileID: 0}
-  m_PackedSprites:
-  - {fileID: -427087166051188126, guid: e1a44d009ae51473aa0efefb5fe3e876, type: 3}
-  - {fileID: 21300000, guid: 40015f60dd2b6c044bd12aee7ceebcf3, type: 3}
-  - {fileID: 21300000, guid: 304e0ec0b20a8b549bd8a39606a08272, type: 3}
-  - {fileID: 21300000, guid: 4b3e9a225fc012f48b11cbf49f40e886, type: 3}
-  - {fileID: 21300000, guid: b8b45d22ce12e334c95e45b162d41761, type: 3}
-  - {fileID: 21300000, guid: 7dadb072f401a614f81f3a2489865623, type: 3}
-  - {fileID: 21300000, guid: 59b277336594449f0bbb44e74d58c58a, type: 3}
-  - {fileID: 21300000, guid: 0dd6c353624194912a15cb73a3e699d0, type: 3}
-  - {fileID: 21300000, guid: 52743904f18fd5945885ad08a046c906, type: 3}
-  - {fileID: -6272680934486854694, guid: 0d9401550a41644caa093937163fb004, type: 3}
-  - {fileID: 21300000, guid: 4b3c7417de61747109ca2a6d3addd75c, type: 3}
-  - {fileID: 4031550798319795281, guid: 01d1b567f44264ccb87546c27103871e, type: 3}
-  - {fileID: 21300000, guid: 7c77819743f4af243992cb323277f51a, type: 3}
-  - {fileID: 21300000, guid: eb55c358aef8a497eac797ed52f03d9d, type: 3}
-  - {fileID: 21300000, guid: b3b215b850b774749bfb49ed0d804ff2, type: 3}
-  - {fileID: 21300000, guid: 8efac4590db919846a13bacb52c4bc2d, type: 3}
-  - {fileID: 21300000, guid: 7fe2eab94b47d4b60bcec8ff5c32c2d5, type: 3}
-  - {fileID: 21300000, guid: 4627bc5a1951f5d4d8fe74aff84c5f58, type: 3}
-  - {fileID: 21300000, guid: 46e75e9b8caada94382b46f89993ad07, type: 3}
-  - {fileID: 21300000, guid: 9e4e962c11c3c43b9bcf478af0e1334b, type: 3}
-  - {fileID: 21300000, guid: 755dda7cf1297b94293bdc3b9241e7be, type: 3}
-  - {fileID: 21300000, guid: 9b10df7c8dd571343a151c110e7638c5, type: 3}
-  - {fileID: 21300000, guid: d0ee55cd5d535db489212ecf83907e11, type: 3}
-  - {fileID: 21300000, guid: d3f1ddcdbf85a4aaabd894cca91056ab, type: 3}
-  - {fileID: 21300000, guid: 8edc11ddd5123504582c1e3446d53472, type: 3}
-  - {fileID: 21300000, guid: 8edee40f602cd480a8c8e8cd75f81a88, type: 3}
-  - {fileID: 21300000, guid: cde6fc8f5c28c0a4a910940c3967cf1d, type: 3}
-  m_PackedSpriteNamesToIndex:
-  - Quest_Expend_Back_0
-  - ReWord_Thumanil
-  - Clear
-  - closeBtn
-  - Clear_Back
-  - all_Confirm
-  - Quest_Expend_Back
-  - Smaple
-  - Quest_sample
-  - Quest_Expend_Inback_0
-  - Quest_Panel_Back
-  - QuestItem_Thum_0
-  - InBack
-  - Quest_Expend_Inback
-  - Post_Expend
-  - SenderProfil
-  - Index_Back
-  - scrollview_Back
-  - Charactor_Thumnail
-  - QuestItem_Thum
-  - Post_IndexBack
-  - PostBox_Backgournd
-  - common_box
-  - Item_ProFile
-  - confirom_All_Btn
-  - Sample
-  - confirom_Btn
+  m_PackedSprites: []
+  m_PackedSpriteNamesToIndex: []
   m_RenderDataMap: {}
   m_Tag: PopUP_Atlas
   m_IsVariant: 0

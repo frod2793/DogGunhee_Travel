@@ -56,7 +56,7 @@ public class OptionPopupManager : MonoBehaviour
     private Canvas m_canvas;
 
     // 프레임 설정 관련 상수
-    private readonly int[] m_frameRateOptions = { 60, 120 };
+    private readonly int[] m_frameRateOptions = { 30, 60, 120 };
 
     #endregion
 
@@ -109,7 +109,14 @@ public class OptionPopupManager : MonoBehaviour
         {
             Debug.LogError("상위 오브젝트에서 Canvas를 찾을 수 없습니다!", this);
         }
-        // Canvas의 RenderMode나 Camera 설정은 프리팹에서 지정하는 것이 더 안전하므로 코드에서 강제로 변경하지 않습니다.
+        
+        // 프레임 레이트 슬라이더 범위 설정 (0 ~ 옵션 개수 - 1)
+        if (m_frameRateSlider != null)
+        {
+            m_frameRateSlider.minValue = 0;
+            m_frameRateSlider.maxValue = m_frameRateOptions.Length - 1;
+            m_frameRateSlider.wholeNumbers = true;
+        }
     }
 
     /// <summary>
@@ -133,7 +140,7 @@ public class OptionPopupManager : MonoBehaviour
         if (sliderValue < 0)
         {
             // 저장된 값이 리스트에 없으면 기본값(120 FPS)으로 설정
-            sliderValue = 1; // 120 FPS는 배열의 인덱스 1에 해당합니다.
+            sliderValue = 2; // 120 FPS는 배열의 인덱스 2에 해당합니다.
             m_settingsData.TargetFrameRate = m_frameRateOptions[sliderValue];
         }
         m_frameRateSlider.SetValueWithoutNotify(sliderValue);
@@ -228,13 +235,13 @@ public class OptionPopupManager : MonoBehaviour
     /// <param name="frameRate">목표 FPS</param>
     private void SetFrameRate(int frameRate)
     {
+        // 엔진에 직접 프레임 적용
+        Application.targetFrameRate = frameRate;
+
         if (m_playerDataManager != null)
         {
+            // 데이터 매니저에도 값 전달 (저장 용도 등)
             m_playerDataManager.SetTargetFrameRate(frameRate);
-        }
-        else
-        {
-            Debug.LogWarning("PlayerDataManager를 찾을 수 없습니다.");
         }
     }
     #endregion

@@ -9,7 +9,6 @@ using UnityEngine;
 using DG.Tweening;
 using InGame.Player.Player_Base;
 using UnityEngine.UI;
-using InGame;
 using Random = UnityEngine.Random;
 using InGame.Lobby;
 using InGame.vamsir;
@@ -105,6 +104,14 @@ namespace InGame.Manager
         {
             m_playerController = m_gameManager.PlayerController;
             m_variableJoystick = m_gameManager.Joystick;
+
+            // 초기 설정 적용 (카운트다운 전 조이스틱 위치 잡기)
+            if (m_settingsData != null)
+            {
+                m_settingsData.LoadSettings();
+                ApplyJoystickSettings();
+            }
+
             SubscribeToEvents();
         }
 

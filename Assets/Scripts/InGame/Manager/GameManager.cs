@@ -35,18 +35,19 @@ namespace InGame.Manager
 
         #region 인스펙터 필드
 
-        [Header("Editor Start Settings (에디터 전용)")] [SerializeField]
+        [Header("에디터 시작 설정 (Editor Only)")] [SerializeField]
         private int m_startCharacterIndex = 0;
 
-        [Header("Data References")] [SerializeField]
+        [Header("데이터 참조")] [SerializeField]
         private SkillDatabase m_skillDatabase;
+        [SerializeField] private SettingsData m_settingsData;
 
-        [Header("Reference Settings")] [SerializeField]
+        [Header("참조 설정")] [SerializeField]
         private GameObject m_playerContainer;
         [SerializeField] private SpriteRenderer m_mapRange; // 맵 범위 스프라이트 추가
         [SerializeField] private OptionPopupManager m_optionPopupPrefab;
 
-        [Header("Debug")] public List<SkillData> TestWeapons = new List<SkillData>();
+        [Header("디버그")] public List<SkillData> TestWeapons = new List<SkillData>();
 
         #endregion
 
@@ -82,12 +83,28 @@ namespace InGame.Manager
 
             s_instance = this;
 
+            // 안드로이드 및 모바일 환경 최적화 설정
+#if UNITY_ANDROID
+            Application.targetFrameRate = 120;
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
+#else
+            Application.targetFrameRate = 120;
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
+#endif
+
             CacheComponents();
             SubscribeEvents();
         }
 
         private void Start()
         {
+            // 설정 로드 및 프레임 적용
+            if (m_settingsData != null)
+            {
+                m_settingsData.LoadSettings();
+                Application.targetFrameRate = m_settingsData.TargetFrameRate;
+            }
+
 #if UNITY_EDITOR
             if (Application.isPlaying && PlayerDataManagerDontdesytoy.Instance != null)
             {
