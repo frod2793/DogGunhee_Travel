@@ -25,28 +25,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 130be8c60f147e845ba0247850661c42
-    m_Address: Coin
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1557623e4099d47d0ac20a5355ba603b
     m_Address: Prefab_Weapon_Pearl
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 16425c45709f14b4c9ed480607630a29
-    m_Address: Enemy
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 20d59de054b734565a75a420e7947e91
-    m_Address: Assets/Game_Resource/VamserLike/VamSer_Like_Image/UI/UIatlas_atlst.spriteatlas
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2c192c63847c74f48bc73740db59a24b
-    m_Address: Drop_item
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -57,11 +37,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 34e464a5122a245aa9d83bd61f1fe434
     m_Address: Assets/Scenes/LoadResourceScene.unity
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 35b424dfd3cc7cd46818c4a2a9f27d3d
-    m_Address: MiniShield
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -80,11 +55,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4464f6a372c6942469f7ea34158454b6
-    m_Address: Weaphon/ballPlay .prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4efd0e3627cd2420197c95134841c170
     m_Address: Weaphon/Jinjoo.prefab
     m_ReadOnly: 0
@@ -92,11 +62,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4fff049a21ea62141b5c6bf468f172fb
     m_Address: Prefab_Weapon_Bone
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6da3e616afe6e9642a2a6fbe5d363ca8
-    m_Address: Player_charactor
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -120,43 +85,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9990d404d42a6ae4abc0e629718dadeb
-    m_Address: Exp
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9dfc825aed78fcd4ba02077103263b40
     m_Address: Sprite-Unlit-Default
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ae081f6c20b40ad4992af47818d27772
-    m_Address: Weaphon
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: aeb5e4e24acdcf340ae813706eb1d555
-    m_Address: "\uAC74\uD76C_\uC0D8\uD50C 1"
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb7bc972af1334ecfae1ae0f4db37e58
     m_Address: Assets/Scripts/ScriptableOJB/SoundData.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bbed90bc3c2d841fdb5c8cf0973ea605
-    m_Address: Weaphon/Shield_Impackt.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c471a13dad9b00644acffbffcbad0eb4
-    m_Address: Mob_0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cf3e8c61dfbfa344b9ca98f921f02227
-    m_Address: BigExp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -170,11 +105,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: df12ff3e664cd1e4dbac653da5e1d79e
-    m_Address: Map
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfa6c0fa2195f49668417386ea057ef9
     m_Address: Prefab_Weapon_Punch
     m_ReadOnly: 0
@@ -185,18 +115,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f03efe7b01bc19143974838bf0497ac2
-    m_Address: charactor_skin
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f12391ae88c4b2742944ab27fdce585c
     m_Address: Prefab_Weapon_Landing
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f515143fa7e2c41a595d079376162ec7
-    m_Address: Lobby_background
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
