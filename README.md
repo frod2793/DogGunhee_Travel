@@ -25,71 +25,61 @@
 Unity에 최적화된 **UniTask**를 활용하여 에셋 로딩 파이프라인을 비동기적으로 구축했습니다. 전투 중에도 프리징 현상 없이 필요한 리소스를 실시간으로 불러와 부드러운 게임 플레이를 제공합니다.
 
 ```csharp
-// UniTask와 Addressables를 활용한 캐릭터 스폰 (VamserLikeGameManager.cs)
-private async UniTask SpawnCharacterAsync(Weaphon_base weapon)
+// UniTask와 Addressables를 활용한 캐릭터 스폰 (GameManager.cs)
+private async UniTask SpawnPlayerAndInitialWeaponsAsync()
 {
-    int index = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
-    string key = $"Player_Character_{index}"; // Addressable Key
+    if (m_playerContainer == null) return;
 
     try
     {
-        var op = Addressables.InstantiateAsync(key, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform);
-        GameObject instance = await op.ToUniTask();
+        int charIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
+        string charKey = $"Player_Character_{charIndex}"; // Addressable Key
 
-        if (instance != null)
+        // 비동기로 캐릭터 프리팹 로드 및 생성
+        GameObject charInstance = await Addressables
+            .InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform)
+            .ToUniTask();
+
+        if (charInstance == null) return;
+
+        charInstance.transform.localPosition = Vector3.zero;
+        SpawnedPlayer = charInstance.GetComponent<PlayerBase>();
+
+        // ... (무기 초기화 및 이벤트 연결)
+
+        if (m_playerController != null)
         {
-            instance.transform.localPosition = Vector3.zero;
-            SpawnedPlayer = instance.GetComponent<PlayerBase>();
-
-            if (SpawnedPlayer != null)
-            {
-                // 무기 장착
-                SpawnedPlayer.InitializeWeapon(weapon);
-                
-                // 컨트롤러 연결
-                if (m_playerController != null)
-                {
-                    m_playerController.AssignCharacter(SpawnedPlayer);
-                }
-            }
-            else
-            {
-                LogManager.LogError($"[GameManager] PlayerBase component missing on {instance.name}");
-            }
-
-            // 이벤트 전파 (UI 업데이트 등)
-            OnPlayerChanged?.Invoke(SpawnedPlayer);
+            m_playerController.AssignCharacter(SpawnedPlayer);
         }
+
+        OnPlayerChanged?.Invoke(SpawnedPlayer);
     }
-    catch (Exception e)
+    catch (Exception ex)
     {
-        LogManager.LogError($"[GameManager] Character Spawn Error ({key}): {e.Message}");
+        LogManager.LogError($"[GameManager] 스폰 과정에서 오류 발생: {ex.Message}");
         SpawnedPlayer = null;
     }
 }
 ```
 
 ### 2. 대규모 전투를 위한 런타임 성능 최적화
-뱀파이어 서바이버즈 장르의 특성상 화면에 수많은 투사체와 몬스터가 등장합니다. 이는 `Instantiate`와 `Destroy`의 반복 호출로 이어져 심각한 **GC Spike(가비지 컬렉션으로 인한 프레임 드랍)**를 유발합니다.
+뱀파이어 서바이버즈 장르 특성상 수많은 몬스터와 투사체가 등장합니다. 이를 효율적으로 처리하기 위해 다음과 같은 최적화 기법을 적용했습니다.
 
-**강점: 오브젝트 풀링과 팩토리 패턴을 결합한 고성능 객체 관리**
-이 문제를 해결하기 위해 **오브젝트 풀링(Object Pooling)**과 **팩토리 패턴(Factory Pattern)**을 결합한 시스템을 설계했습니다.
-
-- **오브젝트 풀링**: `Unity.ObjectPool` API를 기반으로, 자주 사용되는 오브젝트(몬스터, 투사체 등)를 미리 생성하여 풀(Pool)에 보관합니다. 이를 통해 GC 발생을 원천적으로 차단하고 안정적인 프레임을 확보했습니다.
-- **팩토리 패턴**: 오브젝트를 **'생성하는 코드'**와 **'사용하는 코드'**를 명확히 분리했습니다. 그 결과, 새로운 몬스터나 아이템을 추가할 때 기존 코드 수정 없이 팩토리 클래스에 새로운 생성 로직만 추가하면 되므로, **유지보수성과 확장성**이 크게 향상되었습니다.
+- **오브젝트 풀링 (Object Pooling):** `Unity.ObjectPool`을 활용하여 가비지 컬렉션(GC) 스파이크를 방지하고 메모리 할당을 최소화했습니다.
+- **팩토리 패턴 (Factory Pattern):** 객체 생성과 사용 로직을 분리하여 유지보수성을 높였습니다.
+- **타겟 프레임 최적화:** 안드로이드 환경에서 `Application.targetFrameRate`를 120으로 설정하여 부드러운 화면을 제공하며, `SleepTimeout.NeverSleep`을 적용하여 화면 꺼짐을 방지했습니다.
+- **이펙트 처리 최적화:** 적 피격 시 발생하는 플래시 이펙트의 처리 병목을 제거하기 위해 순차적 큐(Queue) 방식에서 **즉시 실행(Parallel)** 방식으로 변경하여, 수십 마리의 적을 동시에 타격해도 밀림 없는 시각 효과를 구현했습니다.
 
 ```csharp
 // 오브젝트 풀을 활용하여 획득한 경험치 오브젝트를 반환하는 코드 (PlayerBase.cs)
 private void HandleExpCollision(GameObject expObject)
 {
-    bool hasComponent = expObject.TryGetComponent(out EXP_Obj expObj);
-
-    if (hasComponent && expObj.ObjectPoolSpawner != null)
+    // TryGetComponent로 컴포넌트 캐싱 및 유효성 검사
+    if (expObject.TryGetComponent(out EXP_Obj expObj) && expObj.ObjectPoolSpawner != null)
     {
-        // [정상 처리]
-        float expAmount = expObj.ExpValue * ExpGain;
-        AddExperience(expAmount);
+        AddExperience(expObj.ExpValue);
         
+        // 사용이 끝난 오브젝트를 풀로 반환 (Destroy 호출 방지 -> GC 최소화)
         expObj.ObjectPoolSpawner.ExpObjectPool.Release(expObj);
         SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
     }
@@ -97,119 +87,66 @@ private void HandleExpCollision(GameObject expObject)
 ```
 
 ### 3. 안전한 데이터 관리 및 보안
-로컬에 저장되는 재화, 아이템 등 민감한 사용자 데이터의 위변조를 방지하고, 기기 변경이나 삭제 시에도 데이터를 보존하기 위한 강력한 보안 및 백업 시스템을 구축했습니다.
-
-**강점: 하이브리드 암호화 및 서버 연동**
-- **데이터 위변조 방지 (하이브리드 암호화)**: 로컬 데이터는 **AES-256** 대칭키로 암호화하여 빠른 성능을 보장하고, 이 AES 키 자체는 **RSA** 공개키로 다시 암호화하여 안전하게 보관합니다. 이 하이브리드 방식은 속도와 보안을 모두 만족시키는 효과적인 해결책입니다.
-- **서버를 통한 데이터 영속성**: 암호화된 데이터는 JSON으로 직렬화하여 **뒤끝(TheBackend.io)** 서버에 백업합니다. 이를 통해 로컬 데이터가 조작되더라도 서버의 데이터를 통해 즉시 복구할 수 있어 치팅을 방지하고 사용자의 자산을 안전하게 보호합니다.
+**AES-256 + RSA 하이브리드 암호화**를 적용하여 로컬 데이터를 강력하게 보호하고, **뒤끝(TheBackend)** 서버와 연동하여 데이터 영속성을 보장합니다.
 
 ```csharp
-//하이브리드 암호화/복호화 로직 (HybridEncryption.cs)
-
-/// <summary>
-/// 암호화된 데이터와 세션 키를 포함하며, JSON 직렬화를 지원하는 하이브리드 암호화 패킷 클래스입니다.
-/// </summary>
-[System.Serializable]
-public class EncryptedPacket
+// 하이브리드 암호화 핵심 로직 (HybridEncryption.cs)
+public EncryptedPacket Encrypt(string plainJson, string publicKey)
 {
-    public string EncryptedSessionKeyBase64;
-    public string EncryptedDataBase64;
-}
-
-/// <summary>
-/// 하이브리드 암호화(RSA + AES)를 수행하는 클래스입니다.
-/// </summary>
-public class HybridEncryption
-{
-    /// <summary>
-    /// 주어진 RSA 공개키를 사용하여 평문 데이터를 암호화합니다.
-    /// </summary>
-    public EncryptedPacket Encrypt(string plainJson, string publicKey)
+    using (var aes = Aes.Create())
     {
-        // 1. AES 암호화를 위한 임시 대칭키(세션키)와 IV를 생성합니다.
-        using (var aes = Aes.Create())
+        // 1. AES 세션키 및 IV(초기화 벡터) 생성
+        aes.KeySize = 256;
+        aes.GenerateKey();
+        aes.GenerateIV();
+        byte[] sessionKey = aes.Key;
+        byte[] iv = aes.IV;
+
+        // 2. 데이터 암호화 (AES 대칭키 사용)
+        byte[] encryptedData;
+        using (var encryptor = aes.CreateEncryptor(sessionKey, iv))
         {
-            aes.KeySize = 256;
-            aes.GenerateKey();
-            aes.GenerateIV();
-            byte[] sessionKey = aes.Key;
-            byte[] iv = aes.IV;
-
-            // 2. 생성된 AES 세션키를 사용하여 JSON 데이터를 암호화합니다.
-            byte[] encryptedData;
-            using (var encryptor = aes.CreateEncryptor(sessionKey, iv))
-            {
-                byte[] plainBytes = Encoding.UTF8.GetBytes(plainJson);
-                encryptedData = PerformCryptography(plainBytes, encryptor);
-            }
-
-            // 3. RSA 공개키를 사용하여 AES 세션키와 IV를 암호화합니다.
-            byte[] encryptedSessionKey;
-            using (var rsa = new RSACryptoServiceProvider())
-            {
-                rsa.FromXmlString(publicKey);
-                byte[] keyAndIv = new byte[sessionKey.Length + iv.Length];
-                Buffer.BlockCopy(sessionKey, 0, keyAndIv, 0, sessionKey.Length);
-                Buffer.BlockCopy(iv, 0, keyAndIv, sessionKey.Length, iv.Length);
-                encryptedSessionKey = rsa.Encrypt(keyAndIv, true);
-            }
-
-            // 4. 암호화된 데이터와 암호화된 세션키를 하나의 패킷으로 묶어 반환합니다.
-            return new EncryptedPacket { 
-                EncryptedSessionKeyBase64 = Convert.ToBase64String(encryptedSessionKey),
-                EncryptedDataBase64 = Convert.ToBase64String(encryptedData)
-            };
+            byte[] plainBytes = Encoding.UTF8.GetBytes(plainJson);
+            encryptedData = PerformCryptography(plainBytes, encryptor);
         }
-    }
 
-    /// <summary>
-    /// 주어진 RSA 개인키를 사용하여 암호화된 패킷을 복호화합니다.
-    /// </summary>
-    public string Decrypt(EncryptedPacket packet, string privateKey)
-    {
-        // 1. RSA 개인키를 사용하여 암호화된 AES 세션키와 IV를 복호화합니다.
-        byte[] decryptedKeyAndIv;
+        // 3. 세션키 암호화 (RSA 공개키 사용)
+        byte[] encryptedSessionKey;
         using (var rsa = new RSACryptoServiceProvider())
         {
-            rsa.FromXmlString(privateKey);
-            decryptedKeyAndIv = rsa.Decrypt(Convert.FromBase64String(packet.EncryptedSessionKeyBase64), true);
+            rsa.FromXmlString(publicKey);
+            // AES 키와 IV를 결합하여 RSA로 암호화
+            byte[] keyAndIv = new byte[sessionKey.Length + iv.Length];
+            Buffer.BlockCopy(sessionKey, 0, keyAndIv, 0, sessionKey.Length);
+            Buffer.BlockCopy(iv, 0, keyAndIv, sessionKey.Length, iv.Length);
+            encryptedSessionKey = rsa.Encrypt(keyAndIv, true);
         }
 
-        // 2. 복호화된 바이트 배열에서 AES 키와 IV를 다시 분리합니다.
-        using (var aes = Aes.Create())
-        {
-            byte[] sessionKey = new byte[aes.KeySize / 8];
-            byte[] iv = new byte[aes.BlockSize / 8];
-            Buffer.BlockCopy(decryptedKeyAndIv, 0, sessionKey, 0, sessionKey.Length);
-            Buffer.BlockCopy(decryptedKeyAndIv, sessionKey.Length, iv, 0, iv.Length);
-
-            // 3. 복호화된 AES 세션키를 사용하여 원본 데이터를 복호화합니다.
-            byte[] decryptedDataBytes;
-            using (var decryptor = aes.CreateDecryptor(sessionKey, iv))
-            {
-                decryptedDataBytes = PerformCryptography(Convert.FromBase64String(packet.EncryptedDataBase64), decryptor);
-            }
-
-            // 4. 바이트 배열을 UTF8 문자열로 변환하여 최종 반환합니다.
-            return Encoding.UTF8.GetString(decryptedDataBytes);
-        }
-    }
-
-    // 암호화/복호화 스트림 처리를 위한 헬퍼 메소드
-    private byte[] PerformCryptography(byte[] data, ICryptoTransform cryptoTransform)
-    {
-        using (var memoryStream = new MemoryStream())
-        using (var cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
-        {
-            cryptoStream.Write(data, 0, data.Length);
-            cryptoStream.FlushFinalBlock();
-            return memoryStream.ToArray();
-        }
+        return new EncryptedPacket(encryptedSessionKey, encryptedData);
     }
 }
 ```
 
-### 4. 그 외 기술 요소
-- **확장 가능한 데이터 관리**: **Scriptable Object**를 활용하여 게임의 핵심 데이터를 관리함으로써, 기획자가 코드 수정 없이 밸런스를 쉽게 조절할 수 있도록 설계했습니다.
-- **안정적인 전역 접근**: **Singleton 패턴**을 적용하여 게임 내 주요 매니저(UIManager, GameManager 등)에 대한 일관되고 안정적인 접근점을 제공했습니다.
-- **다양한 사용자 인증**: 게스트, GPGS, 토큰 기반 자동 로그인 등 다양한 인증 방식을 지원하여 사용자의 접근성을 높였습니다.
+### 4. 리소스 관리 구조 개선 (Refactoring)
+프로젝트의 유지보수성을 높이기 위해 리소스 폴더 구조를 **씬(Scene) 중심**으로 전면 개편했습니다.
+- **구조화:** `Game_Resource` 하위에 `IntroScene`, `LobbyScene`, `RunGame` 등 씬별 전용 폴더를 생성하여 응집도를 높였습니다.
+- **중복 제거:** 여러 씬에서 공통으로 사용되는 리소스는 `Common` 폴더로 통합하여 용량 낭비를 줄이고 관리 효율을 높였습니다.
+- **표준화:** 각 폴더 내부는 `Images`, `Prefabs`, `Animations`, `Materials`, `Sounds`로 표준화된 분류 체계를 따릅니다.
+
+### 5. 게임플레이 및 UI/UX 개선
+- **안전한 스폰 시스템:** `ObjectPoolSpawner`의 알고리즘을 개선하여, 적들이 카메라 시야 밖이면서 맵 경계 내부인 안전한 위치에서만 스폰되도록 구현했습니다. (화면 밖 스폰 보장)
+- **반응형 조이스틱:** 씬 진입 시 카운트다운과 관계없이 조이스틱 위치가 즉시 적용되도록 초기화 시점을 최적화했습니다.
+- **프레임 설정 옵션:** 플레이어가 기기 사양에 맞춰 30, 60, 120 FPS를 선택할 수 있는 옵션 기능을 구현했습니다.
+
+---
+
+## 📂 프로젝트 구조 (Game_Resource)
+```
+Assets/Game_Resource/
+├── Common/              # 공통 리소스 (UI, 아이템, 이펙트 등)
+├── IntroScene/          # 인트로 씬 전용 리소스
+├── LobbyScene/          # 로비 씬 전용 리소스
+├── RunGame/             # 런게임 모드 리소스
+├── VamSerlike/          # 뱀서라이크 모드 리소스
+└── LoadResourceScene/   # 로딩 씬 리소스
+```

@@ -168,10 +168,8 @@ namespace InGame
             sequence.SetTarget(targetRenderer.transform);
         }
 
-        // 몹 피격 효과를 위한 큐
-        private readonly Queue<(SpriteRenderer renderer, UniTaskCompletionSource completionSource)> _queuedFlashEffects = new();
-        private bool _isProcessingQueuedFlashes = false;
-
+        // 몹 피격 효과를 위한 큐 제거 (동시 다발적 피격 처리를 위해 즉시 실행으로 변경)
+        
         #region 인라인 이펙트 (Inline Effects)
 
         /// <summary>
@@ -194,38 +192,16 @@ namespace InGame
         }
 
         /// <summary>
-        /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 큐에 추가하여 순차적으로 적용합니다.
-        /// (몹 피격과 같이 동시 발생 시 순서대로 처리될 수 있는 효과에 사용)
+        /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 적용합니다.
+        /// (이전에는 큐를 사용했으나, 반응성을 위해 즉시 실행으로 변경됨)
         /// </summary>
         /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
         /// <returns>효과 완료를 기다릴 수 있는 UniTask</returns>
         public UniTask PlayQueuedFlashEffect(SpriteRenderer targetRenderer)
         {
-            if (targetRenderer == null) return UniTask.CompletedTask;
-
-            var completionSource = new UniTaskCompletionSource();
-            _queuedFlashEffects.Enqueue((targetRenderer, completionSource));
-
-            if (!_isProcessingQueuedFlashes)
-            {
-                ProcessQueuedFlashesAsync().Forget();
-            }
-
-            return completionSource.Task;
-        }
-
-        private async UniTaskVoid ProcessQueuedFlashesAsync()
-        {
-            _isProcessingQueuedFlashes = true;
-            while (_queuedFlashEffects.Count > 0)
-            {
-                var (renderer, completionSource) = _queuedFlashEffects.Dequeue();
-                if (renderer == null || renderer.gameObject == null) { completionSource.TrySetResult(); continue; } // 오브젝트가 파괴된 경우 스킵
-                PlayImmediateFlashEffect(renderer); // 실제 플래시 효과 재생
-                await UniTask.Delay(TimeSpan.FromSeconds(0.2f)); // 플래시 애니메이션 시간만큼 대기
-                completionSource.TrySetResult();
-            }
-            _isProcessingQueuedFlashes = false;
+            // 큐 대기 없이 즉시 실행
+            PlayImmediateFlashEffect(targetRenderer);
+            return UniTask.CompletedTask;
         }
 
         /// <summary>
