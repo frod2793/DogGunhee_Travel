@@ -129,7 +129,7 @@ public EncryptedPacket Encrypt(string plainJson, string publicKey)
 
 ### 4. 리소스 관리 구조 개선 (Refactoring)
 프로젝트의 유지보수성을 높이기 위해 리소스 폴더 구조를 **씬(Scene) 중심**으로 전면 개편했습니다.
-- **구조화:** `Game_Resource` 하위에 `IntroScene`, `LobbyScene`, `RunGame` 등 씬별 전용 폴더를 생성하여 응집도를 높였습니다.
+- **구조화:** `Game_Resource` 하위에 `IntroScene`, `LobbyScene` 등 씬별 전용 폴더를 생성하여 응집도를 높였습니다.
 - **중복 제거:** 여러 씬에서 공통으로 사용되는 리소스는 `Common` 폴더로 통합하여 용량 낭비를 줄이고 관리 효율을 높였습니다.
 - **표준화:** 각 폴더 내부는 `Images`, `Prefabs`, `Animations`, `Materials`, `Sounds`로 표준화된 분류 체계를 따릅니다.
 
@@ -140,13 +140,34 @@ public EncryptedPacket Encrypt(string plainJson, string publicKey)
 
 ---
 
-## 📂 프로젝트 구조 (Game_Resource)
+## 📂 프로젝트 구조
+
+### 🗂️ Assets/Game_Resource (리소스)
 ```
 Assets/Game_Resource/
-├── Common/              # 공통 리소스 (UI, 아이템, 이펙트 등)
+├── Common/              # 공통 리소스 (대부분의 게임 에셋 통합)
+│   ├── Images/
+│   ├── Prefabs/
+│   ├── Materials/
+│   └── Sounds/
 ├── IntroScene/          # 인트로 씬 전용 리소스
 ├── LobbyScene/          # 로비 씬 전용 리소스
-├── RunGame/             # 런게임 모드 리소스
-├── VamSerlike/          # 뱀서라이크 모드 리소스
 └── LoadResourceScene/   # 로딩 씬 리소스
+```
+
+### 📜 Assets/Scripts (스크립트)
+```
+Assets/Scripts/
+├── Data/                # 데이터 모델 및 관리
+├── Editor/              # 에디터 확장 스크립트
+├── InGame/              # 인게임 로직 (Player, Mob, Manager 등 핵심 코어)
+│   ├── Manager/         # GameManager, EffectManager, UIManager 등
+│   ├── ObjectPool/      # 최적화를 위한 풀링 시스템
+│   └── Player/          # 플레이어 컨트롤 및 스탯 관리
+├── Lobby/               # 로비 씬 로직 및 UI
+├── Manager/             # 전역 관리 매니저 (SceneLoader 등)
+├── protect/             # 보안 및 암호화 (HybridEncryption)
+├── ScriptableOJB/       # 스크립터블 오브젝트 데이터
+├── Test/                # 테스트용 스크립트
+└── Title/               # 타이틀 화면 로직
 ```
