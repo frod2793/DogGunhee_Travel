@@ -2,6 +2,9 @@ using UnityEngine;
 using InGame.Weaphon.Base;
 using InGame.ObjectPool;
 
+
+// todo : 진주 오브젝트 바운드시 모래 먼지 이펙트 추가 
+
 namespace InGame.Weaphon
 {
     /// <summary>

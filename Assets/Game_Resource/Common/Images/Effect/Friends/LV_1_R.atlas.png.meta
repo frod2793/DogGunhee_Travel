@@ -1,0 +1,1924 @@
+fileFormatVersion: 2
+guid: 4b522cb4b2a532d4db92daeaf6b4f24d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -252753721293386793
+    second: LV_1_R.atlas_0
+  - first:
+      213: 3422778514237672304
+    second: LV_1_R.atlas_1
+  - first:
+      213: 4303831227249036145
+    second: LV_1_R.atlas_2
+  - first:
+      213: 3154283898933805753
+    second: LV_1_R.atlas_3
+  - first:
+      213: -5085268501390381463
+    second: LV_1_R.atlas_4
+  - first:
+      213: -8707151036409562644
+    second: LV_1_R.atlas_5
+  - first:
+      213: -4651284312268452416
+    second: LV_1_R.atlas_6
+  - first:
+      213: -8203685438281394268
+    second: LV_1_R.atlas_7
+  - first:
+      213: 116482367786903265
+    second: LV_1_R.atlas_8
+  - first:
+      213: 4874783595701174813
+    second: LV_1_R.atlas_9
+  - first:
+      213: 2929158165365014905
+    second: LV_1_R.atlas_10
+  - first:
+      213: 4130872082692324634
+    second: LV_1_R.atlas_11
+  - first:
+      213: -3475906714339754078
+    second: LV_1_R.atlas_12
+  - first:
+      213: 7227283272705284743
+    second: LV_1_R.atlas_13
+  - first:
+      213: -4741433664934490949
+    second: LV_1_R.atlas_14
+  - first:
+      213: 7235427878098083683
+    second: LV_1_R.atlas_15
+  - first:
+      213: 197826111480669070
+    second: LV_1_R.atlas_16
+  - first:
+      213: -7867171433176125372
+    second: LV_1_R.atlas_17
+  - first:
+      213: 5578422190863797715
+    second: LV_1_R.atlas_18
+  - first:
+      213: -6172844951284984890
+    second: LV_1_R.atlas_19
+  - first:
+      213: 7937480079571895167
+    second: LV_1_R.atlas_20
+  - first:
+      213: -5562259892916756837
+    second: LV_1_R.atlas_21
+  - first:
+      213: 7057633783572320405
+    second: LV_1_R.atlas_22
+  - first:
+      213: 2514929872923289627
+    second: LV_1_R.atlas_23
+  - first:
+      213: 3332761788673398173
+    second: LV_1_R.atlas_24
+  - first:
+      213: 2405191450968342099
+    second: LV_1_R.atlas_25
+  - first:
+      213: -287591141478374094
+    second: LV_1_R.atlas_26
+  - first:
+      213: 1949678521630790731
+    second: LV_1_R.atlas_27
+  - first:
+      213: 6887793197254959180
+    second: LV_1_R.atlas_28
+  - first:
+      213: -1722534153500695505
+    second: LV_1_R.atlas_29
+  - first:
+      213: 1357882870480245319
+    second: LV_1_R.atlas_30
+  - first:
+      213: 6019270699844393897
+    second: LV_1_R.atlas_31
+  - first:
+      213: -3233861370930005493
+    second: LV_1_R.atlas_32
+  - first:
+      213: -224014893601346665
+    second: LV_1_R.atlas_33
+  - first:
+      213: -7159732936800012726
+    second: LV_1_R.atlas_34
+  - first:
+      213: -1494557374255860583
+    second: LV_1_R.atlas_35
+  - first:
+      213: 5181996380429955777
+    second: LV_1_R.atlas_36
+  - first:
+      213: 7401348930119266201
+    second: LV_1_R.atlas_37
+  - first:
+      213: 4703628199050304083
+    second: LV_1_R.atlas_38
+  - first:
+      213: -4356412568121306427
+    second: LV_1_R.atlas_39
+  - first:
+      213: -4025905491131500092
+    second: LV_1_R.atlas_40
+  - first:
+      213: -783770882668449429
+    second: LV_1_R.atlas_41
+  - first:
+      213: 9197141967240712194
+    second: LV_1_R.atlas_42
+  - first:
+      213: -6851635965150141560
+    second: LV_1_R.atlas_43
+  - first:
+      213: 1924777298198491160
+    second: LV_1_R.atlas_44
+  - first:
+      213: -1219969394854080616
+    second: LV_1_R.atlas_45
+  - first:
+      213: -7006618513886253859
+    second: LV_1_R.atlas_46
+  - first:
+      213: -8290701255422285492
+    second: LV_1_R.atlas_47
+  - first:
+      213: 396718719732476416
+    second: LV_1_R.atlas_48
+  - first:
+      213: -3584427874720899879
+    second: LV_1_R.atlas_49
+  - first:
+      213: 6625031623307549609
+    second: LV_1_R.atlas_50
+  - first:
+      213: -116222228417455492
+    second: LV_1_R.atlas_51
+  - first:
+      213: 7217244722551086661
+    second: LV_1_R.atlas_52
+  - first:
+      213: 6766739426019432874
+    second: LV_1_R.atlas_53
+  - first:
+      213: 8160716622645285240
+    second: LV_1_R.atlas_54
+  - first:
+      213: 605928530057999811
+    second: LV_1_R.atlas_55
+  - first:
+      213: 5258647690191899887
+    second: LV_1_R.atlas_56
+  - first:
+      213: -7864699521542608229
+    second: LV_1_R.atlas_57
+  - first:
+      213: -7366522299551045503
+    second: LV_1_R.atlas_58
+  - first:
+      213: -1418056578001014356
+    second: LV_1_R.atlas_59
+  - first:
+      213: 8290867798194004468
+    second: LV_1_R.atlas_60
+  - first:
+      213: 6611857738343709746
+    second: LV_1_R.atlas_61
+  - first:
+      213: -2313375318255206051
+    second: LV_1_R.atlas_62
+  - first:
+      213: -1470392284167499538
+    second: LV_1_R.atlas_63
+  - first:
+      213: -1593285000721709284
+    second: LV_1_R.atlas_64
+  - first:
+      213: -58706290339070059
+    second: LV_1_R.atlas_65
+  - first:
+      213: -6346969276343660126
+    second: LV_1_R.atlas_66
+  - first:
+      213: 8470594715060292049
+    second: LV_1_R.atlas_67
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: clam_0
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 473
+        width: 37
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7db46a264d90e7cf0800000000000000
+      internalID: -252753721293386793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_0
+      rect:
+        serializedVersion: 2
+        x: 316
+        y: 470
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07bc9fd8ce6208f20800000000000000
+      internalID: 3422778514237672304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_0
+      rect:
+        serializedVersion: 2
+        x: 369
+        y: 470
+        width: 37
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17b8961d2b74abb30800000000000000
+      internalID: 4303831227249036145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_0
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 471
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b20fa47e7446cb20800000000000000
+      internalID: 3154283898933805753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_1
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 473
+        width: 37
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96ea42bad3f7d69b0800000000000000
+      internalID: -5085268501390381463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_1
+      rect:
+        serializedVersion: 2
+        x: 558
+        y: 469
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce9322dc34cf92780800000000000000
+      internalID: -8707151036409562644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_1
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 470
+        width: 37
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cd44e1cf81537fb0800000000000000
+      internalID: -4651284312268452416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_1
+      rect:
+        serializedVersion: 2
+        x: 668
+        y: 471
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a751321f87a62e80800000000000000
+      internalID: -8203685438281394268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_2
+      rect:
+        serializedVersion: 2
+        x: 743
+        y: 473
+        width: 35
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e6e88aa814dd9100800000000000000
+      internalID: 116482367786903265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_2
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 469
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d128ba24ad5b6a340800000000000000
+      internalID: 4874783595701174813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_2
+      rect:
+        serializedVersion: 2
+        x: 854
+        y: 469
+        width: 35
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 971448105d576a820800000000000000
+      internalID: 2929158165365014905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_2
+      rect:
+        serializedVersion: 2
+        x: 911
+        y: 470
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1d347dd54ec35930800000000000000
+      internalID: 4130872082692324634
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_3
+      rect:
+        serializedVersion: 2
+        x: 986
+        y: 473
+        width: 34
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2af326b624913cfc0800000000000000
+      internalID: -3475906714339754078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_3
+      rect:
+        serializedVersion: 2
+        x: 1043
+        y: 468
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78a98b048d77c4460800000000000000
+      internalID: 7227283272705284743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_3
+      rect:
+        serializedVersion: 2
+        x: 1097
+        y: 469
+        width: 33
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbc4083f33b033eb0800000000000000
+      internalID: -4741433664934490949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_3
+      rect:
+        serializedVersion: 2
+        x: 1153
+        y: 470
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36f9ef7f157696460800000000000000
+      internalID: 7235427878098083683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_4
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 469
+        width: 33
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e832a1edcc1deb200800000000000000
+      internalID: 197826111480669070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_4
+      rect:
+        serializedVersion: 2
+        x: 1285
+        y: 465
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 440bf6a734132d290800000000000000
+      internalID: -7867171433176125372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_4
+      rect:
+        serializedVersion: 2
+        x: 1339
+        y: 465
+        width: 33
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ddc7954d698a6d40800000000000000
+      internalID: 5578422190863797715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_4
+      rect:
+        serializedVersion: 2
+        x: 1396
+        y: 467
+        width: 28
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c35811d836a55aa0800000000000000
+      internalID: -6172844951284984890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_5
+      rect:
+        serializedVersion: 2
+        x: 1471
+        y: 461
+        width: 32
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f734f9ae318972e60800000000000000
+      internalID: 7937480079571895167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_5
+      rect:
+        serializedVersion: 2
+        x: 1528
+        y: 457
+        width: 27
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9e5b46f812eec2b0800000000000000
+      internalID: -5562259892916756837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_5
+      rect:
+        serializedVersion: 2
+        x: 1582
+        y: 457
+        width: 31
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 590df908880c1f160800000000000000
+      internalID: 7057633783572320405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_5
+      rect:
+        serializedVersion: 2
+        x: 1638
+        y: 458
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b186c9e0563d6e220800000000000000
+      internalID: 2514929872923289627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_6
+      rect:
+        serializedVersion: 2
+        x: 1713
+        y: 449
+        width: 31
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d959fd66039504e20800000000000000
+      internalID: 3332761788673398173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_6
+      rect:
+        serializedVersion: 2
+        x: 1770
+        y: 445
+        width: 27
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35e36c3a1e4f06120800000000000000
+      internalID: 2405191450968342099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_6
+      rect:
+        serializedVersion: 2
+        x: 1824
+        y: 445
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 235e1ab6165420cf0800000000000000
+      internalID: -287591141478374094
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_6
+      rect:
+        serializedVersion: 2
+        x: 1881
+        y: 446
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b44130c1946ae0b10800000000000000
+      internalID: 1949678521630790731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_7
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 268
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c40ebb87b6b569f50800000000000000
+      internalID: 6887793197254959180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_7
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 263
+        width: 26
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f24ec1350545818e0800000000000000
+      internalID: -1722534153500695505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_7
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 264
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 742109db64b28d210800000000000000
+      internalID: 1357882870480245319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_7
+      rect:
+        serializedVersion: 2
+        x: 187
+        y: 265
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ab542f5fceb88350800000000000000
+      internalID: 6019270699844393897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_8
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 252
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0afbd487340f13d0800000000000000
+      internalID: -3233861370930005493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_8
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 248
+        width: 26
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79bae7224a324ecf0800000000000000
+      internalID: -224014893601346665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_8
+      rect:
+        serializedVersion: 2
+        x: 372
+        y: 248
+        width: 31
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a46fe5fe3d483ac90800000000000000
+      internalID: -7159732936800012726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_8
+      rect:
+        serializedVersion: 2
+        x: 429
+        y: 249
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 994f9039cf3424be0800000000000000
+      internalID: -1494557374255860583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_9
+      rect:
+        serializedVersion: 2
+        x: 561
+        y: 232
+        width: 26
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c233eaa0462ae740800000000000000
+      internalID: 5181996380429955777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_9
+      rect:
+        serializedVersion: 2
+        x: 614
+        y: 233
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99fe97e43afd6b660800000000000000
+      internalID: 7401348930119266201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_9
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 237
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35a57e71de4a64140800000000000000
+      internalID: 4703628199050304083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_9
+      rect:
+        serializedVersion: 2
+        x: 671
+        y: 234
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c2151eb9d9ea83c0800000000000000
+      internalID: -4356412568121306427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_10
+      rect:
+        serializedVersion: 2
+        x: 745
+        y: 223
+        width: 31
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c9ffc5394c1128c0800000000000000
+      internalID: -4025905491131500092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_10
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 219
+        width: 27
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b61b049e88c7f15f0800000000000000
+      internalID: -783770882668449429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_10
+      rect:
+        serializedVersion: 2
+        x: 856
+        y: 219
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 200583204efc2af70800000000000000
+      internalID: 9197141967240712194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_10
+      rect:
+        serializedVersion: 2
+        x: 913
+        y: 220
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8836fe624691ae0a0800000000000000
+      internalID: -6851635965150141560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_11
+      rect:
+        serializedVersion: 2
+        x: 987
+        y: 212
+        width: 32
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8107bda31ce26ba10800000000000000
+      internalID: 1924777298198491160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_11
+      rect:
+        serializedVersion: 2
+        x: 1044
+        y: 207
+        width: 28
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89fcfde8c4cc11fe0800000000000000
+      internalID: -1219969394854080616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_11
+      rect:
+        serializedVersion: 2
+        x: 1097
+        y: 208
+        width: 33
+        height: 34
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddc6223959d73ce90800000000000000
+      internalID: -7006618513886253859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_11
+      rect:
+        serializedVersion: 2
+        x: 1154
+        y: 209
+        width: 28
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c496bab522381fc80800000000000000
+      internalID: -8290701255422285492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_12
+      rect:
+        serializedVersion: 2
+        x: 1227
+        y: 205
+        width: 35
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00ae66dd29d618500800000000000000
+      internalID: 396718719732476416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_12
+      rect:
+        serializedVersion: 2
+        x: 1285
+        y: 200
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dc904cc6dd814ec0800000000000000
+      internalID: -3584427874720899879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_12
+      rect:
+        serializedVersion: 2
+        x: 1338
+        y: 201
+        width: 35
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9abd9f41927d0fb50800000000000000
+      internalID: 6625031623307549609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_12
+      rect:
+        serializedVersion: 2
+        x: 1395
+        y: 202
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7a5c20cf78136ef0800000000000000
+      internalID: -116222228417455492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_13
+      rect:
+        serializedVersion: 2
+        x: 1465
+        y: 204
+        width: 44
+        height: 19
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54e58b826ddc82460800000000000000
+      internalID: 7217244722551086661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_13
+      rect:
+        serializedVersion: 2
+        x: 1523
+        y: 201
+        width: 38
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa9d48ff7a948ed50800000000000000
+      internalID: 6766739426019432874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_13
+      rect:
+        serializedVersion: 2
+        x: 1575
+        y: 202
+        width: 45
+        height: 24
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 871d56de780b04170800000000000000
+      internalID: 8160716622645285240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_13
+      rect:
+        serializedVersion: 2
+        x: 1633
+        y: 202
+        width: 38
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c5b169a9c0b86800800000000000000
+      internalID: 605928530057999811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_14
+      rect:
+        serializedVersion: 2
+        x: 1714
+        y: 206
+        width: 37
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fec01d476387af840800000000000000
+      internalID: 5258647690191899887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_14
+      rect:
+        serializedVersion: 2
+        x: 1769
+        y: 206
+        width: 36
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9aa4414479fad290800000000000000
+      internalID: -7864699521542608229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_14
+      rect:
+        serializedVersion: 2
+        x: 1825
+        y: 204
+        width: 36
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18824418ffad4c990800000000000000
+      internalID: -7366522299551045503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_14
+      rect:
+        serializedVersion: 2
+        x: 1881
+        y: 206
+        width: 37
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca1f7d43e0d025ce0800000000000000
+      internalID: -1418056578001014356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_15
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 45
+        width: 34
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f12417e5541f0370800000000000000
+      internalID: 8290867798194004468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_15
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 47
+        width: 32
+        height: 31
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23cf467f49902cb50800000000000000
+      internalID: 6611857738343709746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_15
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 47
+        width: 33
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d510e33a76d35efd0800000000000000
+      internalID: -2313375318255206051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_15
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 46
+        width: 35
+        height: 26
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee098bd020e189be0800000000000000
+      internalID: -1470392284167499538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: clam_16
+      rect:
+        serializedVersion: 2
+        x: 277
+        y: 50
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c174602cbb383e9e0800000000000000
+      internalID: -1593285000721709284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: tako_16
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 53
+        width: 28
+        height: 35
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59f3242a0fe6f2ff0800000000000000
+      internalID: -58706290339070059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Racoon_16
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 55
+        width: 32
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a1d73322190be7a0800000000000000
+      internalID: -6346969276343660126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Dog_16
+      rect:
+        serializedVersion: 2
+        x: 450
+        y: 51
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d94873a3099d8570800000000000000
+      internalID: 8470594715060292049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 00622e9aeaa330a4a9d4627c5da611c9
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Dog_0: 3154283898933805753
+      Dog_1: -8203685438281394268
+      Dog_10: -6851635965150141560
+      Dog_11: -8290701255422285492
+      Dog_12: -116222228417455492
+      Dog_13: 605928530057999811
+      Dog_14: -1418056578001014356
+      Dog_15: -1470392284167499538
+      Dog_16: 8470594715060292049
+      Dog_2: 4130872082692324634
+      Dog_3: 7235427878098083683
+      Dog_4: -6172844951284984890
+      Dog_5: 2514929872923289627
+      Dog_6: 1949678521630790731
+      Dog_7: 6019270699844393897
+      Dog_8: -1494557374255860583
+      Dog_9: -4356412568121306427
+      Racoon_0: 4303831227249036145
+      Racoon_1: -4651284312268452416
+      Racoon_10: 9197141967240712194
+      Racoon_11: -7006618513886253859
+      Racoon_12: 6625031623307549609
+      Racoon_13: 8160716622645285240
+      Racoon_14: -7366522299551045503
+      Racoon_15: -2313375318255206051
+      Racoon_16: -6346969276343660126
+      Racoon_2: 2929158165365014905
+      Racoon_3: -4741433664934490949
+      Racoon_4: 5578422190863797715
+      Racoon_5: 7057633783572320405
+      Racoon_6: -287591141478374094
+      Racoon_7: 1357882870480245319
+      Racoon_8: -7159732936800012726
+      Racoon_9: 7401348930119266201
+      clam_0: -252753721293386793
+      clam_1: -5085268501390381463
+      clam_10: -4025905491131500092
+      clam_11: 1924777298198491160
+      clam_12: 396718719732476416
+      clam_13: 7217244722551086661
+      clam_14: 5258647690191899887
+      clam_15: 8290867798194004468
+      clam_16: -1593285000721709284
+      clam_2: 116482367786903265
+      clam_3: -3475906714339754078
+      clam_4: 197826111480669070
+      clam_5: 7937480079571895167
+      clam_6: 3332761788673398173
+      clam_7: 6887793197254959180
+      clam_8: -3233861370930005493
+      clam_9: 4703628199050304083
+      tako_0: 3422778514237672304
+      tako_1: -8707151036409562644
+      tako_10: -783770882668449429
+      tako_11: -1219969394854080616
+      tako_12: -3584427874720899879
+      tako_13: 6766739426019432874
+      tako_14: -7864699521542608229
+      tako_15: 6611857738343709746
+      tako_16: -58706290339070059
+      tako_2: 4874783595701174813
+      tako_3: 7227283272705284743
+      tako_4: -7867171433176125372
+      tako_5: -5562259892916756837
+      tako_6: 2405191450968342099
+      tako_7: -1722534153500695505
+      tako_8: -224014893601346665
+      tako_9: 5181996380429955777
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

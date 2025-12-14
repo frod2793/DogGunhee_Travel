@@ -2,15 +2,19 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
 using InGame.ObjectPool;
 using InGame.Weaphon.Base;
+
+// todo : 친구들 오브젝트 착지시 모래 먼지 이펙트 추가 
 
 namespace InGame.Weaphon
 {
     /// <summary>
     /// 친구 캐릭터를 소환하여 공격하는 무기 컨트롤러입니다.
     /// </summary>
-    public class WeaPhon_Friends : WeaphonBase
+    public class WeaPhonFriends : WeaphonBase
     {
         [Header("친구 소환 설정")]
         [SerializeField] private FriendCharacter m_friendCharacterPrefab;
@@ -18,21 +22,13 @@ namespace InGame.Weaphon
         [SerializeField] private int m_friendsPerAttack = 3;
         [Tooltip("풀에 미리 생성해둘 친구 캐릭터의 총 개수입니다.")]
         [SerializeField] private int m_poolSize = 10;
-        [Tooltip("친구 캐릭터 소환 전 경고 애니메이션 또는 지연 시간입니다.")]
-        [SerializeField] private Animator m_warningAnimator; // 경고 애니메이터 추가
-        [SerializeField] private float m_warningDelay = 0.5f;
-
+        
         private Camera m_mainCamera;
         private CancellationTokenSource m_attackLoopCts;
 
         private void Awake()
         {
             m_mainCamera = Camera.main;
-            // 경고 애니메이터가 있다면 초기에는 비활성화
-            if (m_warningAnimator != null)
-            {
-                m_warningAnimator.gameObject.SetActive(false);
-            }
         }
 
         private new void OnEnable()
@@ -67,25 +63,6 @@ namespace InGame.Weaphon
                 float speed = this.attackSpeed > 0 ? this.attackSpeed : 1f;
                 await UniTask.Delay(TimeSpan.FromSeconds(coolTime / speed), cancellationToken: token);
 
-                // 경고 애니메이션 또는 지연 시간
-                if (m_warningAnimator != null)
-                {
-                    m_warningAnimator.gameObject.SetActive(true);
-                    // 애니메이터 상태 업데이트를 위해 한 프레임 대기
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    
-                    AnimatorStateInfo warningStateInfo = m_warningAnimator.GetCurrentAnimatorStateInfo(0);
-                    float warningAnimLength = warningStateInfo.length / (warningStateInfo.speed > 0 ? warningStateInfo.speed : 1f);
-                    
-                    await UniTask.Delay(System.TimeSpan.FromSeconds(warningAnimLength), ignoreTimeScale: true, cancellationToken: token);
-                    m_warningAnimator.gameObject.SetActive(false);
-                }
-                else
-                {
-                    // 경고 애니메이터가 없으면 기존 지연 시간을 사용
-                    await UniTask.Delay(TimeSpan.FromSeconds(m_warningDelay), cancellationToken: token);
-                }
-
                 SpawnFriends();
             }
         }
@@ -96,6 +73,23 @@ namespace InGame.Weaphon
             {
                 Debug.LogError("[WeaPhon_Friends] Friend Character Prefab이 할당되지 않았습니다!");
                 return;
+            }
+
+            // 모든 애니메이션 타입 가져오기
+            var allTypes = (FriendAnimationType[])Enum.GetValues(typeof(FriendAnimationType));
+            int typesCount = allTypes.Length;
+
+            // 섞을 리스트 준비 (전체 타입 수 이하일 때 중복 방지용)
+            List<FriendAnimationType> uniqueTypesList = null;
+            if (m_friendsPerAttack <= typesCount)
+            {
+                uniqueTypesList = new List<FriendAnimationType>(allTypes);
+                // Fisher-Yates Shuffle 로 섞기
+                for (int j = 0; j < uniqueTypesList.Count; j++)
+                {
+                    int rnd = UnityEngine.Random.Range(j, uniqueTypesList.Count);
+                    (uniqueTypesList[j], uniqueTypesList[rnd]) = (uniqueTypesList[rnd], uniqueTypesList[j]);
+                }
             }
 
             for (int i = 0; i < m_friendsPerAttack; i++)
@@ -109,10 +103,20 @@ namespace InGame.Weaphon
                     continue;
                 }
 
-                // 4가지 애니메이션 타입 중 랜덤 선택
-                FriendAnimationType randomAnimType = (FriendAnimationType)UnityEngine.Random.Range(0, Enum.GetValues(typeof(FriendAnimationType)).Length);
+                FriendAnimationType selectedType;
+
+                if (uniqueTypesList != null)
+                {
+                    // 셔플된 리스트에서 순서대로 가져옴 (중복 없음 보장)
+                    selectedType = uniqueTypesList[i];
+                }
+                else
+                {
+                    // 타입 수보다 많이 소환할 때는 완전 랜덤 (중복 허용)
+                    selectedType = (FriendAnimationType)UnityEngine.Random.Range(0, typesCount);
+                }
                 
-                friend.Initialize(randomPosition, randomAnimType, this.attackPower, this.mobStunTime);
+                friend.Initialize(randomPosition, selectedType, this.attackPower, this.mobStunTime);
             }
         }
 

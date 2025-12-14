@@ -142,10 +142,7 @@ namespace InGame.Weaphon
 
             var token = this.GetCancellationTokenOnDestroy();
 
-            if (isEvolved)
-            {
-                LaunchBoomerangs();
-            }
+
 
             try
             {
@@ -163,6 +160,11 @@ namespace InGame.Weaphon
                 float waitTime = m_impactTriggerTime / speedMultiplier;
                 
                 await UniTask.Delay(TimeSpan.FromSeconds(waitTime), cancellationToken: token);
+
+                if (isEvolved)
+                {
+                    LaunchBoomerangs();
+                }
 
                 SpawnShockwaveEffect();
             }

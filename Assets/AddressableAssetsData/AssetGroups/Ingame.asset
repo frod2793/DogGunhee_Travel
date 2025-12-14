@@ -105,6 +105,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be4528b884a19344ebb1c26a1467ce62
+    m_Address: Prefab_WeaPhon_Friends
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c471a13dad9b00644acffbffcbad0eb4
     m_Address: normal_mob
     m_ReadOnly: 0
@@ -121,7 +126,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dd92437f32f12453580b9520586cf517
-    m_Address: WeaPhon_Flame
+    m_Address: Prefab_WeaPhon_Flame
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

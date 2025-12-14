@@ -189,7 +189,7 @@ MonoBehaviour:
       \uC801\uC744 \uACF5\uACA9\uD569\uB2C8\uB2E4."
     stats: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30, \uACF5\uACA9\uC18D\uB3C4,
       \uCFE8\uD0C0\uC784 \uAC10\uC18C"
-    weaponAddressableKey: Prefab_Weapon_Ball
+    weaponAddressableKey: Prefab_Weapon_BallPlay
     skillIcon: {fileID: -3334053677006557033, guid: 416e69384c17cd448945cd31377de2b8, type: 3}
   - skillCode: WP_FIRE
     skillName: "\uC2E0\uBE44\uD55C \uBD88\uAF43"
@@ -203,5 +203,19 @@ MonoBehaviour:
       \uC9C0\uC18D\uC801\uC778 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
     stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
       \uBC1C\uC0AC\uCCB4 \uC218"
-    weaponAddressableKey: WeaPhon_Flame
+    weaponAddressableKey: Prefab_WeaPhon_Flame
+    skillIcon: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}
+  - skillCode: WP_FRIENDS
+    skillName: "\uB0B4 \uCE5C\uAD6C\uB4E4!"
+    skillType: 1
+    upgradeItemCode: PS_PROTEIN
+    flavorText: "\uCE5C\uAD6C\uB4E4\uACFC \uD568\uAED8\uB77C\uBA74 \uC6B0\uB9B0 \uB450\uB824\uC6B4\uAC83\uC774
+      \uC5C6\uC2B5\uB2C8\uB2E4! \uC138\uC0C1\uC5D0\uC11C \uAC00\uC7A5 \uBBFF\uC74C\uC9C1\uD55C
+      \uCE5C\uAD6C\uB4E4\uACFC \uD568\uAED8 \uACE0\uB09C\uC744 \uD5E4\uCCD0\uB098\uAC11\uC2DC\uB2E4!"
+    skillDescription: "\uCE5C\uAD6C\uB4E4\uC744 \uBD88\uB7EC \uD558\uB298\uC5D0\uC11C
+      \uB5A8\uC5B4\uC9D1\uB2C8\uB2E4. \uB79C\uB364\uD55C \uC704\uCE58\uC5D0 \uD53C\uD574\uB97C
+      \uC90D\uB2C8\uB2E4."
+    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
+      \uBC1C\uC0AC\uCCB4 \uC218"
+    weaponAddressableKey: Prefab_WeaPhon_Friends
     skillIcon: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}
