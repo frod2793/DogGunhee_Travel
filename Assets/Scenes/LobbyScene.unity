@@ -1190,7 +1190,7 @@ MonoBehaviour:
   m_playerDataManager: {fileID: 0}
   m_isDebugMode: 0
   m_backgroundAnimator: {fileID: 1064257346}
-  m_backgroundAnimationSpeed: 0.3
+  m_backgroundAnimationSpeed: 1.7
 --- !u!1 &81575512
 GameObject:
   m_ObjectHideFlags: 0

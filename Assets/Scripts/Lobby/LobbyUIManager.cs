@@ -77,14 +77,15 @@ namespace Lobby
         [Header("<color=green>배경 애니메이션</color>")]
         [SerializeField] private Animator m_backgroundAnimator;
         [Tooltip("배경 애니메이션의 재생 속도를 조절합니다.")]
-        [SerializeField] private float m_backgroundAnimationSpeed = 1f;
+        [SerializeField] private float m_backgroundAnimationSpeed = 1.7f;
 
         #endregion
 
         #region 내부 상태 변수
 
         private static readonly Stack<Action> s_closePopUpActions = new Stack<Action>();
-        private OptionPopupManager m_currentOptionPopup; 
+        private OptionPopupManager m_currentOptionPopup;
+        private float m_cachedAnimationSpeed = -1f; // 최적화를 위한 캐싱 변수 
 
         #endregion
 
@@ -112,8 +113,22 @@ namespace Lobby
             }
 
             PlayBackgroundAnimation("Start"); // 기본 배경 애니메이션 재생
+        }
 
-            HandleBackButtonAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        private void Update()
+        {
+            // 1. 성능 최적화: 변경사항이 있을 때만 Animator에 접근
+            if (m_backgroundAnimator != null && Mathf.Abs(m_cachedAnimationSpeed - m_backgroundAnimationSpeed) > Mathf.Epsilon)
+            {
+                m_cachedAnimationSpeed = m_backgroundAnimationSpeed;
+                m_backgroundAnimator.speed = m_backgroundAnimationSpeed;
+            }
+
+            // 2. 뒤로가기 버튼 처리 (Polling) - UniTask 루프 대신 Update 사용
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CloseTopPopup();
+            }
         }
 
         #endregion
@@ -170,12 +185,12 @@ namespace Lobby
 
             var data = m_playerDataManager.PlayerData;
 
-            if (m_playerNameText) m_playerNameText.text = data.nickname;
-            if (m_playerLevelText) m_playerLevelText.text = $"Lv. {data.level}";
+            if (m_playerNameText) m_playerNameText.SetText(data.nickname);
+            if (m_playerLevelText) m_playerLevelText.SetText("Lv. {0}", data.level);
             if (m_playerLevelSlider) m_playerLevelSlider.value = data.experience / 100f;
 
-            if (m_goldText) m_goldText.text = data.currency1.ToString("N0");
-            if (m_diaText) m_diaText.text = data.currency2.ToString("N0");
+            if (m_goldText) m_goldText.SetText("{0:N0}", data.currency1);
+            if (m_diaText) m_diaText.SetText("{0:N0}", data.currency2);
         }
 
         #endregion
@@ -261,17 +276,7 @@ namespace Lobby
             }
         }
 
-        private async UniTaskVoid HandleBackButtonAsync(System.Threading.CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                if (Input.GetKeyDown(KeyCode.Escape))
-                {
-                    CloseTopPopup();
-                }
-                await UniTask.Yield(PlayerLoopTiming.Update);
-            }
-        }
+
 
         #endregion
     }

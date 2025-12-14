@@ -47,7 +47,8 @@ namespace InGame.Manager
         [SerializeField] private TMP_Text m_gameOverWaveText;
         [SerializeField] private TMP_Text m_gameOverMobCountText;
 
-        [Header("조작계 UI")] [SerializeField] private VariableJoystick m_variableJoystick;
+        [Header("조작계 UI")] 
+        [SerializeField] private VariableJoystick m_variableJoystick;
         [SerializeField] private RectTransform m_joystickTransform;
         [SerializeField] private Toggle m_autoAttackToggle;
 
@@ -234,16 +235,24 @@ namespace InGame.Manager
 
             try
             {
+                // 카운트다운 시작 시 조이스틱 비활성화
+                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(false);
+
                 m_mobWaveText.gameObject.SetActive(true);
                 await ShowWaveTextEffect("3..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("2..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("1..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("게임 시작!");
+                
+                // 카운트다운 종료 후 조이스틱 활성화
+                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
+
                 PlayStateManager.instance.StartGame();
             }
             catch (Exception ex)
             {
                 LogManager.LogError($"카운트다운 오류: {ex.Message}", LogManager.LogCategory.VamserLikeUI);
+                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true); // 오류 시에도 활성화 보장
                 PlayStateManager.instance.StartGame();
             }
         }
