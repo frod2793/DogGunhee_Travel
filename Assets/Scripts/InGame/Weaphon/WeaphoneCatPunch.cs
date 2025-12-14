@@ -49,8 +49,8 @@ namespace InGame.Weaphon
 
             if (m_attackCollider != null) 
             {
-                m_attackCollider.enabled = false;
                 m_attackCollider.isTrigger = true;
+                SetAttackColliderActive(false);
             }
 
             m_contactFilter.NoFilter();
@@ -91,7 +91,7 @@ namespace InGame.Weaphon
             m_isAttacking = false;
             m_hitMobInstanceIDs.Clear();
 
-            if (m_attackCollider != null) m_attackCollider.enabled = false;
+            SetAttackColliderActive(false);
             if (m_weaponAnimator != null) m_weaponAnimator.Rebind();
             
             transform.localRotation = Quaternion.identity;
@@ -129,11 +129,11 @@ namespace InGame.Weaphon
                     m_weaponAnimator.SetTrigger(trigger);
                 }
 
-                if (m_attackCollider != null) m_attackCollider.enabled = true;
+                SetAttackColliderActive(true);
 
                 await WaitForAnimationAndCheckCollision(token);
 
-                if (m_attackCollider != null) m_attackCollider.enabled = false;
+                SetAttackColliderActive(false);
 
                 float waitTime = (attackSpeed > 0) ? coolTime / attackSpeed : coolTime;
                 await UniTask.Delay(System.TimeSpan.FromSeconds(waitTime), cancellationToken: token);
@@ -239,6 +239,16 @@ namespace InGame.Weaphon
                     mob.TakeDamage(attackPower, mobStunTime);
                 }
             }
+        }
+
+        private void SetAttackColliderActive(bool isActive)
+        {
+            if (m_attackCollider == null) return;
+
+            if (m_attackCollider.gameObject != gameObject)
+                m_attackCollider.gameObject.SetActive(isActive);
+            else
+                m_attackCollider.enabled = isActive;
         }
 
         #endregion

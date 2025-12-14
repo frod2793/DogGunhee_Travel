@@ -1,0 +1,41 @@
+# AI-related files
+.cursorrules
+.cursorignore
+.windsurf
+.codeiumignore
+.kiro
+CLAUDE.md
+
+# Code-copy related files
+.clipignore
+
+# Python-generated files
+__pycache__/
+__pycache__.meta
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Unity Editor
+*.unitypackage
+*.asset
+LICENSE.meta
+CONTRIBUTING.md.meta
+
+# IDE
+.idea/
+.vscode/
+.aider*
+.DS_Store*
+# Unity test project lock files
+TestProjects/UnityMCPTests/Packages/packages-lock.json
+
+# Backup artifacts
+*.backup
+*.backup.meta
+
+.wt-origin-main/

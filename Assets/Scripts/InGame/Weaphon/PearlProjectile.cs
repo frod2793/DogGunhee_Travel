@@ -27,6 +27,8 @@ namespace InGame.Weaphon
         private Camera m_mainCamera;
         private TrailRenderer m_trailRenderer;
         private Animator m_animator;
+        private Renderer m_renderer; 
+        private float m_radius = 0.5f; 
 
         private readonly Dictionary<int, float> m_hitCooldowns = new Dictionary<int, float>();
         private const float k_HitCooldown = 0.5f;
@@ -56,6 +58,8 @@ namespace InGame.Weaphon
             m_mainCamera = Camera.main;
             m_trailRenderer = GetComponent<TrailRenderer>();
             m_animator = GetComponent<Animator>();
+            m_renderer = GetComponent<Renderer>(); 
+            if (m_renderer != null) m_radius = m_renderer.bounds.extents.x;
 
             var col = GetComponent<Collider2D>();
             if (col != null) col.isTrigger = true;
@@ -65,6 +69,8 @@ namespace InGame.Weaphon
 
         private void OnEnable()
         {
+            m_mainCamera = Camera.main; // 카메라 참조 갱신
+
             if (Instance != null && Instance != this)
             {
                 Debug.LogWarning("[PearlProjectile] 두 개 이상의 진주가 활성화되려 합니다. 기존 인스턴스를 파괴합니다.");
@@ -78,15 +84,25 @@ namespace InGame.Weaphon
 
         private void OnDisable()
         {
+            Debug.Log($"[PearlProjectile] OnDisable called. GameObject active: {gameObject.activeSelf}");
             if (Instance == this)
             {
                 Instance = null;
             }
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            transform.position += m_velocity * Time.deltaTime;
+            Debug.Log("[PearlProjectile] OnDestroy called.");
+        }
+
+        private void LateUpdate()
+        {
+            // 1. 이동 및 Z축 강제 고정
+            Vector3 nextPos = transform.position + m_velocity * Time.deltaTime;
+            nextPos.z = 0f;
+            transform.position = nextPos;
+
             transform.Rotate(0, 0, -360f * Time.deltaTime);
             BounceOffScreenEdges();
         }
@@ -98,6 +114,7 @@ namespace InGame.Weaphon
         public void Initialize(WeaphonBase weapon, Vector3 initialVelocity)
         {
             m_velocity = initialVelocity;
+            m_velocity.z = 0f; // Velocity의 Z축 성분 제거
             UpdateState(weapon);
             transform.rotation = Quaternion.identity;
         }
@@ -162,34 +179,63 @@ namespace InGame.Weaphon
             m_trailRenderer.colorGradient = gradient;
         }
 
-        /// <summary>
-        /// 카메라의 월드 좌표 경계를 계산하여 반사시키는 최종 로직
-        /// </summary>
         private void BounceOffScreenEdges()
         {
+            if (m_mainCamera == null) m_mainCamera = Camera.main;
             if (m_mainCamera == null) return;
 
-            // 1. 카메라의 월드 좌표 경계를 직접 계산
+            // 1. 카메라의 월드 좌표 경계 계산 (radius 고려)
             float camHalfHeight = m_mainCamera.orthographicSize;
             float camHalfWidth = camHalfHeight * m_mainCamera.aspect;
             Vector3 camPos = m_mainCamera.transform.position;
 
-            float minX = camPos.x - camHalfWidth;
-            float maxX = camPos.x + camHalfWidth;
-            float minY = camPos.y - camHalfHeight;
-            float maxY = camPos.y + camHalfHeight;
+            float minX = camPos.x - camHalfWidth + m_radius;
+            float maxX = camPos.x + camHalfWidth - m_radius;
+            float minY = camPos.y - camHalfHeight + m_radius;
+            float maxY = camPos.y + camHalfHeight - m_radius;
 
             Vector3 currentPosition = transform.position;
+            bool bounced = false;
 
-            // 2. 진주의 월드 좌표와 카메라의 월드 좌표 경계를 비교
-            if ((currentPosition.x <= minX && m_velocity.x < 0) || (currentPosition.x >= maxX && m_velocity.x > 0))
+            // 2. Clamp 및 바운스 로직 (Strict)
+            if (currentPosition.x <= minX)
             {
-                m_velocity.x *= -1;
+                currentPosition.x = minX;
+                if (m_velocity.x < 0) m_velocity.x *= -1;
+                bounced = true;
+            }
+            else if (currentPosition.x >= maxX)
+            {
+                currentPosition.x = maxX;
+                if (m_velocity.x > 0) m_velocity.x *= -1;
+                bounced = true;
             }
 
-            if ((currentPosition.y <= minY && m_velocity.y < 0) || (currentPosition.y >= maxY && m_velocity.y > 0))
+            if (currentPosition.y <= minY)
             {
-                m_velocity.y *= -1;
+                currentPosition.y = minY;
+                if (m_velocity.y < 0) m_velocity.y *= -1;
+                bounced = true;
+            }
+            else if (currentPosition.y >= maxY)
+            {
+                currentPosition.y = maxY;
+                if (m_velocity.y > 0) m_velocity.y *= -1;
+                bounced = true;
+            }
+
+            // 바운스가 발생했으면 위치를 강제 조정 (Clamping)
+            if (bounced)
+            {
+                transform.position = currentPosition;
+            }
+            
+            // 3. 안전장치: Clamp 로직이 실패할 경우를 대비한 2차 방어선
+            if (Vector3.Distance(transform.position, camPos) > 40f)
+            {
+                // Z축은 유지하고 X, Y만 카메라 위치로 이동 (카메라 Z값(-10 등)을 그대로 가져오면 안보일 수 있음)
+                transform.position = new Vector3(camPos.x, camPos.y, 0f);
+                Debug.LogWarning("[PearlProjectile] 진주가 안전거리를 벗어나 복귀했습니다. (Z=0 보정)");
             }
         }
 

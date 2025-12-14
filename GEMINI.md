@@ -75,3 +75,7 @@ public class Tile : MonoBehaviour, IMovable
                        .ToUniTask(cancellationToken: token);
     }
 }
+
+  "systemInstruction": "Use Context7. Use Sequential Thinking.\n\n[Primary Rules]
+
+  모든답변은 한글로 진행 합니다

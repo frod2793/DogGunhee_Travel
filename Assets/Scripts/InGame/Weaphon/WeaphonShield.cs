@@ -61,6 +61,7 @@ namespace InGame.Weaphon
                 m_playerTransform = GameManager.Instance.PlayerTransfrom();
 
             ResetShieldState();
+            SetShieldActive(false);
             m_canAttack = true; // 활성화 시 공격 가능하도록 초기화
 
             // WeaponPoolManager를 통해 shieldProjectile 풀을 등록합니다.
@@ -126,6 +127,7 @@ namespace InGame.Weaphon
                 m_shieldAnimator.Rebind();
                 m_shieldAnimator.speed = 1f;
             }
+            SetShieldActive(false);
         }
 
         #endregion
@@ -153,6 +155,7 @@ namespace InGame.Weaphon
 
                 if (m_shieldAnimator != null)
                 {
+                    SetShieldActive(true);
                     m_shieldAnimator.speed = speedMultiplier;
                     m_shieldAnimator.SetTrigger(k_AnimHashAttack);
                 }
@@ -234,6 +237,13 @@ namespace InGame.Weaphon
                     m_boomerangRotationsPerSecond
                 );
             }
+        }
+
+
+        private void SetShieldActive(bool isActive)
+        {
+            if (m_shieldAnimator != null)
+                m_shieldAnimator.gameObject.SetActive(isActive);
         }
 
         #endregion
