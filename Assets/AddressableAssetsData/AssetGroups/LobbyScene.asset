@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: LobbyScene
   m_GUID: aae5b5579dcf1154e9404869c75c45cf
   m_SerializeEntries:
+  - m_GUID: 13fcdc3dde31c064b9b8aa730517b39f
+    m_Address: Store_Item
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 194573e79eefa49f0b3ff5f34eb75b92
     m_Address: Skin_Index_Button
     m_ReadOnly: 0

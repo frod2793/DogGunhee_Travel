@@ -46,6 +46,10 @@ public class SoundManager : MonoBehaviour
     public float EffectSoundVolume { get; private set; } = 1.0f; // 외부에서는 읽기만 가능
     public float BgmSoundVolume { get; private set; } = 1.0f; // 외부에서는 읽기만 가능
 
+    // [Throttling]
+    private Dictionary<AudioClip, float> m_soundTimers = new Dictionary<AudioClip, float>();
+    private const float k_MinSoundInterval = 0.05f; // 0.05초 내 중복 재생 방지
+
     #endregion
 
     #region 정적 메서드
@@ -194,6 +198,16 @@ public class SoundManager : MonoBehaviour
         }
         else // Effect
         {
+            // [Throttling] 중복 재생 방지 로직
+            if (m_soundTimers.TryGetValue(audioClip, out float lastPlayTime))
+            {
+                if (Time.time - lastPlayTime < k_MinSoundInterval)
+                {
+                    return; // 너무 자주 재생되면 스킵
+                }
+            }
+            m_soundTimers[audioClip] = Time.time;
+
             audioSource.volume = EffectSoundVolume;
             audioSource.PlayOneShot(audioClip);
         }

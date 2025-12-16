@@ -213,6 +213,12 @@ namespace InGame
         {
             Uuid = Backend.UID;
             NickName = Backend.UserNickName;
+
+            if (string.IsNullOrEmpty(NickName))
+            {
+                NickName = Uuid;
+            }
+
             RefreshTokenIfAlive();
         }
 

@@ -189,8 +189,8 @@ namespace Lobby
             if (m_playerLevelText) m_playerLevelText.SetText("Lv. {0}", data.level);
             if (m_playerLevelSlider) m_playerLevelSlider.value = data.experience / 100f;
 
-            if (m_goldText) m_goldText.SetText("{0:N0}", data.currency1);
-            if (m_diaText) m_diaText.SetText("{0:N0}", data.currency2);
+            if (m_goldText) m_goldText.SetText("{0}", data.currency1);
+            if (m_diaText) m_diaText.SetText("{0}", data.currency2);
         }
 
         #endregion
