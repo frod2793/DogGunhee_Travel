@@ -3,6 +3,8 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
 using InGame.ObjectPool;
+using UnityEngine.Rendering.Universal; // For Light2D
+using DG.Tweening; // For DOTween
 
 namespace InGame.Weaphon
 {
@@ -11,13 +13,16 @@ namespace InGame.Weaphon
         [Header("애니메이터")]
         [SerializeField] private Animator m_warningAnimator;
         [SerializeField] private List<Animator> m_flameAnimators;
+        [SerializeField] private Light2D m_flameLight; // 불기둥 조명 오브젝트
+        [SerializeField] private float m_minFalloffStrength = 0.35f; // 최소 Falloff 강도
+        [SerializeField] private float m_maxFalloffStrength = 0.5f; // 최대 Falloff 강도
+     
 
         [Header("공격 판정")]
         [SerializeField] private Collider2D m_damageCollider;
         [SerializeField] private LayerMask m_targetLayer;
         
-        // [삭제] 고정된 시간 대신 애니메이션 길이를 동적으로 사용
-        // [SerializeField] private float m_flameDuration = 1.0f;
+
 
         private float m_directDamage;
         private float m_dotDamage;
@@ -36,13 +41,15 @@ namespace InGame.Weaphon
             
             if (m_damageCollider != null) m_damageCollider.enabled = false;
             if (m_warningAnimator != null) m_warningAnimator.gameObject.SetActive(false);
+            if (m_flameLight != null) m_flameLight.gameObject.SetActive(false);
             m_flameAnimators?.ForEach(anim => anim.gameObject.SetActive(false));
         }
 
         // IObjectPool<FlamePillar> pool 매개변수 제거
         public void Activate(Vector3 position, float directDamage, float dotDamage, float dotDuration, int dotTicks)
         {
-            // m_pool = pool; // 제거
+            ResetState(); // [Pool] 재사용 시 상태 초기화
+            
             transform.position = position;
             
             m_directDamage = directDamage;
@@ -52,6 +59,44 @@ namespace InGame.Weaphon
 
             gameObject.SetActive(true);
             AttackSequenceAsync().Forget();
+        }
+
+        private void ResetState()
+        {
+            // 1. Kill Tweens
+            if (m_flameLight != null)
+            {
+                DOTween.Kill(m_flameLight);
+                m_flameLight.falloffIntensity = 0f;
+                m_flameLight.gameObject.SetActive(false);
+            }
+
+            // 2. Disable Warning
+            if (m_warningAnimator != null)
+            {
+                m_warningAnimator.gameObject.SetActive(false);
+            }
+
+            // 3. Reset Animators & Sprites
+            if (m_flameAnimators != null)
+            {
+                foreach (var anim in m_flameAnimators)
+                {
+                    if (anim != null)
+                    {
+                        // Kill any sprite fades
+                        if (anim.TryGetComponent(out SpriteRenderer sr))
+                        {
+                            DOTween.Kill(sr);
+                            sr.color = Color.white; // Alpha 1로 복구
+                        }
+                        anim.gameObject.SetActive(false);
+                    }
+                }
+            }
+            
+            // 4. Collider Disabled
+            if (m_damageCollider != null) m_damageCollider.enabled = false;
         }
 
         private async UniTaskVoid AttackSequenceAsync()
@@ -66,24 +111,79 @@ namespace InGame.Weaphon
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
                 AnimatorStateInfo warningStateInfo = m_warningAnimator.GetCurrentAnimatorStateInfo(0);
                 float warningAnimLength = warningStateInfo.length / (warningStateInfo.speed > 0 ? warningStateInfo.speed : 1f);
-                await UniTask.Delay(System.TimeSpan.FromSeconds(warningAnimLength), ignoreTimeScale: true, cancellationToken: token);
+                // [Fix] ignoreTimeScale: true -> false (애니메이터는 GameTime을따르므로 딜레이도 맞춰야 함)
+                if (warningAnimLength < 0.1f) warningAnimLength = 0.5f; // 안전 장치: 최소 지연 시간 보장
+                await UniTask.Delay(System.TimeSpan.FromSeconds(warningAnimLength), cancellationToken: token);
                 m_warningAnimator.gameObject.SetActive(false);
             }
 
             // 2. 랜덤 불기둥 선택 및 재생
             Animator selectedFlameAnimator = null;
+            SpriteRenderer selectedSpriteRenderer = null;
+            Light2D selectedLight2D = null;
             float flameAnimLength = 0f;
 
             if (m_flameAnimators != null && m_flameAnimators.Count > 0)
             {
+                // [Logic] 중복 활성화 방지를 위해 먼저 모두 비활성화
+                foreach (var anim in m_flameAnimators)
+                {
+                    if (anim != null) anim.gameObject.SetActive(false);
+                }
+
                 int randomIndex = Random.Range(0, m_flameAnimators.Count);
                 selectedFlameAnimator = m_flameAnimators[randomIndex];
                 selectedFlameAnimator.gameObject.SetActive(true);
+                
+                // SpriteRenderer와 Light2D 컴포넌트 가져오기
+                selectedFlameAnimator.TryGetComponent(out selectedSpriteRenderer);
+                selectedFlameAnimator.TryGetComponent(out selectedLight2D);
 
-                // [수정] 불기둥 애니메이션의 실제 재생 시간 계산
+                // [Fix] 알파 값 초기화 (이전 페이드 아웃으로 투명해졌을 수 있음)
+                if (selectedSpriteRenderer != null)
+                {
+                    Color c = selectedSpriteRenderer.color;
+                    selectedSpriteRenderer.color = new Color(c.r, c.g, c.b, 1f);
+                }
+
+                // [수정] 불기둥 애니메이션의 실제 재생 시간 계산 (먼저 계산해야 Tween에 사용 가능)
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
                 AnimatorStateInfo flameStateInfo = selectedFlameAnimator.GetCurrentAnimatorStateInfo(0);
                 flameAnimLength = flameStateInfo.length / (flameStateInfo.speed > 0 ? flameStateInfo.speed : 1f);
+                
+                // 조명 활성화 및 애니메이션 + 스프라이트 페이드 아웃
+                if (m_flameLight != null)
+                {
+                    m_flameLight.gameObject.SetActive(true);
+                    
+                    // 초기값 0에서 목표값까지 부드럽게 변화 (Fade In/Out)
+                    m_flameLight.falloffIntensity = 0f;
+                    float targetStrength = Random.Range(m_minFalloffStrength, m_maxFalloffStrength);
+                    
+                    // 시간 분배: 20% 등장, 50% 유지, 30% 소멸
+                    float fadeInDuration = flameAnimLength * 0.2f;
+                    float holdDuration = flameAnimLength * 0.5f;
+                    float fadeOutDuration = flameAnimLength * 0.3f;
+
+                    Sequence animSeq = DOTween.Sequence();
+                    
+                    // 1. Light Fade In
+                    animSeq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, targetStrength, fadeInDuration).SetEase(Ease.OutQuad));
+                    
+                    // 2. Hold
+                    animSeq.AppendInterval(holdDuration);
+                    
+                    // 3. Light Fade Out & Sprite Alpha Fade Out (Falloff -> 1로 변경)
+                    animSeq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, 1f, fadeOutDuration).SetEase(Ease.InQuad));
+                    
+                    if (selectedSpriteRenderer != null)
+                    {
+                        animSeq.Join(selectedSpriteRenderer.DOFade(0f, fadeOutDuration).SetEase(Ease.InQuad));
+                    }
+                    
+                    // 토큰 취소 시 안전하게 Kill
+                    animSeq.ToUniTask(cancellationToken: token).Forget(); 
+                }
             }
             
             // 3. 불기둥 애니메이션 시간 동안 피해 판정
@@ -92,13 +192,19 @@ namespace InGame.Weaphon
             float timer = 0f;
             while (timer < flameAnimLength)
             {
+                // [Sync] Light2D 스프라이트 동기화
+                if (selectedLight2D != null && selectedSpriteRenderer != null)
+                {
+                    selectedLight2D.lightCookieSprite = selectedSpriteRenderer.sprite;
+                }
+
                 CheckForDamage();
-                await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
-                timer += Time.fixedDeltaTime;
+                await UniTask.Yield(PlayerLoopTiming.Update, token); // Visual Sync를 위해 Update로 변경
+                timer += Time.deltaTime;
             }
 
             if (m_damageCollider != null) m_damageCollider.enabled = false;
-            if (selectedFlameAnimator != null) selectedFlameAnimator.gameObject.SetActive(false);
+            if (m_flameLight != null) m_flameLight.gameObject.SetActive(false);
 
             // 4. 오브젝트 풀로 반환
             // m_pool.Release(this); // 제거
