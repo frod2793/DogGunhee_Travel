@@ -161,9 +161,12 @@ Assets/Scripts/
 ├── Data/                # 데이터 모델 및 관리
 ├── Editor/              # 에디터 확장 스크립트
 ├── InGame/              # 인게임 로직 (Player, Mob, Manager 등 핵심 코어)
+│   ├── Drop_Item/       # 아이템 드롭 로직
 │   ├── Manager/         # GameManager, EffectManager, UIManager 등
+│   ├── Mob/             # 몬스터 AI 및 행동 로직
 │   ├── ObjectPool/      # 최적화를 위한 풀링 시스템
-│   └── Player/          # 플레이어 컨트롤 및 스탯 관리
+│   ├── Player/          # 플레이어 컨트롤 및 스탯 관리
+│   └── Weaphon/         # 무기 및 투사체 구현 (Weapon)
 ├── Lobby/               # 로비 씬 로직 및 UI
 ├── Manager/             # 전역 관리 매니저 (SceneLoader 등)
 ├── protect/             # 보안 및 암호화 (HybridEncryption)
