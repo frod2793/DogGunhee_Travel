@@ -295,19 +295,44 @@ namespace InGame
                 LogManager.Log("서버에서 게임 정보를 성공적으로 조회했습니다.", LogManager.LogCategory.PlayerDataManager);
 
                 PlayerData serverData = ParseServerData(serverDataJson);
+                LogManager.Log($"[Debug] Parsed Server Data - Level: {serverData.level}, Money1: {serverData.currency1}", LogManager.LogCategory.PlayerDataManager);
 
                 // 로컬 데이터 로드
                 LoadPlayerData();
                 PlayerData localData = PlayerData;
-                PlayerData finalData = ResolveDataConflict(serverData, localData);
+                LogManager.Log($"[Debug] Local Data - Level: {localData.level}, Money1: {localData.currency1}", LogManager.LogCategory.PlayerDataManager);
+
+                PlayerData finalData;
+
+                // [무결성 검증] 서버 데이터 검증
+                bool isVerified = VerifyDataIntegrity(serverDataJson, serverData);
+                LogManager.Log($"[Debug] Verification Result: {isVerified}", LogManager.LogCategory.PlayerDataManager);
+
+                // [수정] 무결성 검증 실패 시에도 데이터 복구를 위해 Conflict Resolution 진행
+                // 보안 정책 완화: 해시가 다르더라도 서버 데이터(Legacy/Migration)가 더 가치있다면(레벨 등) 채택 후 재서명(Re-sign)하여 업로드
+                if (!isVerified)
+                {
+                    LogManager.LogWarning("무결성 검증 실패: 데이터 위변조 또는 키/포맷 불일치(Migration) 가능성. 데이터 가치 비교를 통해 복구를 시도합니다.", LogManager.LogCategory.PlayerDataManager);
+                }
+
+                // 무결성 여부와 관계없이 더 나은 데이터를 선택 (레벨/경험치 기준)
+                finalData = ResolveDataConflict(serverData, localData);
+                LogManager.Log($"[Debug] Conflict Resolved. Selected Source: {(finalData == serverData ? "Server" : "Local")}", LogManager.LogCategory.PlayerDataManager);
 
                 UpdatePlayerData(finalData);
                 SavePlayerData(); // 최종 데이터를 로컬에 저장
 
-                // 필요한 경우 서버 데이터 업데이트
-                if (finalData == localData)
+                // 동기화 및 복구 업로드 조건
+                // 1. 검증이 실패했거나 (!isVerified) -> 해시 재발급(Self-Healing) 필요
+                // 2. 로컬 데이터가 최종 선택되었을 때 (finalData == localData) -> 서버 동기화 필요
+                if (!isVerified || finalData == localData)
                 {
+                    LogManager.Log("[Debug] Uploading Data to Server (Sync/Fix/Self-Healing)", LogManager.LogCategory.PlayerDataManager);
                     await UploadDataToServerAsync();
+                }
+                else
+                {
+                    LogManager.Log("[Debug] Skipping Upload (Server is valid and up-to-date)", LogManager.LogCategory.PlayerDataManager);
                 }
 
                 return true;
@@ -333,6 +358,44 @@ namespace InGame
             // 예: serverData.selectCharacterIndex = int.Parse(serverDataJson["selectCharacterIndex"].ToString());
 
             return serverData;
+        }
+
+        /// <summary>
+        /// 서버로부터 받은 데이터의 무결성을 검증합니다.
+        /// </summary>
+        private bool VerifyDataIntegrity(LitJson.JsonData serverDataJson, PlayerData serverData)
+        {
+            // 1. 해시값 존재 여부 확인
+            if (!serverDataJson.ContainsKey("integrityHash"))
+            {
+                LogManager.LogWarning("서버 데이터에 해시값이 없습니다. (Legacy Data 가능성)", LogManager.LogCategory.PlayerDataManager);
+                // 초기 단계에서는 호환성을 위해 true 반환 (보안 강화 시 false로 변경 고려)
+                return true; 
+            }
+
+            string serverHash = serverDataJson["integrityHash"].ToString();
+
+            LogManager.Log($"[Debug Integrity] ServerHash: {serverHash}", LogManager.LogCategory.PlayerDataManager);
+            LogManager.Log($"[Debug Integrity] Components(Server): Nick={serverData.nickname}, UID={serverData.UID}, Money1={serverData.currency1}, Money2={serverData.currency2}, Exp={serverData.experience}, Lv={serverData.level}", LogManager.LogCategory.PlayerDataManager);
+
+            // 2. 로컬에서 동일한 방식으로 해시 재생성 (구조적 안정성 강화: 구분자 사용 및 정밀도 보장)
+            // 형식: Nick|UID|Money1|Money2|Exp|Start
+            // float는 ToString("R")을 사용하여 라운드트립 보장
+            string rawData = $"{serverData.nickname}|{serverData.UID}|{serverData.currency1}|{serverData.currency2}|{serverData.experience.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}|{serverData.level}";
+            LogManager.Log($"[Debug Integrity] RawData: {rawData}", LogManager.LogCategory.PlayerDataManager);
+
+            string calculatedHash = _encryption.GenerateHMAC(rawData, k_IntegritySecretKey);
+            LogManager.Log($"[Debug Integrity] CalculatedHash: {calculatedHash}", LogManager.LogCategory.PlayerDataManager);
+
+            // 3. 비교
+            if (serverHash.Equals(calculatedHash))
+            {
+                return true;
+            }
+
+            LogManager.LogError($"데이터 변조 감지! ServerHash: {serverHash} / MyCalc: {calculatedHash}", LogManager.LogCategory.PlayerDataManager);
+            LogManager.LogError($"RawData Used: {rawData}", LogManager.LogCategory.PlayerDataManager);
+            return false;
         }
 
         private PlayerData ResolveDataConflict(PlayerData serverData, PlayerData localData)
@@ -361,8 +424,8 @@ namespace InGame
             param.Add("level", PlayerData.level);
 
             // [무결성 검증] HMAC-SHA256 해시 생성 및 추가
-            // 데이터 순서를 고정하여 해시를 생성해야 서버에서도 동일하게 검증 가능
-            string rawData = $"{PlayerData.nickname}{PlayerData.UID}{PlayerData.currency1}{PlayerData.currency2}{PlayerData.experience}{PlayerData.level}";
+            // 데이터 순서를 고정하고 구분자를 사용하여 구조적 문제 해결 (InvariantCulture + 구분자 + 정밀도 "R")
+            string rawData = $"{PlayerData.nickname}|{PlayerData.UID}|{PlayerData.currency1}|{PlayerData.currency2}|{PlayerData.experience.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}|{PlayerData.level}";
             string integrityHash = _encryption.GenerateHMAC(rawData, k_IntegritySecretKey);
             param.Add("integrityHash", integrityHash);
 

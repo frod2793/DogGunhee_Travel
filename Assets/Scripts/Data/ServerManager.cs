@@ -243,29 +243,32 @@ namespace InGame
 
             BackendReturnObject bro;
 
-            // [최적화] TryGetValue로 딕셔너리 조회 성능 향상
+
             if (m_tableInDate.TryGetValue(tableName, out string inDate))
             {
-                LogManager.Log($"{tableName} 수정 요청 (inDate: {inDate})", LogManager.LogCategory.ServerManager);
+                LogManager.Log($"[{tableName}] Update Request. inDate: {inDate} / ParamCount: {param.Count}", LogManager.LogCategory.ServerManager);
                 bro = await BackendAsync(callback => Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, callback));
             }
             else
             {
-                LogManager.Log($"{tableName} 신규 삽입 요청", LogManager.LogCategory.ServerManager);
+                LogManager.Log($"[{tableName}] Insert Request (New Data). ParamCount: {param.Count}", LogManager.LogCategory.ServerManager);
                 bro = await BackendAsync(callback => Backend.GameData.Insert(tableName, param, callback));
                 if (bro.IsSuccess())
                 {
-                    m_tableInDate[tableName] = bro.GetInDate();
+                    string newInDate = bro.GetInDate();
+                    m_tableInDate[tableName] = newInDate;
+                    LogManager.Log($"[{tableName}] Insert Success. New inDate: {newInDate}", LogManager.LogCategory.ServerManager);
                 }
             }
 
             if (!bro.IsSuccess())
             {
                 ErroDebug(bro);
+                LogManager.LogError($"[{tableName}] Upload Failed: {bro.GetStatusCode()} - {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
                 throw new Exception($"데이터 업로드 실패 ({tableName}): {bro.GetMessage()}");
             }
 
-            LogManager.Log($"{tableName} 업로드 완료", LogManager.LogCategory.ServerManager);
+            LogManager.Log($"{tableName} 업로드(Update/Insert) 완료", LogManager.LogCategory.ServerManager);
         }
 
         public async UniTask<JsonData> DownloadDataAsync(string tableName)
@@ -279,9 +282,14 @@ namespace InGame
                 var gameDataJson = bro.FlattenRows();
                 if (gameDataJson.Count > 0)
                 {
+                    if (gameDataJson.Count > 1)
+                    {
+                         LogManager.LogWarning($"[{tableName}] 중복된 데이터 행 발견! (Count: {gameDataJson.Count}) - 최신 행을 사용해야 합니다.", LogManager.LogCategory.ServerManager);
+                    }
+
                     var row = gameDataJson[0];
                     m_tableInDate[tableName] = row["inDate"].ToString();
-                    LogManager.Log($"{tableName} 다운로드 완료", LogManager.LogCategory.ServerManager);
+                    LogManager.Log($"{tableName} 다운로드 완료 (inDate: {m_tableInDate[tableName]})", LogManager.LogCategory.ServerManager);
                     return row;
                 }
 
