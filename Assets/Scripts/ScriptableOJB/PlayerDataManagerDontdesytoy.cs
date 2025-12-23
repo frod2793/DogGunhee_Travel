@@ -44,6 +44,9 @@ namespace InGame
 
         private const string k_EncryptedDataPath = "playerData.encrypted";
         private const string k_RsaKeysPath = "rsakeys.json";
+        
+        // 데이터 무결성 검증을 위한 비밀키 (주의: 실제 상용 환경에서는 보안 저장소나 Remote Config 등을 통해 관리해야 함)
+        private const string k_IntegritySecretKey = "DogGunhee_Travel_Secret_Key_2025";
 
         // 플레이어 데이터 속성에 대한 접근자
         public int SelectWeaponIndex
@@ -356,6 +359,12 @@ namespace InGame
             param.Add("Money2", PlayerData.currency2);
             param.Add("experience", PlayerData.experience);
             param.Add("level", PlayerData.level);
+
+            // [무결성 검증] HMAC-SHA256 해시 생성 및 추가
+            // 데이터 순서를 고정하여 해시를 생성해야 서버에서도 동일하게 검증 가능
+            string rawData = $"{PlayerData.nickname}{PlayerData.UID}{PlayerData.currency1}{PlayerData.currency2}{PlayerData.experience}{PlayerData.level}";
+            string integrityHash = _encryption.GenerateHMAC(rawData, k_IntegritySecretKey);
+            param.Add("integrityHash", integrityHash);
 
             try
             {

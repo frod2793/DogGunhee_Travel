@@ -126,6 +126,21 @@ public class HybridEncryption
     }
 
     /// <summary>
+    /// 주어진 데이터와 비밀키를 사용하여 HMAC-SHA256 해시를 생성합니다.
+    /// </summary>
+    /// <param name="data">해싱할 원본 문자열</param>
+    /// <param name="secretKey">비밀키</param>
+    /// <returns>생성된 해시 문자열 (Hex format)</returns>
+    public string GenerateHMAC(string data, string secretKey)
+    {
+        using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secretKey)))
+        {
+            byte[] hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
+            return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        }
+    }
+
+    /// <summary>
     /// 주어진 RSA 개인키를 사용하여 암호화된 패킷을 복호화합니다.
     /// </summary>
     /// <param name="packet">암호화된 데이터와 세션 키가 포함된 패킷</param>
