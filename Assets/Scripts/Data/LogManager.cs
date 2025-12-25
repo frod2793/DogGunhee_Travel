@@ -63,10 +63,12 @@ public class LogManager : MonoBehaviour
         // 리스트 크기가 Enum 개수와 맞지 않으면 초기화
         if (m_logCategoryEnables.Count != categories.Length)
         {
-            m_logCategoryEnables = new List<bool>(new bool[categories.Length]);
-            for (int i = 0; i < m_logCategoryEnables.Count; i++)
+            // [Optimization] 임시 배열(new bool[]) 생성 방지
+            // new List<bool>(capacity)로 내부 배열만 할당 후 Add로 값 채움
+            m_logCategoryEnables = new List<bool>(categories.Length);
+            for (int i = 0; i < categories.Length; i++)
             {
-                m_logCategoryEnables[i] = true;
+                m_logCategoryEnables.Add(true);
             }
         }
         
