@@ -3,8 +3,8 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
 using InGame.ObjectPool;
-using UnityEngine.Rendering.Universal; // For Light2D
-using DG.Tweening; // For DOTween
+using UnityEngine.Rendering.Universal; // Light2D 사용을 위해 추가
+using DG.Tweening; // DOTween 사용을 위해 추가
 
 namespace InGame.Weaphon
 {
@@ -29,7 +29,6 @@ namespace InGame.Weaphon
         private float m_dotDuration;
         private int m_dotTicks;
 
-        // private IObjectPool<FlamePillar> m_pool; // WeaponPoolManager가 관리하므로 제거
         private ContactFilter2D m_contactFilter;
         private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20);
         private readonly HashSet<MobBase> m_hitMobs = new HashSet<MobBase>();
@@ -45,10 +44,9 @@ namespace InGame.Weaphon
             m_flameAnimators?.ForEach(anim => anim.gameObject.SetActive(false));
         }
 
-        // IObjectPool<FlamePillar> pool 매개변수 제거
         public void Activate(Vector3 position, float directDamage, float dotDamage, float dotDuration, int dotTicks)
         {
-            ResetState(); // [Pool] 재사용 시 상태 초기화
+            ResetState();
             
             transform.position = position;
             
@@ -63,7 +61,7 @@ namespace InGame.Weaphon
 
         private void ResetState()
         {
-            // 1. Kill Tweens
+            // 1. 트윈 제거 (Kill Tweens)
             if (m_flameLight != null)
             {
                 DOTween.Kill(m_flameLight);
@@ -71,20 +69,20 @@ namespace InGame.Weaphon
                 m_flameLight.gameObject.SetActive(false);
             }
 
-            // 2. Disable Warning
+            // 2. 경고 애니메이션 비활성화 (Disable Warning)
             if (m_warningAnimator != null)
             {
                 m_warningAnimator.gameObject.SetActive(false);
             }
 
-            // 3. Reset Animators & Sprites
+            // 3. 애니메이터 및 스프라이트 초기화 (Reset Animators & Sprites)
             if (m_flameAnimators != null)
             {
                 foreach (var anim in m_flameAnimators)
                 {
                     if (anim != null)
                     {
-                        // Kill any sprite fades
+                        // 스프라이트 페이드 트윈 제거 및 색상 복구
                         if (anim.TryGetComponent(out SpriteRenderer sr))
                         {
                             DOTween.Kill(sr);
@@ -95,7 +93,7 @@ namespace InGame.Weaphon
                 }
             }
             
-            // 4. Collider Disabled
+            // 4. 콜라이더 비활성화 (Collider Disabled)
             if (m_damageCollider != null) m_damageCollider.enabled = false;
         }
 
@@ -111,7 +109,8 @@ namespace InGame.Weaphon
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
                 AnimatorStateInfo warningStateInfo = m_warningAnimator.GetCurrentAnimatorStateInfo(0);
                 float warningAnimLength = warningStateInfo.length / (warningStateInfo.speed > 0 ? warningStateInfo.speed : 1f);
-                // [Fix] ignoreTimeScale: true -> false (애니메이터는 GameTime을따르므로 딜레이도 맞춰야 함)
+                
+                // [수정] ignoreTimeScale: true -> false (애니메이터는 GameTime을 따르므로 딜레이도 맞춰야 함)
                 if (warningAnimLength < 0.1f) warningAnimLength = 0.5f; // 안전 장치: 최소 지연 시간 보장
                 await UniTask.Delay(System.TimeSpan.FromSeconds(warningAnimLength), cancellationToken: token);
                 m_warningAnimator.gameObject.SetActive(false);
@@ -139,11 +138,16 @@ namespace InGame.Weaphon
                 selectedFlameAnimator.TryGetComponent(out selectedSpriteRenderer);
                 selectedFlameAnimator.TryGetComponent(out selectedLight2D);
 
-                // [Fix] 알파 값 초기화 (이전 페이드 아웃으로 투명해졌을 수 있음)
+                // [수정] 알파 값 초기화 (이전 페이드 아웃으로 투명해졌을 수 있음)
                 if (selectedSpriteRenderer != null)
                 {
-                    Color c = selectedSpriteRenderer.color;
-                    selectedSpriteRenderer.color = new Color(c.r, c.g, c.b, 1f);
+                    // 불필요한 구조체 복사 방지 (Color.white 등 활용 가능하지만, 기존 색상 유지 필요시 아래처럼)
+                    // 여기서는 단순히 투명도만 복구하면 되므로 기존 R,G,B 유지
+                    Color currentColor = selectedSpriteRenderer.color;
+                    if (currentColor.a < 1f)
+                    {
+                        selectedSpriteRenderer.color = new Color(currentColor.r, currentColor.g, currentColor.b, 1f);
+                    }
                 }
 
                 // [수정] 불기둥 애니메이션의 실제 재생 시간 계산 (먼저 계산해야 Tween에 사용 가능)
@@ -167,18 +171,16 @@ namespace InGame.Weaphon
 
                     Sequence animSeq = DOTween.Sequence();
                     
-                    // 1. Light Fade In
-                    animSeq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, targetStrength, fadeInDuration).SetEase(Ease.OutQuad));
-                    
-                    // 2. Hold
-                    animSeq.AppendInterval(holdDuration);
-                    
-                    // 3. Light Fade Out & Sprite Alpha Fade Out (Falloff -> 1로 변경)
-                    animSeq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, 1f, fadeOutDuration).SetEase(Ease.InQuad));
+                    // 1. Light Fade In -> 2. Hold -> 3. Light Fade Out
+                    // [Fix] CS4014 Warning: Sequence가 awaitable이라서 경고 발생. 체이닝으로 해결.
+                    animSeq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, targetStrength, fadeInDuration).SetEase(Ease.OutQuad))
+                           .AppendInterval(holdDuration)
+                           .Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, 1f, fadeOutDuration).SetEase(Ease.InQuad));
                     
                     if (selectedSpriteRenderer != null)
                     {
-                        animSeq.Join(selectedSpriteRenderer.DOFade(0f, fadeOutDuration).SetEase(Ease.InQuad));
+                        // [Fix] CS4014: Join 결과를 discard 하여 경고 무시
+                        _ = animSeq.Join(selectedSpriteRenderer.DOFade(0f, fadeOutDuration).SetEase(Ease.InQuad));
                     }
                     
                     // 토큰 취소 시 안전하게 Kill
@@ -192,7 +194,7 @@ namespace InGame.Weaphon
             float timer = 0f;
             while (timer < flameAnimLength)
             {
-                // [Sync] Light2D 스프라이트 동기화
+                // [동기화] Light2D 스프라이트 동기화
                 if (selectedLight2D != null && selectedSpriteRenderer != null)
                 {
                     selectedLight2D.lightCookieSprite = selectedSpriteRenderer.sprite;
@@ -208,7 +210,7 @@ namespace InGame.Weaphon
 
             // 4. 오브젝트 풀로 반환
             // m_pool.Release(this); // 제거
-            WeaponPoolManager.Instance.Release(this); // WeaponPoolManager를 통해 자신을 풀로 반환
+            WeaponPoolManager.Instance.Release(this); // WeaponPoolManager를 통해 반환
         }
 
         private void CheckForDamage()
