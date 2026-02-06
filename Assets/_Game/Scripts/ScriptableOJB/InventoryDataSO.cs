@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace InGame
 {
-    [CreateAssetMenu(fileName = "Inventory_Data", menuName = "GameData/Inventory_Data")]
-    public class Inventory_Data : ScriptableObject
+    [CreateAssetMenu(fileName = "InventoryDataSO", menuName = "GameData/InventoryDataSO")]
+    public class InventoryDataSO : ScriptableObject
     {
 
         public List<InventoryEntry> inventory = new List<InventoryEntry>(); // 인벤토리
@@ -12,7 +12,7 @@ namespace InGame
         [System.Serializable]
         public class InventoryEntry
         {
-            public Item_Data item; // 아이템 데이터
+            public ItemDataSO item; // 아이템 데이터
             public int count; // 아이템 개수
         }
 
@@ -20,7 +20,7 @@ namespace InGame
         /// 인벤토리에 아이템 추가
         /// </summary>
         /// <param name="item"></param>
-        public void AddItem(Item_Data item)
+        public void AddItem(ItemDataSO item)
         {
             InventoryEntry existingEntry = inventory.Find(entry => entry.item.itemCode == item.itemCode);
             if (existingEntry != null)

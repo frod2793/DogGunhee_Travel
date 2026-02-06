@@ -10,47 +10,58 @@ namespace InGame.Weaphon
 {
     public class BoneBullet : MonoBehaviour
     {
-        #region 필드 및 변수
+        #region Inspector 설정
+
+        [Header("이동 설정")]
+        [SerializeField] private float m_travelDistance = 20f;
+
+        [Header("회전 설정")]
+        [SerializeField] private float m_rotateSpeed = 360f;
+
+        [Header("폭발 설정")]
+        [SerializeField] private float m_explosionRadius = 1.5f;
+        [SerializeField] private float m_explosionDamage = 10f;
+
+        [Header("감지 설정")]
+        [SerializeField] private LayerMask m_mobLayerMask;
+
+        #endregion
+
+        #region 런타임 상태
 
         public float BulletSpeed { get; set; }
         
         private float m_attackPower;
         private float m_stunTime;
         private bool m_isEvolved;
+        private bool m_isActive;
 
-        [Header("이동 설정")]
-        [SerializeField]
-        private float m_travelDistance = 20f;
+        #endregion
 
-        [Header("회전 설정")]
-        [SerializeField]
-        private float m_rotateSpeed = 360f;
-
-        [Header("폭발 설정")]
-        [SerializeField]
-        private float m_explosionRadius = 1.5f;
-        [SerializeField]
-        private float m_explosionDamage = 10f;
-
-        [Header("감지 설정")]
-        [SerializeField]
-        private LayerMask m_mobLayerMask;
+        #region 캐시 및 내부 변수
 
         private Transform m_transform;
         private Vector3 m_attackAngle;
-        private bool m_isActive;
         private Tween m_moveTween;
         private System.Threading.CancellationTokenSource m_lifetimeCts;
 
         // 이동 감지 관련
         private Vector3 m_lastPosition;
         private float m_stoppedTime;
-        private const float k_StopThreshold = 0.01f; // 정지 판정 임계값
-        private const float k_MaxStoppedDuration = 0.3f; // 정지 상태 최대 허용 시간 (초)
 
-        private const int k_MaxOverlapColliders = 10;
+        // 충돌 감지 캐시
         private readonly Collider2D[] m_overlapResults = new Collider2D[k_MaxOverlapColliders];
         private ContactFilter2D m_contactFilter;
+
+        #endregion
+
+        #region 상수
+
+        private const float k_StopThreshold = 0.01f;
+        private const float k_StopThresholdSqr = k_StopThreshold * k_StopThreshold;
+        private const float k_MaxStoppedDuration = 0.3f;
+        private const float k_LifetimeBuffer = 2f;
+        private const int k_MaxOverlapColliders = 10;
 
         #endregion
 
@@ -87,10 +98,11 @@ namespace InGame.Weaphon
         {
             if (!m_isActive) return;
 
-            // 이동 감지: 현재 위치와 이전 프레임 위치 비교
-            float distanceMoved = Vector3.Distance(m_transform.position, m_lastPosition);
+            // 이동 감지: 제곱 거리 비교로 Sqrt 연산 제거 (성능 최적화)
+            Vector3 currentPos = m_transform.position;
+            float sqrDistanceMoved = (currentPos - m_lastPosition).sqrMagnitude;
             
-            if (distanceMoved < k_StopThreshold)
+            if (sqrDistanceMoved < k_StopThresholdSqr)
             {
                 // 이동이 거의 없음 (정지 상태)
                 m_stoppedTime += Time.deltaTime;
@@ -109,16 +121,19 @@ namespace InGame.Weaphon
                 m_stoppedTime = 0f;
             }
 
-            m_lastPosition = m_transform.position;
+            m_lastPosition = currentPos;
         }
 
         #endregion
 
         #region 핵심 로직
 
+        /// <summary>
+        /// 총알을 지정된 방향으로 발사합니다.
+        /// </summary>
+        /// <param name="direction">발사 방향 (정규화하여 사용)</param>
         public void ThrowBullet(Vector3 direction)
         {
-            // UniTask로 구현된 비동기 로직을 실행하고, 결과룰 기다리지 않습니다 (Fire and Forget)
             ThrowAndTrackLifecycleAsync(direction).Forget();
         }
 
@@ -132,7 +147,7 @@ namespace InGame.Weaphon
             m_lifetimeCts?.Cancel();
             m_lifetimeCts?.Dispose();
             m_lifetimeCts = new System.Threading.CancellationTokenSource();
-            float maxLifetime = duration + 2f; // 여유 시간 추가
+            float maxLifetime = duration + k_LifetimeBuffer;
             LifetimeGuardAsync(maxLifetime, m_lifetimeCts.Token).Forget();
 
             var token = this.GetCancellationTokenOnDestroy();
@@ -206,6 +221,13 @@ namespace InGame.Weaphon
             WeaponPoolManager.Instance.Release(this);
         }
 
+        /// <summary>
+        /// 총알의 전투 파라미터를 초기화합니다.
+        /// </summary>
+        /// <param name="damage">공격력</param>
+        /// <param name="stunTime">스턴 시간 (초)</param>
+        /// <param name="speed">이동 속도</param>
+        /// <param name="isEvolved">진화 여부 (폭발 효과)</param>
         public void Initialize(float damage, float stunTime, float speed, bool isEvolved)
         {
             m_attackPower = damage;
@@ -233,14 +255,19 @@ namespace InGame.Weaphon
             }
         }
 
+        /// <summary>
+        /// 풀에서 재사용 시 상태를 초기화합니다.
+        /// </summary>
         public void ResetState()
         {
             m_isActive = true;
             m_transform.DOKill();
             m_transform.rotation = Quaternion.identity;
+            
             m_lifetimeCts?.Cancel();
             m_lifetimeCts?.Dispose();
             m_lifetimeCts = null;
+            
             m_lastPosition = m_transform.position;
             m_stoppedTime = 0f;
         }

@@ -78,17 +78,17 @@ namespace InGame.Manager
             {
                 case GameState.Play:
                     OnGameStart?.Invoke();
-                    LogManager.Log("OnGameStart", LogManager.LogCategory.PlayStateManager);
+                    LogManager.Log("게임 시작 (OnGameStart)", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.Pause:
                 case GameState.Resume:
                     if (newState == GameState.Pause) OnGamePause?.Invoke();
                     else OnGameResume?.Invoke();
-                    LogManager.Log(newState == GameState.Pause ? "OnGamePause" : "OnGameResume", LogManager.LogCategory.PlayStateManager);
+                    LogManager.Log(newState == GameState.Pause ? "게임 일시정지 (OnGamePause)" : "게임 재개 (OnGameResume)", LogManager.LogCategory.PlayStateManager);
                     break;
                 case GameState.GameOver:
                     OnGameOver?.Invoke();
-                    LogManager.Log("OnGameOver", LogManager.LogCategory.PlayStateManager);
+                    LogManager.Log("게임 오버 (OnGameOver)", LogManager.LogCategory.PlayStateManager);
                     break;
             }
         }

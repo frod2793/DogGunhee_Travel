@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using InGame;
 using InGame.Lobby;
+using InGame.Services;
 
 namespace Lobby
 {
@@ -41,7 +42,7 @@ namespace Lobby
         #region 내부 데이터 및 풀링
 
         // 현재 선택된 우편 정보
-        private ServerManager.PostInfo m_currentPostInfo;
+        private PostService.PostInfo m_currentPostInfo;
 
         // StringBuilder 캐싱
         private readonly StringBuilder m_stringBuilder = new StringBuilder(100);
@@ -77,7 +78,7 @@ namespace Lobby
                     ServerManager.Instance.GetPostListAsync(PostType.Coupon)
                 );
 
-                var allPosts = new List<ServerManager.PostInfo>(adminPosts.Count + couponPosts.Count);
+                var allPosts = new List<PostService.PostInfo>(adminPosts.Count + couponPosts.Count);
                 allPosts.AddRange(adminPosts);
                 allPosts.AddRange(couponPosts);
 
@@ -89,7 +90,7 @@ namespace Lobby
             }
         }
 
-        private void RefreshPostList(List<ServerManager.PostInfo> postList)
+        private void RefreshPostList(List<PostService.PostInfo> postList)
         {
             foreach (var item in m_activeItems.Values)
             {
@@ -163,7 +164,7 @@ namespace Lobby
             m_postBoxPanel.SetActive(false);
         }
 
-        private void OpenPostDetailPanel(ServerManager.PostInfo postInfo)
+        private void OpenPostDetailPanel(PostService.PostInfo postInfo)
         {
             m_currentPostInfo = postInfo;
 
@@ -191,12 +192,12 @@ namespace Lobby
             HandleRewardClaim(m_currentPostInfo);
         }
 
-        private void HandleRewardClaim(ServerManager.PostInfo postInfo)
+        private void HandleRewardClaim(PostService.PostInfo postInfo)
         {
             ProcessRewardAsync(postInfo).Forget();
         }
 
-        private async UniTaskVoid ProcessRewardAsync(ServerManager.PostInfo postInfo)
+        private async UniTaskVoid ProcessRewardAsync(PostService.PostInfo postInfo)
         {
             if (postInfo.Items == null || postInfo.Items.Count == 0)
             {

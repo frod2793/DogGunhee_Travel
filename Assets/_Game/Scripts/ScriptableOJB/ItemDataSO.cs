@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace InGame
 {
-    [CreateAssetMenu(fileName = "Item_Data", menuName = "GameData/Item_Data")]
-    public class Item_Data : ScriptableObject
+    [CreateAssetMenu(fileName = "ItemDataSO", menuName = "GameData/ItemDataSO")]
+    public class ItemDataSO : ScriptableObject
     {
         public string itemName; // 아이템 이름
         public int itemCode; // 아이템 코드

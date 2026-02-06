@@ -40,7 +40,7 @@ namespace Lobby
         [FormerlySerializedAs("itemButton")]
         [SerializeField] private Button m_itemButton;
 
-        private Item_Data m_itemData;
+        private ItemDataSO m_itemData;
 
         private void Start()
         {

@@ -1,33 +1,54 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using BackEnd;
 using Cysharp.Threading.Tasks;
+using InGame.Services;
 using LitJson;
 using UnityEngine;
 
 namespace InGame
 {
+    /// <summary>
+    /// 서버 통신을 관리하는 Facade 클래스입니다.
+    /// 실제 비즈니스 로직은 각 서비스(Auth, GameData, Post)에 위임합니다.
+    /// 기존 API 호환성을 유지하면서 내부적으로 서비스를 호출합니다.
+    /// </summary>
     public class ServerManager : MonoBehaviour
     {
-        #region 필드 및 프로퍼티
+        #region 서비스 프로퍼티
 
-        public string Uuid { get; private set; }
-        public string NickName { get; private set; }
+        /// <summary>
+        /// 인증(로그인, 회원가입) 관련 서비스입니다.
+        /// </summary>
+        public AuthenticationService Auth { get; private set; }
 
-        public class PostInfo
-        {
-            public BackEnd.PostType PostType;
-            public string PostInDate;
-            public string InDate;
-            public string Title;
-            public string Content;
-            public string Sender;
-            public Dictionary<string, int> Items = new Dictionary<string, int>();
-        }
+        /// <summary>
+        /// 게임 데이터 저장/로드 관련 서비스입니다.
+        /// </summary>
+        public GameDataService GameData { get; private set; }
 
-        // [최적화] 테이블별 inDate 캐싱 (초기 용량 설정으로 재할당 방지)
-        private readonly Dictionary<string, string> m_tableInDate = new Dictionary<string, string>(8);
+        /// <summary>
+        /// 우편함 관련 서비스입니다.
+        /// </summary>
+        public PostService Post { get; private set; }
+
+        #endregion
+
+        #region 기존 API 호환용 프로퍼티
+
+        /// <summary>
+        /// 현재 로그인된 사용자의 UUID (호환성 유지)
+        /// </summary>
+        public string Uuid => Auth?.Uuid;
+
+        /// <summary>
+        /// 현재 로그인된 사용자의 닉네임 (호환성 유지)
+        /// </summary>
+        public string NickName => Auth?.NickName;
+
+        #endregion
+
+        #region 내부 필드
 
         // 초기화 상태 추적 (스레드 안전성 확보)
         private readonly UniTaskCompletionSource<bool> m_isInitialized = new UniTaskCompletionSource<bool>();
@@ -73,6 +94,14 @@ namespace InGame
             {
                 Destroy(gameObject);
                 return;
+            }
+
+            // [Fix] 인스턴스가 프로퍼티에 의해 먼저 설정된 경우에도 서비스 초기화 보장
+            if (Auth == null)
+            {
+                Auth = new AuthenticationService(m_isInitialized);
+                GameData = new GameDataService(m_isInitialized);
+                Post = new PostService(m_isInitialized);
             }
         }
 
@@ -130,306 +159,64 @@ namespace InGame
 
         #endregion
 
-        #region 로그인 및 회원 가입
+        #region 기존 API 호환 레이어 (Facade 패턴)
 
-        public async UniTask<(bool success, string error)> LoginAsync(string id, string pw)
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.BMember.CustomLogin(id, pw, callback));
-
-            if (bro.IsSuccess())
-            {
-                LogManager.Log("로그인 성공", LogManager.LogCategory.ServerManager);
-                OnLoginSuccess();
-                return (true, null);
-            }
-
-            ErroDebug(bro);
-            return (false, bro.GetMessage());
-        }
-
-        public async UniTask<(bool success, string error)> GuestLoginAsync()
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.BMember.GuestLogin(callback));
-
-            if (bro.IsSuccess())
-            {
-                LogManager.Log("게스트 로그인 성공", LogManager.LogCategory.ServerManager);
-                OnLoginSuccess();
-                return (true, null);
-            }
-
-            // 실패 시 로컬 정보 삭제 후 재시도 가능하도록 유도
-            Backend.BMember.DeleteGuestInfo();
-            ErroDebug(bro);
-            return (false, bro.GetMessage());
-        }
-
-        public async UniTask<(bool success, string error)> TokenLoginAsync()
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.BMember.LoginWithTheBackendToken(callback));
-
-            if (bro.IsSuccess())
-            {
-                LogManager.Log("토큰 로그인 성공", LogManager.LogCategory.ServerManager);
-                OnLoginSuccess();
-                return (true, null);
-            }
-
-            LogManager.LogWarning($"토큰 로그인 실패/만료: {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
-            return (false, bro.GetMessage());
-        }
-
-        public async UniTask<(bool success, string error)> SignUpAsync(string id, string pw, string nickname)
-        {
-            await m_isInitialized.Task;
-
-            var signUpBro = await BackendAsync(callback => Backend.BMember.CustomSignUp(id, pw, callback));
-            if (!signUpBro.IsSuccess())
-            {
-                ErroDebug(signUpBro);
-                return (false, signUpBro.GetMessage());
-            }
-
-            LogManager.Log("회원가입 성공. 닉네임 설정 시도...", LogManager.LogCategory.ServerManager);
-
-            var updateBro = await BackendAsync(callback => Backend.BMember.UpdateNickname(nickname, callback));
-            if (!updateBro.IsSuccess())
-            {
-                ErroDebug(updateBro);
-                return (false, $"가입 성공, 닉네임 설정 실패: {updateBro.GetMessage()}");
-            }
-
-            LogManager.Log("닉네임 설정 성공", LogManager.LogCategory.ServerManager);
-            return (true, null);
-        }
-
-        private void OnLoginSuccess()
-        {
-            Uuid = Backend.UID;
-            NickName = Backend.UserNickName;
-
-            if (string.IsNullOrEmpty(NickName))
-            {
-                NickName = Uuid;
-            }
-
-            RefreshTokenIfAlive();
-        }
-
-        private void RefreshTokenIfAlive()
-        {
-            // 토큰 갱신 (메인 스레드 부하 적음, 필요시 비동기 래핑 가능)
-            var bro = Backend.BMember.IsAccessTokenAlive();
-            if (bro.IsSuccess())
-            {
-                LogManager.Log("액세스 토큰 갱신 시도", LogManager.LogCategory.ServerManager);
-                Backend.BMember.RefreshTheBackendToken();
-            }
-        }
-
-        #endregion
-
-        #region 게임 데이터 저장 및 불러오기
-
-        public async UniTask UploadDataAsync(string tableName, Param param)
-        {
-            await m_isInitialized.Task;
-
-            BackendReturnObject bro;
-
-
-            if (m_tableInDate.TryGetValue(tableName, out string inDate))
-            {
-                LogManager.Log($"[{tableName}] Update Request. inDate: {inDate} / ParamCount: {param.Count}", LogManager.LogCategory.ServerManager);
-                bro = await BackendAsync(callback => Backend.GameData.UpdateV2(tableName, inDate, Backend.UserInDate, param, callback));
-            }
-            else
-            {
-                LogManager.Log($"[{tableName}] Insert Request (New Data). ParamCount: {param.Count}", LogManager.LogCategory.ServerManager);
-                bro = await BackendAsync(callback => Backend.GameData.Insert(tableName, param, callback));
-                if (bro.IsSuccess())
-                {
-                    string newInDate = bro.GetInDate();
-                    m_tableInDate[tableName] = newInDate;
-                    LogManager.Log($"[{tableName}] Insert Success. New inDate: {newInDate}", LogManager.LogCategory.ServerManager);
-                }
-            }
-
-            if (!bro.IsSuccess())
-            {
-                ErroDebug(bro);
-                LogManager.LogError($"[{tableName}] Upload Failed: {bro.GetStatusCode()} - {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
-                throw new Exception($"데이터 업로드 실패 ({tableName}): {bro.GetMessage()}");
-            }
-
-            LogManager.Log($"{tableName} 업로드(Update/Insert) 완료", LogManager.LogCategory.ServerManager);
-        }
-
-        public async UniTask<JsonData> DownloadDataAsync(string tableName)
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.GameData.GetMyData(tableName, new Where(), callback));
-
-            if (bro.IsSuccess())
-            {
-                var gameDataJson = bro.FlattenRows();
-                if (gameDataJson.Count > 0)
-                {
-                    if (gameDataJson.Count > 1)
-                    {
-                         LogManager.LogWarning($"[{tableName}] 중복된 데이터 행 발견! (Count: {gameDataJson.Count}) - 최신 행을 사용해야 합니다.", LogManager.LogCategory.ServerManager);
-                    }
-
-                    var row = gameDataJson[0];
-                    m_tableInDate[tableName] = row["inDate"].ToString();
-                    LogManager.Log($"{tableName} 다운로드 완료 (inDate: {m_tableInDate[tableName]})", LogManager.LogCategory.ServerManager);
-                    return row;
-                }
-
-                LogManager.Log($"{tableName} 데이터 없음", LogManager.LogCategory.ServerManager);
-                return null;
-            }
-
-            ErroDebug(bro);
-            throw new Exception($"데이터 다운로드 실패 ({tableName}): {bro.GetMessage()}");
-        }
-
-        #endregion
-
-        #region 메시지 관련
-
-        public async UniTask LoadMessageAsync()
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.UPost.GetPostList(PostType.Coupon, 10, callback));
-            if (bro.IsSuccess())
-            {
-                var json = bro.GetReturnValuetoJSON()["postList"];
-                for (var i = 0; i < json.Count; i++)
-                {
-                    LogManager.Log($"제목: {json[i]["title"]}, 날짜: {json[i]["inDate"]}", LogManager.LogCategory.ServerManager);
-                }
-            }
-        }
-
-        public async UniTask<List<PostInfo>> GetPostListAsync(PostType postType)
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.UPost.GetPostList(postType, 100, callback));
-
-            if (!bro.IsSuccess())
-            {
-                ErroDebug(bro);
-                return new List<PostInfo>();
-            }
-
-            var json = bro.GetReturnValuetoJSON();
-            if (!json.ContainsKey("postList"))
-            {
-                return new List<PostInfo>();
-            }
-
-            JsonData postListJson = json["postList"];
-            var postList = new List<PostInfo>(postListJson.Count);
-
-            foreach (JsonData postJson in postListJson)
-            {
-                var postInfo = new PostInfo
-                {
-                    PostType = postType,
-                    PostInDate = postJson["inDate"].ToString(),
-                    InDate = ConvertToCustomDateFormat(postJson["inDate"].ToString()),
-                    Title = postJson["title"].ToString(),
-                    Content = postJson["content"].ToString(),
-                    Sender = postJson.ContainsKey("senderNickname") ? postJson["senderNickname"].ToString() : "운영팀",
-                };
-
-                // 아이템 파싱
-                if (postJson["items"].IsArray)
-                {
-                    foreach (JsonData itemJson in postJson["items"])
-                    {
-                        if (itemJson["chartName"].ToString() == "아이템 차트")
-                        {
-                            string itemName = itemJson["item"]["itemName"].ToString();
-                            if (int.TryParse(itemJson["itemCount"].ToString(), out int itemCount))
-                            {
-                                if (postInfo.Items.ContainsKey(itemName))
-                                    postInfo.Items[itemName] += itemCount;
-                                else
-                                    postInfo.Items.Add(itemName, itemCount);
-                            }
-                        }
-                    }
-                }
-                else if (postJson["items"].IsObject)
-                {
-                    foreach (string key in postJson["items"].Keys)
-                    {
-                        int val = int.TryParse(postJson["items"][key].ToString(), out int v) ? v : 0;
-                        postInfo.Items[key] = val;
-                    }
-                }
-
-                postList.Add(postInfo);
-            }
-
-            LogManager.Log($"우편 {postList.Count}개 로드 완료 ({postType})", LogManager.LogCategory.ServerManager);
-            return postList;
-        }
-
-        public async UniTask<bool> ReceivePostItemAsync(PostType postType, string postInDate)
-        {
-            await m_isInitialized.Task;
-
-            var bro = await BackendAsync(callback => Backend.UPost.ReceivePostItem(postType, postInDate, callback));
-
-            if (!bro.IsSuccess())
-            {
-                ErroDebug(bro);
-                return false;
-            }
-
-            LogManager.Log($"우편 수령 완료 ({postType})", LogManager.LogCategory.ServerManager);
-            return true;
-        }
-
-        #endregion
-
-        #region 유틸리티 메서드
+        // 아래 메서드들은 기존 코드와의 호환성을 위해 유지됩니다.
+        // 내부적으로 각 서비스의 메서드를 호출합니다.
 
         /// <summary>
-        /// 뒤끝 비동기 콜백 메서드를 UniTask로 변환하는 래퍼
+        /// 커스텀 로그인 (기존 API 호환)
         /// </summary>
-        private UniTask<BackendReturnObject> BackendAsync(Action<Backend.BackendCallback> backendCall)
-        {
-            var tcs = new UniTaskCompletionSource<BackendReturnObject>();
-            backendCall(bro => tcs.TrySetResult(bro));
-            return tcs.Task;
-        }
+        public UniTask<(bool success, string error)> LoginAsync(string id, string pw)
+            => Auth.LoginAsync(id, pw);
 
-        private void ErroDebug(BackendReturnObject bro)
-        {
-            LogManager.LogError($"[Error] {bro.GetStatusCode()} / {bro.GetErrorCode()} / {bro.GetMessage()}", LogManager.LogCategory.ServerManager);
-        }
+        /// <summary>
+        /// 게스트 로그인 (기존 API 호환)
+        /// </summary>
+        public UniTask<(bool success, string error)> GuestLoginAsync()
+            => Auth.GuestLoginAsync();
 
-        private string ConvertToCustomDateFormat(string inDate)
-        {
-            if (DateTime.TryParse(inDate, out DateTime date))
-            {
-                return date.ToString("yyyy-MM-dd");
-            }
-            return inDate;
-        }
+        /// <summary>
+        /// 토큰 로그인 (기존 API 호환)
+        /// </summary>
+        public UniTask<(bool success, string error)> TokenLoginAsync()
+            => Auth.TokenLoginAsync();
+
+        /// <summary>
+        /// 회원가입 (기존 API 호환)
+        /// </summary>
+        public UniTask<(bool success, string error)> SignUpAsync(string id, string pw, string nickname)
+            => Auth.SignUpAsync(id, pw, nickname);
+
+        /// <summary>
+        /// 데이터 업로드 (기존 API 호환)
+        /// </summary>
+        public UniTask UploadDataAsync(string tableName, Param param)
+            => GameData.UploadDataAsync(tableName, param);
+
+        /// <summary>
+        /// 데이터 다운로드 (기존 API 호환)
+        /// </summary>
+        public UniTask<JsonData> DownloadDataAsync(string tableName)
+            => GameData.DownloadDataAsync(tableName);
+
+        /// <summary>
+        /// 우편 메시지 로드 (기존 API 호환)
+        /// </summary>
+        public UniTask LoadMessageAsync()
+            => Post.LoadMessageAsync();
+
+        /// <summary>
+        /// 우편 리스트 조회 (기존 API 호환)
+        /// </summary>
+        public UniTask<List<PostService.PostInfo>> GetPostListAsync(PostType postType)
+            => Post.GetPostListAsync(postType);
+
+        /// <summary>
+        /// 우편 아이템 수령 (기존 API 호환)
+        /// </summary>
+        public UniTask<bool> ReceivePostItemAsync(PostType postType, string postInDate)
+            => Post.ReceivePostItemAsync(postType, postInDate);
 
         #endregion
     }
