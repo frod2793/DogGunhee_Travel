@@ -1627,6 +1627,9 @@
         <member name="M:DG.DemiEditor.DeGUILayout.SceneField(System.String,UnityEngine.Object)">
             <summary>Scene field</summary>
         </member>
+        <member name="M:DG.DemiEditor.DeGUILayout.SceneField(UnityEngine.GUIContent,UnityEngine.Object)">
+            <summary>Scene field</summary>
+        </member>
         <member name="M:DG.DemiEditor.DeGUILayout.SortingLayer(System.String,System.Int32,UnityEngine.GUIStyle)">
             <summary>
             Draws a dropdown for choosing a SortingLayer ID
@@ -1732,6 +1735,11 @@
         <member name="M:DG.DemiEditor.DeGUI.GetFastVisibleContentColorOn(UnityEngine.Color32)">
             <summary>
             Gets either black or white, depending on the color that would be most visible on the given one
+            </summary>
+        </member>
+        <member name="M:DG.DemiEditor.DeGUI.IsDoubleClickTextBeingEdited(System.String)">
+            <summary>
+            Returns TRUE if the double-click text area/field with the given id is currently in editing mode
             </summary>
         </member>
         <member name="T:DG.DemiEditor.DeGUI.CursorColorScope">
@@ -1886,6 +1894,9 @@
             <summary>Button that can be toggled on and off</summary>
         </member>
         <member name="M:DG.DemiEditor.DeGUI.SceneField(UnityEngine.Rect,System.String,UnityEngine.Object)">
+            <summary>Scene field</summary>
+        </member>
+        <member name="M:DG.DemiEditor.DeGUI.SceneField(UnityEngine.Rect,UnityEngine.GUIContent,UnityEngine.Object)">
             <summary>Scene field</summary>
         </member>
         <member name="M:DG.DemiEditor.DeGUI.BackgroundGrid(UnityEngine.Rect,UnityEngine.Vector2,UnityEngine.Texture2D,System.Single)">

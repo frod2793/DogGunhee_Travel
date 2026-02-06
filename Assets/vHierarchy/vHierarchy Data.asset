@@ -17,7 +17,7 @@ MonoBehaviour:
     values: []
   bookmarks: []
   bookmarkedScenePaths:
-  - Assets/Scenes/VamSerLike_Test.unity
-  - Assets/Scenes/VamSerlike.unity
-  - Assets/Scenes/IntroScene.unity
-  - Assets/Scenes/LobbyScene.unity
+  - Assets/_Game/Scenes/VamSerLike_Test.unity
+  - Assets/_Game/Scenes/VamSerlike.unity
+  - Assets/_Game/Scenes/IntroScene.unity
+  - Assets/_Game/Scenes/LobbyScene.unity

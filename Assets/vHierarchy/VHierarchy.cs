@@ -1863,7 +1863,7 @@ namespace VHierarchy
 
 
 
-        public const string version = "2.1.7";
+        public const string version = "2.1.8";
 
     }
 
