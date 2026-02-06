@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6155638956145482786}
   - component: {fileID: 893102888339448788}
-  - component: {fileID: 7764369734960967412}
+  - component: {fileID: 2661519029935665480}
   - component: {fileID: 8995850725629666990}
   - component: {fileID: 6735505719767251672}
   - component: {fileID: 3357545769698321406}
@@ -91,7 +91,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7764369734960967412
+--- !u!114 &2661519029935665480
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -100,17 +100,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 1989101733439538212}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e8002305a577734b9aabec3b7e18685, type: 3}
+  m_Script: {fileID: 11500000, guid: 179884493eb497e4a960008f79ca7043, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_attackPower: 10
-  m_coolTime: 1
-  m_attackSpeed: 1
-  m_weaponSize: 1
-  m_projectileCount: 1
-  m_maxHealth: 100
-  m_defense: 0
-  m_moveSpeed: 2.5
+  m_config: {fileID: 11400000, guid: 181c388667c224c4aa40128d63aa48b3, type: 2}
+  m_stats:
+    AttackPower: 0
+    CoolTime: 0
+    AttackSpeed: 0
+    WeaponSize: 0
+    ProjectileCount: 0
+    MaxHealth: 0
+    CurrentHealth: 0
+    Defense: 0
+    MoveSpeed: 0
 --- !u!95 &8995850725629666990
 Animator:
   serializedVersion: 7

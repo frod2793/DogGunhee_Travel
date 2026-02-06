@@ -111,21 +111,32 @@ namespace InGame.Weaphon
 
         #region 초기화 및 상태 업데이트
 
-        public void Initialize(WeaphonBase weapon, Vector3 initialVelocity)
+        /// <summary>
+        /// PearlProjectile을 초기화합니다.
+        /// </summary>
+        /// <param name="damage">공격력</param>
+        /// <param name="stunTime">스턴 시간</param>
+        /// <param name="speed">이동 속도</param>
+        /// <param name="isEvolved">진화 여부</param>
+        /// <param name="initialVelocity">초기 속도 벡터</param>
+        public void Initialize(float damage, float stunTime, float speed, bool isEvolved, Vector3 initialVelocity)
         {
             m_velocity = initialVelocity;
             m_velocity.z = 0f; // Velocity의 Z축 성분 제거
-            UpdateState(weapon);
+            UpdateState(damage, stunTime, speed, isEvolved);
             transform.rotation = Quaternion.identity;
         }
         
-        public void UpdateState(WeaphonBase weapon)
+        /// <summary>
+        /// 진주의 상태(스탯 및 비주얼)를 업데이트합니다.
+        /// </summary>
+        public void UpdateState(float damage, float stunTime, float speed, bool isEvolved)
         {
-            m_damage = weapon.attackPower;
-            m_stunTime = weapon.mobStunTime;
-            m_isEvolved = weapon.isEvolved;
+            m_damage = damage;
+            m_stunTime = stunTime;
+            m_isEvolved = isEvolved;
 
-            float newSpeed = (weapon.attackSpeed > 0) ? weapon.attackSpeed : 1f;
+            float newSpeed = (speed > 0) ? speed : 1f;
             m_velocity = m_velocity.normalized * newSpeed;
 
             UpdateVisualsByLevel();

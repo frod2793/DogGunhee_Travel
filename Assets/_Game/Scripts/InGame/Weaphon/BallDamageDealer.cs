@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
-using InGame.Weaphon.Base;
 
 namespace InGame.Weaphon
 {
@@ -9,8 +8,16 @@ namespace InGame.Weaphon
     /// WeaphonBallplay에 의해 생성된 공의 물리적 충돌과 데미지를 담당하는 클래스입니다.
     /// </summary>
     [RequireComponent(typeof(PolygonCollider2D))]
-    public class BallDamageDealer : WeaphonBase
+    public class BallDamageDealer : MonoBehaviour
     {
+        #region 스탯 필드
+
+        private float m_attackPower;
+        private float m_mobStunTime;
+        private float m_coolTime;
+
+        #endregion
+
         #region 내부 변수
 
         private PolygonCollider2D m_polygonCollider;
@@ -37,12 +44,12 @@ namespace InGame.Weaphon
             }
         }
 
-        private new void OnEnable()
+        private void OnEnable()
         {
-            SetWeaphonState(WeaphonState.Idle);
+            // 활성화 시 초기화 로직 (필요시)
         }
 
-        private new void OnDisable()
+        private void OnDisable()
         {
             m_damageCooldowns.Clear();
         }
@@ -57,8 +64,8 @@ namespace InGame.Weaphon
             {
                 if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
                 {
-                    mob.TakeDamage(attackPower, mobStunTime);
-                    m_damageCooldowns[enemyId] = Time.time + coolTime;
+                    mob.TakeDamage(m_attackPower, m_mobStunTime);
+                    m_damageCooldowns[enemyId] = Time.time + m_coolTime;
                 }
             }
         }
@@ -75,12 +82,17 @@ namespace InGame.Weaphon
 
         #region 초기화
 
-        public void Initialize(WeaphonBase parentWeapon)
+        /// <summary>
+        /// BallDamageDealer를 초기화합니다.
+        /// </summary>
+        /// <param name="attackPower">공격력</param>
+        /// <param name="mobStunTime">스턴 시간</param>
+        /// <param name="coolTime">데미지 쿨타임</param>
+        public void Initialize(float attackPower, float mobStunTime, float coolTime)
         {
-            this.isEvolved = parentWeapon.isEvolved;
-            this.attackPower = parentWeapon.attackPower;
-            this.mobStunTime = parentWeapon.mobStunTime;
-            this.coolTime = parentWeapon.coolTime;
+            m_attackPower = attackPower;
+            m_mobStunTime = mobStunTime;
+            m_coolTime = coolTime;
         }
 
         #endregion

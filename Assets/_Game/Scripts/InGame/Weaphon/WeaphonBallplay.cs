@@ -96,7 +96,7 @@ namespace InGame.Weaphon
             for (int i = 0; i < m_ballCount; i++)
             {
                 var ball = m_ballPool.Get();
-                ball.Initialize(this);
+                ball.Initialize(this.attackPower, this.mobStunTime, this.coolTime);
                 m_activeBalls.Add(ball);
             }
 

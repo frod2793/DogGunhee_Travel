@@ -59,7 +59,7 @@ namespace InGame.Weaphon
                     PearlProjectile.Instance.CurrentSpeed != this.attackSpeed)
                 {
                     m_currentEvolveState = this.isEvolved;
-                    PearlProjectile.Instance.UpdateState(this);
+                    PearlProjectile.Instance.UpdateState(this.attackPower, this.mobStunTime, this.attackSpeed, this.isEvolved);
                 }
             }
         }
@@ -99,7 +99,7 @@ namespace InGame.Weaphon
             pearl.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
 
             float initialSpeed = (this.attackSpeed > 0) ? this.attackSpeed : 1f;
-            pearl.Initialize(this, direction.normalized * initialSpeed);
+            pearl.Initialize(this.attackPower, this.mobStunTime, this.attackSpeed, this.isEvolved, direction.normalized * initialSpeed);
         }
 
         #endregion

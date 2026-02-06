@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1029970897304350661}
   - component: {fileID: 1954461616781348138}
-  - component: {fileID: 7851789508565027945}
   - component: {fileID: 8895233736637493165}
   - component: {fileID: 1097775034256607769}
   - component: {fileID: 4183574122275040980}
+  - component: {fileID: 3173064971277021958}
   m_Layer: 0
   m_Name: player_Racoon
   m_TagString: Player
@@ -91,26 +91,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7851789508565027945
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2242325960951905811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58ba749bfe565104c91ba6257af7d839, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_attackPower: 10
-  m_coolTime: 1
-  m_attackSpeed: 1
-  m_weaponSize: 1
-  m_projectileCount: 1
-  m_maxHealth: 100
-  m_defense: 0
-  m_moveSpeed: 2.5
 --- !u!95 &8895233736637493165
 Animator:
   serializedVersion: 7
@@ -196,3 +176,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &3173064971277021958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2242325960951905811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 179884493eb497e4a960008f79ca7043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_config: {fileID: 11400000, guid: d61b8e77b96600f4d9b90a80751ff0a0, type: 2}
+  m_stats:
+    AttackPower: 0
+    CoolTime: 0
+    AttackSpeed: 0
+    WeaponSize: 0
+    ProjectileCount: 0
+    MaxHealth: 0
+    CurrentHealth: 0
+    Defense: 0
+    MoveSpeed: 0

@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using InGame.Manager;
 using InGame.Mob.MobBase;
+using InGame.ObjectPool;
 using InGame.Player.Player_Base;
 using InGame.vamsir;
 using UnityEngine;
@@ -13,6 +14,10 @@ using Random = UnityEngine.Random;
 
 namespace InGame
 {
+    /// <summary>
+    /// 오브젝트 풀 관리 및 스폰 시스템을 담당하는 MonoBehaviour 컴포넌트입니다.
+    /// 실제 로직은 WaveSystem과 SpawnPositionSolver POCO 클래스에 위임합니다.
+    /// </summary>
     public class ObjectPoolSpawner : MonoBehaviour
     {
         #region 필드 및 속성
@@ -24,6 +29,7 @@ namespace InGame
         [SerializeField] private SpriteRenderer m_mapRange;
         private Bounds m_mapBounds;
 
+        // 오브젝트 풀
         public IObjectPool<MobBase> MobObjectPool { get; private set; }
         public IObjectPool<EXP_Obj> ExpObjectPool { get; private set; }
         public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
@@ -33,13 +39,25 @@ namespace InGame
 
         [Header("Mob Settings")]
         [SerializeField] private int m_initialMobCount = 20;
-        [SerializeField] private int m_mobsPerWave = 20;
+        [SerializeField] private int m_mobIncreasePerWave = 5;
         [SerializeField] private int m_maxPoolSize = 100;
+        [SerializeField] private float m_waveDelay = 3f;
         [SerializeField] private AssetReferenceGameObject m_mobPrefabReference;
         [SerializeField] private Transform m_mobParent;
 
-        public int ActiveMobCount { get; private set; }
-        public int CurrentWave { get; private set; }
+        // POCO 시스템 (로직 분리)
+        private WaveSystem m_waveSystem;
+        private SpawnPositionSolver m_positionSolver;
+
+        /// <summary>
+        /// 현재 활성 몹 수 (WaveSystem에서 관리)
+        /// </summary>
+        public int ActiveMobCount => m_waveSystem?.ActiveMobCount ?? 0;
+
+        /// <summary>
+        /// 현재 웨이브 번호 (WaveSystem에서 관리)
+        /// </summary>
+        public int CurrentWave => m_waveSystem?.CurrentWave ?? 0;
 
         [Header("Item Settings")]
         [SerializeField] private AssetReferenceGameObject m_expPrefabReference;
@@ -48,8 +66,6 @@ namespace InGame
         [SerializeField] private float m_coinSpawnPercent = 25f;
 
         private readonly Dictionary<AssetReferenceGameObject, GameObject> m_loadedPrefabs = new Dictionary<AssetReferenceGameObject, GameObject>();
-        private bool m_isSpawningAllowed = true;
-        private CancellationTokenSource m_respawnCts;
 
         #endregion
 
@@ -58,21 +74,8 @@ namespace InGame
         private void Awake()
         {
             m_mainCamera = Camera.main;
-
-            if (m_mapRange == null)
-            {
-                var mapObj = GameObject.FindGameObjectWithTag("Map");
-                if (mapObj != null) m_mapRange = mapObj.GetComponent<SpriteRenderer>();
-            }
-
-            if (m_mapRange != null)
-            {
-                m_mapBounds = m_mapRange.bounds;
-            }
-            else
-            {
-                m_mapBounds = new Bounds(Vector3.zero, Vector3.one * 1000f);
-            }
+            InitializeMapBounds();
+            InitializePOCOSystems();
         }
 
         private void OnEnable()
@@ -83,15 +86,17 @@ namespace InGame
         private void OnDisable()
         {
             UnsubscribeEvents();
-            CancelRespawnTask();
+            m_waveSystem?.Pause();
         }
 
         private void OnDestroy()
         {
+            m_waveSystem?.Dispose();
+
             MobObjectPool?.Clear();
             ExpObjectPool?.Clear();
             CoinObjectPool?.Clear();
-            
+
             foreach (var pool in m_genericPools.Values)
             {
                 pool.Clear();
@@ -102,7 +107,42 @@ namespace InGame
 
         #endregion
 
-        #region 초기화 및 이벤트
+        #region 초기화
+
+        private void InitializeMapBounds()
+        {
+            if (m_mapRange == null)
+            {
+                var mapObj = GameObject.FindGameObjectWithTag("Map");
+                if (mapObj != null) m_mapRange = mapObj.GetComponent<SpriteRenderer>();
+            }
+
+            m_mapBounds = m_mapRange != null
+                ? m_mapRange.bounds
+                : new Bounds(Vector3.zero, Vector3.one * 1000f);
+        }
+
+        private void InitializePOCOSystems()
+        {
+            // 위치 계산 POCO 초기화
+            m_positionSolver = new SpawnPositionSolver(
+                mapBounds: m_mapBounds,
+                minSpawnDistance: 2f,
+                maxSpawnDistance: 10f,
+                maxAttempts: 30
+            );
+
+            // 웨이브 시스템 POCO 초기화
+            m_waveSystem = new WaveSystem(
+                initialMobCount: m_initialMobCount,
+                mobIncreasePerWave: m_mobIncreasePerWave,
+                maxMobCount: m_maxPoolSize,
+                waveDelay: m_waveDelay
+            );
+
+            // 웨이브 이벤트 구독
+            m_waveSystem.OnWaveStarted += OnWaveStarted;
+        }
 
         public async UniTask InitializeAndStartSpawning(PlayerBase player)
         {
@@ -117,8 +157,7 @@ namespace InGame
 
             if (PlayStateManager.instance.IsPlaying)
             {
-                SpawnInitialMobs();
-                CurrentWave = 1;
+                m_waveSystem.Start();
             }
         }
 
@@ -143,93 +182,48 @@ namespace InGame
             PlayStateManager.OnGamePause -= OnPause;
             PlayStateManager.OnGameResume -= OnResume;
             PlayStateManager.OnGameOver -= OnGameOver;
+
+            if (m_waveSystem != null)
+            {
+                m_waveSystem.OnWaveStarted -= OnWaveStarted;
+            }
         }
 
         #endregion
 
         #region 게임 상태 핸들러
 
-        private void OnPause() => m_isSpawningAllowed = false;
+        private void OnPause() => m_waveSystem?.Pause();
 
-        private void OnResume()
-        {
-            m_isSpawningAllowed = true;
-            // [수정] 게임 재개 시, 몹이 0마리인 상태였다면 다음 웨이브를 진행하도록 체크
-            CheckMobCount();
-        }
+        private void OnResume() => m_waveSystem?.Resume();
 
-        private void OnGameOver()
-        {
-            m_isSpawningAllowed = false;
-            CancelRespawnTask();
-        }
+        private void OnGameOver() => m_waveSystem?.Stop();
 
         private void OnPlayerChanged(PlayerBase newPlayer)
         {
             m_player = newPlayer;
         }
 
-        private void CancelRespawnTask()
-        {
-            if (m_respawnCts != null)
-            {
-                m_respawnCts.Cancel();
-                m_respawnCts.Dispose();
-                m_respawnCts = null;
-            }
-        }
-
         #endregion
 
-        #region 몹 스폰 로직
+        #region 웨이브 이벤트 핸들러
 
-        private void SpawnInitialMobs()
+        private void OnWaveStarted(int spawnCount)
         {
-            m_mobsPerWave = m_initialMobCount;
-            SpawnMobs(m_mobsPerWave);
+            SpawnMobs(spawnCount);
         }
 
         private void SpawnMobs(int count)
         {
-            if (!m_isSpawningAllowed) return;
+            if (m_waveSystem == null || !m_waveSystem.IsSpawningAllowed) return;
 
             for (int i = 0; i < count; i++)
             {
-                if (ActiveMobCount < m_maxPoolSize)
+                if (m_waveSystem.CanSpawn())
                 {
                     MobObjectPool.Get();
                 }
             }
-        }
-
-        private void CheckMobCount()
-        {
-            if (ActiveMobCount <= 0 && m_isSpawningAllowed)
-            {
-                CancelRespawnTask();
-                m_respawnCts = new CancellationTokenSource();
-                
-                var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(m_respawnCts.Token, this.GetCancellationTokenOnDestroy());
-                RespawnWaveAsync(linkedCts.Token).Forget();
-            }
-        }
-
-        private async UniTaskVoid RespawnWaveAsync(CancellationToken token)
-        {
-            try
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(3), ignoreTimeScale: true, cancellationToken: token);
-                
-                if (!m_isSpawningAllowed) return;
-
-                CurrentWave++;
-                m_mobsPerWave = Mathf.Min(m_mobsPerWave + 5, m_maxPoolSize);
-                
-                LogManager.Log($"[Spawner] Wave {CurrentWave} Start (Count: {m_mobsPerWave})", LogManager.LogCategory.ObjectPoolSpawner);
-                
-                SpawnMobs(m_mobsPerWave);
-            }
-            catch (OperationCanceledException) { /* 정상 취소 */ }
         }
 
         #endregion
@@ -238,7 +232,7 @@ namespace InGame
 
         private void SpawnItems(MobBase deadMob)
         {
-            if (!m_isSpawningAllowed) return;
+            if (m_waveSystem == null || !m_waveSystem.IsSpawningAllowed) return;
 
             Vector3 pos = deadMob.transform.position;
 
@@ -257,31 +251,33 @@ namespace InGame
         #region Pool Callbacks
 
         private MobBase CreateMob() => CreatePoolObject<MobBase>(m_mobPrefabReference);
+
         private EXP_Obj CreateExp()
         {
             bool isBig = CurrentWave >= 5 && Random.value > 0.9f;
             return CreatePoolObject<EXP_Obj>(isBig ? m_bigExpPrefabReference : m_expPrefabReference);
         }
+
         private Coin_Obj CreateCoin() => CreatePoolObject<Coin_Obj>(m_coinPrefabReference);
 
         private void OnGetMob(MobBase mob)
         {
             OnGetObject(mob);
-            
-            Vector3 spawnPos = GetValidSpawnPosition();
+
+            // POCO를 통한 위치 계산
+            Vector3 spawnPos = m_positionSolver.CalculateSpawnPosition(m_mainCamera);
             mob.transform.position = spawnPos;
-            
-            ActiveMobCount++;
+
+            m_waveSystem?.OnMobSpawned();
             mob.SetTarget(m_player);
         }
 
         private void OnReleaseMob(MobBase mob)
         {
             OnReleaseObject(mob);
-            ActiveMobCount--;
-            
-            SpawnItems(mob);   
-            CheckMobCount();   
+            m_waveSystem?.OnMobDied();
+
+            SpawnItems(mob);
         }
 
         private void OnGetObject<T>(T obj) where T : MonoBehaviour => obj.gameObject.SetActive(true);
@@ -294,7 +290,7 @@ namespace InGame
         private T CreatePoolObject<T>(AssetReferenceGameObject refObj) where T : MonoBehaviour
         {
             if (!m_loadedPrefabs.TryGetValue(refObj, out var prefab) || prefab == null) return null;
-            
+
             var obj = Instantiate(prefab, m_mobParent).GetComponent<T>();
             if (obj is IObjectPoolUser poolUser)
             {
@@ -335,7 +331,7 @@ namespace InGame
         {
             if (instance == null) return;
 
-            if (m_instanceToPrefabMap.TryGetValue(instance, out var prefab) && 
+            if (m_instanceToPrefabMap.TryGetValue(instance, out var prefab) &&
                 m_genericPools.TryGetValue(prefab, out var pool))
             {
                 pool.Release(instance);
@@ -387,57 +383,6 @@ namespace InGame
             return m_loadedPrefabs.ContainsKey(m_mobPrefabReference) &&
                    m_loadedPrefabs.ContainsKey(m_expPrefabReference) &&
                    m_loadedPrefabs.ContainsKey(m_coinPrefabReference);
-        }
-
-        private Vector3 GetValidSpawnPosition()
-        {
-            if (m_mainCamera == null) return Vector3.zero;
-
-            Vector3 camPos = m_mainCamera.transform.position;
-            camPos.z = 0; // Z축 보정
-
-            float camHeight = m_mainCamera.orthographicSize;
-            float camWidth = camHeight * m_mainCamera.aspect;
-
-            // 화면 대각선 길이 + 여유분 (확실히 화면 밖으로)
-            float minSpawnDist = Mathf.Sqrt(camWidth * camWidth + camHeight * camHeight) + 2.0f;
-            float maxSpawnDist = minSpawnDist + 8.0f; // 스폰 범위 확장
-
-            int maxAttempts = 30; // 시도 횟수 증가
-
-            // 1차 시도: 카메라 주변 랜덤 위치 (도넛 모양)
-            for (int i = 0; i < maxAttempts; i++)
-            {
-                Vector2 randomDir = Random.insideUnitCircle.normalized;
-                float distance = Random.Range(minSpawnDist, maxSpawnDist);
-                
-                Vector3 candidatePos = camPos + (Vector3)(randomDir * distance);
-
-                if (m_mapBounds.Contains(candidatePos))
-                {
-                    return candidatePos;
-                }
-            }
-
-            // 2차 시도: 맵 전체 랜덤 위치 중 카메라와 먼 곳 찾기 (Fallback)
-            for (int i = 0; i < 20; i++)
-            {
-                Vector3 randomMapPos = GetRandomPositionInMap();
-                if (Vector3.Distance(camPos, randomMapPos) >= minSpawnDist)
-                {
-                    return randomMapPos;
-                }
-            }
-
-            // 최후의 수단: 그냥 맵 안 랜덤 (극단적인 코너링 상황 등)
-            return GetRandomPositionInMap();
-        }
-
-        private Vector3 GetRandomPositionInMap()
-        {
-            float x = Random.Range(m_mapBounds.min.x, m_mapBounds.max.x);
-            float y = Random.Range(m_mapBounds.min.y, m_mapBounds.max.y);
-            return new Vector3(x, y, 0f);
         }
 
         #endregion

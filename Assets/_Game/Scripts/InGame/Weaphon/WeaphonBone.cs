@@ -63,7 +63,7 @@ namespace InGame.Weaphon
             if (obj == null) return;
 
             obj.ResetState();
-            obj.Initialize(this); // WeaphonBone 참조는 여전히 필요할 수 있습니다 (예: 공격력 정보)
+            obj.Initialize(this.attackPower, this.mobStunTime, this.attackSpeed, this.isEvolved);
             obj.gameObject.SetActive(true);
         }
 

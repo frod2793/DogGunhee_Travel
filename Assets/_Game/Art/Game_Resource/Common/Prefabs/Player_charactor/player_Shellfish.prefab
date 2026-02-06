@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 6986335789877109087}
   - component: {fileID: 7542069240024341239}
-  - component: {fileID: 6926820551925625877}
   - component: {fileID: 3058511848805722441}
   - component: {fileID: 702256187593941302}
   - component: {fileID: 1202919233577724629}
+  - component: {fileID: 6611094536069402438}
   m_Layer: 0
   m_Name: player_Shellfish
   m_TagString: Player
@@ -91,26 +91,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &6926820551925625877
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8540083127731026762}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aaab1df5643846f48b77f33d557aeb3e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_attackPower: 10
-  m_coolTime: 1
-  m_attackSpeed: 1
-  m_weaponSize: 1
-  m_projectileCount: 1
-  m_maxHealth: 100
-  m_defense: 0
-  m_moveSpeed: 2.5
 --- !u!95 &3058511848805722441
 Animator:
   serializedVersion: 7
@@ -196,3 +176,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &6611094536069402438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8540083127731026762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 179884493eb497e4a960008f79ca7043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_config: {fileID: 11400000, guid: b85873dafbcca034e9d5efd9a31d77d3, type: 2}
+  m_stats:
+    AttackPower: 0
+    CoolTime: 0
+    AttackSpeed: 0
+    WeaponSize: 0
+    ProjectileCount: 0
+    MaxHealth: 0
+    CurrentHealth: 0
+    Defense: 0
+    MoveSpeed: 0

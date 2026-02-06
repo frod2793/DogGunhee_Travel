@@ -8,12 +8,15 @@ using InGame.Weaphon.Base;
 
 namespace InGame.Weaphon
 {
-    public class BoneBullet : WeaphonBase
+    public class BoneBullet : MonoBehaviour
     {
         #region 필드 및 변수
 
-        // public WeaphonBone ObjectPoolSpawner { get; set; } // 제거: WeaponPoolManager를 통해 관리
         public float BulletSpeed { get; set; }
+        
+        private float m_attackPower;
+        private float m_stunTime;
+        private bool m_isEvolved;
 
         [Header("이동 설정")]
         [SerializeField]
@@ -37,6 +40,13 @@ namespace InGame.Weaphon
         private Vector3 m_attackAngle;
         private bool m_isActive;
         private Tween m_moveTween;
+        private System.Threading.CancellationTokenSource m_lifetimeCts;
+
+        // 이동 감지 관련
+        private Vector3 m_lastPosition;
+        private float m_stoppedTime;
+        private const float k_StopThreshold = 0.01f; // 정지 판정 임계값
+        private const float k_MaxStoppedDuration = 0.3f; // 정지 상태 최대 허용 시간 (초)
 
         private const int k_MaxOverlapColliders = 10;
         private readonly Collider2D[] m_overlapResults = new Collider2D[k_MaxOverlapColliders];
@@ -56,36 +66,50 @@ namespace InGame.Weaphon
             m_contactFilter.useLayerMask = true;
         }
 
-        private new void OnEnable()
+        private void OnEnable()
         {
-            SetWeaphonState(WeaphonState.Idle);
             m_isActive = true;
+            m_lastPosition = m_transform.position;
+            m_stoppedTime = 0f;
             SoundManager.PlaySound(Sound.SFX, SoundKeys.Throwbone);
         }
 
-        private new void OnDisable()
+        private void OnDisable()
         {
             m_isActive = false;
             m_moveTween?.Kill();
+            m_lifetimeCts?.Cancel();
+            m_lifetimeCts?.Dispose();
+            m_lifetimeCts = null;
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
+        private void Update()
         {
-            if (!m_isActive || !other.CompareTag("Mob")) return;
+            if (!m_isActive) return;
 
-            if (other.TryGetComponent(out MobBase mob))
+            // 이동 감지: 현재 위치와 이전 프레임 위치 비교
+            float distanceMoved = Vector3.Distance(m_transform.position, m_lastPosition);
+            
+            if (distanceMoved < k_StopThreshold)
             {
-                mob.TakeDamage(attackPower, mobStunTime);
-            }
-
-            if (isEvolved)
-            {
-                BulletExplosion();
+                // 이동이 거의 없음 (정지 상태)
+                m_stoppedTime += Time.deltaTime;
+                
+                if (m_stoppedTime >= k_MaxStoppedDuration)
+                {
+                    // 일정 시간 동안 정지 상태 → 풀로 반환
+                    LogManager.Log("[BoneBullet] Movement stopped, returning to pool", LogManager.LogCategory.Weapon);
+                    ReleaseToPool();
+                    return;
+                }
             }
             else
             {
-                ReleaseToPool();
+                // 이동 중이면 타이머 리셋
+                m_stoppedTime = 0f;
             }
+
+            m_lastPosition = m_transform.position;
         }
 
         #endregion
@@ -103,6 +127,13 @@ namespace InGame.Weaphon
             m_attackAngle = direction.normalized;
             Vector3 targetPosition = m_transform.position + m_attackAngle * m_travelDistance;
             float duration = m_travelDistance / BulletSpeed;
+
+            // 최대 생명 시간 보장 (풀 누수 방지)
+            m_lifetimeCts?.Cancel();
+            m_lifetimeCts?.Dispose();
+            m_lifetimeCts = new System.Threading.CancellationTokenSource();
+            float maxLifetime = duration + 2f; // 여유 시간 추가
+            LifetimeGuardAsync(maxLifetime, m_lifetimeCts.Token).Forget();
 
             var token = this.GetCancellationTokenOnDestroy();
 
@@ -142,22 +173,64 @@ namespace InGame.Weaphon
             ReleaseToPool();
         }
 
+        /// <summary>
+        /// 최대 생명 시간 보장 (풀 반환 누락 방지)
+        /// </summary>
+        private async UniTaskVoid LifetimeGuardAsync(float maxLifetime, System.Threading.CancellationToken token)
+        {
+            try
+            {
+                await UniTask.Delay(System.TimeSpan.FromSeconds(maxLifetime), cancellationToken: token);
+                
+                // 시간 초과 시 강제로 풀 반환
+                if (m_isActive)
+                {
+                    LogManager.LogWarning("[BoneBullet] Lifetime expired, forcing pool return", LogManager.LogCategory.Weapon);
+                    ReleaseToPool();
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
+                // 정상 취소 (총알이 이미 반환됨)
+            }
+        }
+
         private void ReleaseToPool()
         {
             if (!m_isActive) return;
             m_isActive = false;
             m_moveTween?.Kill();
+            m_lifetimeCts?.Cancel();
 
             // WeaponPoolManager를 통해 자신을 풀로 반환합니다.
             WeaponPoolManager.Instance.Release(this);
         }
 
-        public void Initialize(WeaphonBase parentWeapon)
+        public void Initialize(float damage, float stunTime, float speed, bool isEvolved)
         {
-            isEvolved = parentWeapon.isEvolved;
-            attackPower = parentWeapon.attackPower;
-            mobStunTime = parentWeapon.mobStunTime;
-            BulletSpeed = parentWeapon.attackSpeed;
+            m_attackPower = damage;
+            m_stunTime = stunTime;
+            BulletSpeed = speed;
+            m_isEvolved = isEvolved;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (!m_isActive || !other.CompareTag("Mob")) return;
+
+            if (other.TryGetComponent(out MobBase mob))
+            {
+                mob.TakeDamage(m_attackPower, m_stunTime);
+            }
+
+            if (m_isEvolved)
+            {
+                BulletExplosion();
+            }
+            else
+            {
+                ReleaseToPool();
+            }
         }
 
         public void ResetState()
@@ -165,6 +238,11 @@ namespace InGame.Weaphon
             m_isActive = true;
             m_transform.DOKill();
             m_transform.rotation = Quaternion.identity;
+            m_lifetimeCts?.Cancel();
+            m_lifetimeCts?.Dispose();
+            m_lifetimeCts = null;
+            m_lastPosition = m_transform.position;
+            m_stoppedTime = 0f;
         }
 
         #endregion

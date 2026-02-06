@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 8510614628967544747}
   - component: {fileID: 2792773351644889932}
-  - component: {fileID: 2484896779174902975}
   - component: {fileID: 3114147942539962820}
   - component: {fileID: 2749248097042302060}
   - component: {fileID: 7595744428493656112}
+  - component: {fileID: 5790709699531098207}
   m_Layer: 0
   m_Name: player_Octopus
   m_TagString: Player
@@ -91,26 +91,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2484896779174902975
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4725009979178923755}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 315bcc6471fd17f48be0f85551ec5089, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_attackPower: 10
-  m_coolTime: 1
-  m_attackSpeed: 1
-  m_weaponSize: 1
-  m_projectileCount: 1
-  m_maxHealth: 100
-  m_defense: 0
-  m_moveSpeed: 2.5
 --- !u!95 &3114147942539962820
 Animator:
   serializedVersion: 7
@@ -196,3 +176,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &5790709699531098207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4725009979178923755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 179884493eb497e4a960008f79ca7043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_config: {fileID: 11400000, guid: cd17b3a75615bae499b1e9aba25e4193, type: 2}
+  m_stats:
+    AttackPower: 0
+    CoolTime: 0
+    AttackSpeed: 0
+    WeaponSize: 0
+    ProjectileCount: 0
+    MaxHealth: 0
+    CurrentHealth: 0
+    Defense: 0
+    MoveSpeed: 0

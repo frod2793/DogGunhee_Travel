@@ -1,118 +1,68 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Cysharp.Threading.Tasks;
 using InGame.Manager;
-using InGame.Mob.MobBase;
 using UnityEngine;
-using InGame;
-using InGame.vamsir;
 using InGame.Weaphon.Base;
 
 namespace InGame.Player.Player_Base
 {
+    /// <summary>
+    /// 플레이어의 공통 기능을 담당하는 베이스 클래스입니다.
+    /// </summary>
     public class PlayerBase : MonoBehaviour
     {
-        #region 플레이어 스탯 (인스펙터)
+        #region 구성 요소
+        [Header("캐릭터 설정")]
+        [SerializeField] private CharacterConfigSO m_config;
+        
+        [Header("데이터 설정")]
+        [SerializeField] private PlayerStats m_stats = new PlayerStats();
+        
+        private ExperienceSystem m_expSystem = new ExperienceSystem();
+        private PlayerCollisionHandler m_collisionHandler;
+        private PlayerWeaponManager m_weaponManager;
+        #endregion
 
-        [Header("공격 관련 스탯")] [SerializeField] private float m_attackPower = 10f;
-
-        public float AttackPower
-        {
-            get => m_attackPower;
-            set => m_attackPower = value;
+        #region 프로퍼티 (External Access)
+        public float AttackPower { get => m_stats.AttackPower; set => m_stats.AttackPower = value; }
+        public float CoolTime { get => m_stats.CoolTime; set => m_stats.CoolTime = value; }
+        public float AttackSpeed { get => m_stats.AttackSpeed; set => m_stats.AttackSpeed = value; }
+        public float WeaponSize { get => m_stats.WeaponSize; set => m_stats.WeaponSize = value; }
+        public float ProjectileCount { get => m_stats.ProjectileCount; set => m_stats.ProjectileCount = value; }
+        
+        public float MaxHealth 
+        { 
+            get => m_stats.MaxHealth; 
+            set 
+            { 
+                m_stats.MaxHealth = value; 
+                OnHealthChanged?.Invoke(m_stats.CurrentHealth, m_stats.MaxHealth); 
+            } 
         }
+        public float CurrentHealth => m_stats.CurrentHealth;
+        public float Defense { get => m_stats.Defense; set => m_stats.Defense = value; }
+        public float MoveSpeed { get => m_stats.MoveSpeed; set => m_stats.MoveSpeed = value; }
 
-        [SerializeField] private float m_coolTime = 1f;
+        public float Level => m_expSystem.Level;
+        public float CurrentExp => m_expSystem.CurrentExp;
+        public float MaxExp => m_expSystem.MaxExp;
+        
+        public IReadOnlyList<WeaphonBase> Weapons => m_weaponManager?.Weapons;
+        #endregion
 
-        public float CoolTime
-        {
-            get => m_coolTime;
-            set => m_coolTime = value;
-        }
-
-        [SerializeField] private float m_attackSpeed = 1f;
-
-        public float AttackSpeed
-        {
-            get => m_attackSpeed;
-            set => m_attackSpeed = value;
-        }
-
-        [SerializeField] private float m_weaponSize = 1f;
-
-        public float WeaponSize
-        {
-            get => m_weaponSize;
-            set => m_weaponSize = value;
-        }
-
-        [SerializeField] private float m_projectileCount = 1f;
-
-        public float ProjectileCount
-        {
-            get => m_projectileCount;
-            set => m_projectileCount = value;
-        }
-
-        [Header("방어 및 생존 관련 스탯")] [SerializeField]
-        private float m_maxHealth = 100f;
-
-        public float MaxHealth
-        {
-            get => m_maxHealth;
-            set
-            {
-                m_maxHealth = value;
-                OnHealthChanged?.Invoke(CurrentHealth, m_maxHealth);
-            }
-        }
-
-        public float CurrentHealth { get; private set; }
-        [SerializeField] private float m_defense = 0f;
-
-        public float Defense
-        {
-            get => m_defense;
-            set => m_defense = value;
-        }
-
-        [SerializeField] private float m_moveSpeed = 5f;
-
-        public float MoveSpeed
-        {
-            get => m_moveSpeed;
-            set => m_moveSpeed = value;
-        }
-
-        [Header("캐릭터 정보")] public float Level { get; set; } = 1f;
-        public float CurrentExp { get; set; } = 0f;
-        public float MaxExp { get; set; } = 100f;
-
+        #region 정적 및 인스턴스 이벤트
         public static event Action<float> OnLevelUp;
         public static event Action<float, float> OnExpChanged;
         public event Action<float, float> OnHealthChanged;
-
-        #endregion
-
-        #region 내부 상태 관리
-
-        private bool m_isHit = false;
-        private bool m_isColliderActive = true;
-        private float m_damageTickTimer = 0f;
-        private const float k_ContactDamageInterval = 1.0f;
-
-        private List<WeaphonBase> m_weapons = new List<WeaphonBase>();
-        public IReadOnlyList<WeaphonBase> Weapons => m_weapons.AsReadOnly();
-
         #endregion
 
         #region 초기화
-
         public virtual void OnEnable()
         {
-            InitializeStats();
+            InitializeComponents();
+            InitializeSystems();
             SubscribeEvents();
+            
             OnLevelUp?.Invoke(Level);
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
@@ -123,27 +73,37 @@ namespace InGame.Player.Player_Base
             UnsubscribeEvents();
         }
 
-        private void LateUpdate()
+        private void InitializeComponents()
         {
-            foreach (var weapon in m_weapons)
+            m_collisionHandler = GetComponent<PlayerCollisionHandler>();
+            if (m_collisionHandler == null)
             {
-                if (weapon != null)
-                {
-                    weapon.transform.position = transform.position;
-                }
+                m_collisionHandler = gameObject.AddComponent<PlayerCollisionHandler>();
             }
+            m_collisionHandler.Init(this);
+            
+            // POCO 생성
+            m_weaponManager = new PlayerWeaponManager(transform);
         }
 
-        private void InitializeStats()
+        private void Update()
         {
-            Level = 1f;
-            CurrentExp = 0f;
-            MaxExp = CalculateMaxExpForLevel(Level);
-            CurrentHealth = MaxHealth;
-            m_isHit = false;
-            m_isColliderActive = true;
-            m_damageTickTimer = 0f;
-            m_weapons.Clear();
+            m_weaponManager?.OnUpdate();
+        }
+
+        private void LateUpdate()
+        {
+            m_weaponManager?.OnLateUpdate();
+        }
+
+        private void InitializeSystems()
+        {
+            float maxHp = m_config != null ? m_config.BaseMaxHealth : 100f;
+            float speed = m_config != null ? m_config.BaseMoveSpeed : 5f;
+            float attack = m_config != null ? m_config.BaseAttackPower : 10f;
+
+            m_stats.Initialize(maxHp, speed, attack);
+            m_expSystem.Init();
         }
 
         private void SubscribeEvents()
@@ -151,6 +111,16 @@ namespace InGame.Player.Player_Base
             PlayStateManager.OnGameOver += OnGameOver;
             PlayStateManager.OnGamePause += OnGamePause;
             PlayStateManager.OnGameResume += OnGameResume;
+            
+            m_expSystem.OnLevelUp += HandleLevelUp;
+            m_expSystem.OnExpChanged += (cur, max) => OnExpChanged?.Invoke(cur, max);
+            
+            if (m_collisionHandler != null)
+            {
+                m_collisionHandler.OnDamageReceived += ApplyDamage;
+                m_collisionHandler.OnExpCollected += m_expSystem.AddExperience;
+                m_collisionHandler.OnCoinCollected += HandleCoinCollected;
+            }
         }
 
         private void UnsubscribeEvents()
@@ -159,135 +129,54 @@ namespace InGame.Player.Player_Base
             PlayStateManager.OnGamePause -= OnGamePause;
             PlayStateManager.OnGameResume -= OnGameResume;
         }
-
-        private void OnGameResume() => m_isColliderActive = true;
-        private void OnGamePause() => m_isColliderActive = false;
-        private void OnGameOver() => m_isColliderActive = false;
-
-        public void AddWeapon(WeaphonBase weapon)
-        {
-            if (weapon != null)
-            {
-                m_weapons.Add(weapon);
-            }
-        }
-
-        public void RemoveWeapon(string skillCode)
-        {
-            var weaponToRemove = m_weapons.FirstOrDefault(w => w.skillCode == skillCode);
-            if (weaponToRemove != null)
-            {
-                m_weapons.Remove(weaponToRemove);
-                Destroy(weaponToRemove.gameObject);
-            }
-        }
-
         #endregion
 
-        #region 충돌 처리 및 틱 데미지
+        #region 게임 상태 핸들러
+        private void OnGameResume() => m_collisionHandler?.SetColliderActive(true);
+        private void OnGamePause() => m_collisionHandler?.SetColliderActive(false);
+        private void OnGameOver() => m_collisionHandler?.SetColliderActive(false);
+        #endregion
 
-        public virtual void OnCollisionEnter2D(Collision2D other)
-        {
-            if (!m_isColliderActive) return;
+        #region 무기 관리 (위임)
+        public void AddWeapon(WeaphonBase weapon) => m_weaponManager?.AddWeapon(weapon);
+        public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
+        public void SetTargetProvider(Func<Vector3> provider) => m_weaponManager?.SetTargetProvider(provider);
+        public void EquipWeapon(WeaponDataSO data) => m_weaponManager?.EquipWeapon(data);
+        #endregion
 
-            if (other.gameObject.CompareTag("Mob"))
-            {
-                HandleMobCollision(other.gameObject);
-                m_damageTickTimer = 0f;
-            }
-            else if (other.gameObject.CompareTag("Exp"))
-            {
-                HandleExpCollision(other.gameObject);
-            }
-            // [추가] 코인 충돌 처리
-            else if (other.gameObject.CompareTag("Coin"))
-            {
-                HandleCoinCollision(other.gameObject);
-            }
-        }
-
-        public virtual void OnCollisionStay2D(Collision2D other)
-        {
-            if (!m_isColliderActive || !other.gameObject.CompareTag("Mob")) return;
-            m_damageTickTimer += Time.fixedDeltaTime;
-            if (m_damageTickTimer >= k_ContactDamageInterval)
-            {
-                HandleMobCollision(other.gameObject);
-                m_damageTickTimer = 0f;
-            }
-        }
-
-        public virtual void OnCollisionExit2D(Collision2D other)
-        {
-            if (other.gameObject.CompareTag("Mob"))
-            {
-                m_damageTickTimer = 0f;
-            }
-        }
-
-        private void HandleMobCollision(GameObject mobObject)
-        {
-            if (m_isHit) return;
-            if (mobObject.TryGetComponent(out MobBase mob))
-            {
-                float damageAmount = CalculateIncomingDamage(mob.AttackDamage);
-                ApplyDamage(damageAmount);
-                EnableHitCooldown(0.5f).Forget();
-            }
-        }
-
-        private float CalculateIncomingDamage(float rawDamage)
-        {
-            return Mathf.Max(1, rawDamage * (100 / (100 + Defense)));
-        }
-
+        #region 데미지 및 경험치 처리
         private void ApplyDamage(float damageAmount)
         {
-            CurrentHealth -= damageAmount;
+            m_stats.ApplyDamage(damageAmount);
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
             EffectManager.Instance?.PlayPlayerHitCameraShake();
             PlayHitEffect();
-            if (CurrentHealth <= 0)
-            {
-                Player_Die();
-            }
+            
+            if (m_stats.IsDead) Player_Die();
         }
 
-        private void HandleExpCollision(GameObject expObject)
+        private void HandleLevelUp(int level)
         {
-            if (expObject.TryGetComponent(out EXP_Obj expObj) && expObj.ObjectPoolSpawner != null)
-            {
-                AddExperience(expObj.ExpValue);
-                expObj.ObjectPoolSpawner.ExpObjectPool.Release(expObj);
-                SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
-            }
+            OnLevelUp?.Invoke(level);
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.Levelup, false);
         }
-
-        // [추가] 코인 충돌 처리 메서드
-        private void HandleCoinCollision(GameObject coinObject)
+        
+        private void HandleCoinCollected(int coinValue)
         {
-            if (coinObject.TryGetComponent(out Coin_Obj coinObj) && coinObj.ObjectPoolSpawner != null)
+            if (PlayerDataManagerDontdesytoy.Instance != null)
             {
-                if (PlayerDataManagerDontdesytoy.Instance != null)
-                {
-                    PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin += 1;
-                }
-
-                coinObj.ObjectPoolSpawner.CoinObjectPool.Release(coinObj);
-                SoundManager.PlaySound(Sound.SFX, SoundKeys.GetCoin, false);
+                PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin += coinValue;
             }
         }
-
         #endregion
 
         #region 플레이어 액션
-
-        public virtual void Player_attack(Vector3 attackAngle)
-        {
-        }
-
-        protected virtual void PlayHitEffect()
-        {
+        public virtual void Player_attack(Vector3 attackAngle) { }
+        
+        protected virtual void PlayHitEffect() 
+        { 
+            SoundKeys hitSound = m_config != null ? m_config.HitSoundKey : SoundKeys.playerHit;
+            SoundManager.PlaySound(Sound.SFX, hitSound, false);
         }
 
         public virtual void Player_Die()
@@ -296,66 +185,14 @@ namespace InGame.Player.Player_Base
             {
                 PlayStateManager.instance.PlayState = PlayStateManager.GameState.GameOver;
             }
+            
+            SoundKeys deathSound = m_config != null ? m_config.DeathSoundKey : SoundKeys.PlayerDeth;
+            SoundManager.PlaySound(Sound.SFX, deathSound, false);
         }
-
-        #endregion
-
-        #region 경험치 시스템
-
-        public void AddExperience(float expAmount)
-        {
-            CurrentExp += expAmount;
-            CheckLevelUp();
-        }
-
-        private void CheckLevelUp()
-        {
-            bool leveledUp = false;
-            while (CurrentExp >= MaxExp)
-            {
-                CurrentExp -= MaxExp;
-                Level++;
-                MaxExp = CalculateMaxExpForLevel(Level);
-                leveledUp = true;
-                OnLevelUp?.Invoke(Level);
-            }
-
-            if (leveledUp)
-            {
-                SoundManager.PlaySound(Sound.SFX, SoundKeys.Levelup, false);
-            }
-
-            OnExpChanged?.Invoke(CurrentExp, MaxExp);
-        }
-
-        private float CalculateMaxExpForLevel(float level)
-        {
-            return (level + 1) * 10f;
-        }
-
-        public float GetExpProgress()
-        {
-            return MaxExp > 0 ? CurrentExp / MaxExp : 0f;
-        }
-
         #endregion
 
         #region 유틸리티
-
-        private async UniTaskVoid EnableHitCooldown(float duration)
-        {
-            m_isHit = true;
-            try
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(duration),
-                    cancellationToken: this.GetCancellationTokenOnDestroy());
-            }
-            finally
-            {
-                m_isHit = false;
-            }
-        }
-
+        public float GetExpProgress() => m_expSystem.GetProgress();
         #endregion
     }
 }
