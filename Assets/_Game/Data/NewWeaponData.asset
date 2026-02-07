@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: NewWeaponData
   m_EditorClassIdentifier: 
-  SkillCode: 
-  WeaponName: 
+  SkillCode: WP_BONE
+  WeaponName: Bone
   Icon: {fileID: 0}
   Description: 
   BaseAttackPower: 0
@@ -23,5 +23,6 @@ MonoBehaviour:
   BaseDuration: 0
   BaseProjectileCount: 1
   ProjectilePrefab: {fileID: 0}
+  ModelPrefab: {fileID: 0}
   EffectPrefab: {fileID: 0}
   Upgrades: []

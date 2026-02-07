@@ -366,8 +366,8 @@ namespace InGame.Manager
             StartAutoSelectionTimer();
             m_skillChoices.Clear();
 
-            var ownedWeapons = m_gameManager.SpawnedPlayer?.Weapons.ToDictionary(w => w.skillCode) ??
-                               new Dictionary<string, WeaponBase>();
+            var ownedWeapons = m_gameManager.SpawnedPlayer?.Weapons.ToDictionary(w => w.SkillCode) ??
+                               new Dictionary<string, IWeaponController>();
             
             // InventoryDataManager에서 획득한 스킬을 확인
             var acquiredAccessoryCodes = new HashSet<string>();
@@ -386,8 +386,8 @@ namespace InGame.Manager
                     if (ownedWeapons.TryGetValue(skill.skillCode, out var weapon))
                     {
                         // 보유 중인 무기는 최대 레벨 및 진화가 아닐 때만 레벨업 대상으로 포함
-                        return weapon.CurrentLevel < WeaponBase.k_MaxLevel ||
-                               (weapon.CurrentLevel == WeaponBase.k_MaxLevel && !weapon.isEvolved);
+                        return weapon.CurrentLevel < weapon.MaxLevel ||
+                               (weapon.CurrentLevel == weapon.MaxLevel && !weapon.IsEvolved);
                     }
 
                     return true; // 미보유 무기는 항상 포함
@@ -417,11 +417,11 @@ namespace InGame.Manager
             if (selectedSkill.skillType == SkillType.Weapon)
             {
                 var ownedWeapon =
-                    m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.skillCode == selectedSkill.skillCode);
+                    m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.SkillCode == selectedSkill.skillCode);
                 if (ownedWeapon != null)
                 {
                     // 이미 보유한 무기 -> 레벨업
-                    ownedWeapon.UpgradeLevel();
+                    ownedWeapon.LevelUp();
                     EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer
                         .GetComponent<SpriteRenderer>());
                 }
@@ -460,10 +460,10 @@ namespace InGame.Manager
         {
             if (m_gameManager.SpawnedPlayer == null) return;
             var weaponToUpgrade =
-                m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.upgradeItemCode == passiveItemCode);
+                m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.SkillData?.upgradeItemCode == passiveItemCode);
             if (weaponToUpgrade != null)
             {
-                weaponToUpgrade.UpgradeLevel();
+                weaponToUpgrade.LevelUp();
             }
         }
 

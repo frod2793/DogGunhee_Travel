@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using InGame.Weapon.Base;
+using InGame.Manager;
 
 namespace InGame.Weapon.Controllers
 {
@@ -84,6 +85,9 @@ namespace InGame.Weapon.Controllers
 
         public override void OnUpdate(float deltaTime)
         {
+            // 게임 상태 체크 (부모 OnUpdate는 사용하지 않으므로 직접 체크)
+            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
+
             if (m_activeBalls.Count == 0) return;
 
             float rotationDelta = m_runtimeStats.AttackSpeed * deltaTime;
@@ -99,7 +103,7 @@ namespace InGame.Weapon.Controllers
             UpdateBallPositions();
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             // Ballplay는 자동 궤도 공격이므로 수동 Attack은 무시됩니다.
         }

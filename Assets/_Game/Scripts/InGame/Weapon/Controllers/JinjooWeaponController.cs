@@ -81,7 +81,7 @@ namespace InGame.Weapon.Controllers
             }
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             // 이미 활성화된 진주가 있으면 무시
             if (PearlProjectile.Instance != null)

@@ -7,6 +7,8 @@ using InGame.Player.Player_Base;
 using InGame.Weapon.Base;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using Lobby;
+using InGame.Weapon;
 
 namespace InGame.Manager
 {
@@ -45,7 +47,7 @@ namespace InGame.Manager
         [Header("참조 설정")] [SerializeField]
         private GameObject m_playerContainer;
         [SerializeField] private SpriteRenderer m_mapRange; // 맵 범위 스프라이트 추가
-        [SerializeField] private OptionPopupManager m_optionPopupPrefab;
+        [SerializeField] private OptionPopupView m_optionPopupPrefab;
 
         [Header("디버그")] public List<SkillData> TestWeapons = new List<SkillData>();
 
@@ -316,60 +318,54 @@ namespace InGame.Manager
         public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true, int startLevel = 1,
             bool startEvolved = false)
         {
-            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon ||
-                string.IsNullOrEmpty(skillData.weaponAddressableKey))
+            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon)
             {
                 return;
             }
 
-            string key = skillData.weaponAddressableKey;
 
-            try
+            #region 신규 무기 시스템 (WeaponFactory + WeaponDataSO)
+
+            if (skillData.weaponData != null && WeaponFactory.IsRegistered(skillData.skillCode))
             {
-                var op = Addressables.InstantiateAsync(key, m_playerContainer.transform);
-                GameObject instance = await op.ToUniTask();
-
-                if (instance != null)
+                // WeaponFactory를 사용하여 컨트롤러 생성 (POCO)
+                var controller = WeaponFactory.CreateController(skillData.weaponData, SpawnedPlayer.transform, () => m_playerController.GetCalculatedAttackDirection());
+                
+                if (controller != null)
                 {
-                    instance.transform.localPosition = Vector3.zero;
-                    var newWeapon = instance.GetComponent<WeaponBase>();
-                    if (newWeapon != null)
+                    controller.SkillData = skillData;
+
+                    // 레벨 설정
+                    for (int i = 1; i < startLevel; i++)
                     {
-                        newWeapon.skillData = skillData;
-                        newWeapon.skillCode = skillData.skillCode;
-                        newWeapon.upgradeItemCode = skillData.upgradeItemCode;
-                        newWeapon.Thumnail = skillData.skillIcon;
-                        newWeapon.ApplyBaseStats();
-
-                        // [추가] 시작 레벨 및 진화 상태 적용
-                        for (int i = 1; i < startLevel; i++)
-                        {
-                            newWeapon.UpgradeLevel();
-                        }
-
-                        if (startEvolved)
-                        {
-                            // 최대 레벨까지 올린 후, 한 번 더 호출하여 진화시킴
-                            while (newWeapon.CurrentLevel < WeaponBase.k_MaxLevel)
-                            {
-                                newWeapon.UpgradeLevel();
-                            }
-
-                            newWeapon.UpgradeLevel();
-                        }
-
-                        SpawnedPlayer.AddWeapon(newWeapon);
-                        if (playEffect)
-                        {
-                            EffectManager.Instance.PlayLevelUpEffect(SpawnedPlayer.GetComponent<SpriteRenderer>());
-                        }
+                        controller.LevelUp();
                     }
+
+                    if (startEvolved)
+                    {
+                        while (controller.CurrentLevel < controller.MaxLevel)
+                        {
+                            controller.LevelUp();
+                        }
+                        controller.LevelUp(); // 진화
+                    }
+
+                    SpawnedPlayer.AddController(controller);
+
+                    if (playEffect)
+                    {
+                        EffectManager.Instance.PlayLevelUpEffect(SpawnedPlayer.GetComponent<SpriteRenderer>());
+                    }
+                    
+                    LogManager.Log($"[게임 매니저] 신규 시스템 기반 무기 장착 완료: {skillData.skillName}", LogManager.LogCategory.Weapon);
                 }
             }
-            catch (Exception e)
+            else
             {
-                LogManager.LogError($"[게임 매니저] 스킬로부터 무기 스폰 오류 ({key}): {e.Message}");
+                LogManager.LogWarning($"[게임 매니저] 무기 생성 실패: {skillData.skillName} (Data: {skillData.weaponData != null}, Registered: {WeaponFactory.IsRegistered(skillData.skillCode)})");
             }
+
+            #endregion
         }
 
         public void RemoveWeaponForTest(string skillCode)

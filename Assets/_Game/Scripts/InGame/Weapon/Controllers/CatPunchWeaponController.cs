@@ -101,7 +101,7 @@ namespace InGame.Weapon.Controllers
             // CatPunch는 공격 시에만 콜라이더 업데이트를 수행합니다.
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             if (m_isAttacking) return;
 

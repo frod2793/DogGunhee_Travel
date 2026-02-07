@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using InGame.Manager; // GameManager 사용
-using InGame.Weapon.Base;
 
 namespace InGame.Mob
 {
@@ -225,18 +224,8 @@ namespace InGame.Mob
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.CompareTag("Player_Attack"))
-            {
-                ProcessHit(other);
-            }
-        }
-
-        private void ProcessHit(Collider2D other)
-        {
-            if (other.TryGetComponent(out WeaponBase weapon))
-            {
-                TakeDamage(weapon.attackPower, weapon.mobStunTime);
-            }
+            // [리팩토링] 신규 무기 시스템에서는 각 투사체/공격 이펙트가 직접 MobBase.TakeDamage를 호출합니다.
+            // 따라서 몬스터 측에서의 별도 처리가 불필요합니다.
         }
 
         public override void TakeDamage(float damage, float stunTime = 0f)

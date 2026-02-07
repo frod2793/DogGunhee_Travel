@@ -27,6 +27,7 @@ namespace InGame.Manager
 
         public enum GameState
         {
+            Ready,      // 기본값
             Play,
             Pause,
             Resume,

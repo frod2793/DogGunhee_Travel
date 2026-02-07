@@ -139,6 +139,35 @@ namespace InGame
                     skill.BaseStats = data.BaseStats;
                     skill.EvolutionInfo = data.EvolutionInfo;
                     skill.Upgrades = data.Upgrades;
+
+                    // [추가] 신규 무기 시스템(WeaponDataSO)에도 데이터 동기화
+                    if (skill.weaponData != null)
+                    {
+                        var weapon = skill.weaponData;
+                        // 기본 정보 동기화
+                        weapon.SkillCode = skill.skillCode;
+                        weapon.WeaponName = data.Name;
+                        weapon.Description = data.Description;
+
+                        // 아이콘이 있다면 동기화 (선택 사항)
+                        // weapon.Icon = skill.skillIcon; 
+
+                        // 기본 스탯 동기화
+                        if (data.BaseStats != null)
+                        {
+                            if (data.BaseStats.TryGetValue("Damage", out float damage)) weapon.BaseAttackPower = damage;
+                            if (data.BaseStats.TryGetValue("Cooldown", out float cooldown)) weapon.BaseCoolTime = cooldown;
+                            if (data.BaseStats.TryGetValue("AttackSpeed", out float speed)) weapon.BaseAttackSpeed = speed;
+                            if (data.BaseStats.TryGetValue("WeaponSize", out float size)) weapon.BaseAttackRange = size; // WeaponSize를 AttackRange로 매핑
+                            if (data.BaseStats.TryGetValue("Duration", out float duration)) weapon.BaseDuration = duration;
+                            if (data.BaseStats.TryGetValue("ProjectileCount", out float count)) weapon.BaseProjectileCount = (int)count;
+                        }
+
+#if UNITY_EDITOR
+                        UnityEditor.EditorUtility.SetDirty(weapon);
+#endif
+                        Debug.Log($"[SkillDatabase] WeaponDataSO '{weapon.name}' Updated from XML.");
+                    }
                 }
             }
         }

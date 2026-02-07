@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
+using InGame.Manager;
 
 namespace InGame.Weapon
 {
@@ -56,6 +57,9 @@ namespace InGame.Weapon
 
         private void OnTriggerStay2D(Collider2D other)
         {
+            // 게임이 시작되지 않았거나 일시정지 상태면 무시
+            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
+
             if (!other.CompareTag("Mob")) return;
 
             int enemyId = other.GetInstanceID();

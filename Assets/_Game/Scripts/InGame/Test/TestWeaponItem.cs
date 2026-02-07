@@ -23,7 +23,7 @@ namespace InGame.Test
         /// <param name="weapon">표시할 무기 인스턴스</param>
         /// <param name="onLevelUp">레벨업 버튼 클릭 시 호출될 콜백 (skillCode 전달)</param>
         /// <param name="onRemove">제거 버튼 클릭 시 호출될 콜백 (skillCode 전달)</param>
-        public void Setup(WeaponBase weapon, Action<string> onLevelUp, Action<string> onRemove)
+        public void Setup(IWeaponController weapon, Action<string> onLevelUp, Action<string> onRemove)
         {
             if (weapon == null)
             {
@@ -40,8 +40,9 @@ namespace InGame.Test
 
             if (m_infoText != null)
             {
-                string evolutionText = weapon.isEvolved ? " (진화)" : "";
-                m_infoText.text = $"{weapon.skillData.skillName} (Lv.{weapon.CurrentLevel}{evolutionText})";
+                string evolutionText = weapon.IsEvolved ? " (진화)" : "";
+                string weaponName = weapon.SkillData?.skillName ?? weapon.WeaponName;
+                m_infoText.text = $"{weaponName} (Lv.{weapon.CurrentLevel}{evolutionText})";
             }
 
             // 2. 버튼 이벤트 연결
@@ -50,14 +51,14 @@ namespace InGame.Test
             m_removeButton.onClick.RemoveAllListeners();
 
             // 레벨업 버튼은 최대 레벨이 아닐 때만 활성화
-            bool canLevelUp = weapon.CurrentLevel < WeaponBase.k_MaxLevel;
+            bool canLevelUp = weapon.CurrentLevel < weapon.MaxLevel;
             m_levelUpButton.interactable = canLevelUp;
             if (canLevelUp)
             {
-                m_levelUpButton.onClick.AddListener(() => onLevelUp?.Invoke(weapon.skillCode));
+                m_levelUpButton.onClick.AddListener(() => onLevelUp?.Invoke(weapon.SkillCode));
             }
 
-            m_removeButton.onClick.AddListener(() => onRemove?.Invoke(weapon.skillCode));
+            m_removeButton.onClick.AddListener(() => onRemove?.Invoke(weapon.SkillCode));
         }
     }
 }

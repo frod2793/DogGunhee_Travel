@@ -23,8 +23,16 @@ namespace InGame.Weapon.Base
         public float CurrentAttackPower => AttackPower;
         public float CurrentCoolTime => CoolTime;
         public float CurrentAttackSpeed => AttackSpeed;
+        public float CurrentAttackRange => AttackRange;
         public int CurrentProjectileCount => ProjectileCount;
         public float CurrentDuration => Duration;
+
+        // R3 ReactiveProperties (Observer Pattern)
+        public R3.ReadOnlyReactiveProperty<float> AttackPowerRP => m_attackPowerRP;
+        public R3.ReadOnlyReactiveProperty<int> CurrentLevelRP => m_currentLevelRP;
+
+        private readonly R3.ReactiveProperty<float> m_attackPowerRP = new(0f);
+        private readonly R3.ReactiveProperty<int> m_currentLevelRP = new(1);
 
         public WeaponRuntimeStats(WeaponDataSO data)
         {
@@ -45,12 +53,19 @@ namespace InGame.Weapon.Base
             ProjectileCount = Data.BaseProjectileCount;
             MobStunTime = 0.5f; // 기본값
             IsEvolved = false;
+
+            m_attackPowerRP.Value = AttackPower;
+            m_currentLevelRP.Value = CurrentLevel;
         }
 
         public void LevelUp(int newLevel)
         {
             CurrentLevel = newLevel;
             if (CurrentLevel >= 6) IsEvolved = true;
+
+            m_currentLevelRP.Value = CurrentLevel;
+            m_attackPowerRP.Value = AttackPower;
+            
             // TODO: WeaponDataSO의 Upgrades 리스트를 참조하여 스탯 재계산 로직 추가 필요
         }
     }

@@ -131,7 +131,7 @@ namespace InGame.Weapon.Controllers
             // Shield는 Attack 호출에 의존하므로 별도 Update 로직 불필요
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             if (!m_canAttack) return;
 

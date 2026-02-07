@@ -30,7 +30,7 @@ namespace Lobby
         [SerializeField] private Button m_optionBtn;
 
         [Header("<color=green>게임선택 UI</color>")]
-        [SerializeField] private OptionPopupManager m_optionPopupPrefab;
+        [SerializeField] private OptionPopupView m_optionPopupPrefab;
         [SerializeField] private GameObject m_gameSelectPopUp;
         [SerializeField] private Button m_closeGameSelectPopUpBtn;
         [SerializeField] private Button m_gameStartButton;
@@ -86,7 +86,7 @@ namespace Lobby
         #region 내부 상태 변수
 
         // private static readonly Stack<Action> s_closePopUpActions = new Stack<Action>(); // Removed: Use PopupManager
-        private OptionPopupManager m_currentOptionPopup;
+        private OptionPopupView m_currentOptionPopup;
         private float m_cachedAnimationSpeed = -1f;
         
         // MVVM 연결

@@ -133,6 +133,9 @@ namespace InGame.Weapon.Controllers
 
         public override void OnUpdate(float deltaTime)
         {
+            // 게임 상태 체크
+            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
+
             if (m_playerTransform == null || m_trailCollider == null) return;
 
             float currentTime = Time.time;
@@ -174,7 +177,7 @@ namespace InGame.Weapon.Controllers
             m_lastFramePlayerPos = currentPos;
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             // Smell은 자동 흔적 생성이므로 수동 Attack은 무시됩니다.
         }
@@ -194,6 +197,9 @@ namespace InGame.Weapon.Controllers
         /// </summary>
         public void ProcessTriggerDamage(Collider2D other)
         {
+            // 게임 상태 체크
+            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
+
             if (!other.CompareTag("Mob")) return;
 
             int id = other.gameObject.GetInstanceID();

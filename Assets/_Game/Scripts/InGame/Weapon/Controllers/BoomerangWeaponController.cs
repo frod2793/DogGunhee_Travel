@@ -83,7 +83,7 @@ namespace InGame.Weapon.Controllers
             // 부메랑은 쿨타임 기반 자동 공격이 아니므로 Update에서 처리할 로직 없음
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             if (m_isAttacking) return;
 

@@ -58,14 +58,19 @@ namespace InGame.Weapon
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterDefaultWeapons()
         {
-            // 기존 하드코딩 로직을 여기에 등록 형태로 이전합니다.
-            Register("Bone", () => new BoneWeaponController());
+            // [Refactoring] XML의 'key' 속성(SkillCode)과 정확히 일치하도록 등록합니다.
+            Register("WP_BONE", () => new BoneWeaponController());
+            Register("WP_PUNCH", () => new CatPunchWeaponController());
+            Register("WP_PEARL", () => new JinjooWeaponController());
+            Register("WP_LANDING", () => new ShieldWeaponController());
+            Register("WP_FRIENDS", () => new FriendsWeaponController());
+            Register("WP_BOOMERANG", () => new BoomerangWeaponController());
+            Register("WP_FIRE", () => new FlameWeaponController());
+            Register("WP_BALL", () => new BallplayWeaponController());
+            Register("WP_INK", () => new BlackWaterWeaponController());
+            Register("WP_SMELL", () => new SmellWeaponController());
             
-            // 향후 추가될 무기도 여기에 등록합니다.
-            // Register("Flame", () => new FlameWeaponController());
-            // Register("Shield", () => new ShieldWeaponController());
-            
-            LogManager.Log("[WeaponFactory] 기본 무기 팩토리 등록 완료", LogManager.LogCategory.Weapon);
+            LogManager.Log("[WeaponFactory] 모든 실질 무기 컨트롤러 등록 완료 (XML Key 호환)", LogManager.LogCategory.Weapon);
         }
 
         #endregion

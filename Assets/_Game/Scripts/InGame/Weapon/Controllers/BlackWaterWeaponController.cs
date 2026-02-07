@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using InGame.Mob.MobBase;
 using InGame.Weapon.Base;
+using InGame.Manager;
 
 namespace InGame.Weapon.Controllers
 {
@@ -107,6 +108,13 @@ namespace InGame.Weapon.Controllers
             {
                 while (!token.IsCancellationRequested)
                 {
+                    // 게임이 플레이 중이 아니면 로직 중단
+                    if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying)
+                    {
+                        await UniTask.Yield(token);
+                        continue;
+                    }
+
                     CheckEvolveState();
                     ProcessTickDamage();
 
@@ -180,7 +188,7 @@ namespace InGame.Weapon.Controllers
             // BlackWater는 자체 AttackLoop를 사용하므로 별도 Update 로직 불필요
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
             // 자동 공격 루프를 사용하므로 수동 Attack은 무시됩니다.
             if (!m_isAttacking)

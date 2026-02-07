@@ -6,7 +6,6 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using InGame.Test;
-using InGame.Weapon.Base;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -195,7 +194,7 @@ namespace InGame.Manager
             int selectedIndex = m_weaponDropdown.value;
             SkillData selectedSkill = m_allWeaponSkills[selectedIndex];
 
-            if (m_gameManager.SpawnedPlayer.Weapons.Any(w => w.skillCode == selectedSkill.skillCode))
+            if (m_gameManager.SpawnedPlayer.Weapons.Any(w => w.SkillCode == selectedSkill.skillCode))
             {
                 Debug.LogWarning($"[TestManager] 이미 보유한 무기({selectedSkill.skillName})입니다.");
                 return;
@@ -205,7 +204,7 @@ namespace InGame.Manager
             if (m_startLevelInput != null && !string.IsNullOrEmpty(m_startLevelInput.text))
             {
                 int.TryParse(m_startLevelInput.text, out startLevel);
-                startLevel = Mathf.Clamp(startLevel, 1, WeaponBase.k_MaxLevel);
+                startLevel = Mathf.Clamp(startLevel, 1, 6); // MaxLevel 6 가정
             }
 
             bool startEvolved = m_startEvolvedToggle != null && m_startEvolvedToggle.isOn;
@@ -216,10 +215,10 @@ namespace InGame.Manager
 
         private void LevelUpWeapon(string skillCode)
         {
-            var weapon = m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.skillCode == skillCode);
+            var weapon = m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.SkillCode == skillCode);
             if (weapon != null)
             {
-                weapon.UpgradeLevel();
+                weapon.LevelUp();
                 RefreshOwnedWeaponList();
             }
         }

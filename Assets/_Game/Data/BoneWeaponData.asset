@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
+  m_Name: BoneWeaponData
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
+  SkillCode: WP_BONE
+  WeaponName: "\uCD5C\uC560 \uBF08\uB2E4\uADC0"
+  Icon: {fileID: 0}
+  Description: "\uC801\uC5D0\uAC8C \uBF08\uB2E4\uADC0\uB97C \uB0A0\uB824 \uD53C\uD574\uB97C
+    \uC785\uD799\uB2C8\uB2E4."
+  BaseAttackPower: 15
+  BaseCoolTime: 1.5
+  BaseAttackSpeed: 10
+  BaseAttackRange: 0
+  BaseDuration: 0
+  BaseProjectileCount: 1
+  ProjectilePrefab: {fileID: 1450392623949166087, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}
+  ModelPrefab: {fileID: 1450392623949166087, guid: 4c3e8fd5331c03f4eb9f8ae4ccb22182, type: 3}
+  EffectPrefab: {fileID: 0}
+  Upgrades: []

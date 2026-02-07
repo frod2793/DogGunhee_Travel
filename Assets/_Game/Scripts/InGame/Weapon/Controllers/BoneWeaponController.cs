@@ -31,7 +31,7 @@ namespace InGame.Weapon.Controllers
             m_boneSpeed = m_runtimeStats.CurrentAttackSpeed > 0 ? m_runtimeStats.CurrentAttackSpeed : 10f;
         }
 
-        public override void Attack(Vector3 direction)
+        protected override void ExecuteAttack(Vector3 direction)
         {
              ThrowBone(direction);
         }

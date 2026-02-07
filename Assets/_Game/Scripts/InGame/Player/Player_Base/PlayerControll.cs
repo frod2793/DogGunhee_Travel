@@ -189,7 +189,7 @@ namespace InGame.Player.Player_Base
             m_cameraController.ResetPosition();
         }
 
-        private Vector3 GetCalculatedAttackDirection()
+        public Vector3 GetCalculatedAttackDirection()
         {
             if (m_inputHandler == null || m_autoAttack == null) return transform.up;
 
@@ -247,7 +247,7 @@ namespace InGame.Player.Player_Base
             if (m_playerCharacter == null || m_playerCharacter.Weapons == null || m_playerCharacter.Weapons.Count == 0) return;
             foreach (var weapon in m_playerCharacter.Weapons)
             {
-                if (weapon != null) weapon.Weapon_Attack(dir);
+                weapon?.Attack(dir);
             }
         }
 

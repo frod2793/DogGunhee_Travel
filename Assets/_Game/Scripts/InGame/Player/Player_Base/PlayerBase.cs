@@ -47,7 +47,7 @@ namespace InGame.Player.Player_Base
         public float CurrentExp => m_expSystem.CurrentExp;
         public float MaxExp => m_expSystem.MaxExp;
         
-        public IReadOnlyList<WeaponBase> Weapons => m_weaponManager?.Weapons;
+        public IReadOnlyList<IWeaponController> Weapons => m_weaponManager?.Controllers;
         #endregion
 
         #region 정적 및 인스턴스 이벤트
@@ -164,7 +164,7 @@ namespace InGame.Player.Player_Base
         #endregion
 
         #region 무기 관리 (위임)
-        public void AddWeapon(WeaponBase weapon) => m_weaponManager?.AddWeapon(weapon);
+        public void AddController(IWeaponController weapon) => m_weaponManager?.AddController(weapon);
         public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
         public void SetTargetProvider(Func<Vector3> provider) => m_weaponManager?.SetTargetProvider(provider);
         public void EquipWeapon(WeaponDataSO data) => m_weaponManager?.EquipWeapon(data);

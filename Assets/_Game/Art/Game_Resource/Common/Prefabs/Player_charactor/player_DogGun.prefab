@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 6155638956145482786}
   - component: {fileID: 893102888339448788}
-  - component: {fileID: 2661519029935665480}
   - component: {fileID: 8995850725629666990}
   - component: {fileID: 6735505719767251672}
   - component: {fileID: 3357545769698321406}
+  - component: {fileID: 2661519029935665480}
   m_Layer: 0
   m_Name: player_DogGun
   m_TagString: Player
@@ -38,6 +38,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &893102888339448788
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -56,6 +57,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -77,9 +80,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -764746273662079006, guid: e7796b6e4a533c74594c76006bba9dac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -89,31 +94,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2661519029935665480
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1989101733439538212}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 179884493eb497e4a960008f79ca7043, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_config: {fileID: 11400000, guid: 181c388667c224c4aa40128d63aa48b3, type: 2}
-  m_stats:
-    AttackPower: 0
-    CoolTime: 0
-    AttackSpeed: 0
-    WeaponSize: 0
-    ProjectileCount: 0
-    MaxHealth: 0
-    CurrentHealth: 0
-    Defense: 0
-    MoveSpeed: 0
 --- !u!95 &8995850725629666990
 Animator:
   serializedVersion: 7
@@ -199,3 +180,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &2661519029935665480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1989101733439538212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 179884493eb497e4a960008f79ca7043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_config: {fileID: 11400000, guid: 181c388667c224c4aa40128d63aa48b3, type: 2}
+  m_stats:
+    AttackPower: 0
+    CoolTime: 0
+    AttackSpeed: 0
+    WeaponSize: 0
+    ProjectileCount: 0
+    MaxHealth: 0
+    CurrentHealth: 0
+    Defense: 0
+    MoveSpeed: 0

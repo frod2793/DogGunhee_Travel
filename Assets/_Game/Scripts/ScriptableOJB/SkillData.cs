@@ -35,5 +35,9 @@ namespace InGame
 
         [System.NonSerialized]
         public Dictionary<int, List<StatModification>> Upgrades = new Dictionary<int, List<StatModification>>();
+
+        [Header("New Weapon System")]
+        [Tooltip("신규 무기 시스템에서 사용할 데이터 에셋입니다.")]
+        public InGame.Weapon.Base.WeaponDataSO weaponData;
     }
 }

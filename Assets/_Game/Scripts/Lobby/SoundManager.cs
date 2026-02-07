@@ -191,6 +191,8 @@ public class SoundManager : MonoBehaviour, ISoundManager
         float db = (volume <= 0.0001f) ? -144.0f : Mathf.Log10(Mathf.Clamp(volume, 0.0001f, 1f)) * 20f;
         string param = type == Sound.BGM ? k_BgmVolumeParam : k_SfxVolumeParam;
 
+        Debug.Log($"[SoundManager] SetVolume: Type={type}, Vol={volume}, DB={db}, Mixer={(m_audioMixer != null ? "Found" : "Null")}");
+
         if (m_audioMixer != null)
         {
             m_audioMixer.SetFloat(param, db);
