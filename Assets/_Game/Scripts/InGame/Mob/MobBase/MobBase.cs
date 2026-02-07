@@ -105,9 +105,9 @@ namespace InGame.Mob.MobBase
                 IsDead = true;
                 IsMoveEnabled = false;
                 m_dotCts?.Cancel(); // 사망 시 DoT 중지
-                if (PlayerDataManagerDontdesytoy.Instance != null)
+                if (PlayerDataManager.Instance != null)
                 {
-                    PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt++;
+                    PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt++;
                 }
                 if (ObjectPoolSpawner != null)
                 {

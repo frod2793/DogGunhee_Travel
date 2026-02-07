@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
 using InGame.vamsir;
 
 namespace InGame.Test
@@ -23,7 +23,7 @@ namespace InGame.Test
         /// <param name="weapon">표시할 무기 인스턴스</param>
         /// <param name="onLevelUp">레벨업 버튼 클릭 시 호출될 콜백 (skillCode 전달)</param>
         /// <param name="onRemove">제거 버튼 클릭 시 호출될 콜백 (skillCode 전달)</param>
-        public void Setup(WeaphonBase weapon, Action<string> onLevelUp, Action<string> onRemove)
+        public void Setup(WeaponBase weapon, Action<string> onLevelUp, Action<string> onRemove)
         {
             if (weapon == null)
             {
@@ -50,7 +50,7 @@ namespace InGame.Test
             m_removeButton.onClick.RemoveAllListeners();
 
             // 레벨업 버튼은 최대 레벨이 아닐 때만 활성화
-            bool canLevelUp = weapon.CurrentLevel < WeaphonBase.k_MaxLevel;
+            bool canLevelUp = weapon.CurrentLevel < WeaponBase.k_MaxLevel;
             m_levelUpButton.interactable = canLevelUp;
             if (canLevelUp)
             {

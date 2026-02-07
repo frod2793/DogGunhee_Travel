@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using InGame.Manager;
 using UnityEngine;
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
 
 namespace InGame.Player.Player_Base
 {
@@ -47,7 +47,7 @@ namespace InGame.Player.Player_Base
         public float CurrentExp => m_expSystem.CurrentExp;
         public float MaxExp => m_expSystem.MaxExp;
         
-        public IReadOnlyList<WeaphonBase> Weapons => m_weaponManager?.Weapons;
+        public IReadOnlyList<WeaponBase> Weapons => m_weaponManager?.Weapons;
         #endregion
 
         #region 정적 및 인스턴스 이벤트
@@ -57,8 +57,38 @@ namespace InGame.Player.Player_Base
         #endregion
 
         #region 초기화
+        /// <summary>
+        /// [\ub9ac\ud329\ud1a0\ub9c1] OnEnable\uc5d0\uc11c\ub294 Initialize\uac00 \ud638\ucd9c\ub418\uc9c0 \uc54a\uc558\uc744 \uacbd\uc6b0\ub97c \ub300\ube44\ud55c \ud3f4\ubc31 \ub85c\uc9c1\uc744 \uc218\ud589\ud569\ub2c8\ub2e4.
+        /// \uc678\ubd80\uc5d0\uc11c \uba85\uc2dc\uc801\uc73c\ub85c Initialize()\ub97c \ud638\ucd9c\ud558\ub294 \uac83\uc744 \uad8c\uc7a5\ud569\ub2c8\ub2e4.
+        /// </summary>
         public virtual void OnEnable()
         {
+            // Initialize\uac00 \ud638\ucd9c\ub418\uc9c0 \uc54a\uc558\uc73c\uba74 \uae30\ubcf8\uac12\uc73c\ub85c \ucd08\uae30\ud654 (\ud638\ud658\uc131 \uc720\uc9c0)
+            if (m_weaponManager == null || m_expSystem == null)
+            {
+                Initialize();
+            }
+        }
+
+        protected virtual void OnDisable()
+        {
+            UnsubscribeEvents();
+        }
+
+        #region 초기화 및 의존성 주입
+
+        /// <summary>
+        /// [리팩토링] 외부에서 의존성을 주입받아 초기화합니다.
+        /// GameManager나 Builder에서 호출하세요.
+        /// </summary>
+        /// <param name="weaponManager">무기 매니저 (null이면 내부 생성)</param>
+        /// <param name="expSystem">경험치 시스템 (null이면 내부 생성)</param>
+        public void Initialize(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null)
+        {
+            // 의존성 주입 또는 기본값 생성
+            m_weaponManager = weaponManager ?? new PlayerWeaponManager(transform);
+            m_expSystem = expSystem ?? new ExperienceSystem();
+            
             InitializeComponents();
             InitializeSystems();
             SubscribeEvents();
@@ -66,11 +96,8 @@ namespace InGame.Player.Player_Base
             OnLevelUp?.Invoke(Level);
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
-        }
-
-        protected virtual void OnDisable()
-        {
-            UnsubscribeEvents();
+            
+            LogManager.Log("[PlayerBase] 초기화 완료 (DI 적용)", LogManager.LogCategory.PlayerBase);
         }
 
         private void InitializeComponents()
@@ -81,10 +108,9 @@ namespace InGame.Player.Player_Base
                 m_collisionHandler = gameObject.AddComponent<PlayerCollisionHandler>();
             }
             m_collisionHandler.Init(this);
-            
-            // POCO 생성
-            m_weaponManager = new PlayerWeaponManager(transform);
         }
+
+        #endregion
 
         private void Update()
         {
@@ -138,7 +164,7 @@ namespace InGame.Player.Player_Base
         #endregion
 
         #region 무기 관리 (위임)
-        public void AddWeapon(WeaphonBase weapon) => m_weaponManager?.AddWeapon(weapon);
+        public void AddWeapon(WeaponBase weapon) => m_weaponManager?.AddWeapon(weapon);
         public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
         public void SetTargetProvider(Func<Vector3> provider) => m_weaponManager?.SetTargetProvider(provider);
         public void EquipWeapon(WeaponDataSO data) => m_weaponManager?.EquipWeapon(data);
@@ -163,9 +189,9 @@ namespace InGame.Player.Player_Base
         
         private void HandleCoinCollected(int coinValue)
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null)
+            if (PlayerDataManager.Instance != null)
             {
-                PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin += coinValue;
+                PlayerDataManager.Instance.PlayerData.ingameCoin += coinValue;
             }
         }
         #endregion

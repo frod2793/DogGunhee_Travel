@@ -2,30 +2,31 @@ using System;
 using System.IO;
 using BackEnd;
 using Cysharp.Threading.Tasks;
+using InGame.Services;
 using UnityEngine;
 
 namespace InGame.Lobby
 {
     /// <summary>
     /// 인벤토리 데이터의 저장, 로드, 암호화를 담당하는 POCO 클래스입니다.
+    /// EncryptionService를 통해 암호화를 수행합니다.
     /// </summary>
     public class InventoryPersistence
     {
         #region 설정
 
         private readonly string m_localSavePath;
+        private readonly EncryptionService m_encryptionService;
         private const string k_EncryptedFileName = "inventoryData.encrypted";
-        
-        private HybridEncryption m_encryption;
 
         #endregion
 
         #region 생성자
 
-        public InventoryPersistence()
+        public InventoryPersistence(EncryptionService encryptionService)
         {
             m_localSavePath = Path.Combine(Application.persistentDataPath, k_EncryptedFileName);
-            m_encryption = new HybridEncryption();
+            m_encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         }
 
         #endregion
@@ -42,20 +43,7 @@ namespace InGame.Lobby
             try
             {
                 string jsonData = JsonUtility.ToJson(data, true);
-                string rsaPublicKey = PlayerDataManagerDontdesytoy.Instance?.RsaPublicKey;
-
-                if (string.IsNullOrEmpty(rsaPublicKey))
-                {
-                    // 공개키 없음 -> 평문 저장 (백업)
-                    Debug.LogWarning("[InventoryPersistence] RSA 키 없음. 평문으로 저장합니다.");
-                    File.WriteAllText(m_localSavePath.Replace(".encrypted", ".json"), jsonData);
-                    return;
-                }
-
-                if (m_encryption == null) m_encryption = new HybridEncryption();
-
-                // 암호화 수행
-                EncryptedPacket encryptedPacket = m_encryption.Encrypt(jsonData, rsaPublicKey);
+                EncryptedPacket encryptedPacket = m_encryptionService.Encrypt(jsonData);
                 string packetJson = JsonUtility.ToJson(encryptedPacket);
                 
                 File.WriteAllText(m_localSavePath, packetJson);
@@ -105,17 +93,7 @@ namespace InGame.Lobby
             {
                 string packetJson = File.ReadAllText(m_localSavePath);
                 EncryptedPacket encryptedPacket = JsonUtility.FromJson<EncryptedPacket>(packetJson);
-
-                string rsaPrivateKey = PlayerDataManagerDontdesytoy.Instance?.RsaPrivateKey;
-                if (string.IsNullOrEmpty(rsaPrivateKey))
-                {
-                    LogManager.LogError("[InventoryPersistence] RSA 개인키가 없어 복호화 불가", LogManager.LogCategory.InventoryManager);
-                    return false;
-                }
-
-                if (m_encryption == null) m_encryption = new HybridEncryption();
-
-                string decryptedJson = m_encryption.Decrypt(encryptedPacket, rsaPrivateKey);
+                string decryptedJson = m_encryptionService.Decrypt(encryptedPacket);
                 
                 // 데이터 덮어쓰기
                 JsonUtility.FromJsonOverwrite(decryptedJson, targetData);

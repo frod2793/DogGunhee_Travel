@@ -2069,6 +2069,10 @@ PrefabInstance:
       value: '[ - Logmanager - ]'
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
+      propertyPath: m_logCategoryEnables.Array.size
+      value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: 'm_logCategoryEnables.Array.data[0]'
       value: 1
       objectReference: {fileID: 0}
@@ -2509,7 +2513,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 542925831}
   m_HandleRect: {fileID: 542925830}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -4424,7 +4428,6 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
-  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -4432,6 +4435,7 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!114 &1424236146
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7476,6 +7480,18 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1424236142}
+    - target: {fileID: 4441102585319734577, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_hudView
+      value: 
+      objectReference: {fileID: 3551517958830646570}
+    - target: {fileID: 4441102585319734577, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_skillView
+      value: 
+      objectReference: {fileID: 3551517958830646571}
+    - target: {fileID: 4441102585319734577, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_gameOverPopup
+      value: 
+      objectReference: {fileID: 3551517958830646569}
     - target: {fileID: 5707357700545301199, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -7483,8 +7499,80 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2817357649627020829, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3551517958830646571}
+    - targetCorrespondingSourceObject: {fileID: 2817357649627020829, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3551517958830646570}
+    - targetCorrespondingSourceObject: {fileID: 2817357649627020829, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3551517958830646569}
   m_SourcePrefab: {fileID: 100100000, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+--- !u!1 &3551517958830646568 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2817357649627020829, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+  m_PrefabInstance: {fileID: 3551517958830646567}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3551517958830646569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3551517958830646568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b8c466692d5d48d3bd46d56c78a8473, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.UI.Views.GameOverPopup
+  m_panel: {fileID: 0}
+  m_titleText: {fileID: 0}
+  m_coinText: {fileID: 0}
+  m_waveText: {fileID: 0}
+  m_mobCountText: {fileID: 0}
+  m_restartButton: {fileID: 0}
+  m_exitButton: {fileID: 0}
+--- !u!114 &3551517958830646570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3551517958830646568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86ca71d88294f4291a80855dd44d53e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.UI.Views.InGameHUDView
+  m_playerLevelText: {fileID: 0}
+  m_playerLevelSlider: {fileID: 0}
+  m_playerLevelText_InGame: {fileID: 0}
+  m_expSlider: {fileID: 0}
+  m_mobWaveText: {fileID: 0}
+  m_coinText: {fileID: 0}
+  m_mobCountText: {fileID: 0}
+  m_weaponUIList: []
+  m_accessoryUIList: []
+--- !u!114 &3551517958830646571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3551517958830646568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 538fa4cf6b9b24e73a988388a49a4329, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.UI.Views.InGameSkillView
+  m_skillSelectionPanel: {fileID: 0}
+  m_refreshButton: {fileID: 0}
+  m_skillSelectionButtonPrefab: {fileID: 0}
+  m_skillButtonContainer: {fileID: 0}
+  m_countdownText: {fileID: 0}
+  m_countDownSlider: {fileID: 0}
 --- !u!1001 &3982646854186147772
 PrefabInstance:
   m_ObjectHideFlags: 0

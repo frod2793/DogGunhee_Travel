@@ -1,4 +1,4 @@
-// Author: Daniele Giardini - http://www.demigiant.com
+﻿// Author: Daniele Giardini - http://www.demigiant.com
 // Created: 2015/03/12 16:03
 
 using System;
@@ -12,10 +12,10 @@ using DG.Tweening.Core;
 using UnityEditor;
 using UnityEngine;
 using DOTweenSettings = DG.Tweening.Core.DOTweenSettings;
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
 using UnityEngine.UI;
 #endif
-#if true // TEXTMESHPRO_MARKER
+#if DOTWEEN_TEXTMESHPRO // TEXTMESHPRO_MARKER
     using TMPro;
 #endif
 
@@ -38,22 +38,22 @@ namespace DG.DOTweenEditor
 
         static readonly Dictionary<DOTweenAnimation.AnimationType, Type[]> _AnimationTypeToComponent = new Dictionary<DOTweenAnimation.AnimationType, Type[]>() {
             { DOTweenAnimation.AnimationType.Move, new[] {
-#if true // PHYSICS_MARKER
+#if !DOTWEEN_NOPHYSICS // PHYSICS_MARKER
                 typeof(Rigidbody),
 #endif
-#if true // PHYSICS2D_MARKER
+#if !DOTWEEN_NOPHYSICS2D // PHYSICS2D_MARKER
                 typeof(Rigidbody2D),
 #endif
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                 typeof(RectTransform),
 #endif
                 typeof(Transform)
             }},
             { DOTweenAnimation.AnimationType.Rotate, new[] {
-#if true // PHYSICS_MARKER
+#if !DOTWEEN_NOPHYSICS // PHYSICS_MARKER
                 typeof(Rigidbody),
 #endif
-#if true // PHYSICS2D_MARKER
+#if !DOTWEEN_NOPHYSICS2D // PHYSICS2D_MARKER
                 typeof(Rigidbody2D),
 #endif
                 typeof(Transform)
@@ -63,29 +63,29 @@ namespace DG.DOTweenEditor
             { DOTweenAnimation.AnimationType.Scale, new[] { typeof(Transform) } },
             { DOTweenAnimation.AnimationType.Color, new[] {
                 typeof(Light),
-#if true // SPRITE_MARKER
+#if !DOTWEEN_NOSPRITES // SPRITE_MARKER
                 typeof(SpriteRenderer),
 #endif
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                 typeof(Image), typeof(Text), typeof(RawImage), typeof(Graphic),
 #endif
                 typeof(Renderer),
             }},
             { DOTweenAnimation.AnimationType.Fade, new[] {
                 typeof(Light),
-#if true // SPRITE_MARKER
+#if !DOTWEEN_NOSPRITES // SPRITE_MARKER
                 typeof(SpriteRenderer),
 #endif
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                 typeof(Image), typeof(Text), typeof(CanvasGroup), typeof(RawImage), typeof(Graphic),
 #endif
                 typeof(Renderer),
             }},
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
             { DOTweenAnimation.AnimationType.Text, new[] { typeof(Text) } },
 #endif
             { DOTweenAnimation.AnimationType.PunchPosition, new[] {
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                 typeof(RectTransform),
 #endif
                 typeof(Transform)
@@ -93,7 +93,7 @@ namespace DG.DOTweenEditor
             { DOTweenAnimation.AnimationType.PunchRotation, new[] { typeof(Transform) } },
             { DOTweenAnimation.AnimationType.PunchScale, new[] { typeof(Transform) } },
             { DOTweenAnimation.AnimationType.ShakePosition, new[] {
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                 typeof(RectTransform),
 #endif
                 typeof(Transform)
@@ -106,13 +106,13 @@ namespace DG.DOTweenEditor
             { DOTweenAnimation.AnimationType.CameraOrthoSize, new[] { typeof(Camera) } },
             { DOTweenAnimation.AnimationType.CameraPixelRect, new[] { typeof(Camera) } },
             { DOTweenAnimation.AnimationType.CameraRect, new[] { typeof(Camera) } },
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
             { DOTweenAnimation.AnimationType.UIWidthHeight, new[] { typeof(RectTransform) } },
             { DOTweenAnimation.AnimationType.FillAmount, new[] { typeof(Image) } },
 #endif
         };
 
-#if false // TK2D_MARKER
+#if DOTWEEN_TK2D // TK2D_MARKER
         static readonly Dictionary<DOTweenAnimation.AnimationType, Type[]> _Tk2dAnimationTypeToComponent = new Dictionary<DOTweenAnimation.AnimationType, Type[]>() {
             { DOTweenAnimation.AnimationType.Scale, new[] { typeof(tk2dBaseSprite), typeof(tk2dTextMesh) } },
             { DOTweenAnimation.AnimationType.Color, new[] { typeof(tk2dBaseSprite), typeof(tk2dTextMesh) } },
@@ -120,7 +120,7 @@ namespace DG.DOTweenEditor
             { DOTweenAnimation.AnimationType.Text, new[] { typeof(tk2dTextMesh) } }
         };
 #endif
-#if true // TEXTMESHPRO_MARKER
+#if DOTWEEN_TEXTMESHPRO // TEXTMESHPRO_MARKER
         static readonly Dictionary<DOTweenAnimation.AnimationType, Type[]> _TMPAnimationTypeToComponent = new Dictionary<DOTweenAnimation.AnimationType, Type[]>() {
             { DOTweenAnimation.AnimationType.Color, new[] { typeof(TextMeshPro), typeof(TextMeshProUGUI) } },
             { DOTweenAnimation.AnimationType.Fade, new[] { typeof(TextMeshPro), typeof(TextMeshProUGUI) } },
@@ -134,17 +134,17 @@ namespace DG.DOTweenEditor
             "Rotate", "LocalRotate",
             "Scale",
             "Color", "Fade",
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
             "FillAmount",
             "Text",
 #endif
-#if false // TK2D_MARKER
+#if DOTWEEN_TK2D // TK2D_MARKER
             "Text",
 #endif
-#if true // TEXTMESHPRO_MARKER
+#if DOTWEEN_TEXTMESHPRO // TEXTMESHPRO_MARKER
             "Text",
 #endif
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
             "UIWidthHeight",
 #endif
             "Punch/Position", "Punch/Rotation", "Punch/Scale",
@@ -412,7 +412,7 @@ namespace DG.DOTweenEditor
                     _refreshRequired = false;
                     _src.isValid = Validate(targetGO);
                     // See if we need to choose between multiple targets
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                     if (_src.animationType == DOTweenAnimation.AnimationType.Fade && targetGO.GetComponent<CanvasGroup>() != null && targetGO.GetComponent<Image>() != null) {
                         _chooseTargetMode = ChooseTargetMode.BetweenCanvasGroupAndImage;
                         // Reassign target and forcedTargetType if lost
@@ -429,7 +429,7 @@ namespace DG.DOTweenEditor
 #endif
                         _chooseTargetMode = ChooseTargetMode.None;
                         _src.forcedTargetType = DOTweenAnimation.TargetType.Unset;
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                     }
 #endif
                 }
@@ -444,7 +444,7 @@ namespace DG.DOTweenEditor
                     return;
                 }
 
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                 // Special cases in which multiple target types could be used (set after validation)
                 if (_chooseTargetMode == ChooseTargetMode.BetweenCanvasGroupAndImage && _src.forcedTargetType != DOTweenAnimation.TargetType.Unset) {
                     FadeTargetType fadeTargetType = (FadeTargetType)Enum.Parse(typeof(FadeTargetType), _src.forcedTargetType.ToString());
@@ -601,7 +601,7 @@ namespace DG.DOTweenEditor
 
             Component srcTarget;
             // First check for external plugins
-#if false // TK2D_MARKER
+#if DOTWEEN_TK2D // TK2D_MARKER
             if (_Tk2dAnimationTypeToComponent.ContainsKey(_src.animationType)) {
                 foreach (Type t in _Tk2dAnimationTypeToComponent[_src.animationType]) {
                     srcTarget = targetGO.GetComponent(t);
@@ -613,7 +613,7 @@ namespace DG.DOTweenEditor
                 }
             }
 #endif
-#if true // TEXTMESHPRO_MARKER
+#if DOTWEEN_TEXTMESHPRO // TEXTMESHPRO_MARKER
             if (_TMPAnimationTypeToComponent.ContainsKey(_src.animationType)) {
                 foreach (Type t in _TMPAnimationTypeToComponent[_src.animationType]) {
                     srcTarget = targetGO.GetComponent(t);
@@ -678,7 +678,7 @@ namespace DG.DOTweenEditor
                 Transform prevT = _src.endValueTransform;
                 _src.endValueTransform = EditorGUILayout.ObjectField(_src.endValueTransform, typeof(Transform), true) as Transform;
                 if (_src.endValueTransform != prevT && _src.endValueTransform != null) {
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
                     // Check that it's a Transform for a Transform or a RectTransform for a RectTransform
                     if (targetGO.GetComponent<RectTransform>() != null) {
                         if (_src.endValueTransform.GetComponent<RectTransform>() == null) {
@@ -698,7 +698,7 @@ namespace DG.DOTweenEditor
                 if (GUILayout.Button(_src.useTargetAsV3 ? "target" : "value", EditorGUIUtils.sideBtStyle, GUILayout.Width(44))) _src.useTargetAsV3 = !_src.useTargetAsV3;
             }
             GUILayout.EndHorizontal();
-#if true // UI_MARKER
+#if !DOTWEEN_NOUI // UI_MARKER
             if (_src.useTargetAsV3 && _src.endValueTransform != null && _src.target is RectTransform) {
                 EditorGUILayout.HelpBox("NOTE: when using a UI target, the tween will be created during Start instead of Awake", MessageType.Info);
             }

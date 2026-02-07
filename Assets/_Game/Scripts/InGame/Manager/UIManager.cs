@@ -12,93 +12,65 @@ using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using InGame.Lobby;
 using InGame.vamsir;
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
+using InGame.UI.ViewModels;
+using InGame.UI.Views;
 
 namespace InGame.Manager
 {
     public class UIManager : MonoBehaviour
     {
-        #region 필드 및 변수 (인스펙터 연결)
-
-        [Header("유저 정보 UI")] [SerializeField] private TMP_Text m_levelText;
-        [SerializeField] private Slider m_playerLevelSlider;
-
-        [Header("HUD 텍스트 UI")] [SerializeField]
-        private TMP_Text m_mobWaveText;
-
-        [SerializeField] private TMP_Text m_coinText;
-        [SerializeField] private TMP_Text m_mobCountText;
-        [SerializeField] private TMP_Text m_playerLevelText_InGame;
-        [SerializeField] private Slider m_expSlider;
-
-        [Header("메뉴 UI")] [SerializeField] private Button m_menuButton;
+        [Header("하위 View 및 팝업")]
+        [SerializeField] private InGameHUDView m_hudView;
+        [SerializeField] private InGameSkillView m_skillView;
+        [SerializeField] private GameOverPopup m_gameOverPopup;
         [SerializeField] private GameObject m_menuPanel;
+
+        [Header("메뉴 및 설정")]
+        [SerializeField] private Button m_menuButton;
         [SerializeField] private Button m_settingButton;
         [SerializeField] private Button m_exitButton;
+        [SerializeField] private SettingsData m_settingsData;
 
-        public List<Image> m_weaponUIList = new List<Image>();
-        public List<Image> m_juListUIList = new List<Image>();
-
-        [Header("게임 오버 UI")] [SerializeField] private GameObject m_gameOverPanel;
-        [SerializeField] private Button m_gameOverExitButton;
-        [SerializeField] private Button m_gameOverRestartButton;
-        [SerializeField] private TMP_Text m_gameOverText;
-        [SerializeField] private TMP_Text m_gameOverCoinText;
-        [SerializeField] private TMP_Text m_gameOverWaveText;
-        [SerializeField] private TMP_Text m_gameOverMobCountText;
-
-        [Header("조작계 UI")] 
+        [Header("조작계")]
         [SerializeField] private VariableJoystick m_variableJoystick;
         [SerializeField] private RectTransform m_joystickTransform;
         [SerializeField] private Toggle m_autoAttackToggle;
 
-        [Header("설정 데이터")] [SerializeField] private SettingsData m_settingsData;
+        [Header("데이터")]
+        [SerializeField] private SkillDatabase m_skillDatabase;
+        [SerializeField] private TMP_Text m_mobWaveText; // 카운트다운용으로 유지
 
-        [Header("스킬 선택 UI")] [SerializeField] private GameObject m_skillSelectionPanel;
-        [SerializeField] private Button m_refreshButton;
-        [SerializeField] private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
-        [SerializeField] private GameObject m_skillButtonContainer;
-        [SerializeField] private TMP_Text m_countdownText;
-        [SerializeField] private Slider m_countDownSlider;
-
-        [Header("데이터")] [SerializeField] private SkillDatabase m_skillDatabase;
-
-        #endregion
-
-        #region 내부 상태 변수
+        private InGameViewModel m_viewModel;
 
         private GameManager m_gameManager;
         private PlayerControll m_playerController;
-
-        private CancellationTokenSource m_uiUpdateCts;
         private CancellationTokenSource m_skillSelectionTimerCts;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
-        private Tween m_expSliderTween;
 
-        private int m_lastWave = -1;
-        private int m_lastCoin = -1;
-        private int m_lastMobCount = -1;
-
-        private readonly List<SelectSkillBtnPrefab> m_skillButtonPool = new List<SelectSkillBtnPrefab>();
         private readonly List<SkillData> m_skillChoices = new List<SkillData>(3);
-        private readonly List<SkillData> m_acquiredAccessorySkills = new List<SkillData>();
-
-        private readonly List<Sprite> m_weaponThumbnails = new List<Sprite>();
-        private readonly List<Sprite> m_accessoryIcons = new List<Sprite>();
 
         private int m_pendingSkillSelections = 0;
         private bool m_isSkillSelectionActive = false;
 
         private static readonly Vector2 k_DefaultJoystickPosition = new Vector2(300, 300);
 
-        #endregion
-
         #region Unity 라이프사이클
 
         private void Awake()
         {
             m_gameManager = GameManager.Instance;
+            m_viewModel = new InGameViewModel();
+            
+            InitializeViews();
             BindUIEvents();
+        }
+
+        private void InitializeViews()
+        {
+            if (m_hudView != null) m_hudView.Bind(m_viewModel);
+            if (m_skillView != null) m_skillView.Initialize(() => GenerateSkillChoices());
+            if (m_gameOverPopup != null) m_gameOverPopup.Setup(RestartGame, ExitToLobby);
         }
 
         private void Start()
@@ -106,7 +78,6 @@ namespace InGame.Manager
             m_playerController = m_gameManager.PlayerController;
             m_variableJoystick = m_gameManager.Joystick;
 
-            // 초기 설정 적용 (카운트다운 전 조이스틱 위치 잡기)
             if (m_settingsData != null)
             {
                 m_settingsData.LoadSettings();
@@ -120,11 +91,9 @@ namespace InGame.Manager
         {
             UnsubscribeFromEvents();
             m_disposables.Dispose();
-            m_uiUpdateCts?.Cancel();
-            m_uiUpdateCts?.Dispose();
+            m_viewModel?.Dispose();
             m_skillSelectionTimerCts?.Cancel();
             m_skillSelectionTimerCts?.Dispose();
-            m_expSliderTween?.Kill();
         }
 
         #endregion
@@ -160,12 +129,6 @@ namespace InGame.Manager
             m_menuButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
             m_exitButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
             m_settingButton.OnClickAsObservable().Subscribe(_ => m_gameManager.OpenOptionPopup()).AddTo(m_disposables);
-            m_gameOverExitButton.OnClickAsObservable().Subscribe(_ => ExitToLobby()).AddTo(m_disposables);
-            m_gameOverRestartButton.OnClickAsObservable().Subscribe(_ => RestartGame()).AddTo(m_disposables);
-            if (m_refreshButton != null)
-            {
-                m_refreshButton.OnClickAsObservable().Subscribe(_ => GenerateSkillChoices()).AddTo(m_disposables);
-            }
 
             if (m_autoAttackToggle != null)
             {
@@ -176,15 +139,8 @@ namespace InGame.Manager
 
         private void InitializeUI()
         {
-            m_lastWave = -1;
-            m_lastCoin = -1;
-            m_lastMobCount = -1;
-            UpdatePlayerLevelUI(m_gameManager.GetPlayerLevel());
-            UpdatePlayerExpUI(m_gameManager.GetPlayerExpProgress());
-            m_acquiredAccessorySkills.Clear();
-            UpdateCachedItemLists();
-            RefreshWeaponDisplay();
-            RefreshJuListDisplay();
+            // ViewModel 데이터 갱신 유도
+            m_viewModel.UpdateIconLists();
         }
 
         #endregion
@@ -197,9 +153,6 @@ namespace InGame.Manager
             ApplyJoystickSettings();
             SoundManager.Instance.LoadSoundSetting();
             InitializeUI();
-            m_uiUpdateCts?.Cancel();
-            m_uiUpdateCts = new CancellationTokenSource();
-            UpdateUILoopAsync(m_uiUpdateCts.Token).Forget();
         }
 
         private void OnGamePause() => m_joystickTransform.gameObject.SetActive(false);
@@ -212,8 +165,12 @@ namespace InGame.Manager
 
         private void OnGameOver()
         {
-            UpdateGameOverUI();
-            m_gameOverPanel.SetActive(true);
+            if (m_gameOverPopup != null)
+            {
+                // R3 ReadOnlyReactiveProperty의 현재 값 접근자가 Value가 아닐 경우 CurrentValue를 사용해봅니다.
+                m_gameOverPopup.Show(m_viewModel.CoinCount.CurrentValue, m_viewModel.CurrentWave.CurrentValue, m_viewModel.KillCount.CurrentValue);
+            }
+            
             m_joystickTransform.gameObject.SetActive(false);
             if (m_variableJoystick != null)
             {
@@ -222,7 +179,6 @@ namespace InGame.Manager
             }
 
             if (m_autoAttackToggle != null) m_autoAttackToggle.isOn = false;
-            m_uiUpdateCts?.Cancel();
         }
 
         public async void StartGameCountdown()
@@ -259,36 +215,7 @@ namespace InGame.Manager
 
         #endregion
 
-        #region UI 업데이트 루프
-
-        private async UniTaskVoid UpdateUILoopAsync(CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                int currentWave = m_gameManager.GetCurrentWave();
-                if (m_lastWave != currentWave)
-                {
-                    m_lastWave = currentWave;
-                    ShowWaveTextEffect($"웨이브 {currentWave}").Forget();
-                }
-
-                int currentCoin = m_gameManager.GetCoinCount();
-                if (m_lastCoin != currentCoin)
-                {
-                    m_lastCoin = currentCoin;
-                    m_coinText.SetText("{0}", currentCoin);
-                }
-
-                int currentMobCount = m_gameManager.GetMobKillCount();
-                if (m_lastMobCount != currentMobCount)
-                {
-                    m_lastMobCount = currentMobCount;
-                    m_mobCountText.SetText("{0}", currentMobCount);
-                }
-
-                await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
-            }
-        }
+        // UpdateUILoopAsync는 ViewModel이 내부적으로 R3 Interval로 처리하므로 제거 가능
 
         private async UniTask ShowWaveTextEffect(string text, float holdDuration = 1.0f, float fadeDuration = 0.5f)
         {
@@ -302,26 +229,20 @@ namespace InGame.Manager
             m_mobWaveText.gameObject.SetActive(false);
         }
 
-        #endregion
-
         #region 플레이어 이벤트
 
         private void OnPlayerChanged(PlayerBase player)
         {
-            UpdateCachedItemLists();
-            RefreshWeaponDisplay();
+            m_viewModel.UpdateIconLists();
         }
 
         private void OnPlayerExpChanged(float currentExp, float maxExp)
         {
-            float progress = (maxExp > 0) ? currentExp / maxExp : 0;
-            UpdatePlayerExpUI(progress);
+            // ViewModel이 처리함
         }
 
         private void OnPlayerLevelUp(float newLevel)
         {
-            UpdatePlayerLevelUI(newLevel);
-            ShowLevelUpEffect();
             if (newLevel >= 2)
             {
                 m_pendingSkillSelections++;
@@ -329,28 +250,6 @@ namespace InGame.Manager
                 {
                     ProcessSkillSelectionQueue();
                 }
-            }
-        }
-
-        private void UpdatePlayerExpUI(float progress)
-        {
-            m_expSliderTween?.Kill();
-            m_expSliderTween = m_playerLevelSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
-            if (m_expSlider != null)
-                m_expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
-        }
-
-        private void UpdatePlayerLevelUI(float level)
-        {
-            m_levelText.SetText("Lv. {0}", (int)level);
-            m_playerLevelText_InGame.SetText("Lv. {0}", (int)level);
-        }
-
-        private void ShowLevelUpEffect()
-        {
-            if (m_levelText != null)
-            {
-                m_levelText.transform.DOScale(Vector3.one * 1.2f, 0.15f).SetLoops(2, LoopType.Yoyo);
             }
         }
 
@@ -398,9 +297,7 @@ namespace InGame.Manager
             m_joystickTransform.gameObject.SetActive(!isActive);
             if (isActive)
             {
-                UpdateCachedItemLists();
-                RefreshWeaponDisplay();
-                RefreshJuListDisplay();
+                m_viewModel.UpdateIconLists();
             }
         }
 
@@ -420,7 +317,7 @@ namespace InGame.Manager
         {
             m_gameManager.SetMenuPopupState(true);
             m_isSkillSelectionActive = true;
-            m_skillSelectionPanel.SetActive(true);
+            if (m_skillView != null) m_skillView.Show(true);
             GenerateSkillChoices();
         }
 
@@ -435,12 +332,11 @@ namespace InGame.Manager
         {
             const float duration = 6.0f;
             float timer = duration;
-            m_countdownText.gameObject.SetActive(true);
-            m_countDownSlider.gameObject.SetActive(true);
             while (timer > 0f && !token.IsCancellationRequested)
             {
-                m_countdownText.text = Mathf.CeilToInt(timer).ToString();
-                m_countDownSlider.value = timer / duration;
+                if (m_skillView != null)
+                    m_skillView.UpdateTimer(timer / duration, Mathf.CeilToInt(timer));
+                
                 await UniTask.NextFrame(token);
                 timer -= Time.deltaTime;
             }
@@ -455,14 +351,11 @@ namespace InGame.Manager
         {
             if (m_skillChoices.Count > 0)
             {
-                int randomIndex = Random.Range(0, m_skillChoices.Count);
+                int randomIndex = UnityEngine.Random.Range(0, m_skillChoices.Count);
                 var randomSkill = m_skillChoices[randomIndex];
-                var targetBtn = m_skillButtonPool.FirstOrDefault(b =>
-                    b.gameObject.activeSelf && b.GetCurrentSkillData() == randomSkill);
-                if (targetBtn != null)
-                {
-                    await targetBtn.PlaySelectionAnimation();
-                }
+                
+                if (m_skillView != null)
+                    await m_skillView.PlaySelectionAnimation(randomSkill);
 
                 await OnSkillSelected(randomSkill);
             }
@@ -471,12 +364,20 @@ namespace InGame.Manager
         private void GenerateSkillChoices()
         {
             StartAutoSelectionTimer();
-            foreach (var btn in m_skillButtonPool) btn.gameObject.SetActive(false);
             m_skillChoices.Clear();
 
             var ownedWeapons = m_gameManager.SpawnedPlayer?.Weapons.ToDictionary(w => w.skillCode) ??
-                               new Dictionary<string, WeaphonBase>();
-            var acquiredAccessoryCodes = new HashSet<string>(m_acquiredAccessorySkills.Select(s => s.skillCode));
+                               new Dictionary<string, WeaponBase>();
+            
+            // InventoryDataManager에서 획득한 스킬을 확인
+            var acquiredAccessoryCodes = new HashSet<string>();
+            if (InventoryDataManager.Instance != null)
+            {
+                foreach(var s in InventoryDataManager.Instance.InGameAcquiredSkills)
+                {
+                    if (s.skillType == SkillType.Passive) acquiredAccessoryCodes.Add(s.skillCode);
+                }
+            }
 
             var availableSkills = m_skillDatabase.allSkills.Where(skill =>
             {
@@ -485,8 +386,8 @@ namespace InGame.Manager
                     if (ownedWeapons.TryGetValue(skill.skillCode, out var weapon))
                     {
                         // 보유 중인 무기는 최대 레벨 및 진화가 아닐 때만 레벨업 대상으로 포함
-                        return weapon.CurrentLevel < WeaphonBase.k_MaxLevel ||
-                               (weapon.CurrentLevel == WeaphonBase.k_MaxLevel && !weapon.isEvolved);
+                        return weapon.CurrentLevel < WeaponBase.k_MaxLevel ||
+                               (weapon.CurrentLevel == WeaponBase.k_MaxLevel && !weapon.isEvolved);
                     }
 
                     return true; // 미보유 무기는 항상 포함
@@ -505,22 +406,8 @@ namespace InGame.Manager
                     m_skillChoices.Add(skill);
             }
 
-            for (int i = 0; i < m_skillChoices.Count; i++)
-            {
-                SelectSkillBtnPrefab btn;
-                if (i < m_skillButtonPool.Count)
-                {
-                    btn = m_skillButtonPool[i];
-                }
-                else
-                {
-                    btn = Instantiate(m_skillSelectionButtonPrefab, m_skillButtonContainer.transform);
-                    m_skillButtonPool.Add(btn);
-                }
-
-                btn.gameObject.SetActive(true);
-                btn.Setup(m_skillChoices[i], skill => OnSkillSelected(skill).Forget());
-            }
+            if (m_skillView != null)
+                m_skillView.RefreshSkillChoices(m_skillChoices, skill => OnSkillSelected(skill).Forget());
         }
 
         private async UniTask OnSkillSelected(SkillData selectedSkill)
@@ -546,7 +433,8 @@ namespace InGame.Manager
             }
             else // Passive
             {
-                m_acquiredAccessorySkills.Add(selectedSkill);
+                // m_acquiredAccessorySkills 대신 직접 InventoryDataManager에 추가 (이후 ViewModel의 UpdateIconLists에서 반영)
+                // InventoryDataManager.Instance.AddInGameSkill(selectedSkill)은 아래에서 공통으로 처리됨
                 TryUpgradeWeapon(selectedSkill.skillCode);
                 if (m_gameManager.SpawnedPlayer != null)
                 {
@@ -555,10 +443,8 @@ namespace InGame.Manager
                 }
             }
 
-            InventoryDataManagerDontdestory.Instance.AddInGameSkill(selectedSkill);
-            UpdateCachedItemLists();
-            RefreshWeaponDisplay();
-            RefreshJuListDisplay();
+            InventoryDataManager.Instance.AddInGameSkill(selectedSkill);
+            m_viewModel.UpdateIconLists();
             m_pendingSkillSelections--;
             if (m_pendingSkillSelections > 0)
             {
@@ -584,93 +470,30 @@ namespace InGame.Manager
         private void CloseSkillSelection()
         {
             m_skillSelectionTimerCts?.Cancel();
-            m_skillSelectionPanel.SetActive(false);
+            if (m_skillView != null) m_skillView.Show(false);
             m_isSkillSelectionActive = false;
-            if (m_countdownText != null) m_countdownText.gameObject.SetActive(false);
-            if (m_countDownSlider != null) m_countDownSlider.gameObject.SetActive(false);
             m_gameManager.SetMenuPopupState(false);
-        }
-
-        private void UpdateCachedItemLists()
-        {
-            m_weaponThumbnails.Clear();
-            if (m_gameManager.SpawnedPlayer != null)
-            {
-                foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
-                {
-                    if (weapon != null)
-                    {
-                        m_weaponThumbnails.Add(weapon.Thumnail);
-                    }
-                }
-            }
-
-            m_accessoryIcons.Clear();
-            foreach (var skill in m_acquiredAccessorySkills)
-            {
-                m_accessoryIcons.Add(skill.skillIcon);
-            }
-        }
-
-        private void RefreshWeaponDisplay()
-        {
-            for (int i = 0; i < m_weaponUIList.Count; i++)
-            {
-                var slotImage = m_weaponUIList[i];
-                if (slotImage == null) continue;
-                if (i < m_weaponThumbnails.Count && m_weaponThumbnails[i] != null)
-                {
-                    slotImage.gameObject.SetActive(true);
-                    slotImage.sprite = m_weaponThumbnails[i];
-                }
-                else
-                {
-                    slotImage.gameObject.SetActive(false);
-                }
-            }
-        }
-
-        private void RefreshJuListDisplay()
-        {
-            for (int i = 0; i < m_juListUIList.Count; i++)
-            {
-                var slot = m_juListUIList[i];
-                if (slot == null) continue;
-                if (i < m_accessoryIcons.Count && m_accessoryIcons[i] != null)
-                {
-                    slot.gameObject.SetActive(true);
-                    slot.sprite = m_accessoryIcons[i];
-                }
-                else
-                {
-                    slot.gameObject.SetActive(false);
-                }
-            }
         }
 
         #endregion
 
         #region 게임 종료 처리
 
-        private void UpdateGameOverUI()
+        private void ResumeGame()
         {
-            m_gameOverText.text = "게임 종료";
-            m_gameOverCoinText.SetText("코인: {0}", m_gameManager.GetCoinCount());
-            m_gameOverWaveText.SetText("웨이브: {0}", m_gameManager.GetCurrentWave());
-            m_gameOverMobCountText.SetText("처치 수: {0}", m_gameManager.GetMobKillCount());
+            m_gameManager.SetMenuPopupState(false);
+            m_menuPanel.SetActive(false);
+            m_joystickTransform.gameObject.SetActive(true);
         }
 
         private void ExitToLobby()
         {
-            m_gameOverPanel.SetActive(false);
             SceneLoader.Instance.LoadLobbyScene();
         }
 
         private void RestartGame()
         {
-            m_gameOverPanel.SetActive(false);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene()
-                .name);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         }
 
         #endregion

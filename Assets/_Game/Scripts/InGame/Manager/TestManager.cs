@@ -6,7 +6,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using InGame.Test;
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -184,7 +184,7 @@ namespace InGame.Manager
 
             int characterIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
 
-            PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = characterIndexToSpawn;
+            PlayerDataManager.Instance.SelectCharacterIndex = characterIndexToSpawn;
             m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();
         }
 
@@ -205,7 +205,7 @@ namespace InGame.Manager
             if (m_startLevelInput != null && !string.IsNullOrEmpty(m_startLevelInput.text))
             {
                 int.TryParse(m_startLevelInput.text, out startLevel);
-                startLevel = Mathf.Clamp(startLevel, 1, WeaphonBase.k_MaxLevel);
+                startLevel = Mathf.Clamp(startLevel, 1, WeaponBase.k_MaxLevel);
             }
 
             bool startEvolved = m_startEvolvedToggle != null && m_startEvolvedToggle.isOn;

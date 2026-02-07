@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
 
 namespace InGame.Player.Player_Base
 {
@@ -12,13 +12,13 @@ namespace InGame.Player.Player_Base
     {
         #region 내부 변수
         private readonly Transform m_playerTransform;
-        private List<WeaphonBase> m_weapons = new List<WeaphonBase>(); // Legacy
+        private List<WeaponBase> m_weapons = new List<WeaponBase>(); // Legacy
         private List<IWeaponController> m_controllers = new List<IWeaponController>(); // New System
         private System.Func<Vector3> m_targetProvider;
         #endregion
 
         #region 프로퍼티
-        public IReadOnlyList<WeaphonBase> Weapons => m_weapons.AsReadOnly();
+        public IReadOnlyList<WeaponBase> Weapons => m_weapons.AsReadOnly();
         public int WeaponCount => m_weapons.Count + m_controllers.Count;
         #endregion
 
@@ -37,7 +37,7 @@ namespace InGame.Player.Player_Base
         #endregion
 
         #region 무기 관리
-        public void AddWeapon(WeaphonBase weapon)
+        public void AddWeapon(WeaponBase weapon)
         {
             if (weapon != null)
             {
@@ -53,29 +53,29 @@ namespace InGame.Player.Player_Base
             }
         }
 
-        public void EquipWeapon(InGame.Weaphon.Base.WeaponDataSO data)
+        /// <summary>
+        /// [리팩토링] WeaponFactory를 통해 무기를 장착합니다.
+        /// 기존의 하드코딩된 if-else 로직을 제거했습니다.
+        /// </summary>
+        public void EquipWeapon(InGame.Weapon.Base.WeaponDataSO data)
         {
             if (data == null) return;
 
-            IWeaponController controller = null;
-
-            // 간단한 팩토리 로직 (나중에 별도 클래스로 분리 가능)
-            // SkillCode나 다른 식별자로 구분
-            if (data.SkillCode == "Bone") // 예: "Bone"
-            {
-                controller = new InGame.Weaphon.Controllers.BoneWeaponController();
-            }
-            // else if (data.SkillCode == "Flame") ...
+            // WeaponFactory를 통해 컨트롤러 생성
+            IWeaponController controller = InGame.Weapon.WeaponFactory.CreateController(
+                data, 
+                m_playerTransform, 
+                m_targetProvider
+            );
             
             if (controller != null)
             {
-                controller.Init(data, m_playerTransform, m_targetProvider);
                 m_controllers.Add(controller);
-                Debug.Log($"[PlayerWeaponManager] Equipped {data.WeaponName}");
+                LogManager.Log($"[PlayerWeaponManager] Equipped {data.WeaponName}", LogManager.LogCategory.Weapon);
             }
             else
             {
-                Debug.LogWarning($"[PlayerWeaponManager] No controller found for {data.WeaponName} ({data.SkillCode})");
+                LogManager.LogWarning($"[PlayerWeaponManager] Failed to create controller for {data.WeaponName} ({data.SkillCode})", LogManager.LogCategory.Weapon);
             }
         }
 
@@ -104,7 +104,7 @@ namespace InGame.Player.Player_Base
             {
                 if (weapon != null)
                 {
-                    weapon.Weaphon_Attack(direction);
+                    weapon.Weapon_Attack(direction);
                 }
             }
             

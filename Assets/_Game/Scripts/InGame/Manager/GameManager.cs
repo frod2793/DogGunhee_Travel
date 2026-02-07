@@ -4,7 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using InGame.Lobby;
 using InGame.Player.Player_Base;
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -106,9 +106,9 @@ namespace InGame.Manager
             }
 
 #if UNITY_EDITOR
-            if (Application.isPlaying && PlayerDataManagerDontdesytoy.Instance != null)
+            if (Application.isPlaying && PlayerDataManager.Instance != null)
             {
-                PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = m_startCharacterIndex;
+                PlayerDataManager.Instance.SelectCharacterIndex = m_startCharacterIndex;
             }
 #endif
         }
@@ -165,11 +165,11 @@ namespace InGame.Manager
         {
             try
             {
-                if (InventoryDataManagerDontdestory.Instance != null)
-                    InventoryDataManagerDontdestory.Instance.ClearInGameSkills();
+                if (InventoryDataManager.Instance != null)
+                    InventoryDataManager.Instance.ClearInGameSkills();
 
-                if (PlayerDataManagerDontdesytoy.Instance != null)
-                    PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt = 0;
+                if (PlayerDataManager.Instance != null)
+                    PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt = 0;
 
                 SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
 
@@ -197,7 +197,7 @@ namespace InGame.Manager
             SpawnedPlayer = null;
             OnPlayerChanged?.Invoke(null);
 
-            var dataManager = PlayerDataManagerDontdesytoy.Instance;
+            var dataManager = PlayerDataManager.Instance;
             if (dataManager != null && dataManager.PlayerData != null)
             {
                 var playerData = dataManager.PlayerData;
@@ -263,7 +263,7 @@ namespace InGame.Manager
 
             try
             {
-                int charIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
+                int charIndex = PlayerDataManager.Instance.SelectCharacterIndex;
                 string charKey = $"Player_Character_{charIndex}";
                 GameObject charInstance = await Addressables
                     .InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform)
@@ -332,7 +332,7 @@ namespace InGame.Manager
                 if (instance != null)
                 {
                     instance.transform.localPosition = Vector3.zero;
-                    var newWeapon = instance.GetComponent<WeaphonBase>();
+                    var newWeapon = instance.GetComponent<WeaponBase>();
                     if (newWeapon != null)
                     {
                         newWeapon.skillData = skillData;
@@ -350,7 +350,7 @@ namespace InGame.Manager
                         if (startEvolved)
                         {
                             // 최대 레벨까지 올린 후, 한 번 더 호출하여 진화시킴
-                            while (newWeapon.CurrentLevel < WeaphonBase.k_MaxLevel)
+                            while (newWeapon.CurrentLevel < WeaponBase.k_MaxLevel)
                             {
                                 newWeapon.UpgradeLevel();
                             }
@@ -386,10 +386,10 @@ namespace InGame.Manager
 
         public int GetMobKillCount()
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null &&
-                PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            if (PlayerDataManager.Instance != null &&
+                PlayerDataManager.Instance.PlayerData != null)
             {
-                return PlayerDataManagerDontdesytoy.Instance.PlayerData.nowPlayMObkillCOunt;
+                return PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt;
             }
 
             return 0;
@@ -412,10 +412,10 @@ namespace InGame.Manager
 
         public int GetCoinCount()
         {
-            if (PlayerDataManagerDontdesytoy.Instance != null &&
-                PlayerDataManagerDontdesytoy.Instance.PlayerData != null)
+            if (PlayerDataManager.Instance != null &&
+                PlayerDataManager.Instance.PlayerData != null)
             {
-                return PlayerDataManagerDontdesytoy.Instance.PlayerData.ingameCoin;
+                return PlayerDataManager.Instance.PlayerData.ingameCoin;
             }
 
             return 0;

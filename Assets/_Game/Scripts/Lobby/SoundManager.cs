@@ -1,10 +1,13 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Serialization;
 using UnityEngine;
+using UnityEngine.Audio;
+using InGame.Services;
 
-
-public class SoundManager : MonoBehaviour
+/// <summary>
+/// 오디오를 총괄하는 매니저 클래스입니다.
+/// AudioMixer 연동 및 SFX 풀링을 지원합니다.
+/// </summary>
+public class SoundManager : MonoBehaviour, ISoundManager
 {
     #region 싱글톤
 
@@ -16,45 +19,51 @@ public class SoundManager : MonoBehaviour
         {
             if (s_instance == null)
             {
-                // 씬에서 SoundManager를 찾아봅니다.
                 s_instance = FindFirstObjectByType<SoundManager>();
-                // 씬에 SoundManager가 없다면, 새로 생성하지 않고 경고를 출력합니다.
-                // SoundManager는 씬에 미리 배치하고 SoundData를 할당해야 합니다.
                 if (s_instance == null)
                 {
-                    LogManager.LogError(
-                        "SoundManager instance not found in the scene. Please add SoundManager to your scene and assign SoundData.");
+                    LogManager.LogError("SoundManager instance not found in the scene.");
                 }
             }
-
             return s_instance;
         }
     }
 
     #endregion
 
-    #region 변수 및 필드
+    #region 상수 및 설정
 
-    [Tooltip("재생할 오디오 클립들의 데이터입니다.")]
-    [SerializeField] private SoundData m_soundData;
-
-    [Tooltip("게임의 사운드 설정 데이터입니다.")]
-    [SerializeField] private SettingsData m_settingsData;
-    
-    private AudioSource[] m_audioSources = new AudioSource[(int)Sound.Max];
-    private readonly Dictionary<string, AudioClip> m_audioClips = new Dictionary<string, AudioClip>();
-    public float EffectSoundVolume { get; private set; } = 1.0f; // 외부에서는 읽기만 가능
-    public float BgmSoundVolume { get; private set; } = 1.0f; // 외부에서는 읽기만 가능
-
-    // [Throttling]
-    private Dictionary<AudioClip, float> m_soundTimers = new Dictionary<AudioClip, float>();
-    private const float k_MinSoundInterval = 0.05f; // 0.05초 내 중복 재생 방지
+    private const string k_MasterVolumeParam = "Master_Volume_Exposed";
+    private const string k_BgmVolumeParam = "BGM_Volume_Exposed";
+    private const string k_SfxVolumeParam = "SFX_Volume_Exposed";
+    private const int k_DefaultSfxPoolSize = 10;
+    private const float k_MinSoundInterval = 0.05f;
 
     #endregion
 
-    #region 정적 메서드
+    #region 변수 및 필드
 
-    // 정적 호출 지원
+    [Header("Data")]
+    [SerializeField] private SoundData m_soundData;
+    [SerializeField] private SettingsData m_settingsData;
+    
+    [Header("Audio Mixer")]
+    [SerializeField] private AudioMixer m_audioMixer;
+    [SerializeField] private AudioMixerGroup m_bgmGroup;
+    [SerializeField] private AudioMixerGroup m_sfxGroup;
+
+    private AudioSource m_bgmSource;
+    private readonly List<AudioSource> m_sfxPool = new List<AudioSource>();
+    private readonly Dictionary<string, AudioClip> m_audioClips = new Dictionary<string, AudioClip>();
+    private readonly Dictionary<AudioClip, float> m_soundTimers = new Dictionary<AudioClip, float>();
+
+    public float EffectSoundVolume { get; private set; } = 1.0f;
+    public float BgmSoundVolume { get; private set; } = 1.0f;
+
+    #endregion
+
+    #region 정적 메서드 (상위 호환성 유지)
+
     public static void PlaySound(Sound type, string clipName, bool loop = false, float pitch = 1.0f)
     {
         Instance.Play(clipName, type, pitch, loop);
@@ -67,7 +76,7 @@ public class SoundManager : MonoBehaviour
 
     #endregion
 
-    #region 초기화 메서드
+    #region Unity 라이프사이클
 
     private void Awake()
     {
@@ -78,40 +87,42 @@ public class SoundManager : MonoBehaviour
         }
 
         s_instance = this;
-        Init();
         DontDestroyOnLoad(gameObject);
+        
+        Init();
     }
     
     private void OnEnable()
     {
-        // 설정이 변경될 때마다 자동으로 볼륨을 다시 로드하도록 이벤트 구독
         SettingsData.OnSettingsChanged += LoadSoundSetting;
     }
 
     private void OnDisable()
     {
-        // 오브젝트가 비활성화되거나 파괴될 때 이벤트 구독 해제
         SettingsData.OnSettingsChanged -= LoadSoundSetting;
     }
 
+    #endregion
+
+    #region 초기화
+
     private void Init()
     {
-        if (m_audioSources[0] != null) return; // 이미 초기화된 경우 중복 방지
+        // BGM 소스 초기화
+        GameObject bgmGo = new GameObject("BGM_Source");
+        bgmGo.transform.SetParent(transform);
+        m_bgmSource = bgmGo.AddComponent<AudioSource>();
+        m_bgmSource.outputAudioMixerGroup = m_bgmGroup;
+        m_bgmSource.loop = true;
+        m_bgmSource.playOnAwake = false;
 
-        GameObject root = new GameObject { name = "Sound" };
-        root.transform.parent = transform;
-
-        string[] soundNames = System.Enum.GetNames(typeof(Sound));
-        for (int i = 0; i < soundNames.Length - 1; i++)
+        // SFX 풀 초기화
+        for (int i = 0; i < k_DefaultSfxPoolSize; i++)
         {
-            GameObject go = new GameObject { name = soundNames[i] };
-            m_audioSources[i] = go.AddComponent<AudioSource>();
-            go.transform.parent = root.transform;
+            CreateSfxSource();
         }
 
-        m_audioSources[(int)Sound.BGM].loop = true;
-
-        // 할당된 SoundData에서 오디오 클립 초기화
+        // 클립 데이터 캐싱
         if (m_soundData != null)
         {
             foreach (var audioInfo in m_soundData.audioClips)
@@ -122,136 +133,138 @@ public class SoundManager : MonoBehaviour
                 }
             }
         }
-        else
-        {
-            LogManager.LogError("SoundData가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
-        }
 
         LoadSoundSetting();
     }
 
+    private AudioSource CreateSfxSource()
+    {
+        GameObject sfxGo = new GameObject($"SFX_Source_{m_sfxPool.Count}");
+        sfxGo.transform.SetParent(transform);
+        AudioSource source = sfxGo.AddComponent<AudioSource>();
+        source.outputAudioMixerGroup = m_sfxGroup;
+        source.playOnAwake = false;
+        m_sfxPool.Add(source);
+        return source;
+    }
 
     public void LoadSoundSetting()
     {
-        if (m_settingsData == null)
+        if (m_settingsData != null)
         {
-            LogManager.LogError("SettingsData가 SoundManager에 할당되지 않았습니다. 인스펙터에서 할당해주세요.");
-            // settingsData가 없어도 기본 볼륨으로 동작하도록 설정
-            SetVolume(Sound.BGM, 1.0f);
-            SetVolume(Sound.SFX, 1.0f);
-        }
-        else
-        {
-            // ScriptableObject에서 직접 최신 데이터를 불러옵니다.
             m_settingsData.LoadSettings();
-
-            // 배경음과 효과음 볼륨 설정
             SetVolume(Sound.BGM, m_settingsData.BackgroundSoundVolume);
             SetVolume(Sound.SFX, m_settingsData.EffectSoundVolume);
         }
-
-        // 초기 볼륨 설정
-        SetVolume(Sound.BGM, BgmSoundVolume);
-        SetVolume(Sound.SFX, EffectSoundVolume);
-    }
-    
-    public void Clear()
-    {
-        foreach (AudioSource audioSource in m_audioSources)
-        {
-            if (audioSource == null) continue;
-            audioSource.clip = null;
-            audioSource.Stop();
-        }
-
-        m_audioClips.Clear();
     }
 
     #endregion
 
-    #region 오디오 재생 메서드
+    #region ISoundManager 구현
 
-    public void Play(AudioClip audioClip, Sound type = Sound.SFX, float pitch = 1.0f, bool loop = false)
+    public void Play(string clipName, Sound type = Sound.SFX, float pitch = 1.0f, bool loop = false)
     {
-        if (audioClip == null)
-            return;
-
-        AudioSource audioSource = m_audioSources[(int)type];
-        if (audioSource == null) return;
-
-        audioSource.pitch = pitch;
+        AudioClip clip = GetAudioClip(clipName);
+        if (clip == null) return;
 
         if (type == Sound.BGM)
         {
-            // 이미 같은 BGM이 재생 중이면 다시 재생하지 않음
-            if (audioSource.isPlaying && audioSource.clip == audioClip)
-                return;
-            
-            // 다른 BGM이 재생 중이었다면 정지
-            if(audioSource.isPlaying)
-                audioSource.Stop();
-            
-            audioSource.volume = BgmSoundVolume;
-            audioSource.clip = audioClip;
-            audioSource.Play();
-            LogManager.Log($"Playing BGM: {audioClip.name} with volume: {BgmSoundVolume}", LogManager.LogCategory.SoundManager);
+            PlayBGM(clip, pitch);
         }
-        else // Effect
+        else
         {
-            // [Throttling] 중복 재생 방지 로직
-            if (m_soundTimers.TryGetValue(audioClip, out float lastPlayTime))
-            {
-                if (Time.time - lastPlayTime < k_MinSoundInterval)
-                {
-                    return; // 너무 자주 재생되면 스킵
-                }
-            }
-            m_soundTimers[audioClip] = Time.time;
-
-            audioSource.volume = EffectSoundVolume;
-            audioSource.PlayOneShot(audioClip);
+            PlaySFX(clip, pitch, Vector3.zero, false);
         }
     }
 
-    public void Play(string path, Sound type = Sound.SFX, float pitch = 1.0f, bool loop = false)
+    public void Play(string clipName, Vector3 position, float pitch = 1.0f)
     {
-        AudioClip audioClip = GetAudioClip(path);
-        Play(audioClip, type, pitch, loop);
+        AudioClip clip = GetAudioClip(clipName);
+        if (clip == null) return;
+
+        PlaySFX(clip, pitch, position, true);
     }
-
-    #endregion
-
-    #region 유틸리티 메서드
 
     public void SetVolume(Sound type, float volume)
     {
-        if (type == Sound.BGM)
+        // 0일 경우 명시적으로 -144dB(완벽 무음) 처리, 그 외에는 로그 수식 적용
+        float db = (volume <= 0.0001f) ? -144.0f : Mathf.Log10(Mathf.Clamp(volume, 0.0001f, 1f)) * 20f;
+        string param = type == Sound.BGM ? k_BgmVolumeParam : k_SfxVolumeParam;
+
+        if (m_audioMixer != null)
         {
-            BgmSoundVolume = volume;
-            if (m_audioSources[(int)Sound.BGM] != null)
-            {
-                m_audioSources[(int)Sound.BGM].volume = BgmSoundVolume;
-            }
-            LogManager.Log($"BGM volume updated to: {BgmSoundVolume}", LogManager.LogCategory.SoundManager);
+            m_audioMixer.SetFloat(param, db);
         }
-        else if (type == Sound.SFX)
+
+        if (type == Sound.BGM) BgmSoundVolume = volume;
+        else EffectSoundVolume = volume;
+    }
+
+    public void Clear()
+    {
+        m_bgmSource.Stop();
+        m_bgmSource.clip = null;
+
+        foreach (var source in m_sfxPool)
         {
-            EffectSoundVolume = volume;
-            if (m_audioSources[(int)Sound.SFX] != null)
-            {
-                m_audioSources[(int)Sound.SFX].volume = EffectSoundVolume;
-            }
-            LogManager.Log($"SFX volume updated to: {EffectSoundVolume}", LogManager.LogCategory.SoundManager);
+            source.Stop();
+            source.clip = null;
         }
     }
 
-    AudioClip GetAudioClip(string key)
+    #endregion
+
+    #region 내부 재생 로직
+
+    private void PlayBGM(AudioClip clip, float pitch)
     {
-        if (m_audioClips.TryGetValue(key, out AudioClip audioClip))
+        if (m_bgmSource.isPlaying && m_bgmSource.clip == clip) return;
+
+        m_bgmSource.Stop();
+        m_bgmSource.clip = clip;
+        m_bgmSource.pitch = pitch;
+        m_bgmSource.Play();
+    }
+
+    private void PlaySFX(AudioClip clip, float pitch, Vector3 position, bool is3D)
+    {
+        // Throttling
+        if (m_soundTimers.TryGetValue(clip, out float lastTime))
         {
-            return audioClip;
+            if (Time.time - lastTime < k_MinSoundInterval) return;
+        }
+        m_soundTimers[clip] = Time.time;
+
+        AudioSource source = GetAvailableSfxSource();
+        source.clip = clip;
+        source.pitch = pitch;
+        
+        if (is3D)
+        {
+            source.transform.position = position;
+            source.spatialBlend = 1.0f; // 3D
+        }
+        else
+        {
+            source.spatialBlend = 0.0f; // 2D
         }
 
+        source.Play();
+    }
+
+    private AudioSource GetAvailableSfxSource()
+    {
+        foreach (var source in m_sfxPool)
+        {
+            if (!source.isPlaying) return source;
+        }
+
+        return CreateSfxSource(); // 풀이 부족하면 새로 생성
+    }
+
+    private AudioClip GetAudioClip(string key)
+    {
+        if (m_audioClips.TryGetValue(key, out AudioClip clip)) return clip;
         LogManager.LogWarning($"AudioClip not found: {key}", LogManager.LogCategory.SoundManager);
         return null;
     }

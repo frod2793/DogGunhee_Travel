@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using InGame.Manager; // GameManager 사용
-using InGame.Weaphon.Base;
+using InGame.Weapon.Base;
 
 namespace InGame.Mob
 {
@@ -233,7 +233,7 @@ namespace InGame.Mob
 
         private void ProcessHit(Collider2D other)
         {
-            if (other.TryGetComponent(out WeaphonBase weapon))
+            if (other.TryGetComponent(out WeaponBase weapon))
             {
                 TakeDamage(weapon.attackPower, weapon.mobStunTime);
             }

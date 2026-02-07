@@ -27,7 +27,9 @@ public class LogManager : MonoBehaviour
         VamserLikeUI,
         mobBase,
         Weapon,
-        EffectManager
+        EffectManager,
+        StoreManager,
+        QuestManager
     }
 
     [Tooltip("전체 디버그 로그 활성화 여부")]
@@ -65,7 +67,9 @@ public class LogManager : MonoBehaviour
         { LogCategory.VamserLikeUI, "#FF6347" },        // Tomato
         { LogCategory.mobBase, "#CD5C5C" },             // IndianRed
         { LogCategory.Weapon, "#FF4500" },              // OrangeRed
-        { LogCategory.EffectManager, "#BA55D3" }        // MediumOrchid
+        { LogCategory.EffectManager, "#BA55D3" },       // MediumOrchid
+        { LogCategory.StoreManager, "#FFD700" },        // Gold
+        { LogCategory.QuestManager, "#ADFF2F" }         // GreenYellow
     };
 
     public static LogManager Instance { get; private set; }

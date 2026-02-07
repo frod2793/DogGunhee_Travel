@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Lobby;
 using UnityEngine;
+using InGame.UI;
 
 namespace InGame.Lobby
 {
@@ -21,11 +21,11 @@ namespace InGame.Lobby
         [SerializeField] private GameObject characterListPanel;
 
         [Header("<color=green>캐릭터선택 관련</color>")] 
-        [SerializeField] private CharactorSelectIndex characterSelectIndexPrefab;
+        [SerializeField] private CharacterSelectIndex characterSelectIndexPrefab;
         [SerializeField] private Transform characterSelectIndexParent;
         
         [Header("<color=green>캐릭터스킨 관련</color>")] 
-        [SerializeField] private CharactorSkinIndex characterSkinIndexPrefab;
+        [SerializeField] private CharacterSkinIndex characterSkinIndexPrefab;
         [SerializeField] private Transform characterSkinIndexParent;
 
         // 캐릭터 및 스킨 데이터 캐싱
@@ -37,8 +37,8 @@ namespace InGame.Lobby
         private int _currentSkinIndex = 0;
         
         // 생성된 UI 요소 참조 저장
-        private List<CharactorSelectIndex> _characterIndexItems = new List<CharactorSelectIndex>();
-        private List<CharactorSkinIndex> _skinIndexItems = new List<CharactorSkinIndex>();
+        private List<CharacterSelectIndex> _characterIndexItems = new List<CharacterSelectIndex>();
+        private List<CharacterSkinIndex> _skinIndexItems = new List<CharacterSkinIndex>();
         
         #endregion
 
@@ -79,7 +79,7 @@ namespace InGame.Lobby
             LogManager.Log("캐릭터 데이터 로드", LogManager.LogCategory.CharacterManager);
             
             // 이전에 선택된 캐릭터/스킨 인덱스 복원
-            _currentCharacterIndex = PlayerDataManagerDontdesytoy.Instance?.SelectCharacterIndex ?? 0;
+            _currentCharacterIndex = PlayerDataManager.Instance?.SelectCharacterIndex ?? 0;
             _currentSkinIndex = PlayerPrefs.GetInt("SelectedSkinIndex", 0);
         }
         
@@ -134,9 +134,9 @@ namespace InGame.Lobby
             for (int i = 0; i < 5; i++)
             {
                 var characterItem = Instantiate(characterSelectIndexPrefab, characterSelectIndexParent);
-                if (characterItem.charactorName != null)
+                if (characterItem.characterName != null)
                 {
-                    characterItem.charactorName.text = $"캐릭터 {i}";
+                    characterItem.characterName.text = $"캐릭터 {i}";
                 }
 
                 // 클릭 이벤트 설정
@@ -170,9 +170,9 @@ namespace InGame.Lobby
             for (int i = 0; i < 3; i++)
             {
                 var skinItem = Instantiate(characterSkinIndexPrefab, characterSkinIndexParent);
-                if (skinItem.charactorName != null)
+                if (skinItem.characterName != null)
                 {
-                    skinItem.charactorName.text = $"스킨 {i}";
+                    skinItem.characterName.text = $"스킨 {i}";
                 }
                 
                 // 클릭 이벤트 설정
@@ -199,9 +199,9 @@ namespace InGame.Lobby
             _currentCharacterIndex = characterIndex;
             
             // PlayerData에 선택한 캐릭터 인덱스 저장
-            if (PlayerDataManagerDontdesytoy.Instance != null)
+            if (PlayerDataManager.Instance != null)
             {
-                PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex = characterIndex;
+                PlayerDataManager.Instance.SelectCharacterIndex = characterIndex;
             }
             
             // 스킨 UI 업데이트
@@ -250,7 +250,7 @@ namespace InGame.Lobby
         public void OpenCharacterSelectPanel()
         {
             SetGameObjectActive(characterSelectPanel, true);
-            LobbyUIManager.AddClosePopUpAction(CloseCharacterSelectPanel);
+            PopupManager.Instance.RegisterPopup(CloseCharacterSelectPanel);
             
             // UI 초기화 - 최신 데이터로 리프레시
             InitializeCharacterUI();
@@ -263,7 +263,7 @@ namespace InGame.Lobby
         {
             SetGameObjectActive(characterListPanel, true);
             SetGameObjectActive(characterExpendViewPanel, false);
-            LobbyUIManager.AddClosePopUpAction(CloseCharacterListPanel);
+            PopupManager.Instance.RegisterPopup(CloseCharacterListPanel);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace InGame.Lobby
         {
             SetGameObjectActive(characterExpendViewPanel, true);
             SetGameObjectActive(characterListPanel, false);
-            LobbyUIManager.AddClosePopUpAction(CloseCharacterSkinViewPanel);
+            PopupManager.Instance.RegisterPopup(CloseCharacterSkinViewPanel);
         }
 
         /// <summary>

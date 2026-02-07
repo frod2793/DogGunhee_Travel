@@ -8,6 +8,6 @@ namespace InGame.Lobby
   {
     public Button openCharacterSelectButton;
     public Image thumbNail;
-    public TMP_Text charactorName;
+    public TMP_Text characterName;
   }
 }

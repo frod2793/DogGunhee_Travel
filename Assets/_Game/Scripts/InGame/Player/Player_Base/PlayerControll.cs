@@ -247,7 +247,7 @@ namespace InGame.Player.Player_Base
             if (m_playerCharacter == null || m_playerCharacter.Weapons == null || m_playerCharacter.Weapons.Count == 0) return;
             foreach (var weapon in m_playerCharacter.Weapons)
             {
-                if (weapon != null) weapon.Weaphon_Attack(dir);
+                if (weapon != null) weapon.Weapon_Attack(dir);
             }
         }
 

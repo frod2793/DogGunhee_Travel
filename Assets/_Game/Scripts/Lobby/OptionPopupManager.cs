@@ -49,7 +49,7 @@ public class OptionPopupManager : MonoBehaviour
     /// <summary>
     /// 전역 데이터 및 설정을 관리하는 PlayerDataManager 인스턴스입니다.
     /// </summary>
-    private PlayerDataManagerDontdesytoy m_playerDataManager;
+    private PlayerDataManager m_playerDataManager;
     /// <summary>
     /// 이 팝업이 속한 최상위 Canvas입니다.
     /// </summary>
@@ -90,7 +90,7 @@ public class OptionPopupManager : MonoBehaviour
     private void InitializeComponents()
     {
         m_soundManager = SoundManager.Instance;
-        m_playerDataManager = PlayerDataManagerDontdesytoy.Instance;
+        m_playerDataManager = PlayerDataManager.Instance;
         if (m_soundManager == null)
         {
             Debug.LogError("SoundManager를 찾을 수 없습니다. OptionPopupManager가 정상적으로 작동하지 않을 수 있습니다.");
@@ -168,7 +168,6 @@ public class OptionPopupManager : MonoBehaviour
     {
         // 효과음 슬라이더 값이 변경될 때마다 settingsData 업데이트 및 SoundManager에 적용
         m_effectSoundVolumeSlider.OnValueChangedAsObservable()
-            .ThrottleFirst(TimeSpan.FromSeconds(0.1)) // 0.1초 간격으로 이벤트 발생 제어
             .Subscribe(value =>
             {
                 m_settingsData.EffectSoundVolume = value;
@@ -178,7 +177,6 @@ public class OptionPopupManager : MonoBehaviour
 
         // 배경음 슬라이더 값이 변경될 때마다 settingsData 업데이트 및 SoundManager에 적용
         m_bgmSoundVolumeSlider.OnValueChangedAsObservable()
-            .ThrottleFirst(TimeSpan.FromSeconds(0.1))
             .Subscribe(value =>
             {
                 m_settingsData.BackgroundSoundVolume = value;
@@ -237,12 +235,7 @@ public class OptionPopupManager : MonoBehaviour
     {
         // 엔진에 직접 프레임 적용
         Application.targetFrameRate = frameRate;
-
-        if (m_playerDataManager != null)
-        {
-            // 데이터 매니저에도 값 전달 (저장 용도 등)
-            m_playerDataManager.SetTargetFrameRate(frameRate);
-        }
+        QualitySettings.vSyncCount = 0; // VSync 비활성화하여 targetFrameRate가 적용되도록 함
     }
     #endregion
 
