@@ -20,11 +20,11 @@ MonoBehaviour:
   BaseAttackPower: 25
   BaseCoolTime: 1.2
   BaseAttackSpeed: 1
-  BaseAttackRange: 0
+  BaseAttackRange: 2
   BaseDuration: 0
   BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 0}
-  ModelPrefab: {fileID: 0}
+  ProjectilePrefab: {fileID: 296955345432317447, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
+  ModelPrefab: {fileID: 296955345432317447, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
   EffectPrefab: {fileID: 0}
   EvolutionItemCode: PS_FEATHER
   Upgrades:

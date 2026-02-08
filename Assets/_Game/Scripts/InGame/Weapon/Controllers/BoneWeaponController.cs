@@ -1,70 +1,93 @@
 using System;
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
-using InGame.Weapon;
+using InGame.Weapon.Logic;
+using InGame.Manager;
 
 namespace InGame.Weapon.Controllers
 {
     public class BoneWeaponController : WeaponControllerBase
     {
-        private float m_boneSpeed;
+        #region 내부 상태
+
+        private BoneWeaponLogic m_logic;
+
+        #endregion
+
+        #region 초기화
         
-        public override void Init(WeaponDataSO data, Transform owner, System.Func<Vector3> getTargetDirection)
+        public override void Init(WeaponDataSO data, Transform owner, Func<Vector3> getTargetDirection)
         {
             base.Init(data, owner, getTargetDirection);
             
-            // Bone 전용 초기화: 풀 등록
+            // 1. 비주얼 튜닝 데이터 추출 (WeaponPoolManager)
+            BoneWeaponTuningData? tuningData = null;
+            if (WeaponPoolManager.Instance != null)
+            {
+                var view = WeaponPoolManager.Instance.GetComponent<BoneWeaponView>();
+                if (view != null)
+                {
+                    tuningData = new BoneWeaponTuningData { BoneSpeed = view.BoneSpeed };
+                }
+            }
+
+            // 2. POCO 로직 초기화
+            m_logic = new BoneWeaponLogic(m_runtimeStats, tuningData);
+
+            // 3. 오브젝트 풀 등록
             if (m_runtimeStats.Data.ProjectilePrefab != null)
             {
                 WeaponPoolManager.Instance.GetOrAddPool<BoneBullet>(
-                    CreateBullet,
-                    OnGet,
-                    OnRelease,
-                    OnDestroyPoolItem,
+                    CreateBullet, OnGet, OnRelease, OnDestroyPoolItem,
                     maxSize: 10 + m_runtimeStats.CurrentProjectileCount * 2
                 );
             }
-
-            // 초기 스피드 설정 (AttackSpeed를 투사체 속도로 사용하는지 확인 필요, 기존 코드에서는 attackSpeed를 BulletSpeed로 사용)
-            m_boneSpeed = m_runtimeStats.CurrentAttackSpeed > 0 ? m_runtimeStats.CurrentAttackSpeed : 10f;
         }
+
+        #endregion
+
+        #region IWeaponController 구현
 
         protected override void ExecuteAttack(Vector3 direction)
         {
              ThrowBone(direction);
         }
 
+        public override void Dispose()
+        {
+            // BoneWeaponController는 특별한 해제 로직 없음
+        }
+
+        #endregion
+
+        #region 공격 로직
+
         private void ThrowBone(Vector3 direction)
         {
-            try
-            {
-                // WeaponPoolManager를 통해 총알을 가져옵니다.
-                BoneBullet bullet = WeaponPoolManager.Instance.Get<BoneBullet>();
-                if (bullet == null) return;
+            // 풀에서 투사체 가져오기
+            BoneBullet bullet = WeaponPoolManager.Instance.Get<BoneBullet>();
+            if (bullet == null) return;
 
-                bullet.transform.position = m_ownerTransform.position;
-                bullet.transform.SetParent(null); // 발사 시 부모 해제
-                
-                // POCO Controller에서 투사체로 데이터 전달
-                bullet.Initialize(m_runtimeStats.CurrentAttackPower, m_runtimeStats.CurrentDuration, m_boneSpeed, m_runtimeStats.CurrentLevel >= 6); // 6레벨 진화 가정
+            bullet.transform.position = m_ownerTransform.position;
+            bullet.transform.SetParent(null);
+            
+            // 로직 데이터로 초기화
+            bullet.Initialize(
+                m_logic.AttackPower, 
+                m_logic.Duration, 
+                m_logic.BoneSpeed, 
+                m_logic.IsEvolved);
 
-                // 발사 방향 결정: Bone 무기는 유도(Tracking) 없이 정면/입력 방향으로 발사합니다.
-                Vector3 dir = direction;
-                // [Refactoring] 유저 요청: 적을 추적하지 않고 일정한 사거리/속도로 날아가도록 변경.
-                // m_getTargetDirection(자동 조준)을 무시하고, 입력 방향이 없으면 오너의 위쪽(정면)을 사용합니다.
-                if (dir == Vector3.zero) dir = m_ownerTransform.up; 
-                
-                bullet.ThrowBullet(dir);
-            }
-            catch (Exception ex)
-            {
-                 Debug.LogWarning($"[BoneWeaponController] Error: {ex.Message}");
-            }
+            // 발사 방향 설정 (기본값: 위쪽)
+            Vector3 dir = direction == Vector3.zero ? m_ownerTransform.up : direction; 
+            bullet.ThrowBullet(dir);
         }
         
-        // --- Object Pool Delegates ---
+        #endregion
+
+        #region 오브젝트 풀 델리게이트
+
         private BoneBullet CreateBullet()
         {
             var go = UnityEngine.Object.Instantiate(m_runtimeStats.Data.ProjectilePrefab);
@@ -84,5 +107,7 @@ namespace InGame.Weapon.Controllers
         }
 
         private void OnDestroyPoolItem(BoneBullet obj) => UnityEngine.Object.Destroy(obj.gameObject);
+
+        #endregion
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -12,12 +13,14 @@ namespace InGame.vamsir
     [DisallowMultipleComponent]
     public class PooledEffect : MonoBehaviour
     {
-        [Tooltip("이 값을 0보다 크게 설정하면, 파티클이나 애니메이션 시간 대신 이 시간(초) 후에 자동으로 풀에 반환됩니다. (스프라이트, 라인 렌더러 이펙트 등에 사용)")]
         [SerializeField] private float overrideDuration = -1f;
 
         private IObjectPool<PooledEffect> _pool;
         private ParticleSystem _particleSystem;
         private Animator _animator;
+        
+        private CancellationTokenSource _cts;
+        private bool _isReleasing = false;
 
         private void Awake()
         {
@@ -32,21 +35,57 @@ namespace InGame.vamsir
 
         private void OnEnable()
         {
+            _isReleasing = false;
             StartAutoReturnToPool().Forget();
+        }
+
+        private void OnDisable()
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
+
+            // 외부 요인(예: 부모 비활성화)으로 인해 비활성화된 경우, 풀로 반환 시도
+            // 단, 풀에서 Release를 호출하여 비활성화된 경우(_isReleasing)는 제외 (무한루프/중복반환 방지)
+            if (!_isReleasing && _pool != null)
+            {
+                // 주의: 이미 Destroy된 경우나 앱 종료 시점 등 예외 처리 필요할 수 있음
+                // 여기서는 간단하게 처리
+                _isReleasing = true;
+               try
+               {
+                    _pool.Release(this);
+               }
+               catch
+               {
+                   // 이미 풀에 있거나 파괴된 경우 무시
+               }
+               _isReleasing = false;
+            }
         }
 
         private async UniTaskVoid StartAutoReturnToPool()
         {
+            _cts = new CancellationTokenSource();
             float duration = GetDuration();
 
             if (duration > 0f)
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: this.GetCancellationTokenOnDestroy());
-                
-                // Delay 후에도 오브젝트가 여전히 활성 상태일 때만 풀에 반환합니다.
-                if(gameObject.activeInHierarchy)
+                try
                 {
+                    await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: _cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                
+                // 시간이 다 됨 -> 풀 반환
+                if (gameObject.activeInHierarchy && !_isReleasing)
+                {
+                    _isReleasing = true;
                     _pool?.Release(this);
+                    _isReleasing = false;
                 }
             }
         }

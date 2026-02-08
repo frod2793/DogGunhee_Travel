@@ -1,16 +1,33 @@
 using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
+using InGame.Weapon.Logic;
+using InGame.Weapon.Controllers;
 
 namespace InGame.Weapon.Strategies
 {
+    /// <summary>
+    /// PearlWeaponLogic과 PearlWeaponView를 사용하는 전략 클래스입니다.
+    /// </summary>
     public class PearlStrategy : IWeaponStrategy
     {
-        private WeaponDataSO m_data;
+        private PearlWeaponLogic m_logic;
+        private PearlWeaponView m_view;
 
         public void Initialize(WeaponDataSO data)
         {
-            m_data = data;
+            // 1. View 추출 (중앙 제어: WeaponPoolManager 오브젝트에 부착됨)
+            if (WeaponPoolManager.Instance != null)
+            {
+                m_view = WeaponPoolManager.Instance.GetComponent<PearlWeaponView>();
+            }
+
+            if (m_view == null)
+            {
+                Debug.LogWarning("[PearlStrategy] WeaponPoolManager에 PearlWeaponView가 없습니다. 기본값을 생성합니다.");
+                var go = (WeaponPoolManager.Instance != null) ? WeaponPoolManager.Instance.gameObject : new GameObject("PearlWeaponView_Default");
+                m_view = go.GetComponent<PearlWeaponView>() ?? go.AddComponent<PearlWeaponView>();
+            }
 
             if (data.ProjectilePrefab != null)
             {
@@ -28,15 +45,24 @@ namespace InGame.Weapon.Strategies
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
+            // 로직 초기화 또는 갱신
+            if (m_logic == null)
+            {
+                var tuningData = new PearlTuningData
+                {
+                    HitCooldown = m_view.HitCooldown
+                };
+                m_logic = new PearlWeaponLogic(stats, tuningData);
+            }
+            else
+            {
+                m_logic.UpdateStats(stats);
+            }
+
             // 이미 존재하면 스탯만 갱신하고 리턴
             if (PearlProjectile.Instance != null)
             {
-                PearlProjectile.Instance.UpdateState(
-                    stats.CurrentAttackPower,
-                    stats.MobStunTime,
-                    stats.CurrentAttackSpeed,
-                    stats.IsEvolved
-                );
+                PearlProjectile.Instance.UpdateState(); // Logic이 이미 주입되어 있음
                 return;
             }
 
@@ -49,29 +75,24 @@ namespace InGame.Weapon.Strategies
                 if (direction == Vector3.zero) 
                     direction = Random.insideUnitCircle.normalized;
 
-                float speed = stats.CurrentAttackSpeed > 0 ? stats.CurrentAttackSpeed : 1f;
+                float speed = m_logic.AttackSpeed;
+                Vector3 velocity = direction.normalized * speed;
 
-                pearl.Initialize(
-                    stats.CurrentAttackPower,
-                    stats.MobStunTime,
-                    speed,
-                    stats.IsEvolved,
-                    direction * speed
-                );
+                pearl.Initialize(m_logic, m_view, velocity);
             }
         }
 
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
-            // 매 프레임 스탯 동기화 (선택 사항, Attack에서 해도 충분할 수 있으나 반응성을 위해)
+            if (m_logic != null)
+            {
+                m_logic.UpdateStats(stats);
+            }
+
+            // 매 프레임 스탯 동기화
             if (PearlProjectile.Instance != null)
             {
-                PearlProjectile.Instance.UpdateState(
-                    stats.CurrentAttackPower,
-                    stats.MobStunTime,
-                    stats.CurrentAttackSpeed,
-                    stats.IsEvolved
-                );
+                PearlProjectile.Instance.UpdateState();
             }
         }
     }

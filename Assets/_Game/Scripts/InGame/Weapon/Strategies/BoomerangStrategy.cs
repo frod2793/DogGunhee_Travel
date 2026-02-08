@@ -2,22 +2,42 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
+using InGame.Weapon.Controllers;
+using InGame.Weapon.Logic;
 
 namespace InGame.Weapon.Strategies
 {
     public class BoomerangStrategy : IWeaponStrategy
     {
-        private float m_baseCount = 1;
+        private BoomerangWeaponLogic m_logic;
         private Transform m_firePoint;
         private bool m_isAttacking;
         private int m_currentActiveCount = 0;
 
         public void Initialize(WeaponDataSO data)
         {
-            // 데이터에서 기본 발사체 개수 등을 가져올 수 있음
-            // 현재는 상수가 아닌 데이터 기반으로 변경 권장
+            // 1. 비주얼 설정 추출 및 로직 초기화
+            BoomerangWeaponTuningData? tuningData = null;
+            if (data.ModelPrefab != null)
+            {
+                var view =   WeaponPoolManager.Instance.GetComponent<BoomerangWeaponView>();
+                if (view != null)
+                {
+                    tuningData = new BoomerangWeaponTuningData
+                    {
+                        StartAngle = view.StartAngle,
+                        AngleStep = view.AngleStep,
+                        BurstDelayMs = view.BurstDelayMs
+                    };
+                }
+            }
+
+            // [Note] BoomerangStrategy는 Attack 시점에 Logic을 사용할 것이므로 
+            // 실제 로직 생성은 Attack 호출 시 스탯과 함께 수행하거나, 
+            // Initialize 시점에 기본 스탯으로 생성 후 UpdateStats 호출.
+            // 여기서는 Attack 시점에 스탯과 함께 갱신하는 방식을 사용.
             
-            // Pool 등록
+            // 2. Pool 등록
             if (data.ProjectilePrefab != null)
             {
                 WeaponPoolManager.Instance.GetOrAddPool<BoomerangProjectile>(
@@ -42,34 +62,23 @@ namespace InGame.Weapon.Strategies
         private async UniTaskVoid fireBoomerangAsync(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
             m_isAttacking = true;
-            m_firePoint = owner; // 혹은 별도의 FirePoint Transform을 주입받아야 함
+            m_firePoint = owner;
 
             if (direction == Vector3.zero) direction = Vector3.right;
 
+            // 로직 생성/갱신
+            if (m_logic == null) m_logic = new BoomerangWeaponLogic(stats);
+            else m_logic.UpdateStats(stats);
+
             // [Active Limit Logic]
-            // 현재 활성화된 투사체 수가 최대 허용 수(스탯) 이상이면 발사하지 않음
-            int maxProjectiles = Mathf.Max(1, stats.CurrentProjectileCount);
-            if (m_currentActiveCount >= maxProjectiles)
+            if (m_currentActiveCount >= m_logic.MaxProjectiles)
             {
                 m_isAttacking = false;
                 return;
             }
 
-            // 이번에 발사할 수 있는 최대 개수 계산 (남은 슬롯만큼만 발사)
-            // 예: Max 3, Current 2 -> 1개 발사 가능
-            // 하지만 게임적 허용으로 Burst Count는 유지하되, Total Limit를 넘지 않도록 조정할 수도 있음.
-            // 여기서는 "남은 슬롯만큼만 발사"하는 방식으로 구현.
-            int availableSlots = maxProjectiles - m_currentActiveCount;
-            
-            // 기존 발사 로직: Evolution(진화) 시 +2, 기본 +알파
-            // 하지만 "투사체 개수" 스탯이 곧 Max Limit라면, Burst Count도 이에 맞춰야 함.
-            // 보통 뱀서류 게임에서 Projectile Amount는 "한 번에 발사하는 수"이자 "동시에 존재 가능한 수"일 수 있음.
-            // 사용자의 요청 "투사체 개수에 한해서 추가 발사를 막는 로직"을 "Total Active Limit <= ProjectileCount"로 해석.
-            
-            int burstCount = stats.IsEvolved ? (int)m_baseCount + 2 : (int)m_baseCount;
-            if (stats.CurrentProjectileCount > 0) burstCount = Mathf.Max(burstCount, stats.CurrentProjectileCount);
-
-            // 실제 발사할 개수 = Min(Burst, Available)
+            int availableSlots = m_logic.MaxProjectiles - m_currentActiveCount;
+            int burstCount = m_logic.BurstCount;
             int actualFireCount = Mathf.Min(burstCount, availableSlots);
 
             if (actualFireCount <= 0)
@@ -78,16 +87,15 @@ namespace InGame.Weapon.Strategies
                 return;
             }
 
-            float startAngle = -15f * (actualFireCount - 1);
-            float angleStep = (actualFireCount > 1) ? 30f : 0f;
-
+            // 기준 각도 계산
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
             for (int i = 0; i < actualFireCount; i++)
             {
-                m_currentActiveCount++; // 발사 시 카운트 증가
+                m_currentActiveCount++;
 
-                float currentAngle = baseAngle + startAngle + (angleStep * i);
+                // 로직 클래스에 각도 계산 위임
+                float currentAngle = m_logic.CalculateAngle(i, actualFireCount, baseAngle);
                 Quaternion rotation = Quaternion.Euler(0, 0, currentAngle);
 
                 var projectile = WeaponPoolManager.Instance.Get<BoomerangProjectile>();
@@ -95,26 +103,22 @@ namespace InGame.Weapon.Strategies
                 {
                     projectile.transform.position = m_firePoint.position;
                     projectile.transform.rotation = rotation;
-
-                    float finalSpeed = (stats.CurrentAttackSpeed > 0) ? stats.CurrentAttackSpeed : 1f;
                     
-                    // Initialize w/ Callback
                     projectile.Initialize(
                         m_firePoint, 
-                        stats.CurrentAttackPower, 
-                        stats.MobStunTime, 
-                        finalSpeed, 
-                        stats.CurrentAttackRange,
+                        m_logic.AttackPower, 
+                        m_logic.StunTime, 
+                        m_logic.Speed, 
+                        m_logic.Range,
                         () => 
                         {
-                            // 투사체 회수 시 카운트 감소
                             m_currentActiveCount--;
                             if (m_currentActiveCount < 0) m_currentActiveCount = 0;
                         }
                     );
                 }
 
-                await UniTask.Delay(50, cancellationToken: owner.GetCancellationTokenOnDestroy());
+                await UniTask.Delay(m_logic.BurstDelayMs, cancellationToken: owner.GetCancellationTokenOnDestroy());
             }
             
             m_isAttacking = false;

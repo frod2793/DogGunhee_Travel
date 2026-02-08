@@ -22,10 +22,10 @@ MonoBehaviour:
   BaseAttackSpeed: 1
   BaseAttackRange: 0
   BaseDuration: 0
-  BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 0}
-  ModelPrefab: {fileID: 0}
-  EffectPrefab: {fileID: 0}
+  BaseProjectileCount: 5
+  ProjectilePrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
+  ModelPrefab: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
+  EffectPrefab: {fileID: 5043402755764763948, guid: bbed90bc3c2d841fdb5c8cf0973ea605, type: 3}
   EvolutionItemCode: PS_SHIELD
   Upgrades:
   - Level: 2

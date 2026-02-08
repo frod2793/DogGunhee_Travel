@@ -145,7 +145,7 @@ namespace InGame.Mob.MobBase
         /// <summary>
         /// 지속 피해(DoT)를 적용합니다. 새로운 DoT가 적용되면 이전 DoT는 취소됩니다.
         /// </summary>
-        public void ApplyDamageOverTime(float totalDamage, float duration, int tickCount)
+        public void ApplyDamageOverTime(float totalDamage, float duration, int tickCount, System.Action onTickAction = null)
         {
             if (IsDead || tickCount <= 0 || duration <= 0) return;
 
@@ -155,10 +155,10 @@ namespace InGame.Mob.MobBase
             float damagePerTick = totalDamage / tickCount;
             float interval = duration / tickCount;
 
-            DamageOverTimeLoopAsync(damagePerTick, interval, tickCount, m_dotCts.Token).Forget();
+            DamageOverTimeLoopAsync(damagePerTick, interval, tickCount, m_dotCts.Token, onTickAction).Forget();
         }
 
-        private async UniTaskVoid DamageOverTimeLoopAsync(float damage, float interval, int ticks, CancellationToken token)
+        private async UniTaskVoid DamageOverTimeLoopAsync(float damage, float interval, int ticks, CancellationToken token, System.Action onTickAction)
         {
             for (int i = 0; i < ticks; i++)
             {
@@ -166,6 +166,7 @@ namespace InGame.Mob.MobBase
                 if (IsDead) break;
                 
                 TakeDotDamage(damage);
+                onTickAction?.Invoke();
             }
         }
 
@@ -184,6 +185,11 @@ namespace InGame.Mob.MobBase
         }
 
         public virtual void ApplySlow(float slowMultiplier, float duration) { }
+
+        /// <summary>
+        /// 피격 이펙트를 재생합니다. (색상 지정 가능)
+        /// </summary>
+        public virtual void PlayDamageEffect(Color? color = null) { }
 
         protected bool CanPlayHitSound()
         {

@@ -228,11 +228,17 @@ namespace InGame.Mob
             // 따라서 몬스터 측에서의 별도 처리가 불필요합니다.
         }
 
+        public override void PlayDamageEffect(Color? color = null)
+        {
+            EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer, color).Forget();
+        }
+
         public override void TakeDamage(float damage, float stunTime = 0f)
         {
             if (IsDead) return;
 
-            EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer).Forget();
+            // 기본 피격 효과 (색상 지정 없음 -> Red)
+            PlayDamageEffect();
 
             if (IsHit) return;
 

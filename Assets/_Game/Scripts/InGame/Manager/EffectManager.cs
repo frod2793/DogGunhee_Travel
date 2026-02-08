@@ -177,16 +177,19 @@ namespace InGame
         /// (플레이어 피격과 같이 우선순위가 높은 효과에 사용)
         /// </summary>
         /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
-        public void PlayImmediateFlashEffect(SpriteRenderer targetRenderer)
+        /// <param name="flashColor">깜빡일 색상 (기본값: Red)</param>
+        public void PlayImmediateFlashEffect(SpriteRenderer targetRenderer, Color? flashColor = null)
         {
             if (targetRenderer == null) return;
+
+            Color targetColor = flashColor ?? Color.red;
 
             // 기존에 진행 중인 색상 관련 트윈을 중지하고, 즉시 흰색으로 리셋 후 새로운 시퀀스 시작
             targetRenderer.DOKill();
             targetRenderer.color = Color.white;
 
             DOTween.Sequence()
-                .Append(targetRenderer.DOColor(Color.red, 0.1f))
+                .Append(targetRenderer.DOColor(targetColor, 0.1f))
                 .Append(targetRenderer.DOColor(Color.white, 0.1f))
                 .SetTarget(targetRenderer.transform); // 트윈의 생명주기를 대상 오브젝트에 연결
         }
@@ -196,11 +199,12 @@ namespace InGame
         /// (이전에는 큐를 사용했으나, 반응성을 위해 즉시 실행으로 변경됨)
         /// </summary>
         /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
+        /// <param name="flashColor">깜빡일 색상 (기본값: Red)</param>
         /// <returns>효과 완료를 기다릴 수 있는 UniTask</returns>
-        public UniTask PlayQueuedFlashEffect(SpriteRenderer targetRenderer)
+        public UniTask PlayQueuedFlashEffect(SpriteRenderer targetRenderer, Color? flashColor = null)
         {
             // 큐 대기 없이 즉시 실행
-            PlayImmediateFlashEffect(targetRenderer);
+            PlayImmediateFlashEffect(targetRenderer, flashColor);
             return UniTask.CompletedTask;
         }
 

@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7524583454873391520}
   - component: {fileID: 8913778128330918795}
   m_Layer: 1
-  m_Name: Jinjoo
+  m_Name: PearlProjectile
   m_TagString: Player_Attack
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38,6 +38,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &904953905430455188
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -56,6 +57,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -77,9 +80,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 25
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -716971934653745236, guid: 95621f00dd6d57c4cae5c1b43d2db354, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -89,7 +94,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &1495728984121157625
 MonoBehaviour:
@@ -103,11 +107,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0fb8ea103c74b038454be1e27824245, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_trailTime: 0.5
-  m_trailStartWidth: 0.1
-  m_trailEndWidth: 0
-  m_trailColorLv1: {r: 1, g: 1, b: 1, a: 0.5}
-  m_trailColorLv2: {r: 1, g: 0, b: 1, a: 0.5}
 --- !u!58 &8449623974249962114
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -146,7 +145,7 @@ CircleCollider2D:
   m_Radius: 0.06
 --- !u!96 &7524583454873391520
 TrailRenderer:
-  serializedVersion: 3
+  serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -165,6 +164,8 @@ TrailRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -186,9 +187,11 @@ TrailRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Time: 5
   m_PreviewTimeScale: 1
   m_Parameters:
@@ -247,7 +250,6 @@ TrailRenderer:
     shadowBias: 0.5
     generateLightingData: 0
   m_MinVertexDistance: 0.1
-  m_MaskInteraction: 0
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1

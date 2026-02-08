@@ -2,17 +2,21 @@ using System;
 using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
+using InGame.Weapon.Logic;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 화면 내에서 계속 튕기는 영구적인 진주를 관리하는 POCO 컨트롤러입니다.
+    /// 화면 내에서 계속 튕기는 영구적인 진주를 관리하는 컨트롤러입니다.
+    /// POCO Logic과 View Tuning 아키텍처가 적용되었습니다.
     /// </summary>
     public class JinjooWeaponController : WeaponControllerBase
     {
         #region 설정 데이터
 
         private PearlProjectile m_pearlPrefab;
+        private PearlWeaponLogic m_logic;
+        private PearlWeaponView m_view;
 
         #endregion
 
@@ -24,22 +28,46 @@ namespace InGame.Weapon.Controllers
 
         #region 초기화
 
-        /// <summary>
-        /// JinjooWeaponController를 초기화합니다.
-        /// </summary>
-        /// <param name="data">무기 데이터 ScriptableObject</param>
-        /// <param name="ownerTransform">소유자(플레이어)의 Transform</param>
-        /// <param name="getTargetDirection">공격 방향을 가져오는 델리게이트</param>
-        /// <param name="pearlPrefab">진주 프리팹</param>
-        public void Init(
+        public override void Init(
             WeaponDataSO data,
             Transform ownerTransform,
-            Func<Vector3> getTargetDirection,
-            PearlProjectile pearlPrefab)
+            Func<Vector3> getTargetDirection)
         {
             base.Init(data, ownerTransform, getTargetDirection);
 
-            m_pearlPrefab = pearlPrefab;
+            // 데이터로부터 투사체 프리팹 추출
+            if (data.ProjectilePrefab != null)
+            {
+                m_pearlPrefab = data.ProjectilePrefab.GetComponent<PearlProjectile>();
+            }
+
+            if (m_pearlPrefab == null)
+            {
+                LogManager.LogError("JinjooWeaponController: WeaponData.ProjectilePrefab에서 PearlProjectile을 찾을 수 없습니다.", LogManager.LogCategory.Weapon);
+                return;
+            }
+            
+            // 1. View 추출 (WeaponPoolManager)
+            if (WeaponPoolManager.Instance != null)
+            {
+                m_view = WeaponPoolManager.Instance.GetComponent<PearlWeaponView>();
+            }
+
+            // View가 없으면 경고 후 기본값 생성
+            if (m_view == null)
+            {
+                Debug.LogWarning("[JinjooWeaponController] View not found. Creating default.");
+                var go = (WeaponPoolManager.Instance != null) ? WeaponPoolManager.Instance.gameObject : new GameObject("PearlWeaponView_Default");
+                m_view = go.GetComponent<PearlWeaponView>() ?? go.AddComponent<PearlWeaponView>();
+            }
+
+            // 2. Logic 초기화
+            PearlTuningData tuningData = new PearlTuningData
+            {
+                HitCooldown = m_view.HitCooldown
+            };
+            m_logic = new PearlWeaponLogic(m_runtimeStats, tuningData);
+            
             m_currentEvolveState = m_runtimeStats.IsEvolved;
 
             // 풀 등록 (최대 1개만 존재)
@@ -64,20 +92,20 @@ namespace InGame.Weapon.Controllers
 
         public override void OnUpdate(float deltaTime)
         {
-            // 진주가 존재하면 상태 동기화
+            if (m_logic == null) return;
+
+            // 스탯 변경 감지 및 로직 업데이트
+            if (m_currentEvolveState != m_runtimeStats.IsEvolved ||
+                m_logic.AttackSpeed != m_runtimeStats.AttackSpeed) // 단순 비교
+            {
+                m_currentEvolveState = m_runtimeStats.IsEvolved;
+                m_logic.UpdateStats(m_runtimeStats);
+            }
+
+            // 진주가 존재하면 상태 동기화 (투사체가 스스로 UpdateState를 호출하지 않는 구조라면 여기서 호출)
             if (PearlProjectile.Instance != null)
             {
-                if (m_currentEvolveState != m_runtimeStats.IsEvolved ||
-                    PearlProjectile.Instance.CurrentSpeed != m_runtimeStats.AttackSpeed)
-                {
-                    m_currentEvolveState = m_runtimeStats.IsEvolved;
-                    PearlProjectile.Instance.UpdateState(
-                        m_runtimeStats.AttackPower,
-                        m_runtimeStats.MobStunTime,
-                        m_runtimeStats.AttackSpeed,
-                        m_runtimeStats.IsEvolved
-                    );
-                }
+               PearlProjectile.Instance.UpdateState();
             }
         }
 
@@ -94,7 +122,7 @@ namespace InGame.Weapon.Controllers
 
         public override void Dispose()
         {
-            // 정리 로직 (필요시)
+            // 정리 로직
         }
 
         #endregion
@@ -120,15 +148,12 @@ namespace InGame.Weapon.Controllers
 
             pearl.transform.SetPositionAndRotation(m_ownerTransform.position, Quaternion.identity);
 
-            float initialSpeed = m_runtimeStats.AttackSpeed > 0 ? m_runtimeStats.AttackSpeed : 1f;
+            // 초기 속도 계산 (Logic 활용)
+            float speed = m_logic.AttackSpeed;
+            Vector3 velocity = direction.normalized * speed;
 
-            pearl.Initialize(
-                m_runtimeStats.AttackPower,
-                m_runtimeStats.MobStunTime,
-                m_runtimeStats.AttackSpeed,
-                m_runtimeStats.IsEvolved,
-                direction.normalized * initialSpeed
-            );
+            // 로직과 뷰 주입
+            pearl.Initialize(m_logic, m_view, velocity);
         }
 
         #endregion
@@ -137,11 +162,7 @@ namespace InGame.Weapon.Controllers
 
         private PearlProjectile CreatePearlProjectile()
         {
-            if (m_pearlPrefab == null)
-            {
-                LogManager.LogError("JinjooWeaponController: 진주 프리팹이 할당되지 않았습니다!", LogManager.LogCategory.Weapon);
-                return null;
-            }
+            if (m_pearlPrefab == null) return null;
             return UnityEngine.Object.Instantiate(m_pearlPrefab);
         }
 

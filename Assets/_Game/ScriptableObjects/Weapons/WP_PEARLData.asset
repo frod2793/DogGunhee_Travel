@@ -19,12 +19,12 @@ MonoBehaviour:
     \uB358\uC838 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
   BaseAttackPower: 12
   BaseCoolTime: 2
-  BaseAttackSpeed: 1
+  BaseAttackSpeed: 12
   BaseAttackRange: 0
   BaseDuration: 0
   BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 0}
-  ModelPrefab: {fileID: 0}
+  ProjectilePrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+  ModelPrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
   EffectPrefab: {fileID: 0}
   EvolutionItemCode: PS_NET
   Upgrades:

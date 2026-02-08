@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1592704573348993371}
   - component: {fileID: 363908282408218551}
-  - component: {fileID: 6520746675072631576}
   m_Layer: 1
   m_Name: WeaPhon_CatPhunch
   m_TagString: Player_Attack
@@ -36,6 +35,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &363908282408218551
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -54,6 +54,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75,9 +77,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 3
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: ee1880b2d96719f46a1a2bd94cf4290a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -87,43 +91,7 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &6520746675072631576
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 296955345432317447}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecfa768d6066c443481ba29c66d3c5c4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackPower: 30
-  coolTime: 0.5
-  attackSpeed: 2
-  attackRange: 30
-  mobStunTime: 1
-  isShooting: 0
-  skillCode: PS_FEATHER
-  upgradeItemCode: PS_FEATHER
-  Thumnail: {fileID: 0}
-  m_currentLevel: 1
-  isEvolved: 0
-  weaphonState: 0
-  m_initialAttackPower: 40
-  m_initialCoolTime: 0.5
-  m_initialMobStunTime: 1
-  m_weaponAnimator: {fileID: 5519907954563318227}
-  m_weaponSpriteRenderer: {fileID: 5957035982277589330}
-  m_attackDuration: 0.4
-  m_rotationOffset: 0
-  m_attackCollider: {fileID: 7427790885210288590}
-  m_targetLayer:
-    serializedVersion: 2
-    m_Bits: 64
 --- !u!1 &490073475998919606
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,6 +128,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5957035982277589330
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -178,6 +147,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -199,9 +170,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 1859045663046494767, guid: e2d490ffb05e73847958a015503b89f8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -211,7 +184,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!95 &5519907954563318227
 Animator:
@@ -278,18 +250,9 @@ PolygonCollider2D:
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
-  m_AutoTiling: 0
+  m_AutoTiling: 1
   m_Points:
-    m_Paths:
-    - - {x: -0.26999998, y: 0.024000015}
-      - {x: -0.22, y: -0.015999984}
-      - {x: -0.14, y: -0.015999984}
-      - {x: -0.049999997, y: -0.055999983}
-      - {x: 0.06, y: 0.054000013}
-      - {x: 0.01, y: 0.114000015}
-      - {x: 0.01, y: 0.284}
-      - {x: -0.06, y: 0.284}
-      - {x: -0.22, y: 0.14400001}
+    m_Paths: []
   m_UseDelaunayMesh: 0
 --- !u!1 &9166418300668064937
 GameObject:

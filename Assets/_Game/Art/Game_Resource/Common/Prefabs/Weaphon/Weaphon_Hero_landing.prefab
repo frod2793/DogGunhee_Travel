@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 630497876753694219}
-  - component: {fileID: 4409687409235855706}
   m_Layer: 1
   m_Name: Weaphon_Hero_landing
   m_TagString: Player_Attack
@@ -37,40 +36,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &4409687409235855706
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1385746624147376297}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83bb8d83683d14640bfcc8a5255cecee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackPower: 50
-  coolTime: 5
-  attackSpeed: 1
-  attackRange: 0
-  mobStunTime: 3
-  isShooting: 1
-  skillCode: 
-  upgradeItemCode: 
-  Thumnail: {fileID: 0}
-  m_currentLevel: 1
-  isEvolved: 0
-  weaphonState: 0
-  m_shieldObj: {fileID: 5826676676712210493}
-  m_shieldAnimator: {fileID: 3227818829552517033}
-  m_shockwavePrefab: {fileID: 756189584573125442, guid: bbed90bc3c2d841fdb5c8cf0973ea605, type: 3}
-  m_impactTriggerTime: 1.3
-  m_boomerangPrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
-  m_boomerangCount: 5
-  m_boomerangSpeed: 10
-  m_boomerangDistance: 3
-  m_returnDelay: 0.01
-  m_boomerangRotationsPerSecond: 2.5
 --- !u!1 &5826676676712210493
 GameObject:
   m_ObjectHideFlags: 0
@@ -106,6 +71,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1247562989914852402
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,6 +90,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -145,9 +113,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 31
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -8406814584331126232, guid: d6429c2db9ac04a9782674a2fd4209f4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -157,7 +127,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!95 &3227818829552517033
 Animator:
@@ -167,7 +136,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5826676676712210493}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 20ef720db46c94a988c2d8fdbb281e66, type: 2}
   m_CullingMode: 0

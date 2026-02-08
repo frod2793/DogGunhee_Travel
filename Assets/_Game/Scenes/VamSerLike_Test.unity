@@ -3833,6 +3833,107 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1499702491657628308, guid: 440271337e4a6df43a3314571b76e325, type: 3}
   m_PrefabInstance: {fileID: 7292407808102330180}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1259091778 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+  m_PrefabInstance: {fileID: 3551517958830646567}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1259091781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259091778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbddcb101d783ab4095447451a43b005, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.BoomerangWeaponView
+  StartAngle: -15
+  AngleStep: 30
+  BurstDelayMs: 50
+--- !u!114 &1259091782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259091778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39475428e146e7740a88a3a121b4485e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.FlameWeaponView
+  DotDamageRatio: 0.5
+  HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  MaxActivePillars: 10
+  PoolSize: 20
+--- !u!114 &1259091783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259091778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 587b6e861bd0104418405c802a0bec79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.BoneWeaponView
+  BoneSpeed: 10
+--- !u!114 &1259091784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259091778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f155da560ca49934d8eeb8bf1f854a7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.ShieldWeaponView
+  ImpactTriggerTime: 1.07
+  FollowThroughDelay: 0.5
+  BoomerangSpeed: 5
+  ReturnDelay: 0.1
+  RotationsPerSecond: 2.5
+--- !u!114 &1259091785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259091778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3d1a22cb96805b4f890d79be6c32a11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.PearlWeaponView
+  HitCooldown: 0.5
+  TrailTime: 0.3
+  TrailStartWidth: 0.2
+  TrailEndWidth: 0
+  TrailColorLv1: {r: 1, g: 1, b: 1, a: 0.5}
+  TrailColorLv2: {r: 1, g: 0, b: 1, a: 0.5}
+--- !u!114 &1259091786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259091778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e3c3df66a7d69a44bf7891bdbee7540, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.CatPunchWeaponView
+  AttackDuration: 2
+  RotationOffset: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1 &1289318822
 GameObject:
   m_ObjectHideFlags: 0
@@ -6963,13 +7064,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: WeaPhon_CatPhunch
       objectReference: {fileID: 0}
-    - target: {fileID: 296955345432317447, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1592704573348993371, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 1.361
       objectReference: {fileID: 0}
     - target: {fileID: 1592704573348993371, guid: dfa6c0fa2195f49668417386ea057ef9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -7552,7 +7649,25 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 7285599963525465858, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1259091784}
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1259091783}
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1259091782}
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1259091781}
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1259091785}
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1259091786}
   m_SourcePrefab: {fileID: 100100000, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
 --- !u!4 &3867564719337111730 stripped
 Transform:
@@ -8066,11 +8181,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 630497876753694219, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 0.009
       objectReference: {fileID: 0}
     - target: {fileID: 630497876753694219, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -0.001
       objectReference: {fileID: 0}
     - target: {fileID: 630497876753694219, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -8090,6 +8205,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
       propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227818829552517033, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
+      propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []

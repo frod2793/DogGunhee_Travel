@@ -21,10 +21,10 @@ MonoBehaviour:
   BaseCoolTime: 0.5
   BaseAttackSpeed: 1
   BaseAttackRange: 0
-  BaseDuration: 0
-  BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 0}
-  ModelPrefab: {fileID: 0}
+  BaseDuration: 5
+  BaseProjectileCount: 3
+  ProjectilePrefab: {fileID: 4331519501069643151, guid: ffdc961651f29439ea5c5ae26284c606, type: 3}
+  ModelPrefab: {fileID: 4331519501069643151, guid: ffdc961651f29439ea5c5ae26284c606, type: 3}
   EffectPrefab: {fileID: 0}
   EvolutionItemCode: 
   Upgrades:

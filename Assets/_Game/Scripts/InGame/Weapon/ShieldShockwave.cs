@@ -18,6 +18,10 @@ namespace InGame.Weapon
         
         // 애니메이션 해시 캐싱
         private static readonly int k_AnimHashImpact = Animator.StringToHash("Impact");
+
+        [Header("Position Offset")]
+        [SerializeField] private Vector3 m_spawnOffset = new Vector3(0, -0.5f, 0);
+        public Vector3 SpawnOffset => m_spawnOffset;
         #endregion
 
         private void Awake()
@@ -102,6 +106,7 @@ namespace InGame.Weapon
                 if (other.TryGetComponent(out MobBase mob))
                 {
                     mob.TakeDamage(m_damage, m_stunTime);
+                    mob.PlayDamageEffect();
                 }
             }
         }

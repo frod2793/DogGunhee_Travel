@@ -23,7 +23,10 @@ namespace InGame.Manager
         /// <summary>
         /// 현재 게임이 플레이 상태인지 여부를 반환합니다.
         /// </summary>
-        public bool IsPlaying => PlayState == GameState.Play;
+        /// <summary>
+        /// 현재 게임이 플레이 상태인지 여부를 반환합니다.
+        /// </summary>
+        public bool IsPlaying => PlayState == GameState.Play || PlayState == GameState.Resume;
 
         public enum GameState
         {
