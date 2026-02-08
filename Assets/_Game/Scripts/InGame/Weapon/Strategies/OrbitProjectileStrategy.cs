@@ -55,6 +55,13 @@ namespace InGame.Weapon.Strategies
 
             // 회전 속도 계산
             float rotationDelta = stats.CurrentAttackSpeed * deltaTime * 100f;
+            
+            // 소유자 방향에 따라 회전 방향 반전
+            if (m_owner != null && m_owner.lossyScale.x < 0)
+            {
+                rotationDelta *= -1;
+            }
+
             m_currentAngle = (m_currentAngle + rotationDelta) % 360f;
 
             UpdateBallPositions(stats);
@@ -111,7 +118,7 @@ namespace InGame.Weapon.Strategies
                 float angleRad = orbitalAngle * Mathf.Deg2Rad;
                 Vector3 newPos = m_owner.position + new Vector3(Mathf.Cos(angleRad), Mathf.Sin(angleRad), 0) * radius;
                 m_activeBalls[i].transform.position = newPos;
-                m_activeBalls[i].transform.rotation = Quaternion.Euler(0, 0, orbitalAngle);
+                m_activeBalls[i].transform.rotation = Quaternion.Euler(0, 0, orbitalAngle + m_activeBalls[i].RotationOffset);
             }
         }
 

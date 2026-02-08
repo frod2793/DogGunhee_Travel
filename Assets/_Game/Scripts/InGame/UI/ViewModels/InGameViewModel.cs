@@ -127,9 +127,10 @@ namespace InGame.UI.ViewModels
             // 무기 아이콘 추출
             var weapons = new List<Sprite>();
             foreach (var w in gm.SpawnedPlayer.Weapons)
-            {
-                if (w != null && w.Thumnail != null) weapons.Add(w.Thumnail);
-            }
+                if (w != null && w.Thumbnail != null)
+                {
+                    weapons.Add(w.Thumbnail);
+                }
             m_weaponSprites.Value = weapons;
 
             // 장신구(패시브) 아이콘 추출

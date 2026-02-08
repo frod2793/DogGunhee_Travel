@@ -20,7 +20,7 @@ namespace InGame.Weapon.Base
         public string SkillCode => m_data?.SkillCode ?? string.Empty;
         public string WeaponName => m_data?.WeaponName ?? string.Empty;
         public SkillData SkillData { get; set; }
-        public Sprite Thumnail => SkillData?.skillIcon;
+        public Sprite Thumbnail => SkillData?.skillIcon;
 
         public int CurrentLevel => m_runtimeStats?.CurrentLevel ?? 1;
         public virtual int MaxLevel => 6;

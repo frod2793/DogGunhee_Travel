@@ -41,7 +41,7 @@ namespace InGame.Weapon.Strategies
             foreach (var type in types)
             {
                 // 위치 계산
-                Vector3 spawnPos = m_logic.CalculateSpawnPosition(m_camera);
+                Vector3 spawnPos = m_logic.CalculateSpawnPosition(owner, m_camera);
                 
                 // 풀에서 친구 가져오기
                 var friend = WeaponPoolManager.Instance.Get<FriendCharacter>();

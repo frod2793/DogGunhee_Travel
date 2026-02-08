@@ -64,10 +64,13 @@ namespace InGame.Weapon
             Register("WP_PEARL", () => new JinjooWeaponController());
             Register("WP_LANDING", () => new ShieldWeaponController());
             Register("WP_FRIENDS", () => new FriendsWeaponController());
-            Register("WP_BOOMERANG", () => new BoomerangWeaponController());
+            Register("WP_BOOMERANG", () => new InGame.Weapon.Core.WeaponController(new InGame.Weapon.Strategies.BoomerangStrategy()));
             Register("WP_FIRE", () => new FlameWeaponController());
-            Register("WP_BALL", () => new BallplayWeaponController());
-            Register("WP_INK", () => new BlackWaterWeaponController());
+            Register("WP_BALL", () => new InGame.Weapon.Core.WeaponController(new InGame.Weapon.Strategies.OrbitProjectileStrategy()));
+            // WP_INK: FollowingAuraStrategy + BlackWaterEffect (플레이어 추적 오라)
+            Register("WP_INK", () => new InGame.Weapon.Core.WeaponController(
+                new InGame.Weapon.Strategies.FollowingAuraStrategy<BlackWaterEffect>()
+            ));
             Register("WP_SMELL", () => new SmellWeaponController());
             
             LogManager.Log("[WeaponFactory] 모든 실질 무기 컨트롤러 등록 완료 (XML Key 호환)", LogManager.LogCategory.Weapon);

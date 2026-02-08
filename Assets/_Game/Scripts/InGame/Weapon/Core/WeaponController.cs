@@ -28,7 +28,7 @@ namespace InGame.Weapon.Core
         public string SkillCode => m_data?.SkillCode ?? string.Empty;
         public string WeaponName => m_data?.WeaponName ?? string.Empty;
         public SkillData SkillData { get => m_skillData; set => m_skillData = value; }
-        public Sprite Thumnail => m_skillData?.skillIcon;
+        public Sprite Thumbnail => SkillData?.skillIcon;
 
         #endregion
 

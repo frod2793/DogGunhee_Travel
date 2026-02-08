@@ -318,6 +318,8 @@ namespace InGame.Manager
         public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true, int startLevel = 1,
             bool startEvolved = false)
         {
+            await UniTask.Yield(); // 비동기 메서드 경고(CS1998) 해결
+
             if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon)
             {
                 return;

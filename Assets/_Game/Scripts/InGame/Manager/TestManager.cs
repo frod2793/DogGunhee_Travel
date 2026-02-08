@@ -16,24 +16,37 @@ namespace InGame.Manager
     /// </summary>
     public class TestManager : MonoBehaviour
     {
-        [Header("UI 참조")] [SerializeField] private TMP_Dropdown m_characterDropdown;
+        #region 인스펙터 필드
+        [Header("UI 참조")]
+        [SerializeField] private TMP_Dropdown m_characterDropdown;
         [SerializeField] private Button m_changeCharacterButton;
-        [Space] [SerializeField] private TMP_Dropdown m_weaponDropdown;
+        [Space]
+        [SerializeField] private TMP_Dropdown m_weaponDropdown;
         [SerializeField] private Button m_addWeaponButton;
-        [Space] [SerializeField] private RectTransform m_ownedWeaponsContainer;
+        [Space]
+        [SerializeField] private RectTransform m_ownedWeaponsContainer;
         [SerializeField] private TestWeaponItem m_ownedWeaponItemPrefab;
 
-        [Header("무기 생성 옵션")] [SerializeField] private TMP_InputField m_startLevelInput;
+        [Header("무기 생성 옵션")]
+        [SerializeField] private TMP_InputField m_startLevelInput;
         [SerializeField] private Toggle m_startEvolvedToggle;
 
-        [Header("패널 애니메이션")] [SerializeField] private Button m_toggleButton;
-        public Transform panelTransform;
-        public Transform hiddenPosition;
-        public Transform shownPosition;
+        [Header("패널 애니메이션")]
+        [SerializeField] private Button m_toggleButton;
+        [SerializeField] private Transform m_panelTransform;
+        [SerializeField] private Transform m_hiddenPosition;
+        [SerializeField] private Transform m_shownPosition;
         [SerializeField] private float m_animationDuration = 0.3f;
 
-        [Header("데이터")] [SerializeField] private SkillDatabase m_skillDatabase;
+        public Transform PanelTransform => m_panelTransform;
+        public Transform HiddenPosition => m_hiddenPosition;
+        public Transform ShownPosition => m_shownPosition;
 
+        [Header("데이터")]
+        [SerializeField] private SkillDatabase m_skillDatabase;
+        #endregion
+
+        #region 내부 변수
         private GameManager m_gameManager;
         private List<SkillData> m_allWeaponSkills;
         private List<GameObject> m_spawnedWeaponItems = new List<GameObject>();
@@ -41,6 +54,7 @@ namespace InGame.Manager
 
         private bool m_isPanelOpen = false;
         private bool m_isAnimating = false;
+        #endregion
 
         private class CharacterInfo
         {
@@ -48,6 +62,7 @@ namespace InGame.Manager
             public string Name;
         }
 
+        #region 라이프사이클
         private void Awake()
         {
             m_gameManager = GameManager.Instance;
@@ -64,7 +79,7 @@ namespace InGame.Manager
             await InitializeDataAsync();
             InitializePanel();
 
-            GameManager.OnPlayerChanged += (player) => RefreshOwnedWeaponList();
+            GameManager.OnPlayerChanged += OnPlayerChanged;
         }
 
         private void OnEnable()
@@ -75,6 +90,13 @@ namespace InGame.Manager
             }
         }
 
+        private void OnDestroy()
+        {
+            GameManager.OnPlayerChanged -= OnPlayerChanged;
+        }
+        #endregion
+
+        #region 초기화
         private async UniTask InitializeDataAsync()
         {
             if (m_skillDatabase == null) return;
@@ -118,6 +140,7 @@ namespace InGame.Manager
             m_characterDropdown.AddOptions(characterNames);
             m_characterDropdown.interactable = true;
 
+            // 무기 스택 데이터 필터링
             m_allWeaponSkills = m_skillDatabase.allSkills
                 .Where(s => s.skillType == SkillType.Weapon)
                 .ToList();
@@ -135,33 +158,40 @@ namespace InGame.Manager
 
         private void InitializePanel()
         {
-            if (panelTransform == null || hiddenPosition == null) return;
-            panelTransform.position = hiddenPosition.position;
+            if (m_panelTransform == null || m_hiddenPosition == null) return;
+            m_panelTransform.position = m_hiddenPosition.position;
             m_isPanelOpen = false;
         }
+        #endregion
 
+        #region UI 핸들러
         private async UniTaskVoid TogglePanelAsync()
         {
-            if (m_isAnimating || panelTransform == null || hiddenPosition == null || shownPosition == null) return;
+            if (m_isAnimating || m_panelTransform == null || m_hiddenPosition == null || m_shownPosition == null) return;
 
             m_isAnimating = true;
             m_isPanelOpen = !m_isPanelOpen;
 
-            Vector3 targetPosition = m_isPanelOpen ? shownPosition.position : hiddenPosition.position;
+            Vector3 targetPosition = m_isPanelOpen ? m_shownPosition.position : m_hiddenPosition.position;
             Ease ease = m_isPanelOpen ? Ease.OutCubic : Ease.InCubic;
 
-            await panelTransform.DOMove(targetPosition, m_animationDuration)
+            await m_panelTransform.DOMove(targetPosition, m_animationDuration)
                 .SetEase(ease)
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
 
             m_isAnimating = false;
         }
 
+        private void OnPlayerChanged(InGame.Player.Player_Base.PlayerBase player)
+        {
+            RefreshOwnedWeaponList();
+        }
+
         private void RefreshOwnedWeaponList()
         {
             foreach (var item in m_spawnedWeaponItems)
             {
-                Destroy(item);
+                if (item != null) Destroy(item);
             }
 
             m_spawnedWeaponItems.Clear();
@@ -170,6 +200,8 @@ namespace InGame.Manager
 
             foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
             {
+                if (weapon == null) continue;
+
                 TestWeaponItem itemInstance = Instantiate(m_ownedWeaponItemPrefab, m_ownedWeaponsContainer);
                 itemInstance.Setup(weapon, LevelUpWeapon, RemoveWeapon);
                 m_spawnedWeaponItems.Add(itemInstance.gameObject);
@@ -183,17 +215,22 @@ namespace InGame.Manager
 
             int characterIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
 
-            PlayerDataManager.Instance.SelectCharacterIndex = characterIndexToSpawn;
+            if (PlayerDataManager.Instance != null)
+            {
+                PlayerDataManager.Instance.SelectCharacterIndex = characterIndexToSpawn;
+            }
             m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();
         }
 
         private void OnAddWeapon()
         {
             if (m_allWeaponSkills == null || m_allWeaponSkills.Count == 0) return;
+            if (m_gameManager.SpawnedPlayer == null) return;
 
             int selectedIndex = m_weaponDropdown.value;
             SkillData selectedSkill = m_allWeaponSkills[selectedIndex];
 
+            // 이미 보유한 무기인지 체크
             if (m_gameManager.SpawnedPlayer.Weapons.Any(w => w.SkillCode == selectedSkill.skillCode))
             {
                 Debug.LogWarning($"[TestManager] 이미 보유한 무기({selectedSkill.skillName})입니다.");
@@ -203,14 +240,18 @@ namespace InGame.Manager
             int startLevel = 1;
             if (m_startLevelInput != null && !string.IsNullOrEmpty(m_startLevelInput.text))
             {
-                int.TryParse(m_startLevelInput.text, out startLevel);
-                startLevel = Mathf.Clamp(startLevel, 1, 6); // MaxLevel 6 가정
+                if (int.TryParse(m_startLevelInput.text, out int level))
+                {
+                    startLevel = Mathf.Clamp(level, 1, 6);
+                }
             }
 
             bool startEvolved = m_startEvolvedToggle != null && m_startEvolvedToggle.isOn;
 
+            // 신규 무기 시스템 적용
             m_gameManager.EquipNewWeapon(selectedSkill, true, startLevel, startEvolved)
-                .ContinueWith(RefreshOwnedWeaponList);
+                .ContinueWith(RefreshOwnedWeaponList)
+                .Forget();
         }
 
         private void LevelUpWeapon(string skillCode)
@@ -228,5 +269,6 @@ namespace InGame.Manager
             m_gameManager.RemoveWeaponForTest(skillCode);
             RefreshOwnedWeaponList();
         }
+        #endregion
     }
 }

@@ -70,11 +70,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6efa305b409e57449addb4f0370f209d
-    m_Address: Assets/Scripts/ScriptableOJB/SkillDatabase.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 821ef9c335b6c144bb5835894543add6
     m_Address: Prefab_Weapon_Ink
     m_ReadOnly: 0

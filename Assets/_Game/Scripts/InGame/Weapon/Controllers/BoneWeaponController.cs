@@ -50,10 +50,11 @@ namespace InGame.Weapon.Controllers
                 // POCO Controller에서 투사체로 데이터 전달
                 bullet.Initialize(m_runtimeStats.CurrentAttackPower, m_runtimeStats.CurrentDuration, m_boneSpeed, m_runtimeStats.CurrentLevel >= 6); // 6레벨 진화 가정
 
-                // 발사 방향 결정: 전달받은 방향이 유효하면 사용, 아니면 GetTargetDirection 사용
+                // 발사 방향 결정: Bone 무기는 유도(Tracking) 없이 정면/입력 방향으로 발사합니다.
                 Vector3 dir = direction;
-                if (dir == Vector3.zero && m_getTargetDirection != null) dir = m_getTargetDirection.Invoke();
-                if (dir == Vector3.zero) dir = m_ownerTransform.up; // 안전장치
+                // [Refactoring] 유저 요청: 적을 추적하지 않고 일정한 사거리/속도로 날아가도록 변경.
+                // m_getTargetDirection(자동 조준)을 무시하고, 입력 방향이 없으면 오너의 위쪽(정면)을 사용합니다.
+                if (dir == Vector3.zero) dir = m_ownerTransform.up; 
                 
                 bullet.ThrowBullet(dir);
             }

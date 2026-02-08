@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
+  m_Name: WP_FRIENDSData
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
+  SkillCode: WP_FRIENDS
+  WeaponName: "\uB0B4 \uCE5C\uAD6C\uB4E4!"
+  Icon: {fileID: 0}
+  Description: "\uCE5C\uAD6C\uB4E4\uC744 \uBD88\uB7EC \uD558\uB298\uC5D0\uC11C \uB5A8\uC5B4\uC9D1\uB2C8\uB2E4.
+    \uB79C\uB364\uD55C \uC704\uCE58\uC5D0 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+  BaseAttackPower: 30
+  BaseCoolTime: 4
+  BaseAttackSpeed: 1
+  BaseAttackRange: 0
+  BaseDuration: 0
+  BaseProjectileCount: 1
+  ProjectilePrefab: {fileID: 0}
+  ModelPrefab: {fileID: 0}
+  EffectPrefab: {fileID: 0}
+  EvolutionItemCode: PS_PROTEIN
+  Upgrades:
+  - Level: 2
+    Description: Damage Multiply 1.1
+    Modifications:
+    - StatName: Damage
+      Value: 1.1
+      Mode: 1
+  - Level: 3
+    Description: Cooldown Multiply 0.9
+    Modifications:
+    - StatName: Cooldown
+      Value: 0.9
+      Mode: 1
+  - Level: 4
+    Description: WeaponSize Multiply 1.1
+    Modifications:
+    - StatName: WeaponSize
+      Value: 1.1
+      Mode: 1
+  - Level: 5
+    Description: ProjectileCount Add 1
+    Modifications:
+    - StatName: ProjectileCount
+      Value: 1
+      Mode: 0
+  - Level: 6
+    Description: ProjectileCount Add 1, Damage Multiply 1.2
+    Modifications:
+    - StatName: ProjectileCount
+      Value: 1
+      Mode: 0
+    - StatName: Damage
+      Value: 1.2
+      Mode: 1

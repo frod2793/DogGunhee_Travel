@@ -10,6 +10,7 @@ namespace InGame.Weapon.Strategies
         private float m_baseCount = 1;
         private Transform m_firePoint;
         private bool m_isAttacking;
+        private int m_currentActiveCount = 0;
 
         public void Initialize(WeaponDataSO data)
         {
@@ -45,18 +46,47 @@ namespace InGame.Weapon.Strategies
 
             if (direction == Vector3.zero) direction = Vector3.right;
 
-            // Evolution Check
-            int count = stats.IsEvolved ? (int)m_baseCount + 2 : (int)m_baseCount;
-            // stats.CurrentProjectileCount를 사용하는 것이 더 좋음
-            count = Mathf.Max(count, stats.CurrentProjectileCount);
+            // [Active Limit Logic]
+            // 현재 활성화된 투사체 수가 최대 허용 수(스탯) 이상이면 발사하지 않음
+            int maxProjectiles = Mathf.Max(1, stats.CurrentProjectileCount);
+            if (m_currentActiveCount >= maxProjectiles)
+            {
+                m_isAttacking = false;
+                return;
+            }
 
-            float startAngle = -15f * (count - 1);
-            float angleStep = (count > 1) ? 30f : 0f;
+            // 이번에 발사할 수 있는 최대 개수 계산 (남은 슬롯만큼만 발사)
+            // 예: Max 3, Current 2 -> 1개 발사 가능
+            // 하지만 게임적 허용으로 Burst Count는 유지하되, Total Limit를 넘지 않도록 조정할 수도 있음.
+            // 여기서는 "남은 슬롯만큼만 발사"하는 방식으로 구현.
+            int availableSlots = maxProjectiles - m_currentActiveCount;
+            
+            // 기존 발사 로직: Evolution(진화) 시 +2, 기본 +알파
+            // 하지만 "투사체 개수" 스탯이 곧 Max Limit라면, Burst Count도 이에 맞춰야 함.
+            // 보통 뱀서류 게임에서 Projectile Amount는 "한 번에 발사하는 수"이자 "동시에 존재 가능한 수"일 수 있음.
+            // 사용자의 요청 "투사체 개수에 한해서 추가 발사를 막는 로직"을 "Total Active Limit <= ProjectileCount"로 해석.
+            
+            int burstCount = stats.IsEvolved ? (int)m_baseCount + 2 : (int)m_baseCount;
+            if (stats.CurrentProjectileCount > 0) burstCount = Mathf.Max(burstCount, stats.CurrentProjectileCount);
+
+            // 실제 발사할 개수 = Min(Burst, Available)
+            int actualFireCount = Mathf.Min(burstCount, availableSlots);
+
+            if (actualFireCount <= 0)
+            {
+                m_isAttacking = false;
+                return;
+            }
+
+            float startAngle = -15f * (actualFireCount - 1);
+            float angleStep = (actualFireCount > 1) ? 30f : 0f;
 
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < actualFireCount; i++)
             {
+                m_currentActiveCount++; // 발사 시 카운트 증가
+
                 float currentAngle = baseAngle + startAngle + (angleStep * i);
                 Quaternion rotation = Quaternion.Euler(0, 0, currentAngle);
 
@@ -68,19 +98,26 @@ namespace InGame.Weapon.Strategies
 
                     float finalSpeed = (stats.CurrentAttackSpeed > 0) ? stats.CurrentAttackSpeed : 1f;
                     
-                    // Initialize 호출 (BoomerangProjectile 수정 필요 가능성 있음)
-                    projectile.Initialize(m_firePoint, stats.CurrentAttackPower, stats.MobStunTime, finalSpeed, stats.CurrentAttackRange);
+                    // Initialize w/ Callback
+                    projectile.Initialize(
+                        m_firePoint, 
+                        stats.CurrentAttackPower, 
+                        stats.MobStunTime, 
+                        finalSpeed, 
+                        stats.CurrentAttackRange,
+                        () => 
+                        {
+                            // 투사체 회수 시 카운트 감소
+                            m_currentActiveCount--;
+                            if (m_currentActiveCount < 0) m_currentActiveCount = 0;
+                        }
+                    );
                 }
 
                 await UniTask.Delay(50, cancellationToken: owner.GetCancellationTokenOnDestroy());
             }
             
-            // CoolTime은 WeaponController에서 관리하므로 여기서는 공격 시퀀스 딜레이만 관리하면 됨
-            // 하지만 WeaponController가 CoolTime을 관리하므로 여기서는 굳이 딜레이를 줄 필요가 없음
-            // 단, 연속 발사 중 재진입 방지를 위해 m_isAttacking 사용
-            
-           // 공격 종료 후 플래그 해제 (쿨타임은 외부에서 처리)
-           m_isAttacking = false;
+            m_isAttacking = false;
         }
     }
 }

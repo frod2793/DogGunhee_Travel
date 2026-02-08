@@ -43,20 +43,20 @@ namespace InGame.Test.Editor
 
                 if (GUILayout.Button("Save Shown Position"))
                 {
-                    if (testManager.panelTransform != null)
+                if (testManager.PanelTransform != null)
                     {
                         // [수정] 위치 값을 임시 변수에 '캡처'만 합니다.
-                        s_pendingShownPos = testManager.panelTransform.position;
+                        s_pendingShownPos = testManager.PanelTransform.position;
                         Debug.Log($"Shown Position 캡처 완료: {s_pendingShownPos.Value}. 플레이 모드 종료 시 적용됩니다.");
                     }
                 }
 
                 if (GUILayout.Button("Save Hidden Position"))
                 {
-                    if (testManager.panelTransform != null)
+                if (testManager.PanelTransform != null)
                     {
                         // [수정] 위치 값을 임시 변수에 '캡처'만 합니다.
-                        s_pendingHiddenPos = testManager.panelTransform.position;
+                        s_pendingHiddenPos = testManager.PanelTransform.position;
                         Debug.Log($"Hidden Position 캡처 완료: {s_pendingHiddenPos.Value}. 플레이 모드 종료 시 적용됩니다.");
                     }
                 }
@@ -82,19 +82,19 @@ namespace InGame.Test.Editor
                 bool changed = false;
 
                 // 저장 대기 중인 'Shown' 위치가 있으면 적용
-                if (s_pendingShownPos.HasValue && testManager.shownPosition != null)
+                if (s_pendingShownPos.HasValue && testManager.ShownPosition != null)
                 {
-                    Undo.RecordObject(testManager.shownPosition, "Apply Shown Position");
-                    testManager.shownPosition.position = s_pendingShownPos.Value;
+                    Undo.RecordObject(testManager.ShownPosition, "Apply Shown Position");
+                    testManager.ShownPosition.position = s_pendingShownPos.Value;
                     s_pendingShownPos = null; // 처리 후 초기화
                     changed = true;
                 }
 
                 // 저장 대기 중인 'Hidden' 위치가 있으면 적용
-                if (s_pendingHiddenPos.HasValue && testManager.hiddenPosition != null)
+                if (s_pendingHiddenPos.HasValue && testManager.HiddenPosition != null)
                 {
-                    Undo.RecordObject(testManager.hiddenPosition, "Apply Hidden Position");
-                    testManager.hiddenPosition.position = s_pendingHiddenPos.Value;
+                    Undo.RecordObject(testManager.HiddenPosition, "Apply Hidden Position");
+                    testManager.HiddenPosition.position = s_pendingHiddenPos.Value;
                     s_pendingHiddenPos = null; // 처리 후 초기화
                     changed = true;
                 }

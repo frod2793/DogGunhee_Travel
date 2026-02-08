@@ -50,9 +50,9 @@ namespace InGame.Weapon.Logics
         /// <summary>
         /// 소환 위치를 계산합니다.
         /// </summary>
-        public Vector3 CalculateSpawnPosition(Camera camera)
+        public Vector3 CalculateSpawnPosition(Transform owner, Camera camera)
         {
-            return m_spawnStrategy.GetSpawnPosition(camera);
+            return m_spawnStrategy.GetSpawnPosition(owner, camera);
         }
 
         private void ShuffleTypes()

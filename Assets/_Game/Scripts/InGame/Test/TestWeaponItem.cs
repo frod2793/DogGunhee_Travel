@@ -34,8 +34,8 @@ namespace InGame.Test
             // 1. UI 내용 채우기
             if (m_iconImage != null)
             {
-                m_iconImage.sprite = weapon.Thumnail;
-                m_iconImage.enabled = weapon.Thumnail != null;
+                m_iconImage.sprite = weapon.Thumbnail;
+                m_iconImage.enabled = weapon.Thumbnail != null;
             }
 
             if (m_infoText != null)

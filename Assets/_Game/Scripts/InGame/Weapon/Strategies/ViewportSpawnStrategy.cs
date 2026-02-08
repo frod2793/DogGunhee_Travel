@@ -30,8 +30,9 @@ namespace InGame.Weapon.Strategies
             m_distanceFromCamera = distance;
         }
 
-        public Vector3 GetSpawnPosition(Camera camera)
+        public Vector3 GetSpawnPosition(Transform owner, Camera camera = null)
         {
+            if (camera == null) camera = Camera.main;
             if (camera == null) return Vector3.zero;
 
             float randomX = UnityEngine.Random.Range(m_minViewportX, m_maxViewportX);

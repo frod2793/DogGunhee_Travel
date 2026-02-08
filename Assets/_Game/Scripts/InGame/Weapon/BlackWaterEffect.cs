@@ -13,7 +13,7 @@ namespace InGame.Weapon
     /// 블랙워터 지속 효과 컴포넌트입니다.
     /// 활성화 시 영역 내 적에게 틱 데미지를 주고, 진화 시 슬로우를 적용합니다.
     /// </summary>
-    public class BlackWaterEffect : MonoBehaviour, IAreaAttackEffect
+    public class BlackWaterEffect : MonoBehaviour, IAuraEffect
     {
         #region 인스펙터 필드
 
@@ -86,12 +86,40 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region IAreaAttackEffect 구현
+        #region IAuraEffect 구현
 
         public void Initialize(WeaponRuntimeStats stats)
         {
             m_stats = stats;
+            // 초기화 시 상태 불일치를 유도하여 반드시 애니메이션이 실행되도록 함
+            m_isEvolvedState = !m_stats.IsEvolved; 
             ActivateEffect();
+        }
+
+        /// <summary>
+        /// 런타임 중 스탯이 변경되었을 때 호출됩니다.
+        /// </summary>
+        public void UpdateStats(WeaponRuntimeStats stats)
+        {
+            m_stats = stats;
+            // 스탯 변경에 따른 크기나 비주얼 업데이트 (필요 시)
+            UpdateWeaponState();
+        }
+
+        /// <summary>
+        /// 무기가 해제되거나 비활성화될 때 호출됩니다.
+        /// </summary>
+        public void Deactivate()
+        {
+            if (m_cts != null)
+            {
+                m_cts.Cancel();
+                m_cts.Dispose();
+                m_cts = null;
+            }
+            
+            if (m_collider2D != null) m_collider2D.enabled = false;
+            gameObject.SetActive(false);
         }
 
         #endregion
@@ -137,19 +165,33 @@ namespace InGame.Weapon
             }
         }
 
+        private bool m_isEvolvedState = false;
+
         private void UpdateWeaponState()
         {
             transform.localScale = m_originalScale;
 
             if (m_animator != null && m_stats != null)
             {
-                if (m_stats.IsEvolved)
+                // 상태가 변경되었을 때만 트리거/재생 (중복 호출 방지)
+                if (m_stats.IsEvolved != m_isEvolvedState)
                 {
-                    m_animator.SetTrigger(k_AnimTriggerLevel2);
+                    m_isEvolvedState = m_stats.IsEvolved;
+
+                    if (m_isEvolvedState)
+                    {
+                        m_animator.SetTrigger(k_AnimTriggerLevel2);
+                    }
+                    else
+                    {
+                        m_animator.Play(k_AnimStateLevel1);
+                    }
                 }
-                else
+                // 최초 실행 시에도 상태에 맞춰 초기화 필요 (State 초기값과 다를 경우)
+                else if (m_animator.GetCurrentAnimatorStateInfo(0).shortNameHash != k_AnimStateLevel1 && !m_isEvolvedState)
                 {
-                    m_animator.Play(k_AnimStateLevel1);
+                     // 비진화 상태인데 다른 애니메이션이 재생 중이라면 Level1로 강제 설정 (방어 코드)
+                     // m_animator.Play(k_AnimStateLevel1);
                 }
             }
         }

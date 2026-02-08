@@ -9,7 +9,7 @@ namespace InGame.Weapon.Base
         string SkillCode { get; }
         string WeaponName { get; }
         SkillData SkillData { get; set; }
-        Sprite Thumnail { get; }
+        Sprite Thumbnail { get; }
         #endregion
 
         #region 레벨 및 상태

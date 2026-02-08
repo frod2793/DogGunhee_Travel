@@ -8,7 +8,7 @@ namespace InGame.Weapon
     /// <summary>
     /// WeaponBallplay에 의해 생성된 공의 물리적 충돌과 데미지를 담당하는 클래스입니다.
     /// </summary>
-    [RequireComponent(typeof(PolygonCollider2D))]
+
     public class BallDamageDealer : MonoBehaviour
     {
         #region 스탯 필드
@@ -35,12 +35,13 @@ namespace InGame.Weapon
             
             if (m_polygonCollider == null)
             {
-                m_polygonCollider = gameObject.AddComponent<PolygonCollider2D>();
+                Debug.LogError($"[BallDamageDealer] '{name}' 또는 자식 객체에서 PolygonCollider2D를 찾을 수 없습니다!");
+                return;
             }
 
             if (!m_polygonCollider.isTrigger)
             {
-                Debug.LogWarning($"[BallDamageDealer] '{name}'의 Collider가 Trigger가 아닙니다. 강제로 설정합니다.");
+                Debug.LogWarning($"[BallDamageDealer] '{m_polygonCollider.name}'의 Collider가 Trigger가 아닙니다. 강제로 설정합니다.");
                 m_polygonCollider.isTrigger = true;
             }
         }
@@ -53,6 +54,14 @@ namespace InGame.Weapon
         private void OnDisable()
         {
             m_damageCooldowns.Clear();
+        }
+
+        [SerializeField] private float m_rotationOffset = 0f;
+        public float RotationOffset => m_rotationOffset;
+
+        private void Start()
+        {
+            // 초기화 로직 (필요시)
         }
 
         private void OnTriggerStay2D(Collider2D other)

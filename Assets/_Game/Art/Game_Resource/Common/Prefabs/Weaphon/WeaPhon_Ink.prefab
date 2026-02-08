@@ -36,6 +36,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &7170842148877589129
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -54,6 +55,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75,9 +78,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -1312295768244404941, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -87,7 +92,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!95 &2682865625495149748
 Animator:
@@ -156,7 +160,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2451720572609908487}
-  - component: {fileID: 6661751767244316945}
+  - component: {fileID: 7466889458139631766}
   m_Layer: 1
   m_Name: WeaPhon_Ink
   m_TagString: Player_Attack
@@ -180,7 +184,7 @@ Transform:
   - {fileID: 6745571464397854502}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6661751767244316945
+--- !u!114 &7466889458139631766
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,26 +193,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 6292878162832009718}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f71909a3c8e9f20468b465255d3f9178, type: 3}
+  m_Script: {fileID: 11500000, guid: d3dd7e09cfa1fd6439d11111dcdbaac3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  attackPower: 30
-  coolTime: 0.2
-  attackSpeed: 0
-  attackRange: 0
-  mobStunTime: 1
-  isShooting: 0
-  skillCode: 
-  upgradeItemCode: PS_NET
-  Thumnail: {fileID: 1859045663046494767, guid: efe06be085e404c5fb2af1aafe3353c3, type: 3}
-  m_currentLevel: 1
-  isEvolved: 0
-  weaphonState: 0
-  m_damageTickInterval: 0.2
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.BlackWaterEffect
+  m_damageTickInterval: 0.5
   m_slowAmount: 0.3
   m_slowDuration: 1
   m_targetLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 66
   m_animator: {fileID: 2682865625495149748}
   m_collider2D: {fileID: 1681812197675045945}

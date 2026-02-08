@@ -49,6 +49,9 @@ namespace InGame.Weapon.Base
         public GameObject EffectPrefab;
 
         [Header("성장 테이블")]
+        [Tooltip("진화에 필요한 패시브 아이템 코드입니다. (예: PS_COLLAR)")]
+        public string EvolutionItemCode;
+
         [Tooltip("레벨별 강화 정보 목록입니다.")]
         public List<WeaponUpgradeData> Upgrades;
     }
@@ -56,8 +59,13 @@ namespace InGame.Weapon.Base
     [System.Serializable]
     public class WeaponUpgradeData
     {
+        [Tooltip("강화 레벨입니다.")]
         public int Level;
+
+        [Tooltip("강화에 대한 설명입니다.")]
         public string Description;
+
+        [Tooltip("강화 시 변경될 스탯 정보 목록입니다.")]
         public List<StatModification> Modifications;
     }
 }
