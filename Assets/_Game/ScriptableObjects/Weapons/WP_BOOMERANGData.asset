@@ -12,22 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: WP_BOOMERANGData
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
-  SkillCode: WP_BOOMERANG
-  WeaponName: "\uB2E4X\uC18C \uBD80\uB9E4\uB791"
-  Icon: {fileID: 0}
-  Description: "\uBD80\uB9E4\uB791\uC744 \uB358\uC838 \uC8FC\uBCC0\uC744 \uB9F4\uB3CC\uBA70
+  m_skillCode: WP_BOOMERANG
+  m_weaponName: "\uB2E4X\uC18C \uBD80\uB9E4\uB791"
+  m_icon: {fileID: 0}
+  m_description: "\uBD80\uB9E4\uB791\uC744 \uB358\uC838 \uC8FC\uBCC0\uC744 \uB9F4\uB3CC\uBA70
     \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-  BaseAttackPower: 18
-  BaseCoolTime: 1.8
-  BaseAttackSpeed: 3
-  BaseAttackRange: 3
-  BaseDuration: 0
-  BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 4308062601247789848, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
-  ModelPrefab: {fileID: 4354728564479912810, guid: 2ffe1ae531407134cbfb751aeb0a6331, type: 3}
-  EffectPrefab: {fileID: 0}
-  EvolutionItemCode: PS_VACCINE
-  Upgrades:
+  m_baseAttackPower: 18
+  m_baseCoolTime: 1.8
+  m_baseAttackSpeed: 3
+  m_baseAttackRange: 3
+  m_baseDuration: 0
+  m_baseProjectileCount: 1
+  m_projectilePrefab: {fileID: 4308062601247789848, guid: 3870babb907260340a8eeef11ad9609e, type: 3}
+  m_modelPrefab: {fileID: 0}
+  m_effectPrefab: {fileID: 0}
+  m_evolutionItemCode: PS_VACCINE
+  m_upgrades:
   - Level: 2
     Description: Damage Multiply 1.1
     Modifications:

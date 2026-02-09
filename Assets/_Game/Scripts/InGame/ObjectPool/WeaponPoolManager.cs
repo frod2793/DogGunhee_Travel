@@ -6,7 +6,13 @@ namespace InGame.ObjectPool
 {
     public class WeaponPoolManager : MonoBehaviour
     {
+        #region 정적 멤버 및 싱글톤
+
         private static WeaponPoolManager s_instance;
+
+        /// <summary>
+        /// WeaponPoolManager의 전역 싱글톤 인스턴스입니다.
+        /// </summary>
         public static WeaponPoolManager Instance
         {
             get
@@ -25,8 +31,16 @@ namespace InGame.ObjectPool
             }
         }
 
-        // 각 타입별 오브젝트 풀을 저장하는 딕셔너리
+        #endregion
+
+        #region 내부 상태 및 캐시
+
+        /// <summary>각 타입별 오브젝트 풀을 저장하는 딕셔너리입니다.</summary>
         private Dictionary<Type, object> m_pools = new Dictionary<Type, object>();
+
+        #endregion
+
+        #region 풀 관리 및 제어
 
         /// <summary>
         /// 특정 타입의 오브젝트 풀을 가져오거나 새로 생성하여 등록합니다.
@@ -88,5 +102,7 @@ namespace InGame.ObjectPool
                 Destroy(item.gameObject);
             }
         }
+
+        #endregion
     }
 }

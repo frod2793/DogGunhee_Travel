@@ -12,22 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: WP_INKData
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
-  SkillCode: WP_INK
-  WeaponName: "\uCD08\uAC15\uB825 \uBA39\uBB3C"
-  Icon: {fileID: 0}
-  Description: "\uC801\uB4E4\uC5D0\uAC8C \uBA39\uBB3C\uC744 \uBFCC\uB824 \uD53C\uD574\uB97C
+  m_skillCode: WP_INK
+  m_weaponName: "\uCD08\uAC15\uB825 \uBA39\uBB3C"
+  m_icon: {fileID: 0}
+  m_description: "\uC801\uB4E4\uC5D0\uAC8C \uBA39\uBB3C\uC744 \uBFCC\uB824 \uD53C\uD574\uB97C
     \uC8FC\uACE0 \uC774\uB3D9\uC744 \uBC29\uD574\uD569\uB2C8\uB2E4."
-  BaseAttackPower: 8
-  BaseCoolTime: 2.5
-  BaseAttackSpeed: 1
-  BaseAttackRange: 0
-  BaseDuration: 0
-  BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 6292878162832009718, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
-  ModelPrefab: {fileID: 6292878162832009718, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
-  EffectPrefab: {fileID: 0}
-  EvolutionItemCode: 
-  Upgrades:
+  m_baseAttackPower: 8
+  m_baseCoolTime: 2.5
+  m_baseAttackSpeed: 1
+  m_baseAttackRange: 0
+  m_baseDuration: 5
+  m_baseProjectileCount: 1
+  m_projectilePrefab: {fileID: 6292878162832009718, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
+  m_modelPrefab: {fileID: 6292878162832009718, guid: 821ef9c335b6c144bb5835894543add6, type: 3}
+  m_effectPrefab: {fileID: 0}
+  m_evolutionItemCode: 
+  m_upgrades:
   - Level: 2
     Description: Damage Multiply 1.1
     Modifications:

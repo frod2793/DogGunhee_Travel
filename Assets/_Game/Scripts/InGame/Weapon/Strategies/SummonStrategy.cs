@@ -9,11 +9,10 @@ namespace InGame.Weapon.Strategies
 {
     /// <summary>
     /// 소환수(FriendCharacter)를 소환하는 전략입니다.
-    /// WeaponFriendsLogic을 사용하여 위치와 타입을 결정합니다.
     /// </summary>
     public class SummonStrategy : IWeaponStrategy
     {
-        #region 내부 변수
+        #region 내부 상태 및 변수
 
         private readonly WeaponFriendsLogic m_logic;
         private Camera m_camera;
@@ -24,6 +23,7 @@ namespace InGame.Weapon.Strategies
 
         public SummonStrategy()
         {
+            // 카메라 영역 내 스폰 전략 사용
             var spawnStrategy = new ViewportSpawnStrategy(); 
             m_logic = new WeaponFriendsLogic(spawnStrategy);
             m_camera = Camera.main;
@@ -31,42 +31,46 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        public void Initialize(WeaponDataSO data)
+        #region IWeaponStrategy 구현
+
+        public void Init(WeaponDataSO data)
         {
-            // 데이터 기반 초기화가 필요하다면 여기서 수행
+            // 소환수 전략은 별도의 사전 데이터 초기화가 필요 없음
         }
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
-            if (m_camera == null) m_camera = Camera.main;
+            if (m_camera == null)
+            {
+                m_camera = Camera.main;
+            }
 
-            int count = stats.CurrentProjectileCount; // 소환 수
+            int count = stats.CurrentProjectileCount;
             
-            // 1. 소환할 타입 결정 (셔플)
+            // 1. 소환할 친구 타입 목록 결정 (셔플 포함)
             var types = m_logic.GetNextFriendTypes(count).ToList();
 
-            // 2. 소환
+            // 2. 순차적으로 전장에 소환
             foreach (var type in types)
             {
-                // 위치 계산
                 Vector3 spawnPos = m_logic.CalculateSpawnPosition(owner, m_camera);
                 
-                // 풀에서 친구 가져오기
                 var friend = WeaponPoolManager.Instance.Get<FriendCharacter>();
                 if (friend != null)
                 {
                     friend.transform.position = spawnPos;
                     friend.gameObject.SetActive(true);
                     
-                    // 초기화
-                    friend.Initialize(spawnPos, type, stats.CurrentAttackPower, stats.MobStunTime);
+                    friend.Init(spawnPos, type, stats.CurrentAttackPower, stats.MobStunTime);
                 }
             }
         }
 
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
-            // 소환수는 독자 행동하므로 업데이트 없음
+            // 소환된 객체는 독자적으로 행동하므로 전략 레벨의 업데이트는 없음
         }
+
+        #endregion
     }
 }

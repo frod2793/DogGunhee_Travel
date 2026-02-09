@@ -6,14 +6,20 @@ using InGame.Weapon.Strategies;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// WeaponFriends의 비즈니스 로직을 담당하는 POCO 클래스입니다.
+    /// 친구 소환 무기(Friends)의 비즈니스 로직을 담당하는 POCO 클래스입니다.
     /// 친구 타입 셔플 및 소환 위치 계산 로직을 포함합니다.
     /// </summary>
     public class WeaponFriendsLogic
     {
+        #region 내부 상태 및 변수
+
         private readonly ISpawnPositionStrategy m_spawnStrategy;
         private readonly FriendCharacter.FriendAnimationType[] m_allTypes;
         private readonly List<FriendCharacter.FriendAnimationType> m_shuffledTypes;
+
+        #endregion
+
+        #region 생성자 및 초기화
 
         public WeaponFriendsLogic(ISpawnPositionStrategy spawnStrategy)
         {
@@ -21,6 +27,10 @@ namespace InGame.Weapon.Logic
             m_allTypes = (FriendCharacter.FriendAnimationType[])Enum.GetValues(typeof(FriendCharacter.FriendAnimationType));
             m_shuffledTypes = new List<FriendCharacter.FriendAnimationType>(m_allTypes);
         }
+
+        #endregion
+
+        #region 로직 메서드
 
         /// <summary>
         /// 한 번의 공격(다수 소환)에 사용할 친구 타입 리스트를 반환합니다.
@@ -39,7 +49,7 @@ namespace InGame.Weapon.Logic
             }
             else
             {
-                // 타입 종류보다 많이 요청하면 그냥 랜덤
+                // 타입 종류보다 많이 요청하면 랜덤 반환
                 for (int i = 0; i < count; i++)
                 {
                     yield return (FriendCharacter.FriendAnimationType)UnityEngine.Random.Range(0, m_allTypes.Length);
@@ -48,16 +58,18 @@ namespace InGame.Weapon.Logic
         }
 
         /// <summary>
-        /// 소환 위치를 계산합니다.
+        /// 소환 위치 전략에 따라 소환 위치를 계산합니다.
         /// </summary>
         public Vector3 CalculateSpawnPosition(Transform owner, Camera camera)
         {
             return m_spawnStrategy.GetSpawnPosition(owner);
         }
 
+        /// <summary>
+        /// Fisher-Yates 알고리즘을 사용하여 친구 타입을 무작위로 섞습니다.
+        /// </summary>
         private void ShuffleTypes()
         {
-            // Fisher-Yates Shuffle
             int n = m_shuffledTypes.Count;
             while (n > 1)
             {
@@ -66,5 +78,7 @@ namespace InGame.Weapon.Logic
                 (m_shuffledTypes[k], m_shuffledTypes[n]) = (m_shuffledTypes[n], m_shuffledTypes[k]);
             }
         }
+
+        #endregion
     }
 }

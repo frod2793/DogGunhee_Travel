@@ -7,10 +7,19 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class BoneWeaponView : MonoBehaviour
     {
-        [Header("Weapon Settings")]
+        #region 설정 데이터
+
+        [Header("무기 설정")]
         [Tooltip("뼈 투사체가 날아가는 속도입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("BoneSpeed")]
         [SerializeField] private float m_boneSpeed = 10f;
+
+        #endregion
+
+        #region 프로퍼티
+
         public float BoneSpeed => m_boneSpeed;
+
+        #endregion
     }
 }

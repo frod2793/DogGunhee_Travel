@@ -9464,7 +9464,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 166e3d39c9a4d214e99f4e1ba06bc70c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_effectData: {fileID: 0}
+  m_effectData: {fileID: 11400000, guid: d95fefdb30d37fa48a9fa7976868a49c, type: 2}
   m_shakeDuration: 0.2
   m_shakeStrength: 0.5
   m_shakeVibrato: 10

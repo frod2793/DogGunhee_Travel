@@ -7,26 +7,35 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class FlameWeaponView : MonoBehaviour
     {
-        [Header("DOT Settings")]
+        #region 설정 데이터
+
+        [Header("지속 데미지 설정")]
         [Tooltip("기본 데미지 대비 지속 데미지(DOT) 비율입니다. (0.5 = 50%)")]
         [UnityEngine.Serialization.FormerlySerializedAs("DotDamageRatio")]
         [SerializeField] private float m_dotDamageRatio = 0.5f;
-        public float DotDamageRatio => m_dotDamageRatio;
         
         [Tooltip("적 피격 시 깜빡일 색상입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("HitFlashColor")]
         [SerializeField] private Color m_hitFlashColor = Color.white;
-        public Color HitFlashColor => m_hitFlashColor;
 
-        [Header("Visual Effects")]
+        [Header("시각 효과")]
         [Tooltip("풀링할 최대 불꽃 기둥 수입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("MaxActivePillars")]
         [SerializeField] private int m_maxActivePillars = 10;
-        public int MaxActivePillars => m_maxActivePillars;
         
         [Tooltip("오브젝트 풀링 사이즈입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("PoolSize")]
         [SerializeField] private int m_poolSize = 20;
+
+        #endregion
+
+        #region 프로퍼티
+
+        public float DotDamageRatio => m_dotDamageRatio;
+        public Color HitFlashColor => m_hitFlashColor;
+        public int MaxActivePillars => m_maxActivePillars;
         public int PoolSize => m_poolSize;
+
+        #endregion
     }
 }

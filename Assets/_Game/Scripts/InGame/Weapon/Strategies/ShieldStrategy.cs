@@ -6,51 +6,34 @@ using System;
 
 namespace InGame.Weapon.Strategies
 {
+    /// <summary>
+    /// 방어막 및 충격파(Shield) 무기의 공격 전략을 담당하는 클래스입니다.
+    /// </summary>
     public class ShieldStrategy : IWeaponStrategy
     {
-        #region 내부 변수
+        #region 상수
 
-        private GameObject m_viewInstance;
-        private Animator m_animator;
         private static readonly int k_AnimHashAttack = Animator.StringToHash("Attack");
-        
-        private Transform m_owner;
-        private bool m_isAttacking;
-
-        private WeaponDataSO m_data; // 데이터 캐싱
 
         #endregion
 
-        public void Initialize(WeaponDataSO data)
+        #region 내부 상태 및 변수
+
+        private WeaponDataSO m_data;
+        private GameObject m_viewInstance;
+        private Animator m_animator;
+        private Transform m_owner;
+        private bool m_isAttacking;
+
+        #endregion
+
+        #region IWeaponStrategy 구현
+
+        public void Init(WeaponDataSO data)
         {
             m_data = data;
 
-            // 1. 모델(View) 생성
-            if (data.ModelPrefab != null)
-            {
-                // Owner는 Attack 호출 시 받지만, 초기화 시점에는 아직 모를 수 있음.
-                // 하지만 Factory에서 Init(data, owner...) 호출 시점에 Strategy.Initialize(data)를 호출한다면?
-                // WeaponController.Init에서 m_owner를 설정한 후 m_strategy.Initialize(data)를 호출함.
-                // 그러나 Strategy.Initialize 서명은 (WeaponDataSO data)임. Owner 정보가 없음.
-                // 해결: WeaponController.Init 수정 or Strategy.Initialize 서명 변경 필요.
-                // 현재 WeaponController.Init에서 m_strategy.Initialize(data)를 호출하고 있음.
-                // Owner에 붙이려면 Owner를 알아야 함.
-                // 임시: Attack에서 생성하거나, Initialize 서명을 변경해야 함.
-                
-                // 전략 인터페이스 변경이 부담스럽다면? 
-                // WeaponController에서 Owner를 주입받는 메서드를 따로 두거나, 
-                // Factory에서 생성자 주입을 통해 Owner를 전달할 수 있음.
-                // 하지만 Factory는 Owner를 알 수 있음.
-                
-                // 여기서는 Initialize 호출 시점이 WeaponController.Init 내부이므로, 
-                // WeaponController.Init에서 m_strategy.Initialize(data) 호출 전/후에 
-                // SetOwner 같은 걸 호출해주면 됨. 
-                // 하지만 인터페이스에는 Initialize(data)만 있음.
-                
-                // 가장 깔끔한 방법: Initialize에 owner 파라미터 추가.
-            }
-            
-            // 2. 풀 등록
+            // 1. 충격파 이펙트 풀 등록
             if (data.EffectPrefab != null)
             {
                 WeaponPoolManager.Instance.GetOrAddPool<ShieldShockwave>(
@@ -63,7 +46,8 @@ namespace InGame.Weapon.Strategies
                 );
             }
 
-            if (data.ProjectilePrefab != null) // 부메랑
+            // 2. 부메랑 투사체 풀 등록 (진화 시 사용)
+            if (data.ProjectilePrefab != null) 
             {
                 WeaponPoolManager.Instance.GetOrAddPool<ShieldProjectile>(
                     () => UnityEngine.Object.Instantiate(data.ProjectilePrefab).GetComponent<ShieldProjectile>(),
@@ -76,14 +60,14 @@ namespace InGame.Weapon.Strategies
             }
         }
 
-        // Owner 주입을 위한 메서드 (인터페이스에 없으므로 캐스팅해서 사용하거나 인터페이스 수정)
-        // 여기서는 Attack 메서드에서 최초 1회 생성하는 방식으로 처리 (Lazy Init)
-        
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
-            if (m_isAttacking) return;
+            if (m_isAttacking)
+            {
+                return;
+            }
 
-            // View Lazy Initialization
+            // 뷰 인스턴스 지연 생성
             if (m_viewInstance == null && m_data.ModelPrefab != null)
             {
                 m_viewInstance = UnityEngine.Object.Instantiate(m_data.ModelPrefab, owner);
@@ -92,12 +76,22 @@ namespace InGame.Weapon.Strategies
             }
 
             m_owner = owner;
-            AttackAsync(stats).Forget();
+            PerformAttackAsync(stats).Forget();
         }
 
-        public void OnUpdate(WeaponRuntimeStats stats, float deltaTime) { }
+        public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
+        {
+            // 방어막 전략은 별도의 프레임 업데이트가 필요 없음
+        }
 
-        private async UniTaskVoid AttackAsync(WeaponRuntimeStats stats)
+        #endregion
+
+        #region 상세 공격 로직
+
+        /// <summary>
+        /// 비동기 방식으로 애니메이션 재생 및 충격파/부메랑 스폰을 처리합니다.
+        /// </summary>
+        private async UniTaskVoid PerformAttackAsync(WeaponRuntimeStats stats)
         {
             m_isAttacking = true;
             var token = m_owner.GetCancellationTokenOnDestroy();
@@ -106,7 +100,7 @@ namespace InGame.Weapon.Strategies
             {
                 float attackSpeed = stats.CurrentAttackSpeed > 0 ? stats.CurrentAttackSpeed : 1f;
 
-                // 애니메이션 재생
+                // 애니메이션 시각화
                 if (m_animator != null)
                 {
                     m_viewInstance.SetActive(true);
@@ -114,47 +108,54 @@ namespace InGame.Weapon.Strategies
                     m_animator.SetTrigger(k_AnimHashAttack);
                 }
 
-                // 타격 타이밍 대기 (약 1.07초 / 공속)
+                // 애니메이션 타격 페이즈까지 대기 (약 1.07초 기준 보정)
                 float waitTime = 1.07f / attackSpeed;
                 await UniTask.Delay(TimeSpan.FromSeconds(waitTime), cancellationToken: token);
 
-                // 충격파 생성
+                // 충격파 스폰
                 SpawnShockwave(stats, m_owner.position);
 
-                // 진화 시 부메랑 발사
+                // 진화 시 추가 부메랑 발사
                 if (stats.IsEvolved)
                 {
                     LaunchBoomerangs(stats, m_owner);
                 }
 
-                // 후딜레이 (남은 애니메이션 시간 등)
-                // 단순히 쿨타임은 Controller가 관리하므로, 여기서는 애니메이션 종료 대기 정도만
-                // 혹은 뷰를 끄기 위해 대기
+                // 애니메이션 연출 종료 대기
                 await UniTask.Delay(TimeSpan.FromSeconds(0.5f / attackSpeed), cancellationToken: token);
+            }
+            catch (OperationCanceledException)
+            {
+                // 취소 시 처리
             }
             finally
             {
                 if (m_viewInstance != null)
                 {
-                    m_viewInstance.SetActive(false); // 평소엔 숨김
+                    m_viewInstance.SetActive(false);
                 }
                 m_isAttacking = false;
             }
         }
 
+        /// <summary>
+        /// 오브젝트 풀에서 충격파를 가져와 초기화합니다.
+        /// </summary>
         private void SpawnShockwave(WeaponRuntimeStats stats, Vector3 position)
         {
             var effect = WeaponPoolManager.Instance.Get<ShieldShockwave>();
             if (effect != null)
             {
                 effect.transform.position = position;
-                effect.Initialize(stats.CurrentAttackPower, stats.MobStunTime, stats.CurrentAttackSpeed);
+                effect.Init(stats.CurrentAttackPower, stats.MobStunTime, stats.CurrentAttackSpeed);
             }
         }
 
+        /// <summary>
+        /// 진화 시 플레이어 주변으로 부메랑 투사체를 사출합니다.
+        /// </summary>
         private void LaunchBoomerangs(WeaponRuntimeStats stats, Transform owner)
         {
-            // 부메랑 개수 등은 stats.ProjectileCount 사용 권장 (기본값 설정 필요)
             int count = stats.CurrentProjectileCount > 0 ? stats.CurrentProjectileCount : 5;
             float angleStep = 360f / count;
             
@@ -169,19 +170,20 @@ namespace InGame.Weapon.Strategies
 
                     boomerang.transform.SetPositionAndRotation(owner.position, rotation);
                     
-                    // 매직 넘버들은 추후 데이터화 필요
-                    boomerang.Initialize(
+                    boomerang.Init(
                         stats.CurrentAttackPower, 
                         stats.MobStunTime, 
                         owner, 
                         dir, 
-                        5f * stats.CurrentAttackSpeed, // Speed 
-                        3f * stats.CurrentAttackRange, // Distance 
-                        0.1f, // Return Delay
-                        2.5f // Rotation Speed
+                        5f * stats.CurrentAttackSpeed, 
+                        3f * stats.CurrentAttackRange, 
+                        0.1f, 
+                        2.5f
                     );
                 }
             }
         }
+
+        #endregion
     }
 }

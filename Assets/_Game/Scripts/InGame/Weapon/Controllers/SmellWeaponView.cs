@@ -9,12 +9,25 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class SmellWeaponView : MonoBehaviour
     {
+        #region 내부 상태 및 변수
+
         private SmellWeaponController m_controller;
 
-        public void Initialize(SmellWeaponController controller)
+        #endregion
+
+        #region 초기화 및 제어
+
+        /// <summary>
+        /// 뷰를 컨트롤러와 연결합니다.
+        /// </summary>
+        public void Init(SmellWeaponController controller)
         {
             m_controller = controller;
         }
+
+        #endregion
+
+        #region Unity 라이프사이클
 
         private void OnTriggerStay2D(Collider2D other)
         {
@@ -23,5 +36,7 @@ namespace InGame.Weapon.Controllers
                 m_controller.ProcessTriggerDamage(other);
             }
         }
+
+        #endregion
     }
 }

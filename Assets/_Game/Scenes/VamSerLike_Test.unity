@@ -455,9 +455,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cc0605c2053cb74682aa84328ff2e5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.BallWeaponView
-  RotationOffset: 180
-  RotateWithOrbit: 1
-  RotationSpeedMultiplier: 1
+  m_rotationOffset: 180
+  m_rotateWithOrbit: 1
+  m_rotationSpeedMultiplier: 1
 --- !u!1 &95878362
 GameObject:
   m_ObjectHideFlags: 0
@@ -2534,7 +2534,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 542925831}
   m_HandleRect: {fileID: 542925830}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7555,6 +7555,18 @@ PrefabInstance:
     - target: {fileID: 5707357700545301199, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6708719489541973917, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_hitFlashColor.b
+      value: 0.019607835
+      objectReference: {fileID: 0}
+    - target: {fileID: 6708719489541973917, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_hitFlashColor.g
+      value: 0.22948264
+      objectReference: {fileID: 0}
+    - target: {fileID: 6708719489541973917, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_hitFlashColor.r
+      value: 0.6117647
       objectReference: {fileID: 0}
     - target: {fileID: 7427034918349093204, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_effectData

@@ -27,7 +27,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 내부 상태 및 캐시
+        #region 내부 상태 및 변수
 
         private BlackWaterLogic m_logic;
         private Vector3 m_originalScale;
@@ -46,9 +46,21 @@ namespace InGame.Weapon
 
         private void Awake()
         {
-            if (m_collider2D == null) m_collider2D = GetComponentInChildren<Collider2D>();
-            if (m_collider2D != null) { m_collider2D.enabled = false; m_collider2D.isTrigger = true; }
-            if (m_animator == null) m_animator = GetComponentInChildren<Animator>();
+            if (m_collider2D == null)
+            {
+                m_collider2D = GetComponentInChildren<Collider2D>();
+            }
+
+            if (m_collider2D != null)
+            {
+                m_collider2D.enabled = false;
+                m_collider2D.isTrigger = true;
+            }
+
+            if (m_animator == null)
+            {
+                m_animator = GetComponentInChildren<Animator>();
+            }
 
             m_originalScale = transform.localScale;
             m_contactFilter = ContactFilter2D.noFilter;
@@ -67,11 +79,13 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 초기화 및 제어
+        #region IAuraEffect 구현
 
-        public void Initialize(WeaponRuntimeStats stats)
+        public void Init(WeaponRuntimeStats stats)
         {
             BlackWaterTuningData? tuningData = null;
+            
+            // 튜닝 데이터가 필요한 경우 캐스팅하여 참조
             var view = WeaponPoolManager.Instance.GetComponent<BlackWaterView>();
             if (view != null)
             {
@@ -85,13 +99,19 @@ namespace InGame.Weapon
 
             m_logic = new BlackWaterLogic(stats, tuningData);
             m_isEvolvedState = !m_logic.IsEvolved; 
+            
             ActivateEffect();
         }
 
         public void UpdateStats(WeaponRuntimeStats stats)
         {
+            if (m_logic == null)
+            {
+                return;
+            }
+
             m_logic.UpdateStats(stats);
-            UpdateWeaponState();
+            SyncWeaponVisuals();
         }
 
         public void Deactivate()
@@ -99,26 +119,43 @@ namespace InGame.Weapon
             m_cts?.Cancel();
             m_cts?.Dispose();
             m_cts = null;
-            if (m_collider2D != null) m_collider2D.enabled = false;
+
+            if (m_collider2D != null)
+            {
+                m_collider2D.enabled = false;
+            }
+
             gameObject.SetActive(false);
         }
 
         #endregion
 
-        #region 제어 로직 (비동기 및 물리)
+        #region 상세 효과 제어 로직
 
+        /// <summary>
+        /// 이펙트 활성화 연출 및 데미지 루프를 시작합니다.
+        /// </summary>
         private void ActivateEffect()
         {
             m_cts?.Cancel();
             m_cts = new CancellationTokenSource();
 
-            UpdateWeaponState();
-            if (m_collider2D != null) m_collider2D.enabled = true;
+            SyncWeaponVisuals();
+            
+            if (m_collider2D != null)
+            {
+                m_collider2D.enabled = true;
+            }
 
+            // 등장 애니메이션 (DOTween)
             transform.DOScale(m_originalScale, 0.3f).From(Vector3.zero).SetEase(Ease.OutBack);
+            
             TickDamageLoopAsync(m_cts.Token).Forget();
         }
 
+        /// <summary>
+        /// 일정 주기마다 영역 내 적에게 데미지를 입히는 비동기 루프입니다.
+        /// </summary>
         private async UniTaskVoid TickDamageLoopAsync(CancellationToken token)
         {
             try
@@ -130,38 +167,71 @@ namespace InGame.Weapon
                     await UniTask.Delay(System.TimeSpan.FromSeconds(tickDelay), cancellationToken: token);
                 }
             }
-            catch (System.OperationCanceledException) { }
+            catch (System.OperationCanceledException)
+            {
+                // 취소 시 예외 처리
+            }
             finally
             {
-                if (m_collider2D != null) m_collider2D.enabled = false;
-            }
-        }
-
-        private void UpdateWeaponState()
-        {
-            transform.localScale = m_originalScale;
-            if (m_animator != null && m_logic != null)
-            {
-                if (m_logic.IsEvolved != m_isEvolvedState)
+                if (m_collider2D != null)
                 {
-                    m_isEvolvedState = m_logic.IsEvolved;
-                    if (m_isEvolvedState) m_animator.SetTrigger(k_AnimTriggerLevel2);
-                    else m_animator.Play(k_AnimStateLevel1);
+                    m_collider2D.enabled = false;
                 }
             }
         }
 
+        /// <summary>
+        /// 무기 진화 여부에 따라 애니메이션과 비주얼 상태를 동기화합니다.
+        /// </summary>
+        private void SyncWeaponVisuals()
+        {
+            if (m_logic == null)
+            {
+                return;
+            }
+
+            transform.localScale = m_originalScale;
+
+            if (m_animator != null)
+            {
+                if (m_logic.IsEvolved != m_isEvolvedState)
+                {
+                    m_isEvolvedState = m_logic.IsEvolved;
+                    if (m_isEvolvedState)
+                    {
+                        m_animator.SetTrigger(k_AnimTriggerLevel2);
+                    }
+                    else
+                    {
+                        m_animator.Play(k_AnimStateLevel1);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 콜라이더 겹침 검사를 통해 영역 내 적에게 데미지 및 슬로우 효과를 부여합니다.
+        /// </summary>
         private void ProcessTickDamage()
         {
-            if (m_collider2D == null || m_logic == null) return;
+            if (m_collider2D == null || m_logic == null)
+            {
+                return;
+            }
+
             int hitCount = m_collider2D.Overlap(m_contactFilter, m_hitResults);
+            
             for (int i = 0; i < hitCount; i++)
             {
                 var target = m_hitResults[i];
                 if (target.TryGetComponent(out MobBase mob) && !mob.IsDead)
                 {
                     mob.TakeDamage(m_logic.AttackPower);
-                    if (m_logic.IsEvolved) mob.ApplySlow(m_logic.SlowAmount, m_logic.SlowDuration);
+                    
+                    if (m_logic.IsEvolved)
+                    {
+                        mob.ApplySlow(m_logic.SlowAmount, m_logic.SlowDuration);
+                    }
                 }
             }
         }

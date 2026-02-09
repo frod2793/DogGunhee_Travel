@@ -12,30 +12,26 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class JinjooWeaponController : WeaponControllerBase
     {
-        #region 설정 데이터
+        #region 내부 상태 및 변수
 
         private PearlProjectile m_pearlPrefab;
         private PearlWeaponLogic m_logic;
         private PearlWeaponView m_view;
 
-        #endregion
-
-        #region 내부 상태
-
         private bool m_currentEvolveState;
 
         #endregion
 
-        #region 초기화
+        #region 초기화 및 해제
 
-        public override void Init(
-            WeaponDataSO data,
-            Transform ownerTransform,
-            Func<Vector3> getTargetDirection)
+        /// <summary>
+        /// 무기를 초기화하고 진주 투사체 및 풀을 설정합니다.
+        /// </summary>
+        public override void Init(WeaponDataSO data, Transform ownerTransform, Func<Vector3> getTargetDirection)
         {
             base.Init(data, ownerTransform, getTargetDirection);
 
-            // 데이터로부터 투사체 프리팹 추출
+            // 1. 투사체 프리팹 추출
             if (data.ProjectilePrefab != null)
             {
                 m_pearlPrefab = data.ProjectilePrefab.GetComponent<PearlProjectile>();
@@ -47,13 +43,12 @@ namespace InGame.Weapon.Controllers
                 return;
             }
             
-            // 1. View 추출 (WeaponPoolManager)
+            // 2. View 추출 (WeaponPoolManager에서 보정값 참조)
             if (WeaponPoolManager.Instance != null)
             {
                 m_view = WeaponPoolManager.Instance.GetComponent<PearlWeaponView>();
             }
 
-            // View가 없으면 경고 후 기본값 생성
             if (m_view == null)
             {
                 Debug.LogWarning("[JinjooWeaponController] View not found. Creating default.");
@@ -61,7 +56,7 @@ namespace InGame.Weapon.Controllers
                 m_view = go.GetComponent<PearlWeaponView>() ?? go.AddComponent<PearlWeaponView>();
             }
 
-            // 2. Logic 초기화
+            // 3. POCO Logic 초기화
             PearlTuningData tuningData = new PearlTuningData
             {
                 HitCooldown = m_view.HitCooldown
@@ -70,10 +65,13 @@ namespace InGame.Weapon.Controllers
             
             m_currentEvolveState = m_runtimeStats.IsEvolved;
 
-            // 풀 등록 (최대 1개만 존재)
+            // 4. 오브젝트 풀 등록 (진주는 화면에 1개만 존재하도록 설정)
             RegisterPool();
         }
 
+        /// <summary>
+        /// 진주 투사체를 위한 오브젝트 풀을 등록합니다.
+        /// </summary>
         private void RegisterPool()
         {
             WeaponPoolManager.Instance.GetOrAddPool<PearlProjectile>(
@@ -86,23 +84,33 @@ namespace InGame.Weapon.Controllers
             );
         }
 
+        /// <summary>
+        /// 무기 해제 시 호출됩니다.
+        /// </summary>
+        public override void Dispose()
+        {
+            // 전역 풀 및 정적 인스턴스를 사용하므로 별도 해제 불필요
+        }
+
         #endregion
 
-        #region IWeaponController 구현
+        #region 업데이트 및 실행 인터페이스
 
         public override void OnUpdate(float deltaTime)
         {
-            if (m_logic == null) return;
+            if (m_logic == null)
+            {
+                return;
+            }
 
-            // 스탯 변경 감지 및 로직 업데이트
-            if (m_currentEvolveState != m_runtimeStats.IsEvolved ||
-                m_logic.AttackSpeed != m_runtimeStats.AttackSpeed) // 단순 비교
+            // 실시간 스탯 변화 감지 및 로직 업데이트
+            if (m_currentEvolveState != m_runtimeStats.IsEvolved || m_logic.AttackSpeed != m_runtimeStats.AttackSpeed)
             {
                 m_currentEvolveState = m_runtimeStats.IsEvolved;
                 m_logic.UpdateStats(m_runtimeStats);
             }
 
-            // 진주가 존재하면 상태 동기화 (투사체가 스스로 UpdateState를 호출하지 않는 구조라면 여기서 호출)
+            // 현재 활성화된 진주가 있다면 상태 갱신
             if (PearlProjectile.Instance != null)
             {
                PearlProjectile.Instance.UpdateState();
@@ -111,7 +119,7 @@ namespace InGame.Weapon.Controllers
 
         protected override void ExecuteAttack(Vector3 direction)
         {
-            // 이미 활성화된 진주가 있으면 무시
+            // 화면에 진주가 이미 존재하는 경우 중복 발사 방지
             if (PearlProjectile.Instance != null)
             {
                 return;
@@ -120,57 +128,70 @@ namespace InGame.Weapon.Controllers
             LaunchPearl(direction);
         }
 
-        public override void Dispose()
-        {
-            // 정리 로직
-        }
-
         #endregion
 
         #region 발사 로직
 
+        /// <summary>
+        /// 진주를 생성하고 초기 속도를 부여하여 발사합니다.
+        /// </summary>
         private void LaunchPearl(Vector3 direction)
         {
             if (m_pearlPrefab == null)
             {
-                LogManager.LogError("JinjooWeaponController: 진주 프리팹이 할당되지 않았습니다.", LogManager.LogCategory.Weapon);
                 return;
             }
 
-            if (direction == Vector3.zero) direction = UnityEngine.Random.insideUnitCircle.normalized;
+            if (direction == Vector3.zero)
+            {
+                direction = UnityEngine.Random.insideUnitCircle.normalized;
+            }
 
             PearlProjectile pearl = WeaponPoolManager.Instance.Get<PearlProjectile>();
             if (pearl == null)
             {
-                LogManager.LogError("JinjooWeaponController: 풀에서 PearlProjectile을 가져오지 못했습니다.", LogManager.LogCategory.Weapon);
                 return;
             }
 
             pearl.transform.SetPositionAndRotation(m_ownerTransform.position, Quaternion.identity);
 
-            // 초기 속도 계산 (Logic 활용)
+            // 초기 속도 계산 및 로직 주입
             float speed = m_logic.AttackSpeed;
             Vector3 velocity = direction.normalized * speed;
 
-            // 로직과 뷰 주입
-            pearl.Initialize(m_logic, m_view, velocity);
+            // 투사체 초기화 (Initialize -> Init)
+            pearl.Init(m_logic, m_view, velocity);
         }
 
         #endregion
 
-        #region 오브젝트 풀 델리게이트
+        #region 오브젝트 풀 관리 델리게이트
 
         private PearlProjectile CreatePearlProjectile()
         {
-            if (m_pearlPrefab == null) return null;
+            if (m_pearlPrefab == null)
+            {
+                return null;
+            }
             return UnityEngine.Object.Instantiate(m_pearlPrefab);
         }
 
-        private void OnGetPearlProjectile(PearlProjectile pearl) => pearl.gameObject.SetActive(true);
-        private void OnReleasePearlProjectile(PearlProjectile pearl) => pearl.gameObject.SetActive(false);
+        private void OnGetPearlProjectile(PearlProjectile pearl)
+        {
+            pearl.gameObject.SetActive(true);
+        }
+
+        private void OnReleasePearlProjectile(PearlProjectile pearl)
+        {
+            pearl.gameObject.SetActive(false);
+        }
+
         private void OnDestroyPearlProjectile(PearlProjectile pearl)
         {
-            if (pearl != null) UnityEngine.Object.Destroy(pearl.gameObject);
+            if (pearl != null)
+            {
+                UnityEngine.Object.Destroy(pearl.gameObject);
+            }
         }
 
         #endregion

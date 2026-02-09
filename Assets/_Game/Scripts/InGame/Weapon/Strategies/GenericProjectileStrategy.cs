@@ -4,35 +4,36 @@ using InGame.Weapon.Base;
 
 namespace InGame.Weapon.Strategies
 {
+    /// <summary>
+    /// 개별 투사체(Projectile)의 초기화 인터페이스입니다.
+    /// </summary>
     public interface IProjectile
     {
-        void Initialize(Vector3 direction, float damage, float speed, float duration, bool isEvolved);
+        void Init(Vector3 direction, float damage, float speed, float duration, bool isEvolved);
     }
 
     /// <summary>
-    /// 제네릭을 사용하여 구체적인 투사체 타입을 처리하는 전략입니다.
-    /// 초기화 시 Pool을 등록하고, 공격 시 Pool에서 가져와 발사합니다.
+    /// 제네릭을 사용하여 범용적인 투사체 타입을 발사하는 전략입니다.
     /// </summary>
     /// <typeparam name="TProjectile">MonoBehaviour 상속 및 IProjectile 구현 클래스</typeparam>
     public class GenericProjectileStrategy<TProjectile> : IWeaponStrategy 
         where TProjectile : MonoBehaviour, IProjectile
     {
-        #region 내부 변수
+        #region 내부 상태 및 변수
 
         private WeaponDataSO m_data;
 
         #endregion
 
-        public void Initialize(WeaponDataSO data)
+        #region IWeaponStrategy 구현
+
+        public void Init(WeaponDataSO data)
         {
             m_data = data;
             
-            // Pool 등록
-            // 주의: Prefab이 Data에 있어야 함.
+            // 프리팹 기반 오브젝트 풀 자동 등록
             if (data.ProjectilePrefab != null)
             {
-                // WeaponPoolManager가 제네릭 생성 함수를 지원해야 함.
-                // 현재 구조상 직접 Instantiate 로직을 전달해야 할 수도 있음.
                 WeaponPoolManager.Instance.GetOrAddPool<TProjectile>(
                     () => Object.Instantiate(data.ProjectilePrefab).GetComponent<TProjectile>(),
                     OnGet,
@@ -46,7 +47,6 @@ namespace InGame.Weapon.Strategies
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
             int count = stats.CurrentProjectileCount;
-            // TODO: 멀티샷 로직 (각도 분산 등)
 
             for (int i = 0; i < count; i++)
             {
@@ -54,12 +54,12 @@ namespace InGame.Weapon.Strategies
                 if (projectile != null)
                 {
                     projectile.transform.position = owner.position;
-                    // 방향 분산 로직이 필요하다면 여기서 direction 수정
                     
-                    projectile.Initialize(
+                    // 투사체 초기화 (공격력, 속도, 지속시간, 진화여부)
+                    projectile.Init(
                         direction, 
                         stats.CurrentAttackPower, 
-                        stats.CurrentAttackSpeed, // 투사체 속도로 사용
+                        stats.CurrentAttackSpeed, 
                         stats.CurrentDuration,
                         stats.IsEvolved
                     );
@@ -67,11 +67,19 @@ namespace InGame.Weapon.Strategies
             }
         }
 
-        public void OnUpdate(WeaponRuntimeStats stats, float deltaTime) { }
+        public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
+        {
+            // 범용 투사체 전략은 별도의 프레임 업데이트가 필요 없음
+        }
 
-        // Pool Events
+        #endregion
+
+        #region 오브젝트 풀 이벤트
+
         private void OnGet(TProjectile p) => p.gameObject.SetActive(true);
         private void OnRelease(TProjectile p) => p.gameObject.SetActive(false);
         private void OnDestroy(TProjectile p) => Object.Destroy(p.gameObject);
+
+        #endregion
     }
 }

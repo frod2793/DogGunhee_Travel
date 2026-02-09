@@ -5,11 +5,17 @@ using UnityEngine;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// FlamePillar의 비즈니스 로직(데미지 계산, 피격 상태 관리)을 담당하는 POCO 클래스입니다.
+    /// 불기둥(Flame Pillar)의 비즈니스 로직(데미지 계산, 피격 상태 관리)을 담당하는 POCO 클래스입니다.
     /// MonoBehaviour 의존성 없이 순수 C# 로직만 포함합니다.
     /// </summary>
     public class FlamePillarLogic
     {
+        #region 내부 상태 및 변수
+        
+        private readonly HashSet<MobBase> m_hitMobs = new HashSet<MobBase>();
+        
+        #endregion
+
         #region 프로퍼티
         
         public float DirectDamage { get; private set; }
@@ -20,13 +26,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 내부 상태
-        
-        private readonly HashSet<MobBase> m_hitMobs = new HashSet<MobBase>();
-        
-        #endregion
-
-        #region 생성자
+        #region 생성자 및 상태 관리
 
         public FlamePillarLogic(float directDamage, float dotDamage, float duration, int tickCount, Color hitFlashColor)
         {
@@ -37,10 +37,6 @@ namespace InGame.Weapon.Logic
             HitFlashColor = hitFlashColor;
         }
 
-        #endregion
-
-        #region 로직 메서드
-
         /// <summary>
         /// 씬에 배치될 때 상태를 초기화합니다.
         /// </summary>
@@ -49,6 +45,10 @@ namespace InGame.Weapon.Logic
             m_hitMobs.Clear();
         }
 
+        #endregion
+
+        #region 로직 메서드
+
         /// <summary>
         /// 특정 몹이 이미 피격되었는지 확인하고, 안 되었다면 등록합니다.
         /// </summary>
@@ -56,9 +56,15 @@ namespace InGame.Weapon.Logic
         /// <returns>이미 피격된 적이면 false, 새로 피격된 적이면 true</returns>
         public bool TryHit(MobBase mob)
         {
-            if (mob == null || mob.IsDead) return false;
+            if (mob == null || mob.IsDead)
+            {
+                return false;
+            }
             
-            if (m_hitMobs.Contains(mob)) return false;
+            if (m_hitMobs.Contains(mob))
+            {
+                return false;
+            }
 
             m_hitMobs.Add(mob);
             return true;

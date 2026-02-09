@@ -8,17 +8,21 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 냄새 흔적 공격을 담당하는 POCO 컨트롤러입니다.
+    /// 플레이어의 이동 궤적을 따라 냄새 흔적을 남기고 데미지를 입히는 컨트롤러입니다.
     /// </summary>
     public class SmellWeaponController : WeaponControllerBase
     {
+        #region 내부 구조체
+
         private struct TrailPoint
         {
             public Vector3 Position;
             public float CreationTime;
         }
 
-        #region 설정 데이터
+        #endregion
+
+        #region 내부 상태 및 변수
 
         private int m_maxTrailPoints;
         private float m_pointSpacing;
@@ -31,10 +35,6 @@ namespace InGame.Weapon.Controllers
         private EdgeCollider2D m_trailCollider;
         private Transform m_playerTransform;
         private Transform m_selfTransform;
-
-        #endregion
-
-        #region 내부 상태
 
         private ParticleSystem.EmitParams m_emitParams;
         private TrailPoint[] m_points;
@@ -51,22 +51,18 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 초기화
+        #region 초기화 및 해제
 
-        public override void Init(
-            WeaponDataSO data,
-            Transform ownerTransform,
-            Func<Vector3> getTargetDirection)
+        /// <summary>
+        /// 무기를 초기화하고 궤적 데이터 및 파티클 시스템을 설정합니다.
+        /// </summary>
+        public override void Init(WeaponDataSO data, Transform ownerTransform, Func<Vector3> getTargetDirection)
         {
             base.Init(data, ownerTransform, getTargetDirection);
 
-            // 1. 모델 인스턴스화
+            // 1. 모델 인스턴스화 및 컴포넌트 캐싱
             if (data.ProjectilePrefab != null)
             {
-                // 부모를 Player로 설정하여 따라다니게 함 (Smell은 꼬리에 남으므로 플레이어 자식이거나 따라다녀야 함)
-                // 하지만 TrailRenderer나 ParticleSystem은 World Space여야 할 수도 있음.
-                // 기존 로직: m_selfTransform 사용.
-                // 모델을 생성하고 위치 동기화.
                 m_weaponModelInstance = UnityEngine.Object.Instantiate(data.ProjectilePrefab, ownerTransform);
                 m_weaponModelInstance.transform.localPosition = Vector3.zero;
                 m_weaponModelInstance.transform.localRotation = Quaternion.identity;
@@ -75,33 +71,30 @@ namespace InGame.Weapon.Controllers
                 m_particleSystem = m_weaponModelInstance.GetComponentInChildren<ParticleSystem>();
                 m_trailCollider = m_weaponModelInstance.GetComponentInChildren<EdgeCollider2D>();
                 
-                // 3. View 연결 (충돌 이벤트 수신용)
+                // View 연결 (충돌 이벤트 수신용)
                 var view = m_weaponModelInstance.GetComponent<SmellWeaponView>();
                 if (view != null)
                 {
-                    view.Initialize(this);
+                    view.Init(this); // Initialize -> Init
                 }
                 else
                 {
-                    // View가 없으면 프리팹 루트에 자동 추가 시도 (임시 호환성)
                     view = m_weaponModelInstance.AddComponent<SmellWeaponView>();
-                    view.Initialize(this);
-                    LogManager.Log("[SmellWeaponController] Prefab에 SmellWeaponView가 없어 런타임에 추가했습니다.", LogManager.LogCategory.Weapon);
+                    view.Init(this);
                 }
             }
 
             if (m_particleSystem == null || m_trailCollider == null)
             {
-                LogManager.LogError($"[SmellWeaponController] 프리팹에 필수 컴포넌트(ParticleSystem, EdgeCollider2D)가 누락되었습니다: {data.WeaponName}");
+                LogManager.LogError($"[SmellWeaponController] 필수 컴포넌트 누락: {data.WeaponName}");
             }
 
-            // 2. 튜닝 데이터 설정 (기본값)
+            // 2. 튜닝 데이터 설정
             m_maxTrailPoints = 50;
             m_pointSpacing = 0.5f;
             m_trailWidth = 1.0f;
             m_trailLifetime = data.BaseDuration > 0 ? data.BaseDuration : 5.0f;
             
-            // TODO: 추후 WeaponPoolManager에서 View 데이터 가져오기 구현 가능
             m_cloudDensity = 3;
             m_cloudSpread = 0.3f;
             m_sizeVariation = 0.2f;
@@ -115,10 +108,13 @@ namespace InGame.Weapon.Controllers
                 }
             }
 
-            InitializeTrail();
+            InitTrail();
         }
 
-        private void InitializeTrail()
+        /// <summary>
+        /// 궤적 판정을 위한 충돌체 및 버퍼를 초기화합니다.
+        /// </summary>
+        private void InitTrail()
         {
             m_emitParams = new ParticleSystem.EmitParams();
 
@@ -136,6 +132,9 @@ namespace InGame.Weapon.Controllers
             ResetTrailData();
         }
 
+        /// <summary>
+        /// 궤적 데이터를 초기 상태로 리셋합니다.
+        /// </summary>
         private void ResetTrailData()
         {
             m_head = 0;
@@ -143,7 +142,11 @@ namespace InGame.Weapon.Controllers
             m_pointCount = 0;
             m_damageCooldowns.Clear();
 
-            if (m_particleSystem != null) m_particleSystem.Clear();
+            if (m_particleSystem != null)
+            {
+                m_particleSystem.Clear();
+            }
+
             if (m_trailCollider != null)
             {
                 m_trailCollider.Reset();
@@ -151,37 +154,59 @@ namespace InGame.Weapon.Controllers
             }
         }
 
+        /// <summary>
+        /// 무기 해제 시 모델을 파괴하고 데이터를 정리합니다.
+        /// </summary>
+        public override void Dispose()
+        {
+            ResetTrailData();
+            
+            if (m_weaponModelInstance != null)
+            {
+                UnityEngine.Object.Destroy(m_weaponModelInstance);
+                m_weaponModelInstance = null;
+            }
+            
+            base.Dispose();
+        }
+
         #endregion
 
-        #region IWeaponController 구현
+        #region 업데이트 루프
 
         public override void OnUpdate(float deltaTime)
         {
-            // 게임이 플레이 상태가 아니면 중단
             if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
             {
-                if (m_particleSystem != null && m_particleSystem.isPlaying) m_particleSystem.Stop();
+                if (m_particleSystem != null && m_particleSystem.isPlaying)
+                {
+                    m_particleSystem.Stop();
+                }
                 return;
             }
 
-            // [Optimization] 적이 없으면 흔적 생성 중단 (이동은 계속됨)
-            if (!IsEnemyPresent) // Assuming IsEnemyPresent is defined elsewhere or will be added.
+            if (!IsEnemyPresent)
             {
-                if (m_particleSystem != null && m_particleSystem.isPlaying) m_particleSystem.Stop();
+                if (m_particleSystem != null && m_particleSystem.isPlaying)
+                {
+                    m_particleSystem.Stop();
+                }
                 return;
             }
 
-            // 파티클 시스템 관리
             if (m_particleSystem != null && !m_particleSystem.isPlaying)
             {
                 m_particleSystem.Play();
             }
 
-            if (m_playerTransform == null || m_trailCollider == null) return;
+            if (m_playerTransform == null || m_trailCollider == null)
+            {
+                return;
+            }
 
             float currentTime = Time.time;
 
-            // 오래된 포인트 제거
+            // 1. 유효 시간이 지난 궤적 포인트 제거 (Head 이동)
             while (m_pointCount > 0 && currentTime - m_points[m_head].CreationTime > m_trailLifetime)
             {
                 m_head = (m_head + 1) % m_maxTrailPoints;
@@ -189,10 +214,10 @@ namespace InGame.Weapon.Controllers
             }
 
             Vector3 currentPos = m_playerTransform.position;
-
             int lastIndex = (m_tail - 1 + m_maxTrailPoints) % m_maxTrailPoints;
             bool shouldAdd = m_pointCount == 0 || Vector3.Distance(m_points[lastIndex].Position, currentPos) > m_pointSpacing;
 
+            // 2. 새로운 궤적포인트 추가 (Tail 이동)
             if (shouldAdd)
             {
                 if (m_pointCount == m_maxTrailPoints)
@@ -210,6 +235,7 @@ namespace InGame.Weapon.Controllers
 
             bool playerMoved = Vector3.Distance(currentPos, m_lastFramePlayerPos) > Mathf.Epsilon;
 
+            // 3. 콜라이더 외형 업데이트 (플레이어 현재 위치 포함)
             if (m_pointCount > 0 || playerMoved)
             {
                 UpdateColliderWithDynamicTail(currentPos);
@@ -220,36 +246,28 @@ namespace InGame.Weapon.Controllers
 
         protected override void ExecuteAttack(Vector3 direction)
         {
-            // Smell은 자동 흔적 생성이므로 수동 Attack은 무시됩니다.
-        }
-
-        public override void Dispose()
-        {
-            ResetTrailData();
-            
-            if (m_weaponModelInstance != null)
-            {
-                UnityEngine.Object.Destroy(m_weaponModelInstance);
-                m_weaponModelInstance = null;
-            }
-            
-            base.Dispose();
+            // 루프 기반 자동 실행
         }
 
         #endregion
 
-        #region 데미지 처리 (외부에서 호출)
+        #region 데미지 처리 인터페이스
 
         /// <summary>
-        /// 트리거 충돌 시 데미지 처리를 위한 메서드입니다.
-        /// View 측에서 OnTriggerStay2D에서 호출합니다.
+        /// 트리거와 겹친 적들에게 주기적으로 데미지를 입힙니다.
+        /// 외부 View(SmellWeaponView)에서 호출됩니다.
         /// </summary>
         public void ProcessTriggerDamage(Collider2D other)
         {
-            // 게임 상태 체크
-            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
+            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+            {
+                return;
+            }
 
-            if (!other.CompareTag("Mob")) return;
+            if (!other.CompareTag("Mob"))
+            {
+                return;
+            }
 
             int id = other.gameObject.GetInstanceID();
             float currentTime = Time.time;
@@ -266,11 +284,17 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 비주얼 및 물리 업데이트
+        #region 비주얼 및 물리 갱신
 
+        /// <summary>
+        /// 특정 좌표에 독구름 파티클을 방출합니다.
+        /// </summary>
         private void EmitPoisonCloud(Vector3 centerPos)
         {
-            if (m_particleSystem == null) return;
+            if (m_particleSystem == null)
+            {
+                return;
+            }
 
             for (int i = 0; i < m_cloudDensity; i++)
             {
@@ -289,9 +313,15 @@ namespace InGame.Weapon.Controllers
             }
         }
 
+        /// <summary>
+        /// 궤적 포인트를 기반으로 EdgeCollider2D의 정점을 동적으로 재설정합니다.
+        /// </summary>
         private void UpdateColliderWithDynamicTail(Vector3 currentPlayerPos)
         {
-            if (m_trailCollider == null || m_selfTransform == null) return;
+            if (m_trailCollider == null || m_selfTransform == null)
+            {
+                return;
+            }
 
             if (!m_trailCollider.isTrigger)
             {

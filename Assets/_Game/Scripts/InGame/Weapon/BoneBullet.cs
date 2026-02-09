@@ -13,7 +13,7 @@ namespace InGame.Weapon
     /// </summary>
     public class BoneBullet : MonoBehaviour
     {
-        #region 인스펙터 필드
+        #region 내부 상태 및 변수
 
         [Header("이동 설정")]
         [Tooltip("투사체가 날아가는 최대 거리")]
@@ -32,10 +32,6 @@ namespace InGame.Weapon
         [Header("감지 설정")]
         [Tooltip("적(Mob)으로 인식할 레이어")]
         [SerializeField] private LayerMask m_mobLayerMask;
-
-        #endregion
-
-        #region 내부 상구 및 캐시
 
         private const float k_StopThreshold = 0.01f;
         private const float k_StopThresholdSqr = k_StopThreshold * k_StopThreshold;
@@ -103,7 +99,10 @@ namespace InGame.Weapon
 
         private void Update()
         {
-            if (!m_isActive) return;
+            if (!m_isActive)
+            {
+                return;
+            }
 
             // 투사체가 무언가에 막혀 멈춰있는지 감지 (벽 등)
             UpdateStoppedDetection();
@@ -111,7 +110,10 @@ namespace InGame.Weapon
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!m_isActive || !other.CompareTag("Mob")) return;
+            if (!m_isActive || !other.CompareTag("Mob"))
+            {
+                return;
+            }
 
             // 적중 처리
             if (other.TryGetComponent(out MobBase mob))
@@ -132,16 +134,12 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 초기화 및 제어 메서드
+        #region 초기화 및 상태 관리
 
         /// <summary>
-        /// 투사체의 전투 파라미터를 초기화합니다.
+        /// 투사체의 전투 파라미터를 초기화합니다. (Initialize -> Init)
         /// </summary>
-        /// <param name="damage">적중 데미지</param>
-        /// <param name="stunTime">경직 시간</param>
-        /// <param name="speed">이동 속도</param>
-        /// <param name="isEvolved">진화형 여부 (폭발 추가)</param>
-        public void Initialize(float damage, float stunTime, float speed, bool isEvolved)
+        public void Init(float damage, float stunTime, float speed, bool isEvolved)
         {
             m_attackPower = damage;
             m_stunTime = stunTime;
@@ -152,7 +150,6 @@ namespace InGame.Weapon
         /// <summary>
         /// 투사체를 지정된 방향으로 발사합니다.
         /// </summary>
-        /// <param name="direction">발사 방향 벡터</param>
         public void ThrowBullet(Vector3 direction)
         {
             ThrowAndTrackLifecycleAsync(direction).Forget();
@@ -173,23 +170,9 @@ namespace InGame.Weapon
             m_stoppedTime = 0f;
         }
 
-        /// <summary>
-        /// 투사체를 풀로 반환합니다.
-        /// </summary>
-        private void ReleaseToPool()
-        {
-            if (!m_isActive) return;
-            
-            m_isActive = false;
-            m_transform.DOKill();
-            CancelLifetimeCts();
-            
-            WeaponPoolManager.Instance.Release(this);
-        }
-
         #endregion
 
-        #region 내부 연출 로직
+        #region 비동기 연출 및 수명 주기
 
         /// <summary>
         /// 투사체 이동 및 비행 수명 주기를 처리하는 비동기 메서드입니다.
@@ -212,7 +195,7 @@ namespace InGame.Weapon
             // 이전 트윈 정리
             m_transform.DOKill();
             
-            // 1. 무한 회전 (Sequence에서 분리하여 경고 방지)
+            // 1. 무한 회전
             _ = m_transform.DORotate(new Vector3(0, 0, m_rotateSpeed), 1f, RotateMode.FastBeyond360)
                 .SetEase(Ease.Linear)
                 .SetLoops(-1, LoopType.Incremental);
@@ -255,7 +238,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 유틸리티 및 가드 로직
+        #region 유틸리티 및 풀링
 
         /// <summary>
         /// 투사체가 특정 지점에서 멈춰있는지 확인하여 비정상 상태 시 회수합니다.
@@ -294,7 +277,10 @@ namespace InGame.Weapon
                     ReleaseToPool();
                 }
             }
-            catch (System.OperationCanceledException) { }
+            catch (System.OperationCanceledException)
+            {
+                // 취소 시 무시
+            }
         }
 
         /// <summary>
@@ -307,6 +293,26 @@ namespace InGame.Weapon
                 m_lifetimeCts.Cancel();
                 m_lifetimeCts.Dispose();
                 m_lifetimeCts = null;
+            }
+        }
+
+        /// <summary>
+        /// 투사체를 풀로 반환합니다.
+        /// </summary>
+        private void ReleaseToPool()
+        {
+            if (!m_isActive)
+            {
+                return;
+            }
+            
+            m_isActive = false;
+            m_transform.DOKill();
+            CancelLifetimeCts();
+            
+            if (WeaponPoolManager.Instance != null)
+            {
+                WeaponPoolManager.Instance.Release(this);
             }
         }
 

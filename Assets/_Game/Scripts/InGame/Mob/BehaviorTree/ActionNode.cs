@@ -8,8 +8,14 @@ namespace InGame.Mob.BehaviorTree
     /// </summary>
     public class ActionNode : INode
     {
+        #region 내부 변수
+
         private readonly Func<UniTask<NodeStatus>> m_action;
         private readonly Func<NodeStatus> m_syncAction;
+
+        #endregion
+
+        #region 생성자
 
         /// <summary>
         /// 비동기 액션을 수행하는 노드를 생성합니다.
@@ -27,13 +33,17 @@ namespace InGame.Mob.BehaviorTree
             m_syncAction = action;
         }
 
+        #endregion
+
+        #region 인터페이스 구현
+
         public async UniTask<NodeStatus> Evaluate()
         {
             if (m_action != null)
             {
                 return await m_action.Invoke();
             }
-            
+
             if (m_syncAction != null)
             {
                 return m_syncAction.Invoke();
@@ -41,5 +51,7 @@ namespace InGame.Mob.BehaviorTree
 
             return NodeStatus.Failure;
         }
+
+        #endregion
     }
 }

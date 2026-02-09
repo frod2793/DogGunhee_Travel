@@ -12,22 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: WP_FRIENDSData
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
-  SkillCode: WP_FRIENDS
-  WeaponName: "\uB0B4 \uCE5C\uAD6C\uB4E4!"
-  Icon: {fileID: 0}
-  Description: "\uCE5C\uAD6C\uB4E4\uC744 \uBD88\uB7EC \uD558\uB298\uC5D0\uC11C \uB5A8\uC5B4\uC9D1\uB2C8\uB2E4.
-    \uB79C\uB364\uD55C \uC704\uCE58\uC5D0 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-  BaseAttackPower: 30
-  BaseCoolTime: 4
-  BaseAttackSpeed: 1
-  BaseAttackRange: 0
-  BaseDuration: 0
-  BaseProjectileCount: 4
-  ProjectilePrefab: {fileID: 432755205661050745, guid: ef2895a6296aad04f8774815b8ca70a5, type: 3}
-  ModelPrefab: {fileID: 0}
-  EffectPrefab: {fileID: 0}
-  EvolutionItemCode: PS_PROTEIN
-  Upgrades:
+  m_skillCode: WP_FRIENDS
+  m_weaponName: "\uB0B4 \uCE5C\uAD6C\uB4E4!"
+  m_icon: {fileID: 0}
+  m_description: "\uCE5C\uAD6C\uB4E4\uC744 \uBD88\uB7EC \uD558\uB298\uC5D0\uC11C
+    \uB5A8\uC5B4\uC9D1\uB2C8\uB2E4. \uB79C\uB364\uD55C \uC704\uCE58\uC5D0 \uD53C\uD574\uB97C
+    \uC90D\uB2C8\uB2E4."
+  m_baseAttackPower: 30
+  m_baseCoolTime: 4
+  m_baseAttackSpeed: 1
+  m_baseAttackRange: 3
+  m_baseDuration: 0
+  m_baseProjectileCount: 4
+  m_projectilePrefab: {fileID: 432755205661050745, guid: ef2895a6296aad04f8774815b8ca70a5, type: 3}
+  m_modelPrefab: {fileID: 0}
+  m_effectPrefab: {fileID: 0}
+  m_evolutionItemCode: PS_PROTEIN
+  m_upgrades:
   - Level: 2
     Description: Damage Multiply 1.1
     Modifications:

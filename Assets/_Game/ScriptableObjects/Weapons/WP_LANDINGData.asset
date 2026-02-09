@@ -12,22 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: WP_LANDINGData
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
-  SkillCode: WP_LANDING
-  WeaponName: "\uD788\uC5B4\uB85C \uB79C\uB529"
-  Icon: {fileID: 0}
-  Description: "\uC77C\uC815\uC2DC\uAC04 \uD6C4 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C \uC6D0\uD615\uC73C\uB85C
-    \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
-  BaseAttackPower: 40
-  BaseCoolTime: 3.5
-  BaseAttackSpeed: 1
-  BaseAttackRange: 0
-  BaseDuration: 0
-  BaseProjectileCount: 5
-  ProjectilePrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
-  ModelPrefab: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
-  EffectPrefab: {fileID: 5043402755764763948, guid: bbed90bc3c2d841fdb5c8cf0973ea605, type: 3}
-  EvolutionItemCode: PS_SHIELD
-  Upgrades:
+  m_skillCode: WP_LANDING
+  m_weaponName: "\uD788\uC5B4\uB85C \uB79C\uB529"
+  m_icon: {fileID: 0}
+  m_description: "\uC77C\uC815\uC2DC\uAC04 \uD6C4 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C
+    \uC6D0\uD615\uC73C\uB85C \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
+  m_baseAttackPower: 40
+  m_baseCoolTime: 3.5
+  m_baseAttackSpeed: 1
+  m_baseAttackRange: 3
+  m_baseDuration: 0
+  m_baseProjectileCount: 5
+  m_projectilePrefab: {fileID: 2029326127143702795, guid: 35b424dfd3cc7cd46818c4a2a9f27d3d, type: 3}
+  m_modelPrefab: {fileID: 1385746624147376297, guid: f12391ae88c4b2742944ab27fdce585c, type: 3}
+  m_effectPrefab: {fileID: 5043402755764763948, guid: bbed90bc3c2d841fdb5c8cf0973ea605, type: 3}
+  m_evolutionItemCode: PS_SHIELD
+  m_upgrades:
   - Level: 2
     Description: Damage Multiply 1.1
     Modifications:

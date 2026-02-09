@@ -17,15 +17,19 @@ namespace InGame.Weapon.Logic
     }
 
     /// <summary>
-    /// 히어로 랜딩(방패) 무기의 비즈니스 로직을 담당하는 POCO 클래스입니다.
+    /// 히어로 랜딩(방패) 무기(Shield)의 비즈니스 로직을 담당하는 POCO 클래스입니다.
     /// 계산 로직과 상태 관리를 MonoBehaviour와 분리합니다.
     /// </summary>
     public class ShieldWeaponLogic
     {
-        #region 상태 및 수치 데이터
+        #region 내부 상태 및 변수
 
         private WeaponRuntimeStats m_runtimeStats;
         
+        #endregion
+
+        #region 프로퍼티 (타이밍 및 설정)
+
         // 애니메이션 및 타이밍 설정
         public float ImpactTriggerTime { get; private set; } = 1.07f;
         public float FollowThroughDelay { get; private set; } = 0.5f;
@@ -37,6 +41,11 @@ namespace InGame.Weapon.Logic
         public float ReturnDelay { get; private set; } = 0.1f;
         public float RotationsPerSecond { get; private set; } = 2.5f;
 
+        public bool IsEvolved => m_runtimeStats.IsEvolved;
+        public float AttackSpeed => m_runtimeStats.AttackSpeed > 0 ? m_runtimeStats.AttackSpeed : 1.0f;
+        public float AttackPower => m_runtimeStats.AttackPower;
+        public float MobStunTime => m_runtimeStats.MobStunTime;
+
         #endregion
 
         #region 생성자 및 초기화
@@ -46,6 +55,9 @@ namespace InGame.Weapon.Logic
             UpdateStats(stats, tuningData);
         }
 
+        /// <summary>
+        /// 무기 스탯이나 튜닝 데이터를 기반으로 수치를 갱신합니다.
+        /// </summary>
         public void UpdateStats(WeaponRuntimeStats stats, ShieldWeaponTuningData? tuningData = null)
         {
             m_runtimeStats = stats;
@@ -69,11 +81,6 @@ namespace InGame.Weapon.Logic
         #endregion
 
         #region 로직 메서드
-
-        public bool IsEvolved => m_runtimeStats.IsEvolved;
-        public float AttackSpeed => m_runtimeStats.AttackSpeed > 0 ? m_runtimeStats.AttackSpeed : 1.0f;
-        public float AttackPower => m_runtimeStats.AttackPower;
-        public float MobStunTime => m_runtimeStats.MobStunTime;
 
         /// <summary>
         /// 인덱스에 따른 부메랑 발사 방향과 회전값을 계산합니다.

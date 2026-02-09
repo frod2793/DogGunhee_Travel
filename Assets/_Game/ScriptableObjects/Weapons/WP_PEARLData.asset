@@ -12,22 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: WP_PEARLData
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
-  SkillCode: WP_PEARL
-  WeaponName: "\uC2F8\uAD6C\uB824 \uC9C4\uC8FC"
-  Icon: {fileID: 0}
-  Description: "\uD654\uBA74\uC744 \uB3CC\uC544 \uB2E4\uB2C8\uB294 \uC9C4\uC8FC\uB97C
+  m_skillCode: WP_PEARL
+  m_weaponName: "\uC2F8\uAD6C\uB824 \uC9C4\uC8FC"
+  m_icon: {fileID: 0}
+  m_description: "\uD654\uBA74\uC744 \uB3CC\uC544 \uB2E4\uB2C8\uB294 \uC9C4\uC8FC\uB97C
     \uB358\uC838 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-  BaseAttackPower: 12
-  BaseCoolTime: 2
-  BaseAttackSpeed: 12
-  BaseAttackRange: 0
-  BaseDuration: 0
-  BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
-  ModelPrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
-  EffectPrefab: {fileID: 0}
-  EvolutionItemCode: PS_NET
-  Upgrades:
+  m_baseAttackPower: 12
+  m_baseCoolTime: 2
+  m_baseAttackSpeed: 7
+  m_baseAttackRange: 0
+  m_baseDuration: 0
+  m_baseProjectileCount: 1
+  m_projectilePrefab: {fileID: 7138872095729593513, guid: 4efd0e3627cd2420197c95134841c170, type: 3}
+  m_modelPrefab: {fileID: 0}
+  m_effectPrefab: {fileID: 0}
+  m_evolutionItemCode: PS_NET
+  m_upgrades:
   - Level: 2
     Description: Damage Multiply 1.1
     Modifications:

@@ -18,8 +18,14 @@ namespace InGame.Weapon.Logic
     /// </summary>
     public class BoomerangWeaponLogic
     {
+        #region 내부 상태 및 변수
+
         private WeaponRuntimeStats m_stats;
         
+        #endregion
+
+        #region 프로퍼티
+
         public float StartAngle { get; private set; } = -15f;
         public float AngleStep { get; private set; } = 30f;
         public int BurstDelayMs { get; private set; } = 50;
@@ -30,13 +36,20 @@ namespace InGame.Weapon.Logic
         public float Range => m_stats.CurrentAttackRange;
 
         public int MaxProjectiles => Mathf.Max(1, m_stats.CurrentProjectileCount);
-        public int BurstCount => m_stats.IsEvolved ? 3 : 1; // 기본 1개, 진화 시 3개 (예시)
+        public int BurstCount => m_stats.IsEvolved ? 3 : 1; // 기본 1개, 진화 시 3개
+
+        #endregion
+
+        #region 생성자 및 초기화
 
         public BoomerangWeaponLogic(WeaponRuntimeStats stats, BoomerangWeaponTuningData? tuningData = null)
         {
             UpdateStats(stats, tuningData);
         }
 
+        /// <summary>
+        /// 무기 스탯 및 튜닝 데이터를 기반으로 수치를 갱신합니다.
+        /// </summary>
         public void UpdateStats(WeaponRuntimeStats stats, BoomerangWeaponTuningData? tuningData = null)
         {
             m_stats = stats;
@@ -50,11 +63,20 @@ namespace InGame.Weapon.Logic
             }
         }
 
+        #endregion
+
+        #region 로직 메서드
+
+        /// <summary>
+        /// 인덱스에 따른 발사 각도를 계산합니다.
+        /// </summary>
         public float CalculateAngle(int index, int totalCount, float baseAngle)
         {
             float startAngleOffset = StartAngle * (totalCount - 1);
             float step = (totalCount > 1) ? AngleStep : 0f;
             return baseAngle + startAngleOffset + (step * index);
         }
+
+        #endregion
     }
 }

@@ -40,7 +40,7 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 인스펙터 필드
+        #region 설정 데이터
 
         [Header("에디터 시작 설정 (Editor Only)")]
         [SerializeField] private int m_startCharacterIndex = 0;
@@ -59,7 +59,7 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 내부 캐시 및 상태 변수
+        #region 내부 상태 및 캐시
 
         private ObjectPoolSpawner m_objectPoolSpawner;
         private PlayerController m_playerController;
@@ -72,7 +72,7 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 프로퍼티 및 상태
+        #region 프로퍼티
 
         /// <summary>현재 맵에 스폰된 플레이어 캐릭터입니다.</summary>
         public PlayerBase SpawnedPlayer { get; private set; }
@@ -93,7 +93,7 @@ namespace InGame.Manager
         public Camera MainCamera => m_mainCamera;
 
         /// <summary>UI 시스템 관리자 참조입니다.</summary>
-        public UIManager UIManagerManager => m_uiManager;
+        public UIManager UIManager => m_uiManager;
 
         /// <summary>현재 맵의 경계 범위를 반환합니다.</summary>
         public Bounds MapBounds => m_mapRange != null ? m_mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 100);
@@ -160,7 +160,7 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 초기화 및 이벤트 관리
+        #region 초기화
 
         private void CacheComponents()
         {
@@ -173,7 +173,10 @@ namespace InGame.Manager
 
         private void SubscribeEvents()
         {
-            if (m_state == null) return;
+            if (m_state == null)
+            {
+                return;
+            }
             m_state.OnGameStart += OnGameStart;
             m_state.OnGamePause += OnPause;
             m_state.OnGameResume += OnResume;
@@ -182,7 +185,10 @@ namespace InGame.Manager
 
         private void UnsubscribeEvents()
         {
-            if (m_state == null) return;
+            if (m_state == null)
+            {
+                return;
+            }
             m_state.OnGameStart -= OnGameStart;
             m_state.OnGamePause -= OnPause;
             m_state.OnGameResume -= OnResume;
@@ -191,7 +197,7 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 게임 상태 제어
+        #region 이벤트 핸들러
 
         private async void OnGameStart()
         {
@@ -224,16 +230,21 @@ namespace InGame.Manager
 
         private void OnPause()
         {
-            // 일시 정지 시 추가 처리가 필요한 경우 여기에 구현
+            // 일시 정지 시 TimeScale을 0으로 설정하여 게임 루프 정지
+            Time.timeScale = 0f;
         }
 
         private void OnResume()
         {
-            // 재개 시 추가 처리가 필요한 경우 여기에 구현
+            // 게임 재개 시 TimeScale 복구
+            Time.timeScale = 1f;
         }
 
         private async void OnGameOver()
         {
+            // 게임 오버 시 즉시 정지
+            Time.timeScale = 0f;
+
             SpawnedPlayer = null;
             OnPlayerChanged?.Invoke(null);
 
@@ -270,9 +281,18 @@ namespace InGame.Manager
         /// </summary>
         public void SetMenuPopupState(bool isPause)
         {
-            if (m_state == null) return;
-            if (isPause) m_state.Pause();
-            else m_state.Resume();
+            if (m_state == null)
+            {
+                return;
+            }
+            if (isPause)
+            {
+                m_state.Pause();
+            }
+            else
+            {
+                m_state.Resume();
+            }
         }
 
         /// <summary>
@@ -280,7 +300,10 @@ namespace InGame.Manager
         /// </summary>
         public void OpenOptionPopup()
         {
-            if (m_optionPopupPrefab == null) return;
+            if (m_optionPopupPrefab == null)
+            {
+                return;
+            }
             var popup = Instantiate(m_optionPopupPrefab, transform);
             popup.gameObject.SetActive(true);
         }
@@ -294,7 +317,10 @@ namespace InGame.Manager
         /// </summary>
         public async UniTask ChangeCharacterAndWeapon_Spawn()
         {
-            if (m_playerContainer == null) return;
+            if (m_playerContainer == null)
+            {
+                return;
+            }
 
             // 기존 캐릭터 제거
             for (int i = m_playerContainer.transform.childCount - 1; i >= 0; i--)
@@ -311,7 +337,10 @@ namespace InGame.Manager
 
         private async UniTask SpawnPlayerAndInitialWeaponsAsync()
         {
-            if (m_playerContainer == null) return;
+            if (m_playerContainer == null)
+            {
+                return;
+            }
 
             try
             {
@@ -322,7 +351,10 @@ namespace InGame.Manager
                     .InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform)
                     .ToUniTask();
 
-                if (charInstance == null) return;
+                if (charInstance == null)
+                {
+                    return;
+                }
 
                 charInstance.transform.localPosition = Vector3.zero;
                 SpawnedPlayer = charInstance.GetComponent<PlayerBase>();
@@ -379,7 +411,10 @@ namespace InGame.Manager
         {
             await UniTask.Yield();
 
-            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon) return;
+            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon)
+            {
+                return;
+            }
 
             // 순수 C# 로직 기반 무기 생성 (WeaponFactory 사용)
             if (skillData.weaponData != null && WeaponFactory.IsRegistered(skillData.skillCode))

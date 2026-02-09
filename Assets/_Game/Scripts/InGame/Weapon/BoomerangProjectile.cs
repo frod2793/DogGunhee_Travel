@@ -31,7 +31,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 내부 상태 및 캐시
+        #region 내부 상태 및 변수
 
         private Transform m_playerTransform;
         private SpriteRenderer m_spriteRenderer;
@@ -81,9 +81,9 @@ namespace InGame.Weapon
         #region 초기화 및 제어
 
         /// <summary>
-        /// 투사체를 초기화하고 발사합니다.
+        /// 투사체를 초기화하고 발사 시퀀스를 시작합니다.
         /// </summary>
-        public void Initialize(Transform player, float damage, float stunTime, float speed, float distance, System.Action onReturn = null)
+        public void Init(Transform player, float damage, float stunTime, float speed, float distance, System.Action onReturn = null)
         {
             m_playerTransform = player;
             m_damage = damage;
@@ -94,7 +94,7 @@ namespace InGame.Weapon
             
             m_hitHistory.Clear();
 
-            // Trail 초기화
+            // 트레일 초기화
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.Clear();
@@ -106,18 +106,25 @@ namespace InGame.Weapon
                 m_trailRenderer.emitting = true;
             }
 
-            // 회전 애니메이션 시작
+            // 회전 애니메이션 시작 (루프)
             m_rotateTween?.Kill();
             m_rotateTween = transform.DORotate(new Vector3(0, 0, 720), 0.5f, RotateMode.FastBeyond360)
-                .SetEase(Ease.Linear).SetLoops(-1, LoopType.Incremental);
+                .SetEase(Ease.Linear)
+                .SetLoops(-1, LoopType.Incremental);
 
-            // 발사 로직 비동기 실행
+            // 비동기 발사 로직 실행
             LaunchAsync().Forget();
         }
 
+        /// <summary>
+        /// 트레일 효과의 기본 파라미터를 설정합니다.
+        /// </summary>
         private void SetupTrail()
         {
-            if (m_trailRenderer == null) return;
+            if (m_trailRenderer == null)
+            {
+                return;
+            }
 
             m_trailRenderer.time = m_trailTime;
             m_trailRenderer.startWidth = m_trailStartWidth;
@@ -138,6 +145,9 @@ namespace InGame.Weapon
             m_trailRenderer.sortingOrder = m_spriteRenderer.sortingOrder - 1;
         }
 
+        /// <summary>
+        /// 공격 종료 후 오브젝트 풀로 반환합니다.
+        /// </summary>
         private void ReleaseToPool()
         {
             m_onReturn?.Invoke();
@@ -150,7 +160,10 @@ namespace InGame.Weapon
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.emitting = false;
-                if (m_trailRenderer.material != null) m_trailRenderer.material.color = Color.white;
+                if (m_trailRenderer.material != null)
+                {
+                    m_trailRenderer.material.color = Color.white;
+                }
             }
 
             if (m_spriteRenderer != null)
@@ -168,13 +181,16 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 제어 로직 (비동기)
+        #region 상세 이동 로직 (UniTask)
 
+        /// <summary>
+        /// 부메랑의 왕복 이동 시퀀스를 처리합니다.
+        /// </summary>
         private async UniTaskVoid LaunchAsync()
         {
             var token = this.GetCancellationTokenOnDestroy();
 
-            // 등장 페이드 인
+            // 생성 시 페이드 인 연출
             if (m_spriteRenderer != null)
             {
                 Color c = m_spriteRenderer.color;
@@ -189,7 +205,7 @@ namespace InGame.Weapon
 
             try
             {
-                // 1. [Outward] 목표 지점까지 이동
+                // 1. [Outward] 전방 목표 지점까지 전진
                 float outwardSpeed = m_speed * m_outwardSpeedMultiplier;
                 float outDuration = (outwardSpeed > 0) ? m_distance / outwardSpeed : 1f;
 
@@ -197,20 +213,19 @@ namespace InGame.Weapon
                     .SetEase(Ease.OutSine)
                     .ToUniTask(cancellationToken: token);
 
-                // 2. [Turn] 잠시 대기
+                // 2. [Hold] 정점에서의 짧은 지연
                 m_hitHistory.Clear();
                 await UniTask.Delay(100, cancellationToken: token);
 
-                // 3. [Return] 플레이어에게 복귀
+                // 3. [Return] 플레이어 위치를 추적하며 복귀
                 bool hasStartedFadeOut = false;
                 float returnSpeed = m_speed * m_returnSpeedMultiplier;
 
                 while (true)
                 {
                     if (m_playerTransform == null) 
-                    { 
-                        ReleaseToPool(); 
-                        return; 
+                    {
+                        break; 
                     }
 
                     Vector3 myPos = transform.position;
@@ -220,6 +235,7 @@ namespace InGame.Weapon
                     float step = returnSpeed * Time.deltaTime;
                     transform.position = Vector3.MoveTowards(myPos, playerPos, step);
 
+                    // 도착 즈음 페이드 아웃 시작
                     if (!hasStartedFadeOut && distToPlayer <= 1.5f)
                     {
                         hasStartedFadeOut = true;
@@ -235,9 +251,17 @@ namespace InGame.Weapon
                         }
                     }
 
-                    if (distToPlayer < 0.5f) break;
+                    if (distToPlayer < 0.5f)
+                    {
+                        break;
+                    }
+                    
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                 }
+            }
+            catch (System.OperationCanceledException)
+            {
+                // 취소 시 예외 처리
             }
             finally
             {

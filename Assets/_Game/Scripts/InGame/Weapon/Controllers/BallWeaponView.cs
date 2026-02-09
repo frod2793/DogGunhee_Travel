@@ -8,15 +8,27 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class BallWeaponView : MonoBehaviour
     {
+        #region 설정 데이터
+
         [Header("회전 설정")]
         [Tooltip("Z축 기본 회전 보정값입니다.")]
-        public float RotationOffset = 0f;
+        [SerializeField] private float m_rotationOffset = 0f;
 
         [Tooltip("체크 시 투사체가 궤도 진행 방향을 바라봅니다.")]
-        public bool RotateWithOrbit = true;
+        [SerializeField] private bool m_rotateWithOrbit = true;
 
         [Header("애니메이션 설정")]
         [Tooltip("공의 회전 속도 배율입니다.")]
-        public float RotationSpeedMultiplier = 1.0f;
+        [SerializeField] private float m_rotationSpeedMultiplier = 1.0f;
+
+        #endregion
+
+        #region 프로퍼티
+
+        public float RotationOffset => m_rotationOffset;
+        public bool RotateWithOrbit => m_rotateWithOrbit;
+        public float RotationSpeedMultiplier => m_rotationSpeedMultiplier;
+
+        #endregion
     }
 }

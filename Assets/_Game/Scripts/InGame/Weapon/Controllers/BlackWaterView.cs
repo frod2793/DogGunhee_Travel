@@ -7,13 +7,13 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class BlackWaterView : MonoBehaviour
     {
-        [Header("Tick Damage Settings")]
+        [Header("틱 데미지 설정")]
         [Tooltip("틱 데미지가 들어가는 간격입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("DamageTickInterval")]
         [SerializeField] private float m_damageTickInterval = 0.5f;
         public float DamageTickInterval => m_damageTickInterval;
 
-        [Header("Slow Settings (Evolved)")]
+        [Header("슬로우 설정 (진화 시)")]
         [Tooltip("적의 이동 속도를 감소시키는 비율 (0.3 = 30% 감소)")]
         [Range(0f, 1f)] 
         [UnityEngine.Serialization.FormerlySerializedAs("SlowAmount")]

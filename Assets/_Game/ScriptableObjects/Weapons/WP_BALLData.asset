@@ -12,22 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651f31c7996f9c94eb5f25f3e08f8937, type: 3}
   m_Name: WP_BALLData
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Base.WeaponDataSO
-  SkillCode: WP_BALL
-  WeaponName: "\uACF5\uB180\uC774"
-  Icon: {fileID: 0}
-  Description: "\uD654\uBA74\uC744 \uD295\uAE30\uB294 \uACF5\uC744 \uC18C\uD658\uD558\uC5EC
+  m_skillCode: WP_BALL
+  m_weaponName: "\uACF5\uB180\uC774"
+  m_icon: {fileID: 0}
+  m_description: "\uD654\uBA74\uC744 \uD295\uAE30\uB294 \uACF5\uC744 \uC18C\uD658\uD558\uC5EC
     \uC801\uC744 \uACF5\uACA9\uD569\uB2C8\uB2E4."
-  BaseAttackPower: 10
-  BaseCoolTime: 2
-  BaseAttackSpeed: 2
-  BaseAttackRange: 1
-  BaseDuration: 0
-  BaseProjectileCount: 2
-  ProjectilePrefab: {fileID: 7310443023901082629, guid: 4464f6a372c6942469f7ea34158454b6, type: 3}
-  ModelPrefab: {fileID: 6548375471585183168, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
-  EffectPrefab: {fileID: 0}
-  EvolutionItemCode: PS_TREASURE
-  Upgrades:
+  m_baseAttackPower: 10
+  m_baseCoolTime: 2
+  m_baseAttackSpeed: 1
+  m_baseAttackRange: 1
+  m_baseDuration: 0
+  m_baseProjectileCount: 2
+  m_projectilePrefab: {fileID: 7310443023901082629, guid: 4464f6a372c6942469f7ea34158454b6, type: 3}
+  m_modelPrefab: {fileID: 0}
+  m_effectPrefab: {fileID: 0}
+  m_evolutionItemCode: PS_TREASURE
+  m_upgrades:
   - Level: 2
     Description: Damage Multiply 1.1
     Modifications:

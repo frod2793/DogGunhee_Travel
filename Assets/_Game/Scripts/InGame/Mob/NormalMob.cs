@@ -20,16 +20,20 @@ namespace InGame.Mob
         [Header("몬스터 기본 스탯")]
         [Tooltip("몬스터의 초기 체력입니다.")]
         [SerializeField] private float m_initialHp = 100f;
+
         [Tooltip("몬스터의 이동 속도입니다.")]
         [SerializeField] private float m_initialSpeed = 1f;
+
         [Tooltip("몬스터의 초기 공격력입니다.")]
         [SerializeField] private float m_initialAttackDamage = 10f;
-        [Tooltip("몬스터가 피격 시 경직되는 시간입니다.")]
+
+        [Tooltip("몬스터가 피격 시 경직 시간입니다.")]
         [SerializeField] private float m_initialStunTime = 0.1f;
 
         [Header("AI 설정")]
         [Tooltip("플레이어를 감지하는 범위입니다.")]
         [SerializeField] private float m_searchRange = 8f;
+
         [Tooltip("배회 시 대기 시간 범위입니다 (최소, 최대).")]
         [SerializeField] private Vector2 m_wanderWaitRange = new Vector2(1f, 3f);
 
@@ -63,15 +67,15 @@ namespace InGame.Mob
         public override void OnEnable()
         {
             base.OnEnable();
-            InitializeMob();
-            
+            InitMob();
+
             if (GameManager.Instance != null)
             {
                 m_mapBounds = GameManager.Instance.MapBounds;
             }
 
             // BT 초기화 및 실행
-            InitializeBehaviorTree();
+            InitBehaviorTree();
             StartAILoopAsync().Forget();
         }
 
@@ -80,7 +84,7 @@ namespace InGame.Mob
             base.OnDisable();
             KillAllTweens();
         }
-        
+
         #endregion
 
         #region 초기화
@@ -88,22 +92,24 @@ namespace InGame.Mob
         /// <summary>
         /// 몬스터의 스탯 및 상태를 초기화합니다.
         /// </summary>
-        private void InitializeMob()
+        private void InitMob()
         {
             CurrentHp = m_initialHp;
             MoveSpeed = m_initialSpeed;
             AttackDamage = m_initialAttackDamage;
             StunTime = m_initialStunTime;
             m_isChasing = false;
-            
-            if (m_spriteRenderer != null) 
+
+            if (m_spriteRenderer != null)
+            {
                 m_spriteRenderer.color = Color.white;
+            }
         }
 
         /// <summary>
         /// 몬스터의 행동 트리(Behavior Tree)를 구성합니다.
         /// </summary>
-        private void InitializeBehaviorTree()
+        private void InitBehaviorTree()
         {
             // BT 구조:
             // Selector (우선순위 선택)
@@ -151,7 +157,7 @@ namespace InGame.Mob
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                     continue;
                 }
-                
+
                 m_moveTween?.Play();
 
                 // 트리 평가
@@ -171,7 +177,10 @@ namespace InGame.Mob
         /// </summary>
         private bool CheckPlayerDetection()
         {
-            if (m_playerTransform == null) return false;
+            if (m_playerTransform == null)
+            {
+                return false;
+            }
 
             float distSqr = (m_cachedTransform.position - m_playerTransform.position).sqrMagnitude;
             return distSqr <= (m_searchRange * m_searchRange);
@@ -188,7 +197,7 @@ namespace InGame.Mob
                 m_isChasing = true;
                 m_moveTween?.Kill(); // 기존 이동(배회) 중단
             }
-            
+
             SetState(MobState.Move);
 
             // 2. 이미 이동 중이라면 목적지 갱신 여부 판단
@@ -201,12 +210,12 @@ namespace InGame.Mob
             Vector3 targetPos = m_playerTransform.position;
             Vector3 currentPos = m_cachedTransform.position;
             Vector3 dir = (targetPos - currentPos).normalized;
-            
+
             FlipTowards(dir.x);
 
             float dist = Vector3.Distance(currentPos, targetPos);
             float duration = dist / MoveSpeed;
-            
+
             if (m_rb != null)
             {
                 m_moveTween = m_rb.DOMove(targetPos, duration)
@@ -251,7 +260,7 @@ namespace InGame.Mob
             Vector3 dest = GetRandomPositionInMap();
             Vector3 currentPos = m_cachedTransform.position;
             Vector3 dir = (dest - currentPos).normalized;
-            
+
             FlipTowards(dir.x);
 
             float moveDuration = Vector3.Distance(currentPos, dest) / MoveSpeed;
@@ -262,10 +271,10 @@ namespace InGame.Mob
             {
                 m_moveTween = DOTween.Sequence()
                     .Append(m_rb.DOMove(dest, moveDuration).SetEase(Ease.Linear))
-                    .AppendCallback(() => 
-                    { 
+                    .AppendCallback(() =>
+                    {
                         SetState(MobState.Idle);
-                        m_lastActionTime = Time.time + waitDuration; 
+                        m_lastActionTime = Time.time + waitDuration;
                     })
                     .SetLink(gameObject);
             }
@@ -273,10 +282,10 @@ namespace InGame.Mob
             {
                 m_moveTween = DOTween.Sequence()
                     .Append(m_cachedTransform.DOMove(dest, moveDuration).SetEase(Ease.Linear))
-                    .AppendCallback(() => 
-                    { 
+                    .AppendCallback(() =>
+                    {
                         SetState(MobState.Idle);
-                        m_lastActionTime = Time.time + waitDuration; 
+                        m_lastActionTime = Time.time + waitDuration;
                     })
                     .SetLink(gameObject);
             }
@@ -296,11 +305,11 @@ namespace InGame.Mob
             Vector3 targetPos = m_mapBounds.ClosestPoint(m_cachedTransform.position);
             targetPos.z = 0;
             float duration = Vector3.Distance(m_cachedTransform.position, targetPos) / (MoveSpeed * 2f);
-            
+
             m_moveTween = m_cachedTransform.DOMove(targetPos, duration)
                 .SetEase(Ease.Linear)
                 .SetLink(gameObject);
-                
+
             await m_moveTween.ToUniTask(cancellationToken: token);
         }
 
@@ -333,8 +342,10 @@ namespace InGame.Mob
         {
             m_moveTween?.Kill();
             m_slowTween?.Kill();
-            if (m_spriteRenderer != null) 
+            if (m_spriteRenderer != null)
+            {
                 m_spriteRenderer.DOKill();
+            }
         }
 
         #endregion
@@ -348,11 +359,17 @@ namespace InGame.Mob
 
         public override void TakeDamage(float damage, float stunTime = 0f)
         {
-            if (IsDead) return;
+            if (IsDead)
+            {
+                return;
+            }
 
             PlayDamageEffect();
 
-            if (IsHit) return;
+            if (IsHit)
+            {
+                return;
+            }
             IsHit = true;
             CurrentHp -= damage;
 
@@ -378,20 +395,23 @@ namespace InGame.Mob
             m_slowTween?.Kill(true);
             float originalSpeed = m_initialSpeed;
             MoveSpeed = originalSpeed * (1f - slowAmount);
-            
-            m_slowTween = DOVirtual.DelayedCall(duration, () => 
-            { 
-                MoveSpeed = originalSpeed; 
+
+            m_slowTween = DOVirtual.DelayedCall(duration, () =>
+            {
+                MoveSpeed = originalSpeed;
             }).SetLink(gameObject);
         }
 
         protected override void OnDie()
         {
-            if (IsDead) return;
-            
+            if (IsDead)
+            {
+                return;
+            }
+
             KillAllTweens();
             SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
-            
+
             base.OnDie();
         }
 
@@ -405,7 +425,7 @@ namespace InGame.Mob
         {
             SetState(MobState.Stun);
             m_moveTween?.Pause();
-            
+
             DOVirtual.DelayedCall(duration, () =>
             {
                 if (!IsDead)
@@ -416,7 +436,7 @@ namespace InGame.Mob
         }
 
         #endregion
-        
+
         #region 디버그
 
 #if UNITY_EDITOR

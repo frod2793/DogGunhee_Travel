@@ -36,7 +36,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 내부 상태 및 캐시
+        #region 내부 상태 및 변수
 
         private ParticleSystem m_particleSystem;
         private ParticleSystem.EmitParams m_emitParams;
@@ -71,18 +71,29 @@ namespace InGame.Weapon
             if (GameManager.Instance != null)
             {
                 m_playerTransform = GameManager.Instance.PlayerTransfrom();
-                if (m_playerTransform != null) m_lastFramePlayerPos = m_playerTransform.position;
+                if (m_playerTransform != null)
+                {
+                    m_lastFramePlayerPos = m_playerTransform.position;
+                }
             }
-            InitializeTrail();
+            InitTrail();
         }
 
         private void Update()
         {
-            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
-            if (m_playerTransform == null || !m_trailCollider) return;
+            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+            {
+                return;
+            }
+
+            if (m_playerTransform == null || !m_trailCollider)
+            {
+                return;
+            }
 
             float currentTime = Time.time;
 
+            // 수명이 다한 포인트 제거 (순환 큐)
             while (m_pointCount > 0 && currentTime - m_points[m_head].CreationTime > m_trailLifetime)
             {
                 m_head = (m_head + 1) % m_maxTrailPoints;
@@ -93,26 +104,45 @@ namespace InGame.Weapon
             int lastIndex = (m_tail - 1 + m_maxTrailPoints) % m_maxTrailPoints;
             bool shouldAdd = m_pointCount == 0 || Vector3.Distance(m_points[lastIndex].Position, currentPos) > m_pointSpacing;
 
+            // 새로운 포인트 추가 및 파티클 방출
             if (shouldAdd)
             {
-                if (m_pointCount == m_maxTrailPoints) { m_head = (m_head + 1) % m_maxTrailPoints; m_pointCount--; }
+                if (m_pointCount == m_maxTrailPoints)
+                {
+                    m_head = (m_head + 1) % m_maxTrailPoints;
+                    m_pointCount--;
+                }
+
                 m_points[m_tail] = new TrailPoint { Position = currentPos, CreationTime = currentTime };
                 m_tail = (m_tail + 1) % m_maxTrailPoints;
                 m_pointCount++;
                 EmitPoisonCloud(currentPos);
             }
 
+            // 플레이어가 이동 중이거나 포인트가 있을 때 콜라이더 갱신
             bool playerMoved = Vector3.Distance(currentPos, m_lastFramePlayerPos) > Mathf.Epsilon;
-            if (m_pointCount > 0 || playerMoved) UpdateColliderWithDynamicTail(currentPos);
+            if (m_pointCount > 0 || playerMoved)
+            {
+                UpdateColliderWithDynamicTail(currentPos);
+            }
             m_lastFramePlayerPos = currentPos;
         }
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
-            if (!other.CompareTag("Mob")) return;
+            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+            {
+                return;
+            }
+
+            if (!other.CompareTag("Mob"))
+            {
+                return;
+            }
 
             int id = other.gameObject.GetInstanceID();
+            
+            // 타격 쿨다운 적용
             if (!m_damageCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
             {
                 if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
@@ -132,13 +162,19 @@ namespace InGame.Weapon
 
         #region 초기화 및 제어
 
-        public void Initialize(float damage, float stunTime, float coolTime)
+        /// <summary>
+        /// 무기 정보를 기반으로 이미터를 초기화합니다.
+        /// </summary>
+        public void Init(float damage, float stunTime, float coolTime)
         {
             m_damage = damage;
             m_stunTime = stunTime;
             m_coolTime = coolTime;
         }
 
+        /// <summary>
+        /// 레벨업 등 스탯이 변경되었을 때 호출됩니다.
+        /// </summary>
         public void UpdateStats(float damage, float stunTime, float coolTime)
         {
             m_damage = damage;
@@ -146,34 +182,62 @@ namespace InGame.Weapon
             m_coolTime = coolTime;
         }
 
-        private void InitializeTrail()
+        private void InitTrail()
         {
             m_emitParams = new ParticleSystem.EmitParams { };
-            if (m_trailCollider != null) { m_trailCollider.isTrigger = true; m_trailCollider.enabled = true; }
-            if (m_points == null || m_points.Length != m_maxTrailPoints) m_points = new TrailPoint[m_maxTrailPoints];
+            if (m_trailCollider != null)
+            {
+                m_trailCollider.isTrigger = true;
+                m_trailCollider.enabled = true;
+            }
+
+            if (m_points == null || m_points.Length != m_maxTrailPoints)
+            {
+                m_points = new TrailPoint[m_maxTrailPoints];
+            }
+
             ResetTrailData();
         }
 
         private void ResetTrailData()
         {
-            m_head = 0; m_tail = 0; m_pointCount = 0;
+            m_head = 0;
+            m_tail = 0;
+            m_pointCount = 0;
             m_damageCooldowns.Clear();
-            if (m_particleSystem != null) m_particleSystem.Clear();
-            if (m_trailCollider != null) { m_trailCollider.Reset(); m_trailCollider.isTrigger = true; }
+
+            if (m_particleSystem != null)
+            {
+                m_particleSystem.Clear();
+            }
+
+            if (m_trailCollider != null)
+            {
+                m_trailCollider.Reset();
+                m_trailCollider.isTrigger = true;
+            }
         }
 
         #endregion
 
-        #region 제어 로직 (비주얼 및 물리)
+        #region 연출 및 물리 로직
 
+        /// <summary>
+        /// 특정 위치에 독구름 파티클을 뭉쳐서 방출합니다.
+        /// </summary>
         private void EmitPoisonCloud(Vector3 centerPos)
         {
-            if (m_particleSystem == null) return;
+            if (m_particleSystem == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < m_cloudDensity; i++)
             {
                 Vector2 randomOffset = Random.insideUnitCircle * m_cloudSpread;
                 Vector3 finalPos = centerPos + new Vector3(randomOffset.x, randomOffset.y, 0f);
                 float sizeVar = Random.Range(1f - m_sizeVariation, 1f + m_sizeVariation);
+
                 m_emitParams.position = finalPos;
                 m_emitParams.startSize = m_trailWidth * sizeVar;
                 m_emitParams.rotation = Random.Range(0f, 360f);
@@ -181,9 +245,16 @@ namespace InGame.Weapon
             }
         }
 
+        /// <summary>
+        /// 추적 중인 포인트 목록을 기반으로 EdgeCollider의 모양을 갱신합니다.
+        /// </summary>
         private void UpdateColliderWithDynamicTail(Vector3 currentPlayerPos)
         {
-            if (m_trailCollider == null) return;
+            if (m_trailCollider == null)
+            {
+                return;
+            }
+
             m_colliderPointsCache.Clear();
             int idx = m_head;
             for (int i = 0; i < m_pointCount; i++)
@@ -191,8 +262,14 @@ namespace InGame.Weapon
                 m_colliderPointsCache.Add(transform.InverseTransformPoint(m_points[idx].Position));
                 idx = (idx + 1) % m_maxTrailPoints;
             }
+
+            // 플레이어의 현재 위치까지 선을 잇기 위해 추가
             m_colliderPointsCache.Add(transform.InverseTransformPoint(currentPlayerPos));
-            if (m_colliderPointsCache.Count >= 2) m_trailCollider.SetPoints(m_colliderPointsCache);
+
+            if (m_colliderPointsCache.Count >= 2)
+            {
+                m_trailCollider.SetPoints(m_colliderPointsCache);
+            }
         }
 
         #endregion

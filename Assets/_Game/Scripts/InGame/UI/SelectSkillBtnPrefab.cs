@@ -71,9 +71,9 @@ namespace InGame.vamsir // 네임스페이스를 다른 파일과 일치시킵�
         /// </summary>
         public async UniTask PlaySelectionAnimation(CancellationToken cancellationToken = default)
         {
-            // DOTween을 사용하여 버튼이 커졌다가 원래 크기로 돌아오는 애니메이션을 비동기적으로 실행합니다.
-            await transform.DOScale(1.2f, 0.2f).SetEase(Ease.OutQuad).WithCancellation(cancellationToken);
-            await transform.DOScale(1.0f, 0.1f).SetEase(Ease.InQuad).WithCancellation(cancellationToken);
+            // SetUpdate(true)를 사용하여 Time.timeScale = 0 상태에서도 애니메이션이 동작하도록 합니다.
+            await transform.DOScale(1.2f, 0.2f).SetEase(Ease.OutQuad).SetUpdate(true).WithCancellation(cancellationToken);
+            await transform.DOScale(1.0f, 0.1f).SetEase(Ease.InQuad).SetUpdate(true).WithCancellation(cancellationToken);
         }
 
         /// <summary>

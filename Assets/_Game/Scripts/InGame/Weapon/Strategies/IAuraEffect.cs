@@ -12,7 +12,7 @@ namespace InGame.Weapon.Strategies
         /// <summary>
         /// 최초 생성 시 초기화합니다.
         /// </summary>
-        void Initialize(WeaponRuntimeStats stats);
+        void Init(WeaponRuntimeStats stats);
 
         /// <summary>
         /// 런타임 중 스탯이 변경되었을 때 호출됩니다.

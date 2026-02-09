@@ -11,7 +11,7 @@ namespace InGame.Weapon
     [RequireComponent(typeof(Collider2D))]
     public class BallDamageDealer : MonoBehaviour
     {
-        #region 내부 상태 및 캐시
+        #region 내부 상태 및 변수
 
         private float m_attackPower;
         private float m_stunTime;
@@ -24,7 +24,11 @@ namespace InGame.Weapon
         private void Awake()
         {
             m_collider = GetComponent<Collider2D>();
-            m_collider.isTrigger = true;
+            
+            if (m_collider != null)
+            {
+                m_collider.isTrigger = true;
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -46,7 +50,7 @@ namespace InGame.Weapon
         /// <summary>
         /// 데미지 딜러의 공격 수치를 설정합니다.
         /// </summary>
-        public void Initialize(float damage, float stunTime)
+        public void Init(float damage, float stunTime)
         {
             m_attackPower = damage;
             m_stunTime = stunTime;

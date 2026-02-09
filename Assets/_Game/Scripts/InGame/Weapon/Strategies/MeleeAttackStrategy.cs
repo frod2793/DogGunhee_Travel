@@ -10,7 +10,7 @@ namespace InGame.Weapon.Strategies
 {
     /// <summary>
     /// 근접 공격(펀치/슬래시) 전략입니다.
-    /// 애니메이터 트리거, 콜라이더 판정, 방향 추적을 처리합니다.
+    /// 애니메이터 트리거, 콜라이더 판정, 조이스틱 방향 추적을 처리합니다.
     /// </summary>
     public class MeleeAttackStrategy : IWeaponStrategy
     {
@@ -21,7 +21,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 내부 변수
+        #region 내부 상태 및 변수
 
         private WeaponDataSO m_data;
         private GameObject m_meleeInstance;
@@ -41,11 +41,11 @@ namespace InGame.Weapon.Strategies
 
         #region IWeaponStrategy 구현
 
-        public void Initialize(WeaponDataSO data)
+        public void Init(WeaponDataSO data)
         {
             m_data = data;
 
-            // 콜라이더 필터 설정
+            // 콜라이더 판정을 위한 필터 설정
             m_contactFilter = ContactFilter2D.noFilter;
             m_contactFilter.useTriggers = true;
             m_contactFilter.SetLayerMask(LayerMask.GetMask("Mob"));
@@ -54,7 +54,11 @@ namespace InGame.Weapon.Strategies
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
-            if (m_isAttacking) return;
+            if (m_isAttacking)
+            {
+                return;
+            }
+
             if (m_meleeInstance == null)
             {
                 SpawnMeleeInstance(owner);
@@ -66,7 +70,7 @@ namespace InGame.Weapon.Strategies
 
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
-            // 공격 중이면 방향 업데이트
+            // 공격 중 실시간 방향 업데이트 (조이스틱 추적)
             if (m_isAttacking && m_meleeInstance != null)
             {
                 UpdateWeaponDirection();
@@ -75,13 +79,16 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 내부 메서드
+        #region 공격 및 동기화 로직
 
+        /// <summary>
+        /// 무기 모델 생성 및 필요한 컴포넌트 캐싱을 수행합니다.
+        /// </summary>
         private void SpawnMeleeInstance(Transform owner)
         {
             if (m_data?.ModelPrefab == null)
             {
-                Debug.LogWarning("[MeleeAttackStrategy] ModelPrefab이 없습니다.");
+                Debug.LogWarning("[MeleeAttackStrategy] ModelPrefab이 설정되지 않았습니다.");
                 return;
             }
 
@@ -99,12 +106,16 @@ namespace InGame.Weapon.Strategies
             }
         }
 
+        /// <summary>
+        /// 비동기 방식으로 공격 시퀀스(애니메이션 및 충돌 판정)를 처리합니다.
+        /// </summary>
         private async UniTaskVoid PerformAttackAsync(WeaponRuntimeStats stats, Vector3 direction)
         {
             m_isAttacking = true;
             m_hitMobInstanceIDs.Clear();
             m_cts?.Cancel();
             m_cts = new CancellationTokenSource();
+            
             var token = m_cts.Token;
 
             try
@@ -118,19 +129,26 @@ namespace InGame.Weapon.Strategies
                     m_animator.SetTrigger(trigger);
                 }
 
-                if (m_collider != null) m_collider.enabled = true;
+                if (m_collider != null)
+                {
+                    m_collider.enabled = true;
+                }
 
-                // 애니메이션 길이 계산
+                // 애니메이션 실제 길이에 맞춘 대기 시간 계산
                 float duration = 0.4f;
                 if (m_animator != null)
                 {
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                     var stateInfo = m_animator.GetCurrentAnimatorStateInfo(0);
                     duration = stateInfo.length;
-                    if (stateInfo.speed > 0) duration /= stateInfo.speed;
+                    
+                    if (stateInfo.speed > 0)
+                    {
+                        duration /= stateInfo.speed;
+                    }
                 }
 
-                // 공격 지속 시간 동안 판정
+                // 공격 지속 시간 동안 프레임마다 충돌 체크
                 float timer = 0f;
                 while (timer < duration && !token.IsCancellationRequested)
                 {
@@ -139,11 +157,14 @@ namespace InGame.Weapon.Strategies
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                 }
 
-                if (m_collider != null) m_collider.enabled = false;
+                if (m_collider != null)
+                {
+                    m_collider.enabled = false;
+                }
             }
             catch (System.OperationCanceledException)
             {
-                // 정상적인 취소
+                // 공격 취소 시 안전하게 종료
             }
             finally
             {
@@ -151,26 +172,40 @@ namespace InGame.Weapon.Strategies
             }
         }
 
+        /// <summary>
+        /// 전용 모델의 회전과 스케일을 방향에 맞춰 조정합니다.
+        /// </summary>
         private void RotateToDirection(Vector3 direction)
         {
-            if (m_meleeInstance == null || direction == Vector3.zero) return;
+            if (m_meleeInstance == null || direction == Vector3.zero)
+            {
+                return;
+            }
 
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             m_meleeInstance.transform.rotation = Quaternion.Euler(0, 0, angle);
 
-            // 좌우 반전
+            // 각도에 따른 상하 스케일 반전 (좌우 처리)
             if (Mathf.Abs(angle) > 90)
+            {
                 m_meleeInstance.transform.localScale = new Vector3(1, -1, 1);
+            }
             else
+            {
                 m_meleeInstance.transform.localScale = new Vector3(1, 1, 1);
+            }
         }
 
+        /// <summary>
+        /// 조이스틱 입력을 즉각 반영하여 무기 방향을 갱신합니다.
+        /// </summary>
         private void UpdateWeaponDirection()
         {
             if (GameManager.Instance?.Joystick != null)
             {
                 var joystick = GameManager.Instance.Joystick;
                 Vector3 dir = new Vector3(joystick.Horizontal, joystick.Vertical, 0);
+                
                 if (dir.sqrMagnitude > 0.01f)
                 {
                     RotateToDirection(dir.normalized);
@@ -178,9 +213,15 @@ namespace InGame.Weapon.Strategies
             }
         }
 
+        /// <summary>
+        /// 콜라이더 겹침 검사를 통해 범위 내 적에게 데미지를 입힙니다.
+        /// </summary>
         private void CheckCollision(WeaponRuntimeStats stats)
         {
-            if (m_collider == null || m_collider.pathCount == 0) return;
+            if (m_collider == null || m_collider.pathCount == 0)
+            {
+                return;
+            }
 
             int hitCount = m_collider.Overlap(m_contactFilter, m_hitResults);
 
@@ -188,7 +229,11 @@ namespace InGame.Weapon.Strategies
             {
                 var target = m_hitResults[i];
                 int id = target.gameObject.GetInstanceID();
-                if (m_hitMobInstanceIDs.Contains(id)) continue;
+                
+                if (m_hitMobInstanceIDs.Contains(id))
+                {
+                    continue;
+                }
 
                 if (target.TryGetComponent(out MobBase mob))
                 {

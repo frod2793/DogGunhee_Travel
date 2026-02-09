@@ -7,20 +7,29 @@ namespace InGame.Weapon.Controllers
     /// </summary>
     public class BoomerangWeaponView : MonoBehaviour
     {
-        [Header("Firing Pattern")]
+        #region 설정 데이터
+
+        [Header("발사 패턴")]
         [Tooltip("발사 시 시작 각도 오프셋입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("StartAngle")]
         [SerializeField] private float m_startAngle = -15f;
-        public float StartAngle => m_startAngle;
         
         [Tooltip("발사체 간의 각도 간격입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("AngleStep")]
         [SerializeField] private float m_angleStep = 30f;
-        public float AngleStep => m_angleStep;
         
         [Tooltip("연사 발사 시 간격(ms)입니다.")]
         [UnityEngine.Serialization.FormerlySerializedAs("BurstDelayMs")]
         [SerializeField] private int m_burstDelayMs = 50;
+
+        #endregion
+
+        #region 프로퍼티
+
+        public float StartAngle => m_startAngle;
+        public float AngleStep => m_angleStep;
         public int BurstDelayMs => m_burstDelayMs;
+
+        #endregion
     }
 }

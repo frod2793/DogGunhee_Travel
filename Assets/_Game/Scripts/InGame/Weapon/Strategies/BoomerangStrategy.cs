@@ -7,9 +7,12 @@ using InGame.Weapon.Logic;
 
 namespace InGame.Weapon.Strategies
 {
+    /// <summary>
+    /// 부메랑(Boomerang) 무기의 공격 전략을 담당하는 클래스입니다.
+    /// </summary>
     public class BoomerangStrategy : IWeaponStrategy
     {
-        #region 내부 변수
+        #region 내부 상태 및 변수
 
         private BoomerangWeaponLogic m_logic;
         private Transform m_firePoint;
@@ -18,30 +21,11 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        public void Initialize(WeaponDataSO data)
-        {
-            // 1. 비주얼 설정 추출 및 로직 초기화
-            BoomerangWeaponTuningData? tuningData = null;
-            if (data.ModelPrefab != null)
-            {
-                var view =   WeaponPoolManager.Instance.GetComponent<BoomerangWeaponView>();
-                if (view != null)
-                {
-                    tuningData = new BoomerangWeaponTuningData
-                    {
-                        StartAngle = view.StartAngle,
-                        AngleStep = view.AngleStep,
-                        BurstDelayMs = view.BurstDelayMs
-                    };
-                }
-            }
+        #region IWeaponStrategy 구현
 
-            // [Note] BoomerangStrategy는 Attack 시점에 Logic을 사용할 것이므로 
-            // 실제 로직 생성은 Attack 호출 시 스탯과 함께 수행하거나, 
-            // Initialize 시점에 기본 스탯으로 생성 후 UpdateStats 호출.
-            // 여기서는 Attack 시점에 스탯과 함께 갱신하는 방식을 사용.
-            
-            // 2. Pool 등록
+        public void Init(WeaponDataSO data)
+        {
+            // 2. 투사체 오브젝트 풀 등록
             if (data.ProjectilePrefab != null)
             {
                 WeaponPoolManager.Instance.GetOrAddPool<BoomerangProjectile>(
@@ -57,24 +41,47 @@ namespace InGame.Weapon.Strategies
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
-            if (m_isAttacking) return;
-            fireBoomerangAsync(stats, owner, direction).Forget();
+            if (m_isAttacking)
+            {
+                return;
+            }
+
+            FireBoomerangAsync(stats, owner, direction).Forget();
         }
 
-        public void OnUpdate(WeaponRuntimeStats stats, float deltaTime) { }
+        public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
+        {
+            // 부메랑 전략은 별도의 프레임 업데이트가 필요 없음
+        }
 
-        private async UniTaskVoid fireBoomerangAsync(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
+        #endregion
+
+        #region 상세 공격 로직
+
+        /// <summary>
+        /// 비동기 방식으로 부메랑 투사체를 연속 발사합니다.
+        /// </summary>
+        private async UniTaskVoid FireBoomerangAsync(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
             m_isAttacking = true;
             m_firePoint = owner;
 
-            if (direction == Vector3.zero) direction = Vector3.right;
+            if (direction == Vector3.zero)
+            {
+                direction = Vector3.right;
+            }
 
-            // 로직 생성/갱신
-            if (m_logic == null) m_logic = new BoomerangWeaponLogic(stats);
-            else m_logic.UpdateStats(stats);
+            // 비즈니스 로직 연동
+            if (m_logic == null)
+            {
+                m_logic = new BoomerangWeaponLogic(stats);
+            }
+            else
+            {
+                m_logic.UpdateStats(stats);
+            }
 
-            // [Active Limit Logic]
+            // 활성화된 투사체 개수 제한 체크
             if (m_currentActiveCount >= m_logic.MaxProjectiles)
             {
                 m_isAttacking = false;
@@ -91,14 +98,14 @@ namespace InGame.Weapon.Strategies
                 return;
             }
 
-            // 기준 각도 계산
+            // 기준 발사 각도 계산 (90도 보정)
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
             for (int i = 0; i < actualFireCount; i++)
             {
                 m_currentActiveCount++;
 
-                // 로직 클래스에 각도 계산 위임
+                // 전략에 따른 각도 계산 분산
                 float currentAngle = m_logic.CalculateAngle(i, actualFireCount, baseAngle);
                 Quaternion rotation = Quaternion.Euler(0, 0, currentAngle);
 
@@ -108,7 +115,7 @@ namespace InGame.Weapon.Strategies
                     projectile.transform.position = m_firePoint.position;
                     projectile.transform.rotation = rotation;
                     
-                    projectile.Initialize(
+                    projectile.Init(
                         m_firePoint, 
                         m_logic.AttackPower, 
                         m_logic.StunTime, 
@@ -117,7 +124,10 @@ namespace InGame.Weapon.Strategies
                         () => 
                         {
                             m_currentActiveCount--;
-                            if (m_currentActiveCount < 0) m_currentActiveCount = 0;
+                            if (m_currentActiveCount < 0)
+                            {
+                                m_currentActiveCount = 0;
+                            }
                         }
                     );
                 }
@@ -127,5 +137,7 @@ namespace InGame.Weapon.Strategies
             
             m_isAttacking = false;
         }
+
+        #endregion
     }
 }
