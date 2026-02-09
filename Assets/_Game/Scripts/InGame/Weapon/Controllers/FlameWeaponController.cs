@@ -140,7 +140,13 @@ namespace InGame.Weapon.Controllers
                 await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
 
                 // 게임이 플레이 중이 아니면 스폰 생략
-                if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying)
+                if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+                {
+                    continue;
+                }
+
+                // [Optimization] 적이 없으면 공격 로직 패스 (대기)
+                if (!IsEnemyPresent)
                 {
                     continue;
                 }

@@ -39,6 +39,7 @@ namespace InGame.Weapon.Controllers
         private readonly List<Collider2D> m_hitResults = new List<Collider2D>(10);
         // 콜라이더 정점 처리를 위한 버퍼 (충분한 크기로 할당)
         private readonly List<Vector2> m_shapePointsBuffer = new List<Vector2>(512);
+        private readonly List<Vector2> m_sampledPointsBuffer = new List<Vector2>(16);
 
         private static readonly int k_AnimStateLevel1 = Animator.StringToHash("CatPhunch_Level1");
         private static readonly int k_AnimStateLevel2 = Animator.StringToHash("Catphunch_level2");
@@ -323,13 +324,13 @@ namespace InGame.Weapon.Controllers
                 // 정점 개수를 최대 9개로 제한하되, 샘플링 간격 계산 시 0으로 나누기 방지
                 if (originalCount > 9)
                 {
-                    List<Vector2> sampledPoints = new List<Vector2>(9);
+                    m_sampledPointsBuffer.Clear();
                     for (int j = 0; j < 9; j++)
                     {
                         int index = Mathf.FloorToInt((float)j * (originalCount - 1) / 8);
-                        sampledPoints.Add(m_shapePointsBuffer[index]);
+                        m_sampledPointsBuffer.Add(m_shapePointsBuffer[index]);
                     }
-                    m_attackCollider.SetPath(i, sampledPoints);
+                    m_attackCollider.SetPath(i, m_sampledPointsBuffer);
                 }
                 else
                 {

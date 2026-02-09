@@ -9,12 +9,18 @@ namespace InGame.Weapon.Controllers
     {
         [Header("Firing Pattern")]
         [Tooltip("발사 시 시작 각도 오프셋입니다.")]
-        public float StartAngle = -15f;
+        [UnityEngine.Serialization.FormerlySerializedAs("StartAngle")]
+        [SerializeField] private float m_startAngle = -15f;
+        public float StartAngle => m_startAngle;
         
         [Tooltip("발사체 간의 각도 간격입니다.")]
-        public float AngleStep = 30f;
+        [UnityEngine.Serialization.FormerlySerializedAs("AngleStep")]
+        [SerializeField] private float m_angleStep = 30f;
+        public float AngleStep => m_angleStep;
         
         [Tooltip("연사 발사 시 간격(ms)입니다.")]
-        public int BurstDelayMs = 50;
+        [UnityEngine.Serialization.FormerlySerializedAs("BurstDelayMs")]
+        [SerializeField] private int m_burstDelayMs = 50;
+        public int BurstDelayMs => m_burstDelayMs;
     }
 }

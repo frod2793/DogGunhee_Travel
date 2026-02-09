@@ -8,6 +8,8 @@ namespace InGame.Weapon.Strategies
 {
     public class ShieldStrategy : IWeaponStrategy
     {
+        #region 내부 변수
+
         private GameObject m_viewInstance;
         private Animator m_animator;
         private static readonly int k_AnimHashAttack = Animator.StringToHash("Attack");
@@ -16,6 +18,8 @@ namespace InGame.Weapon.Strategies
         private bool m_isAttacking;
 
         private WeaponDataSO m_data; // 데이터 캐싱
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {
@@ -61,8 +65,8 @@ namespace InGame.Weapon.Strategies
 
             if (data.ProjectilePrefab != null) // 부메랑
             {
-                WeaponPoolManager.Instance.GetOrAddPool<shieldProjectile>(
-                    () => UnityEngine.Object.Instantiate(data.ProjectilePrefab).GetComponent<shieldProjectile>(),
+                WeaponPoolManager.Instance.GetOrAddPool<ShieldProjectile>(
+                    () => UnityEngine.Object.Instantiate(data.ProjectilePrefab).GetComponent<ShieldProjectile>(),
                     p => p.gameObject.SetActive(true),
                     p => p.gameObject.SetActive(false),
                     p => UnityEngine.Object.Destroy(p.gameObject),
@@ -156,7 +160,7 @@ namespace InGame.Weapon.Strategies
             
             for (int i = 0; i < count; i++)
             {
-                var boomerang = WeaponPoolManager.Instance.Get<shieldProjectile>();
+                var boomerang = WeaponPoolManager.Instance.Get<ShieldProjectile>();
                 if (boomerang != null)
                 {
                     float angle = i * angleStep;

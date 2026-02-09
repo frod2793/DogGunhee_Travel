@@ -7,11 +7,17 @@ namespace InGame.Weapon.Strategies
     /// </summary>
     public class ViewportSpawnStrategy : ISpawnPositionStrategy
     {
+        #region 내부 변수
+
         private readonly float m_minViewportX;
         private readonly float m_maxViewportX;
         private readonly float m_minViewportY;
         private readonly float m_maxViewportY;
         private readonly float m_distanceFromCamera;
+
+        #endregion
+
+        #region 생성자
 
         /// <summary>
         /// 생성자
@@ -30,9 +36,11 @@ namespace InGame.Weapon.Strategies
             m_distanceFromCamera = distance;
         }
 
-        public Vector3 GetSpawnPosition(Transform owner, Camera camera = null)
+        #endregion
+
+        public Vector3 GetSpawnPosition(Transform owner)
         {
-            if (camera == null) camera = Camera.main;
+            Camera camera = Camera.main;
             if (camera == null) return Vector3.zero;
 
             float randomX = UnityEngine.Random.Range(m_minViewportX, m_maxViewportX);

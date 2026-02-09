@@ -7,6 +7,8 @@ namespace InGame.Weapon.Base
     /// </summary>
     public class WeaponRuntimeStats
     {
+        #region 공개 프로퍼티
+        
         public WeaponDataSO Data { get; private set; }
 
         public int CurrentLevel { get; private set; } = 1;
@@ -19,21 +21,28 @@ namespace InGame.Weapon.Base
         public float MobStunTime { get; set; }
         public bool IsEvolved { get; set; }
 
-        // 하위 호환성을 위한 별칭 (필요 시)
+        // 하위 호환성을 위한 별칭 (Legacy 대응)
         public float CurrentAttackPower => AttackPower;
         public float CurrentCoolTime => CoolTime;
         public float CurrentAttackSpeed => AttackSpeed;
         public float CurrentAttackRange => AttackRange;
         public int CurrentProjectileCount => ProjectileCount;
         public float CurrentDuration => Duration;
+        
+        #endregion
 
-        // R3 ReactiveProperties (Observer Pattern)
+        #region R3 ReactiveProperties (Observer Pattern)
+        
         public R3.ReadOnlyReactiveProperty<float> AttackPowerRP => m_attackPowerRP;
         public R3.ReadOnlyReactiveProperty<int> CurrentLevelRP => m_currentLevelRP;
 
         private readonly R3.ReactiveProperty<float> m_attackPowerRP = new(0f);
         private readonly R3.ReactiveProperty<int> m_currentLevelRP = new(1);
+        
+        #endregion
 
+        #region 초기화 및 레벨 관리
+        
         public WeaponRuntimeStats(WeaponDataSO data)
         {
             Data = data;
@@ -68,5 +77,7 @@ namespace InGame.Weapon.Base
             
             // TODO: WeaponDataSO의 Upgrades 리스트를 참조하여 스탯 재계산 로직 추가 필요
         }
+        
+        #endregion
     }
 }

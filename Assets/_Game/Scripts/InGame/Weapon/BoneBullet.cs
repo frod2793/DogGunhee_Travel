@@ -1,49 +1,52 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using InGame.Mob.MobBase;
 using InGame.ObjectPool;
 using UnityEngine;
-using InGame;
-using InGame.Weapon.Base;
 
 namespace InGame.Weapon
 {
+    /// <summary>
+    /// 개다귀(Bone) 무기의 투사체 로직을 처리하는 컴포넌트입니다.
+    /// 이동, 회전, 충돌 감지 및 폭발 효과를 관리합니다.
+    /// </summary>
     public class BoneBullet : MonoBehaviour
     {
-        #region Inspector 설정
+        #region 인스펙터 필드
 
         [Header("이동 설정")]
+        [Tooltip("투사체가 날아가는 최대 거리")]
         [SerializeField] private float m_travelDistance = 20f;
 
         [Header("회전 설정")]
-        [SerializeField] private float m_rotateSpeed = 360f;
+        [Tooltip("초당 회전 속도 (도/s)")]
+        [SerializeField] private float m_rotateSpeed = 720f;
 
-        [Header("폭발 설정")]
+        [Header("폭발 설정 (진화 시)")]
+        [Tooltip("폭발 반경")]
         [SerializeField] private float m_explosionRadius = 1.5f;
+        [Tooltip("폭발 시 발생하는 고정 데미지")]
         [SerializeField] private float m_explosionDamage = 10f;
 
         [Header("감지 설정")]
+        [Tooltip("적(Mob)으로 인식할 레이어")]
         [SerializeField] private LayerMask m_mobLayerMask;
 
         #endregion
 
-        #region 런타임 상태
+        #region 내부 상구 및 캐시
 
-        public float BulletSpeed { get; set; }
-        
-        private float m_attackPower;
-        private float m_stunTime;
-        private bool m_isEvolved;
-        private bool m_isActive;
-
-        #endregion
-
-        #region 캐시 및 내부 변수
+        private const float k_StopThreshold = 0.01f;
+        private const float k_StopThresholdSqr = k_StopThreshold * k_StopThreshold;
+        private const float k_MaxStoppedDuration = 0.3f;
+        private const float k_LifetimeBuffer = 2f;
+        private const int k_MaxOverlapColliders = 10;
 
         private Transform m_transform;
-        private Vector3 m_attackAngle;
+        private Vector3 m_attackDirection;
         private Tween m_moveTween;
-        private System.Threading.CancellationTokenSource m_lifetimeCts;
+        private CancellationTokenSource m_lifetimeCts;
 
         // 이동 감지 관련
         private Vector3 m_lastPosition;
@@ -53,15 +56,17 @@ namespace InGame.Weapon
         private readonly Collider2D[] m_overlapResults = new Collider2D[k_MaxOverlapColliders];
         private ContactFilter2D m_contactFilter;
 
+        private float m_attackPower;
+        private float m_stunTime;
+        private bool m_isEvolved;
+        private bool m_isActive;
+
         #endregion
 
-        #region 상수
+        #region 프로퍼티
 
-        private const float k_StopThreshold = 0.01f;
-        private const float k_StopThresholdSqr = k_StopThreshold * k_StopThreshold;
-        private const float k_MaxStoppedDuration = 0.3f;
-        private const float k_LifetimeBuffer = 2f;
-        private const int k_MaxOverlapColliders = 10;
+        /// <summary>투사체의 비행 속도입니다.</summary>
+        public float BulletSpeed { get; set; }
 
         #endregion
 
@@ -71,6 +76,7 @@ namespace InGame.Weapon
         {
             m_transform = transform;
             
+            // 물리 감지용 필터 설정
             m_contactFilter = new ContactFilter2D();
             m_contactFilter.useTriggers = true;
             m_contactFilter.SetLayerMask(m_mobLayerMask);
@@ -82,100 +88,159 @@ namespace InGame.Weapon
             m_isActive = true;
             m_lastPosition = m_transform.position;
             m_stoppedTime = 0f;
+            
             SoundManager.PlaySound(Sound.SFX, SoundKeys.Throwbone);
         }
 
         private void OnDisable()
         {
             m_isActive = false;
-            m_moveTween?.Kill();
-            m_lifetimeCts?.Cancel();
-            m_lifetimeCts?.Dispose();
-            m_lifetimeCts = null;
+            
+            // 모든 연출 및 비동기 작업 정리
+            m_transform.DOKill();
+            CancelLifetimeCts();
         }
 
         private void Update()
         {
             if (!m_isActive) return;
 
-            // 이동 감지: 제곱 거리 비교로 Sqrt 연산 제거 (성능 최적화)
-            Vector3 currentPos = m_transform.position;
-            float sqrDistanceMoved = (currentPos - m_lastPosition).sqrMagnitude;
-            
-            if (sqrDistanceMoved < k_StopThresholdSqr)
+            // 투사체가 무언가에 막혀 멈춰있는지 감지 (벽 등)
+            UpdateStoppedDetection();
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (!m_isActive || !other.CompareTag("Mob")) return;
+
+            // 적중 처리
+            if (other.TryGetComponent(out MobBase mob))
             {
-                // 이동이 거의 없음 (정지 상태)
-                m_stoppedTime += Time.deltaTime;
-                
-                if (m_stoppedTime >= k_MaxStoppedDuration)
-                {
-                    // 일정 시간 동안 정지 상태 → 풀로 반환
-                    LogManager.Log("[BoneBullet] Movement stopped, returning to pool", LogManager.LogCategory.Weapon);
-                    ReleaseToPool();
-                    return;
-                }
+                mob.TakeDamage(m_attackPower, m_stunTime);
+            }
+
+            // 진화 여부에 따른 유도 폭발 또는 즉시 제거
+            if (m_isEvolved)
+            {
+                BulletExplosion();
             }
             else
-            {
-                // 이동 중이면 타이머 리셋
-                m_stoppedTime = 0f;
-            }
-
-            m_lastPosition = currentPos;
-        }
-
-        #endregion
-
-        #region 핵심 로직
-
-        /// <summary>
-        /// 총알을 지정된 방향으로 발사합니다.
-        /// </summary>
-        /// <param name="direction">발사 방향 (정규화하여 사용)</param>
-        public void ThrowBullet(Vector3 direction)
-        {
-            ThrowAndTrackLifecycleAsync(direction).Forget();
-        }
-
-        private async UniTaskVoid ThrowAndTrackLifecycleAsync(Vector3 direction)
-        {
-            m_attackAngle = direction.normalized;
-            Vector3 targetPosition = m_transform.position + m_attackAngle * m_travelDistance;
-            float duration = m_travelDistance / BulletSpeed;
-
-            // 최대 생명 시간 보장 (풀 누수 방지)
-            m_lifetimeCts?.Cancel();
-            m_lifetimeCts?.Dispose();
-            m_lifetimeCts = new System.Threading.CancellationTokenSource();
-            float maxLifetime = duration + k_LifetimeBuffer;
-            LifetimeGuardAsync(maxLifetime, m_lifetimeCts.Token).Forget();
-
-            var token = this.GetCancellationTokenOnDestroy();
-
-            m_moveTween?.Kill();
-            m_moveTween = DOTween.Sequence()
-                .Append(m_transform.DOMove(targetPosition, duration).SetEase(Ease.Linear))
-                .Join(m_transform.DORotate(new Vector3(0, 0, m_rotateSpeed), 1f / (m_rotateSpeed / 360f),
-                        RotateMode.FastBeyond360)
-                    .SetEase(Ease.Linear)
-                    .SetLoops(-1, LoopType.Incremental));
-
-            // 트윈이 끝까지 재생되거나, 외부 요인(충돌)에 의해 취소될 때까지 기다립니다.
-            bool cancelled = await m_moveTween.ToUniTask(cancellationToken: token).SuppressCancellationThrow();
-
-            if (!cancelled)
             {
                 ReleaseToPool();
             }
         }
 
+        #endregion
+
+        #region 초기화 및 제어 메서드
+
+        /// <summary>
+        /// 투사체의 전투 파라미터를 초기화합니다.
+        /// </summary>
+        /// <param name="damage">적중 데미지</param>
+        /// <param name="stunTime">경직 시간</param>
+        /// <param name="speed">이동 속도</param>
+        /// <param name="isEvolved">진화형 여부 (폭발 추가)</param>
+        public void Initialize(float damage, float stunTime, float speed, bool isEvolved)
+        {
+            m_attackPower = damage;
+            m_stunTime = stunTime;
+            BulletSpeed = speed;
+            m_isEvolved = isEvolved;
+        }
+
+        /// <summary>
+        /// 투사체를 지정된 방향으로 발사합니다.
+        /// </summary>
+        /// <param name="direction">발사 방향 벡터</param>
+        public void ThrowBullet(Vector3 direction)
+        {
+            ThrowAndTrackLifecycleAsync(direction).Forget();
+        }
+
+        /// <summary>
+        /// 풀에서 재사용될 때 상태를 초기화합니다.
+        /// </summary>
+        public void ResetState()
+        {
+            m_isActive = true;
+            m_transform.DOKill();
+            m_transform.rotation = Quaternion.identity;
+            
+            CancelLifetimeCts();
+            
+            m_lastPosition = m_transform.position;
+            m_stoppedTime = 0f;
+        }
+
+        /// <summary>
+        /// 투사체를 풀로 반환합니다.
+        /// </summary>
+        private void ReleaseToPool()
+        {
+            if (!m_isActive) return;
+            
+            m_isActive = false;
+            m_transform.DOKill();
+            CancelLifetimeCts();
+            
+            WeaponPoolManager.Instance.Release(this);
+        }
+
+        #endregion
+
+        #region 내부 연출 로직
+
+        /// <summary>
+        /// 투사체 이동 및 비행 수명 주기를 처리하는 비동기 메서드입니다.
+        /// </summary>
+        private async UniTaskVoid ThrowAndTrackLifecycleAsync(Vector3 direction)
+        {
+            m_attackDirection = direction.normalized;
+            Vector3 targetPosition = m_transform.position + m_attackDirection * m_travelDistance;
+            float duration = m_travelDistance / BulletSpeed;
+
+            // 새로운 수명 토큰 생성
+            CancelLifetimeCts();
+            m_lifetimeCts = new CancellationTokenSource();
+            
+            float maxLifetime = duration + k_LifetimeBuffer;
+            LifetimeGuardAsync(maxLifetime, m_lifetimeCts.Token).Forget();
+
+            var onDestroyToken = this.GetCancellationTokenOnDestroy();
+
+            // 이전 트윈 정리
+            m_transform.DOKill();
+            
+            // 1. 무한 회전 (Sequence에서 분리하여 경고 방지)
+            _ = m_transform.DORotate(new Vector3(0, 0, m_rotateSpeed), 1f, RotateMode.FastBeyond360)
+                .SetEase(Ease.Linear)
+                .SetLoops(-1, LoopType.Incremental);
+
+            // 2. 목적지까지 직선 이동
+            m_moveTween = m_transform.DOMove(targetPosition, duration).SetEase(Ease.Linear);
+
+            // 이동 완료 또는 취소 대기
+            bool cancelled = await m_moveTween.ToUniTask(cancellationToken: onDestroyToken).SuppressCancellationThrow();
+
+            if (!cancelled && m_isActive)
+            {
+                ReleaseToPool();
+            }
+        }
+
+        /// <summary>
+        /// 진화된 상태일 때 적중 시 발생하는 폭발 효과를 처리합니다.
+        /// </summary>
         private void BulletExplosion()
         {
             Vector3 currentPosition = m_transform.position;
+            
+            // 시각 효과 재생
             EffectManager.Instance.PlayEffect(EffectType.BoneExplosion, currentPosition);
 
-            int numColliders =
-                Physics2D.OverlapCircle(currentPosition, m_explosionRadius, m_contactFilter, m_overlapResults);
+            // 반경 내 적들에게 광역 데미지
+            int numColliders = Physics2D.OverlapCircle(currentPosition, m_explosionRadius, m_contactFilter, m_overlapResults);
 
             for (int i = 0; i < numColliders; i++)
             {
@@ -188,88 +253,61 @@ namespace InGame.Weapon
             ReleaseToPool();
         }
 
+        #endregion
+
+        #region 유틸리티 및 가드 로직
+
         /// <summary>
-        /// 최대 생명 시간 보장 (풀 반환 누락 방지)
+        /// 투사체가 특정 지점에서 멈춰있는지 확인하여 비정상 상태 시 회수합니다.
         /// </summary>
-        private async UniTaskVoid LifetimeGuardAsync(float maxLifetime, System.Threading.CancellationToken token)
+        private void UpdateStoppedDetection()
+        {
+            Vector3 currentPos = m_transform.position;
+            float sqrDistanceMoved = (currentPos - m_lastPosition).sqrMagnitude;
+            
+            if (sqrDistanceMoved < k_StopThresholdSqr)
+            {
+                m_stoppedTime += Time.deltaTime;
+                if (m_stoppedTime >= k_MaxStoppedDuration)
+                {
+                    ReleaseToPool();
+                }
+            }
+            else
+            {
+                m_stoppedTime = 0f;
+                m_lastPosition = currentPos;
+            }
+        }
+
+        /// <summary>
+        /// 투사체가 미적중 상태로 비행 환경에 남겨지는 것을 방지하는 타임아웃 가드입니다.
+        /// </summary>
+        private async UniTaskVoid LifetimeGuardAsync(float maxLifetime, CancellationToken token)
         {
             try
             {
                 await UniTask.Delay(System.TimeSpan.FromSeconds(maxLifetime), cancellationToken: token);
                 
-                // 시간 초과 시 강제로 풀 반환
                 if (m_isActive)
                 {
-                    LogManager.LogWarning("[BoneBullet] Lifetime expired, forcing pool return", LogManager.LogCategory.Weapon);
                     ReleaseToPool();
                 }
             }
-            catch (System.OperationCanceledException)
-            {
-                // 정상 취소 (총알이 이미 반환됨)
-            }
-        }
-
-        private void ReleaseToPool()
-        {
-            if (!m_isActive) return;
-            m_isActive = false;
-            m_moveTween?.Kill();
-            m_lifetimeCts?.Cancel();
-
-            // WeaponPoolManager를 통해 자신을 풀로 반환합니다.
-            WeaponPoolManager.Instance.Release(this);
+            catch (System.OperationCanceledException) { }
         }
 
         /// <summary>
-        /// 총알의 전투 파라미터를 초기화합니다.
+        /// 현재 수명 주기의 CancellationTokenSource를 취소하고 정리합니다.
         /// </summary>
-        /// <param name="damage">공격력</param>
-        /// <param name="stunTime">스턴 시간 (초)</param>
-        /// <param name="speed">이동 속도</param>
-        /// <param name="isEvolved">진화 여부 (폭발 효과)</param>
-        public void Initialize(float damage, float stunTime, float speed, bool isEvolved)
+        private void CancelLifetimeCts()
         {
-            m_attackPower = damage;
-            m_stunTime = stunTime;
-            BulletSpeed = speed;
-            m_isEvolved = isEvolved;
-        }
-
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            if (!m_isActive || !other.CompareTag("Mob")) return;
-
-            if (other.TryGetComponent(out MobBase mob))
+            if (m_lifetimeCts != null)
             {
-                mob.TakeDamage(m_attackPower, m_stunTime);
+                m_lifetimeCts.Cancel();
+                m_lifetimeCts.Dispose();
+                m_lifetimeCts = null;
             }
-
-            if (m_isEvolved)
-            {
-                BulletExplosion();
-            }
-            else
-            {
-                ReleaseToPool();
-            }
-        }
-
-        /// <summary>
-        /// 풀에서 재사용 시 상태를 초기화합니다.
-        /// </summary>
-        public void ResetState()
-        {
-            m_isActive = true;
-            m_transform.DOKill();
-            m_transform.rotation = Quaternion.identity;
-            
-            m_lifetimeCts?.Cancel();
-            m_lifetimeCts?.Dispose();
-            m_lifetimeCts = null;
-            
-            m_lastPosition = m_transform.position;
-            m_stoppedTime = 0f;
         }
 
         #endregion

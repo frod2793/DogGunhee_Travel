@@ -5,8 +5,12 @@ namespace InGame.Weapon.Strategies
 {
     public class PoisonTrailStrategy : IWeaponStrategy
     {
+        #region 내부 변수
+
         private PoisonTrailEmitter m_emitterInstance;
         private WeaponDataSO m_data;
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {

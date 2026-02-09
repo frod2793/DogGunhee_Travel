@@ -6,7 +6,8 @@ namespace InGame.Weapon.Base
     [CreateAssetMenu(fileName = "NewWeaponData", menuName = "Game/Weapon/WeaponData")]
     public class WeaponDataSO : ScriptableObject
     {
-        [Header("기본 정보")]
+        #region 기본 정보
+        
         [Tooltip("XML 데이터와 연결되는 고유 키값입니다. (예: WP_BONE)")]
         public string SkillCode;
 
@@ -18,8 +19,11 @@ namespace InGame.Weapon.Base
 
         [Tooltip("무기에 대한 상세 설명입니다.")]
         [TextArea] public string Description;
+        
+        #endregion
 
-        [Header("기본 스탯")]
+        #region 기본 스탯
+        
         [Tooltip("무기의 기본 공격력입니다.")]
         public float BaseAttackPower;
 
@@ -37,8 +41,11 @@ namespace InGame.Weapon.Base
 
         [Tooltip("한 번에 발사되거나 생성되는 투사체의 개수입니다.")]
         public int BaseProjectileCount = 1;
+        
+        #endregion
 
-        [Header("프리팹 참조")]
+        #region 프리팹 참조
+        
         [Tooltip("발사될 투사체(Projectile) 프리팹입니다.")]
         public GameObject ProjectilePrefab;
 
@@ -47,13 +54,18 @@ namespace InGame.Weapon.Base
 
         [Tooltip("공격 시 발생할 파티클 등 이펙트 프리팹입니다.")]
         public GameObject EffectPrefab;
+        
+        #endregion
 
-        [Header("성장 테이블")]
+        #region 성장 테이블
+        
         [Tooltip("진화에 필요한 패시브 아이템 코드입니다. (예: PS_COLLAR)")]
         public string EvolutionItemCode;
 
         [Tooltip("레벨별 강화 정보 목록입니다.")]
         public List<WeaponUpgradeData> Upgrades;
+        
+        #endregion
     }
 
     [System.Serializable]

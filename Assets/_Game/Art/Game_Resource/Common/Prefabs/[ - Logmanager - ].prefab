@@ -47,4 +47,4 @@ MonoBehaviour:
   m_enableDebugLog: 1
   m_enableErrorLog: 1
   m_enableWarningLog: 1
-  m_logCategoryEnables: 0000000000000000000000000000000000000000
+  m_logCategoryEnables: 00000000000000000000000000000000000000000000

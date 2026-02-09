@@ -1,29 +1,21 @@
 using UnityEngine;
-using System.Collections.Generic;
 using InGame.Mob.MobBase;
-using InGame.Manager;
+using InGame.ObjectPool;
 
 namespace InGame.Weapon
 {
     /// <summary>
-    /// WeaponBallplay에 의해 생성된 공의 물리적 충돌과 데미지를 담당하는 클래스입니다.
+    /// 공놀이(Ball) 무기의 데미지 판정을 담당하는 컴포넌트입니다.
+    /// 구체 콜라이더를 통해 범위 내 적에게 데미지와 경직을 줍니다.
     /// </summary>
-
+    [RequireComponent(typeof(Collider2D))]
     public class BallDamageDealer : MonoBehaviour
     {
-        #region 스탯 필드
+        #region 내부 상태 및 캐시
 
         private float m_attackPower;
-        private float m_mobStunTime;
-        private float m_coolTime;
-
-        #endregion
-
-        #region 내부 변수
-
-        private PolygonCollider2D m_polygonCollider;
-        
-        private readonly Dictionary<int, float> m_damageCooldowns = new Dictionary<int, float>();
+        private float m_stunTime;
+        private Collider2D m_collider;
 
         #endregion
 
@@ -31,81 +23,33 @@ namespace InGame.Weapon
 
         private void Awake()
         {
-            m_polygonCollider = GetComponent<PolygonCollider2D>();
-            
-            if (m_polygonCollider == null)
+            m_collider = GetComponent<Collider2D>();
+            m_collider.isTrigger = true;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.CompareTag("Mob") && other.TryGetComponent<MobBase>(out var mob))
             {
-                Debug.LogError($"[BallDamageDealer] '{name}' 또는 자식 객체에서 PolygonCollider2D를 찾을 수 없습니다!");
-                return;
-            }
-
-            if (!m_polygonCollider.isTrigger)
-            {
-                Debug.LogWarning($"[BallDamageDealer] '{m_polygonCollider.name}'의 Collider가 Trigger가 아닙니다. 강제로 설정합니다.");
-                m_polygonCollider.isTrigger = true;
-            }
-        }
-
-        private void OnEnable()
-        {
-            // 활성화 시 초기화 로직 (필요시)
-        }
-
-        private void OnDisable()
-        {
-            m_damageCooldowns.Clear();
-        }
-
-        [SerializeField] private float m_rotationOffset = 0f;
-        public float RotationOffset => m_rotationOffset;
-
-        private void Start()
-        {
-            // 초기화 로직 (필요시)
-        }
-
-        private void OnTriggerStay2D(Collider2D other)
-        {
-            // 게임이 시작되지 않았거나 일시정지 상태면 무시
-            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
-
-            if (!other.CompareTag("Mob")) return;
-
-            int enemyId = other.GetInstanceID();
-
-            if (!m_damageCooldowns.TryGetValue(enemyId, out float nextTime) || Time.time >= nextTime)
-            {
-                if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
+                if (!mob.IsDead)
                 {
-                    mob.TakeDamage(m_attackPower, m_mobStunTime);
-                    m_damageCooldowns[enemyId] = Time.time + m_coolTime;
+                    mob.TakeDamage(m_attackPower, m_stunTime);
+                    mob.PlayDamageEffect();
                 }
-            }
-        }
-
-        private void OnTriggerExit2D(Collider2D other)
-        {
-            if (other.CompareTag("Mob"))
-            {
-                m_damageCooldowns.Remove(other.GetInstanceID());
             }
         }
 
         #endregion
 
-        #region 초기화
+        #region 초기화 및 제어
 
         /// <summary>
-        /// BallDamageDealer를 초기화합니다.
+        /// 데미지 딜러의 공격 수치를 설정합니다.
         /// </summary>
-        /// <param name="attackPower">공격력</param>
-        /// <param name="mobStunTime">스턴 시간</param>
-        /// <param name="coolTime">데미지 쿨타임</param>
-        public void Initialize(float attackPower, float mobStunTime, float coolTime)
+        public void Initialize(float damage, float stunTime)
         {
-            m_attackPower = attackPower;
-            m_mobStunTime = mobStunTime;
-            m_coolTime = coolTime;
+            m_attackPower = damage;
+            m_stunTime = stunTime;
         }
 
         #endregion

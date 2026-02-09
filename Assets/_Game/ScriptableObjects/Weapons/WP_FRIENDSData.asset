@@ -22,8 +22,8 @@ MonoBehaviour:
   BaseAttackSpeed: 1
   BaseAttackRange: 0
   BaseDuration: 0
-  BaseProjectileCount: 1
-  ProjectilePrefab: {fileID: 0}
+  BaseProjectileCount: 4
+  ProjectilePrefab: {fileID: 432755205661050745, guid: ef2895a6296aad04f8774815b8ca70a5, type: 3}
   ModelPrefab: {fileID: 0}
   EffectPrefab: {fileID: 0}
   EvolutionItemCode: PS_PROTEIN

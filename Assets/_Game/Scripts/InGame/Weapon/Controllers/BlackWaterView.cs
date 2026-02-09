@@ -9,13 +9,20 @@ namespace InGame.Weapon.Controllers
     {
         [Header("Tick Damage Settings")]
         [Tooltip("틱 데미지가 들어가는 간격입니다.")]
-        public float DamageTickInterval = 0.5f;
+        [UnityEngine.Serialization.FormerlySerializedAs("DamageTickInterval")]
+        [SerializeField] private float m_damageTickInterval = 0.5f;
+        public float DamageTickInterval => m_damageTickInterval;
 
         [Header("Slow Settings (Evolved)")]
         [Tooltip("적의 이동 속도를 감소시키는 비율 (0.3 = 30% 감소)")]
-        [Range(0f, 1f)] public float SlowAmount = 0.3f;
+        [Range(0f, 1f)] 
+        [UnityEngine.Serialization.FormerlySerializedAs("SlowAmount")]
+        [SerializeField] private float m_slowAmount = 0.3f;
+        public float SlowAmount => m_slowAmount;
         
         [Tooltip("슬로우 효과 지속 시간(초)입니다.")]
-        public float SlowDuration = 1.0f;
+        [UnityEngine.Serialization.FormerlySerializedAs("SlowDuration")]
+        [SerializeField] private float m_slowDuration = 1.0f;
+        public float SlowDuration => m_slowDuration;
     }
 }

@@ -44,7 +44,7 @@ namespace InGame.Manager
         private InGameViewModel m_viewModel;
 
         private GameManager m_gameManager;
-        private PlayerControll m_playerController;
+        private PlayerController m_playerController;
         private CancellationTokenSource m_skillSelectionTimerCts;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
@@ -102,10 +102,11 @@ namespace InGame.Manager
 
         private void SubscribeToEvents()
         {
-            PlayStateManager.OnGameStart += OnGameStart;
-            PlayStateManager.OnGamePause += OnGamePause;
-            PlayStateManager.OnGameResume += OnGameResume;
-            PlayStateManager.OnGameOver += OnGameOver;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGameStart += OnGameStart;
+            GameManager.Instance.State.OnGamePause += OnGamePause;
+            GameManager.Instance.State.OnGameResume += OnGameResume;
+            GameManager.Instance.State.OnGameOver += OnGameOver;
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
             SettingsData.OnSettingsChanged += ApplyJoystickSettings;
@@ -114,10 +115,11 @@ namespace InGame.Manager
 
         private void UnsubscribeFromEvents()
         {
-            PlayStateManager.OnGameStart -= OnGameStart;
-            PlayStateManager.OnGamePause -= OnGamePause;
-            PlayStateManager.OnGameResume -= OnGameResume;
-            PlayStateManager.OnGameOver -= OnGameOver;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGameStart -= OnGameStart;
+            GameManager.Instance.State.OnGamePause -= OnGamePause;
+            GameManager.Instance.State.OnGameResume -= OnGameResume;
+            GameManager.Instance.State.OnGameOver -= OnGameOver;
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
             SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
@@ -185,7 +187,7 @@ namespace InGame.Manager
         {
             if (m_mobWaveText == null)
             {
-                PlayStateManager.instance.StartGame();
+                GameManager.Instance.State.StartGame();
                 return;
             }
 
@@ -203,13 +205,13 @@ namespace InGame.Manager
                 // 카운트다운 종료 후 조이스틱 활성화
                 if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
 
-                PlayStateManager.instance.StartGame();
+                GameManager.Instance.State.StartGame();
             }
             catch (Exception ex)
             {
                 LogManager.LogError($"카운트다운 오류: {ex.Message}", LogManager.LogCategory.VamserLikeUI);
                 if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true); // 오류 시에도 활성화 보장
-                PlayStateManager.instance.StartGame();
+                GameManager.Instance.State.StartGame();
             }
         }
 

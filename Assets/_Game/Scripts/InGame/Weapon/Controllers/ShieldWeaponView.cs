@@ -10,20 +10,30 @@ namespace InGame.Weapon.Controllers
     {
         [Header("Animation Timings")]
         [Tooltip("공격 시작 후 충격파/부메랑이 발생하는 타이밍(초)입니다.")]
-        public float ImpactTriggerTime = 1.07f;
+        [UnityEngine.Serialization.FormerlySerializedAs("ImpactTriggerTime")]
+        [SerializeField] private float m_impactTriggerTime = 1.07f;
+        public float ImpactTriggerTime => m_impactTriggerTime;
         
         [Tooltip("공격 판정 후 애니메이션 마무리를 위해 대기하는 시간(초)입니다.")]
-        public float FollowThroughDelay = 0.5f;
+        [UnityEngine.Serialization.FormerlySerializedAs("FollowThroughDelay")]
+        [SerializeField] private float m_followThroughDelay = 0.5f;
+        public float FollowThroughDelay => m_followThroughDelay;
 
         [Header("Evolved (Boomerang) Settings")]
         [Tooltip("부메랑이 날아가는 속도입니다.")]
-        public float BoomerangSpeed = 5f;
+        [UnityEngine.Serialization.FormerlySerializedAs("BoomerangSpeed")]
+        [SerializeField] private float m_boomerangSpeed = 5f;
+        public float BoomerangSpeed => m_boomerangSpeed;
         
         [Tooltip("부메랑이 반환을 시작하기 전 대기 시간(초)입니다.")]
-        public float ReturnDelay = 0.1f;
+        [UnityEngine.Serialization.FormerlySerializedAs("ReturnDelay")]
+        [SerializeField] private float m_returnDelay = 0.1f;
+        public float ReturnDelay => m_returnDelay;
         
         [Tooltip("부메랑의 초당 회전 수입니다.")]
-        public float RotationsPerSecond = 2.5f;
+        [UnityEngine.Serialization.FormerlySerializedAs("RotationsPerSecond")]
+        [SerializeField] private float m_rotationsPerSecond = 2.5f;
+        public float RotationsPerSecond => m_rotationsPerSecond;
 
         #region Helper Methods
 
@@ -32,9 +42,9 @@ namespace InGame.Weapon.Controllers
         /// </summary>
         public void ValidateSettings()
         {
-            if (ImpactTriggerTime <= 0) ImpactTriggerTime = 1.07f;
-            if (FollowThroughDelay <= 0) FollowThroughDelay = 0.5f;
-            if (BoomerangSpeed <= 0) BoomerangSpeed = 5f;
+            if (m_impactTriggerTime <= 0) m_impactTriggerTime = 1.07f;
+            if (m_followThroughDelay <= 0) m_followThroughDelay = 0.5f;
+            if (m_boomerangSpeed <= 0) m_boomerangSpeed = 5f;
         }
 
         #endregion

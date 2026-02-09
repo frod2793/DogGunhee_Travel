@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6526120700562935947}
-  - component: {fileID: 4210713427547025171}
   m_Layer: 1
   m_Name: WeaPhon_Flame
   m_TagString: Player_Attack
@@ -32,33 +31,3 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4210713427547025171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8467117305479902176}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4afbf311d9589924190674de7ee1a15c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackPower: 50
-  coolTime: 0
-  attackSpeed: 0
-  attackRange: 0
-  mobStunTime: 0
-  isShooting: 0
-  skillCode: 
-  upgradeItemCode: 
-  Thumnail: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}
-  m_currentLevel: 1
-  isEvolved: 0
-  weaphonState: 0
-  m_flamePillarPrefab: {fileID: 3797206666192712404, guid: ffdc961651f29439ea5c5ae26284c606, type: 3}
-  m_maxActivePillars: 3
-  m_poolSize: 10
-  m_dotDamageRatio: 0.5
-  m_dotDuration: 3
-  m_dotTicks: 3

@@ -11,8 +11,12 @@ namespace InGame.Weapon.Strategies
     /// </summary>
     public class PearlStrategy : IWeaponStrategy
     {
+        #region 내부 변수
+
         private PearlWeaponLogic m_logic;
         private PearlWeaponView m_view;
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {

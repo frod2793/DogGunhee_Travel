@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace InGame.Player.Player_Base
 {
@@ -9,19 +10,35 @@ namespace InGame.Player.Player_Base
     [CreateAssetMenu(fileName = "CharacterConfig", menuName = "Game/Player/CharacterConfig")]
     public class CharacterConfigSO : ScriptableObject
     {
+        #region 설정 데이터
+
         [Header("기본 정보")]
-        public string CharacterName;
-        
-        [Header("사운드 키")]
-        public SoundKeys HitSoundKey = SoundKeys.playerHit;
-        public SoundKeys DeathSoundKey = SoundKeys.PlayerDeth;
+        [FormerlySerializedAs("CharacterName")] [SerializeField] private string m_characterName;
 
-        [Header("초기 스탯")]
-        public float BaseMaxHealth = 100f;
-        public float BaseMoveSpeed = 5f;
-        public float BaseAttackPower = 10f;
+        [Header("사운드 설정")]
+        [FormerlySerializedAs("HitSoundKey")] [SerializeField] private SoundKeys m_hitSoundKey = SoundKeys.playerHit;
+        [FormerlySerializedAs("DeathSoundKey")] [SerializeField] private SoundKeys m_deathSoundKey = SoundKeys.PlayerDeth;
 
-        [Header("이펙트 설정 (필요 시)")]
-        public GameObject HitEffectPrefab;
+        [Header("초기 능력치")]
+        [FormerlySerializedAs("BaseMaxHealth")] [SerializeField] private float m_baseMaxHealth = 100f;
+        [FormerlySerializedAs("BaseMoveSpeed")] [SerializeField] private float m_baseMoveSpeed = 5f;
+        [FormerlySerializedAs("BaseAttackPower")] [SerializeField] private float m_baseAttackPower = 10f;
+
+        [Header("시각 효과")]
+        [FormerlySerializedAs("HitEffectPrefab")] [SerializeField] private GameObject m_hitEffectPrefab;
+
+        #endregion
+
+        #region 프로퍼티
+
+        public string CharacterName => m_characterName;
+        public SoundKeys HitSoundKey => m_hitSoundKey;
+        public SoundKeys DeathSoundKey => m_deathSoundKey;
+        public float BaseMaxHealth => m_baseMaxHealth;
+        public float BaseMoveSpeed => m_baseMoveSpeed;
+        public float BaseAttackPower => m_baseAttackPower;
+        public GameObject HitEffectPrefab => m_hitEffectPrefab;
+
+        #endregion
     }
 }

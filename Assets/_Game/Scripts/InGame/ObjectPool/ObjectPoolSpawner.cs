@@ -155,7 +155,7 @@ namespace InGame
 
             InitializePools();
 
-            if (PlayStateManager.instance.IsPlaying)
+            if (GameManager.Instance.State != null && GameManager.Instance.State.IsPlaying)
             {
                 m_waveSystem.Start();
             }
@@ -171,17 +171,19 @@ namespace InGame
         private void SubscribeEvents()
         {
             GameManager.OnPlayerChanged += OnPlayerChanged;
-            PlayStateManager.OnGamePause += OnPause;
-            PlayStateManager.OnGameResume += OnResume;
-            PlayStateManager.OnGameOver += OnGameOver;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGamePause += OnPause;
+            GameManager.Instance.State.OnGameResume += OnResume;
+            GameManager.Instance.State.OnGameOver += OnGameOver;
         }
 
         private void UnsubscribeEvents()
         {
             GameManager.OnPlayerChanged -= OnPlayerChanged;
-            PlayStateManager.OnGamePause -= OnPause;
-            PlayStateManager.OnGameResume -= OnResume;
-            PlayStateManager.OnGameOver -= OnGameOver;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGamePause -= OnPause;
+            GameManager.Instance.State.OnGameResume -= OnResume;
+            GameManager.Instance.State.OnGameOver -= OnGameOver;
 
             if (m_waveSystem != null)
             {

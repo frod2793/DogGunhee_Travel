@@ -9,10 +9,14 @@ namespace InGame.Weapon.Strategies
 {
     public class BoomerangStrategy : IWeaponStrategy
     {
+        #region 내부 변수
+
         private BoomerangWeaponLogic m_logic;
         private Transform m_firePoint;
         private bool m_isAttacking;
         private int m_currentActiveCount = 0;
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {

@@ -13,11 +13,15 @@ namespace InGame.Weapon
     /// </summary>
     public static class WeaponFactory
     {
-        #region 팩토리 등록 시스템
-
+        #region 내부 상태 및 팩토리 딕셔너리
+        
         // SkillCode와 생성 함수를 매핑하는 딕셔너리
         private static readonly Dictionary<string, Func<IWeaponController>> s_controllerFactories 
             = new Dictionary<string, Func<IWeaponController>>();
+            
+        #endregion
+
+        #region 팩토리 등록 시스템
 
         /// <summary>
         /// 새로운 무기 컨트롤러 팩토리를 등록합니다.
@@ -113,6 +117,10 @@ namespace InGame.Weapon
             return controller;
         }
 
+        #endregion
+
+        #region 팩토리 명명 확인
+        
         /// <summary>
         /// 특정 SkillCode가 등록되어 있는지 확인합니다.
         /// </summary>

@@ -102,7 +102,7 @@ namespace InGame.Weapon.Controllers
         {
             if (m_boomerangPrefab != null)
             {
-                WeaponPoolManager.Instance.GetOrAddPool<shieldProjectile>(
+                WeaponPoolManager.Instance.GetOrAddPool<ShieldProjectile>(
                     CreateBoomerangProjectile,
                     OnGetBoomerangProjectile,
                     OnReleaseBoomerangProjectile,
@@ -252,7 +252,7 @@ namespace InGame.Weapon.Controllers
             {
                 var (direction, rotation) = m_logic.CalculateBoomerangLaunchInfo(i);
 
-                var boomerang = WeaponPoolManager.Instance.Get<shieldProjectile>();
+                var boomerang = WeaponPoolManager.Instance.Get<ShieldProjectile>();
                 if (boomerang != null)
                 {
                     boomerang.transform.SetPositionAndRotation(spawnPos, rotation);
@@ -280,15 +280,15 @@ namespace InGame.Weapon.Controllers
 
         #region 오브젝트 풀 델리게이트
 
-        private shieldProjectile CreateBoomerangProjectile()
+        private ShieldProjectile CreateBoomerangProjectile()
         {
             if (m_boomerangPrefab == null) return null;
-            return UnityEngine.Object.Instantiate(m_boomerangPrefab).GetComponent<shieldProjectile>();
+            return UnityEngine.Object.Instantiate(m_boomerangPrefab).GetComponent<ShieldProjectile>();
         }
 
-        private void OnGetBoomerangProjectile(shieldProjectile p) => p.gameObject.SetActive(true);
-        private void OnReleaseBoomerangProjectile(shieldProjectile p) => p.gameObject.SetActive(false);
-        private void OnDestroyBoomerangProjectile(shieldProjectile p)
+        private void OnGetBoomerangProjectile(ShieldProjectile p) => p.gameObject.SetActive(true);
+        private void OnReleaseBoomerangProjectile(ShieldProjectile p) => p.gameObject.SetActive(false);
+        private void OnDestroyBoomerangProjectile(ShieldProjectile p)
         {
             if (p != null) UnityEngine.Object.Destroy(p.gameObject);
         }

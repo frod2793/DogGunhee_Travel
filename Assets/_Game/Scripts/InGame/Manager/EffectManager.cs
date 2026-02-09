@@ -14,52 +14,83 @@ namespace InGame
     /// </summary>
     public class EffectManager : MonoBehaviour
     {
-        public static EffectManager Instance { get; private set; }
+        #region 싱글톤
+
+        private static EffectManager s_instance;
+
+        /// <summary>EffectManager의 전역 싱글톤 인스턴스입니다.</summary>
+        public static EffectManager Instance
+        {
+            get
+            {
+                if (s_instance == null)
+                {
+                    s_instance = FindFirstObjectByType<EffectManager>();
+                }
+                return s_instance;
+            }
+        }
+
+        #endregion
+
+        #region 인스펙터 필드
 
         [Tooltip("이펙트 종류와 프리팹을 매핑해놓은 ScriptableObject 데이터입니다.")]
-        [SerializeField] private EffectData effectData;
+        [SerializeField] private EffectData m_effectData;
 
         [Header("카메라 흔들림 효과")]
         [Tooltip("플레이어 피격 시 카메라 흔들림 지속 시간입니다.")]
-        [SerializeField] private float shakeDuration = 0.2f;
+        [SerializeField] private float m_shakeDuration = 0.2f;
         [Tooltip("플레이어 피격 시 카메라 흔들림 강도입니다.")]
-        [SerializeField] private float shakeStrength = 0.5f;
+        [SerializeField] private float m_shakeStrength = 0.5f;
         [Tooltip("플레이어 피격 시 카메라 흔들림의 진동수입니다.")]
-        [SerializeField] private int shakeVibrato = 10;
+        [SerializeField] private int m_shakeVibrato = 10;
 
-        private Dictionary<EffectType, IObjectPool<PooledEffect>> _effectPools;
-        private Dictionary<EffectType, GameObject> _effectPrefabs;
-        private Camera _mainCamera;
-        private Tween _cameraShakeTween;
+        #endregion
+
+        #region 내부 필드
+
+        private Dictionary<EffectType, IObjectPool<PooledEffect>> m_effectPools;
+        private Dictionary<EffectType, GameObject> m_effectPrefabs;
+        private Camera m_mainCamera;
+        private Tween m_cameraShakeTween;
+
+        #endregion
+
+        #region Unity 라이프사이클
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (s_instance != null && s_instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
-            _mainCamera = Camera.main;
+            s_instance = this;
+            m_mainCamera = Camera.main;
 
             InitializePools();
         }
+
+        #endregion
+
+        #region 초기화 로직
 
         /// <summary>
         /// EffectData를 기반으로 각 이펙트 타입에 대한 오브젝트 풀을 생성합니다.
         /// </summary>
         private void InitializePools()
         {
-            _effectPools = new Dictionary<EffectType, IObjectPool<PooledEffect>>();
-            _effectPrefabs = new Dictionary<EffectType, GameObject>();
+            m_effectPools = new Dictionary<EffectType, IObjectPool<PooledEffect>>();
+            m_effectPrefabs = new Dictionary<EffectType, GameObject>();
 
-            if (effectData == null)
+            if (m_effectData == null)
             {
                 LogManager.LogError("EffectData가 EffectManager에 할당되지 않았습니다.", LogManager.LogCategory.EffectManager, this);
                 return;
             }
 
-            foreach (var mapping in effectData.effects)
+            foreach (var mapping in m_effectData.effects)
             {
                 if (mapping.prefab == null)
                 {
@@ -74,8 +105,8 @@ namespace InGame
                     LogManager.LogWarning($"'{mapping.prefab.name}' 프리팹에 PooledEffect 컴포넌트를 추가했습니다. 프리팹을 확인하고 저장해주세요.", LogManager.LogCategory.EffectManager);
                 }
 
-                _effectPrefabs[mapping.type] = mapping.prefab;
-                _effectPools[mapping.type] = new ObjectPool<PooledEffect>(
+                m_effectPrefabs[mapping.type] = mapping.prefab;
+                m_effectPools[mapping.type] = new ObjectPool<PooledEffect>(
                     createFunc: () => CreateEffect(mapping.type),
                     actionOnGet: OnGetEffect,
                     actionOnRelease: OnReleaseEffect,
@@ -85,6 +116,26 @@ namespace InGame
             }
         }
 
+        private PooledEffect CreateEffect(EffectType type)
+        {
+            var prefab = m_effectPrefabs[type];
+            var instance = Instantiate(prefab, transform); // EffectManager를 부모로 하여 생성
+            var pooledEffect = instance.GetComponent<PooledEffect>();
+            pooledEffect.SetPool(m_effectPools[type]);
+            return pooledEffect;
+        }
+
+        private void OnGetEffect(PooledEffect effect) => effect.gameObject.SetActive(true);
+        private void OnReleaseEffect(PooledEffect effect) => effect.gameObject.SetActive(false);
+        private void OnDestroyEffect(PooledEffect effect)
+        {
+            if (effect != null) Destroy(effect.gameObject);
+        }
+
+        #endregion
+
+        #region 이펙트 재생 (Pool)
+
         /// <summary>
         /// 지정된 타입의 이펙트를 특정 위치와 회전으로 재생합니다.
         /// </summary>
@@ -93,13 +144,13 @@ namespace InGame
         /// <param name="rotation">이펙트의 초기 회전값</param>
         public void PlayEffect(EffectType type, Vector3 position, Quaternion rotation)
         {
-            if (!_effectPools.ContainsKey(type))
+            if (!m_effectPools.ContainsKey(type))
             {
                 LogManager.LogWarning($"'{type}' 타입에 대한 이펙트 풀이 존재하지 않습니다.", LogManager.LogCategory.EffectManager);
                 return;
             }
 
-            var effect = _effectPools[type].Get();
+            var effect = m_effectPools[type].Get();
             effect.transform.SetPositionAndRotation(position, rotation);
         }
 
@@ -111,44 +162,34 @@ namespace InGame
             PlayEffect(type, position, Quaternion.identity);
         }
 
-        // 오브젝트 풀 델리게이트 메서드들
-        private PooledEffect CreateEffect(EffectType type)
-        {
-            var prefab = _effectPrefabs[type];
-            var instance = Instantiate(prefab, transform); // EffectManager를 부모로 하여 생성
-            var pooledEffect = instance.GetComponent<PooledEffect>();
-            pooledEffect.SetPool(_effectPools[type]);
-            return pooledEffect;
-        }
+        #endregion
 
-        private void OnGetEffect(PooledEffect effect) => effect.gameObject.SetActive(true);
-        private void OnReleaseEffect(PooledEffect effect) => effect.gameObject.SetActive(false);
-        private void OnDestroyEffect(PooledEffect effect)
-        {
-            if (effect != null) Destroy(effect.gameObject);
-        }
+        #region 카메라 효과 (DOTween)
 
         /// <summary>
         /// 플레이어 피격 시 카메라 흔들림 효과를 재생합니다.
         /// </summary>
         public void PlayPlayerHitCameraShake()
         {
-            if (_mainCamera == null) return;
+            if (m_mainCamera == null) return;
 
             // 이미 흔들림 효과가 진행 중이라면, 초기화 후 새로 시작합니다.
-            _cameraShakeTween?.Kill();
+            m_cameraShakeTween?.Kill();
 
             // 카메라 흔들림 효과를 생성하고 트윈을 저장합니다.
-            _cameraShakeTween = _mainCamera.DOShakePosition(
-                shakeDuration,
-                shakeStrength,
-                shakeVibrato
-            ).SetTarget(_mainCamera); // 트윈의 생명주기를 카메라에 연결
+            m_cameraShakeTween = m_mainCamera.DOShakePosition(
+                m_shakeDuration,
+                m_shakeStrength,
+                m_shakeVibrato
+            ).SetTarget(m_mainCamera); // 트윈의 생명주기를 카메라에 연결
         }
-        
+
+        #endregion
+
+        #region 트윈 이펙트 (SpriteRenderer)
+
         /// <summary>
         /// 플레이어 레벨업 또는 스킬 선택 시 성장 이펙트를 재생합니다.
-        /// 이펙트는 플레이어의 위치에서 재생됩니다.
         /// </summary>
         /// <param name="targetRenderer">효과를 적용할 플레이어의 SpriteRenderer</param>
         public void PlayLevelUpEffect(SpriteRenderer targetRenderer)
@@ -168,13 +209,8 @@ namespace InGame
             sequence.SetTarget(targetRenderer.transform);
         }
 
-        // 몹 피격 효과를 위한 큐 제거 (동시 다발적 피격 처리를 위해 즉시 실행으로 변경)
-        
-        #region 인라인 이펙트 (Inline Effects)
-
         /// <summary>
         /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 즉시 적용합니다.
-        /// (플레이어 피격과 같이 우선순위가 높은 효과에 사용)
         /// </summary>
         /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
         /// <param name="flashColor">깜빡일 색상 (기본값: Red)</param>
@@ -191,19 +227,14 @@ namespace InGame
             DOTween.Sequence()
                 .Append(targetRenderer.DOColor(targetColor, 0.1f))
                 .Append(targetRenderer.DOColor(Color.white, 0.1f))
-                .SetTarget(targetRenderer.transform); // 트윈의 생명주기를 대상 오브젝트에 연결
+                .SetTarget(targetRenderer.transform);
         }
 
         /// <summary>
-        /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 적용합니다.
-        /// (이전에는 큐를 사용했으나, 반응성을 위해 즉시 실행으로 변경됨)
+        /// 대상 SpriteRenderer에 피격 시 붉게 깜빡이는 효과를 대기 없이 즉시 실행합니다.
         /// </summary>
-        /// <param name="targetRenderer">효과를 적용할 SpriteRenderer</param>
-        /// <param name="flashColor">깜빡일 색상 (기본값: Red)</param>
-        /// <returns>효과 완료를 기다릴 수 있는 UniTask</returns>
         public UniTask PlayQueuedFlashEffect(SpriteRenderer targetRenderer, Color? flashColor = null)
         {
-            // 큐 대기 없이 즉시 실행
             PlayImmediateFlashEffect(targetRenderer, flashColor);
             return UniTask.CompletedTask;
         }
@@ -211,10 +242,6 @@ namespace InGame
         /// <summary>
         /// 대상 Transform에 넉백 효과를 적용합니다.
         /// </summary>
-        /// <param name="targetTransform">효과를 적용할 Transform</param>
-        /// <param name="direction">밀려날 방향</param>
-        /// <param name="distance">밀려날 거리</param>
-        /// <param name="duration">넉백 지속 시간</param>
         public void PlayKnockbackEffect(Transform targetTransform, Vector3 direction, float distance, float duration)
         {
             if (targetTransform == null) return;

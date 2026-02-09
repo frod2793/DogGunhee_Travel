@@ -7,14 +7,18 @@ namespace InGame.Weapon.Strategies
 {
     /// <summary>
     /// 플레이어 주변에 영구적으로 지속되는 오라(Aura)형 무기 전략입니다.
-    /// (예: 마늘, 블랙워터 등)
     /// </summary>
     /// <typeparam name="TEffect">IAuraEffect를 구현하는 MonoBehaviour</typeparam>
     public class FollowingAuraStrategy<TEffect> : IWeaponStrategy 
         where TEffect : MonoBehaviour, IAuraEffect
     {
+        #region 내부 변수
+
         private TEffect m_activeAura;
-        private bool m_isInitialized = false;
+
+        private Transform m_owner;
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {
@@ -41,8 +45,6 @@ namespace InGame.Weapon.Strategies
             );
         }
 
-        private Transform m_owner;
-
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
             m_owner = owner;
@@ -60,9 +62,7 @@ namespace InGame.Weapon.Strategies
                     // 회전 초기화 (필요시)
                     m_activeAura.transform.rotation = Quaternion.identity;
                     
-                    // 초기화
                     m_activeAura.Initialize(stats);
-                    m_isInitialized = true;
                 }
             }
             else

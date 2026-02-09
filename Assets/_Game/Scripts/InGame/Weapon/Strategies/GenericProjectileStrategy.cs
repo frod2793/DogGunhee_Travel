@@ -17,7 +17,11 @@ namespace InGame.Weapon.Strategies
     public class GenericProjectileStrategy<TProjectile> : IWeaponStrategy 
         where TProjectile : MonoBehaviour, IProjectile
     {
+        #region 내부 변수
+
         private WeaponDataSO m_data;
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {

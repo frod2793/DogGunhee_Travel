@@ -7,23 +7,30 @@ using InGame.Weapon.Base;
 namespace InGame.Player.Player_Base
 {
     /// <summary>
-    /// 플레이어의 공통 기능을 담당하는 베이스 클래스입니다.
+    /// 플레이어의 공통 데이터와 핵심 시스템(HP, 경험치, 무기 관리 등)을 관리하는 베이스 클래스입니다.
     /// </summary>
     public class PlayerBase : MonoBehaviour
     {
-        #region 구성 요소
+        #region 설정 데이터
+
         [Header("캐릭터 설정")]
         [SerializeField] private CharacterConfigSO m_config;
         
-        [Header("데이터 설정")]
+        [Header("데이터 및 시스템")]
         [SerializeField] private PlayerStats m_stats = new PlayerStats();
-        
+
+        #endregion
+
+        #region 내부 상태 및 캐시
+
         private ExperienceSystem m_expSystem = new ExperienceSystem();
         private PlayerCollisionHandler m_collisionHandler;
         private PlayerWeaponManager m_weaponManager;
+
         #endregion
 
-        #region 프로퍼티 (External Access)
+        #region 프로퍼티
+
         public float AttackPower { get => m_stats.AttackPower; set => m_stats.AttackPower = value; }
         public float CoolTime { get => m_stats.CoolTime; set => m_stats.CoolTime = value; }
         public float AttackSpeed { get => m_stats.AttackSpeed; set => m_stats.AttackSpeed = value; }
@@ -39,6 +46,7 @@ namespace InGame.Player.Player_Base
                 OnHealthChanged?.Invoke(m_stats.CurrentHealth, m_stats.MaxHealth); 
             } 
         }
+        
         public float CurrentHealth => m_stats.CurrentHealth;
         public float Defense { get => m_stats.Defense; set => m_stats.Defense = value; }
         public float MoveSpeed { get => m_stats.MoveSpeed; set => m_stats.MoveSpeed = value; }
@@ -48,25 +56,25 @@ namespace InGame.Player.Player_Base
         public float MaxExp => m_expSystem.MaxExp;
         
         public IReadOnlyList<IWeaponController> Weapons => m_weaponManager?.Controllers;
+
         #endregion
 
-        #region 정적 및 인스턴스 이벤트
+        #region 이벤트
+
         public static event Action<float> OnLevelUp;
         public static event Action<float, float> OnExpChanged;
         public event Action<float, float> OnHealthChanged;
+
         #endregion
 
-        #region 초기화
-        /// <summary>
-        /// [\ub9ac\ud329\ud1a0\ub9c1] OnEnable\uc5d0\uc11c\ub294 Initialize\uac00 \ud638\ucd9c\ub418\uc9c0 \uc54a\uc558\uc744 \uacbd\uc6b0\ub97c \ub300\ube44\ud55c \ud3f4\ubc31 \ub85c\uc9c1\uc744 \uc218\ud589\ud569\ub2c8\ub2e4.
-        /// \uc678\ubd80\uc5d0\uc11c \uba85\uc2dc\uc801\uc73c\ub85c Initialize()\ub97c \ud638\ucd9c\ud558\ub294 \uac83\uc744 \uad8c\uc7a5\ud569\ub2c8\ub2e4.
-        /// </summary>
+        #region Unity 라이프사이클
+
         public virtual void OnEnable()
         {
-            // Initialize\uac00 \ud638\ucd9c\ub418\uc9c0 \uc54a\uc558\uc73c\uba74 \uae30\ubcf8\uac12\uc73c\ub85c \ucd08\uae30\ud654 (\ud638\ud658\uc131 \uc720\uc9c0)
+            // Init이 명시적으로 호출되지 않았을 경우를 대비한 안전장치
             if (m_weaponManager == null || m_expSystem == null)
             {
-                Initialize();
+                Init();
             }
         }
 
@@ -75,17 +83,26 @@ namespace InGame.Player.Player_Base
             UnsubscribeEvents();
         }
 
+        private void Update()
+        {
+            m_weaponManager?.OnUpdate();
+        }
+
+        private void LateUpdate()
+        {
+            m_weaponManager?.OnLateUpdate();
+        }
+
+        #endregion
+
         #region 초기화 및 의존성 주입
 
         /// <summary>
-        /// [리팩토링] 외부에서 의존성을 주입받아 초기화합니다.
-        /// GameManager나 Builder에서 호출하세요.
+        /// 플레이어 시스템을 초기화합니다. 외부(GameManager 등)에서 의존성 주입이 가능합니다.
         /// </summary>
-        /// <param name="weaponManager">무기 매니저 (null이면 내부 생성)</param>
-        /// <param name="expSystem">경험치 시스템 (null이면 내부 생성)</param>
-        public void Initialize(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null)
+        public void Init(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null)
         {
-            // 의존성 주입 또는 기본값 생성
+            // 의존성 주입 처리
             m_weaponManager = weaponManager ?? new PlayerWeaponManager(transform);
             m_expSystem = expSystem ?? new ExperienceSystem();
             
@@ -93,6 +110,7 @@ namespace InGame.Player.Player_Base
             InitializeSystems();
             SubscribeEvents();
             
+            // 초기 상태 알림
             OnLevelUp?.Invoke(Level);
             OnExpChanged?.Invoke(CurrentExp, MaxExp);
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
@@ -110,33 +128,71 @@ namespace InGame.Player.Player_Base
             m_collisionHandler.Init(this);
         }
 
-        #endregion
-
-        private void Update()
-        {
-            m_weaponManager?.OnUpdate();
-        }
-
-        private void LateUpdate()
-        {
-            m_weaponManager?.OnLateUpdate();
-        }
-
         private void InitializeSystems()
         {
             float maxHp = m_config != null ? m_config.BaseMaxHealth : 100f;
             float speed = m_config != null ? m_config.BaseMoveSpeed : 5f;
             float attack = m_config != null ? m_config.BaseAttackPower : 10f;
 
-            m_stats.Initialize(maxHp, speed, attack);
+            m_stats.Init(maxHp, speed, attack);
             m_expSystem.Init();
         }
 
+        #endregion
+
+        #region 전투 및 데미지 로직
+
+        /// <summary>
+        /// 플레이어에게 데미지를 적용하고 사망 여부를 확인합니다.
+        /// </summary>
+        private void ApplyDamage(float damageAmount)
+        {
+            m_stats.ApplyDamage(damageAmount);
+            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+            EffectManager.Instance?.PlayPlayerHitCameraShake();
+            PlayHitEffect();
+            
+            if (m_stats.IsDead) Player_Die();
+        }
+
+        public virtual void Player_attack(Vector3 attackAngle) { }
+        
+        protected virtual void PlayHitEffect() 
+        { 
+            SoundKeys hitSound = m_config != null ? m_config.HitSoundKey : SoundKeys.playerHit;
+            SoundManager.PlaySound(Sound.SFX, hitSound, false);
+        }
+
+        public virtual void Player_Die()
+        {
+            if (GameManager.Instance.State != null)
+            {
+                GameManager.Instance.State.PlayState = PlayStateManager.GameState.GameOver;
+            }
+            
+            SoundKeys deathSound = m_config != null ? m_config.DeathSoundKey : SoundKeys.PlayerDeth;
+            SoundManager.PlaySound(Sound.SFX, deathSound, false);
+        }
+
+        #endregion
+
+        #region 무기 제어 (위임)
+
+        public void AddController(IWeaponController weapon) => m_weaponManager?.AddController(weapon);
+        public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
+        public void SetTargetProvider(Func<Vector3> provider) => m_weaponManager?.SetTargetProvider(provider);
+        public void EquipWeapon(WeaponDataSO data) => m_weaponManager?.EquipWeapon(data);
+
+        #endregion
+
+        #region 이벤트 핸들러
+
         private void SubscribeEvents()
         {
-            PlayStateManager.OnGameOver += OnGameOver;
-            PlayStateManager.OnGamePause += OnGamePause;
-            PlayStateManager.OnGameResume += OnGameResume;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGameOver += OnGameOver;
+            GameManager.Instance.State.OnGamePause += OnGamePause;
+            GameManager.Instance.State.OnGameResume += OnGameResume;
             
             m_expSystem.OnLevelUp += HandleLevelUp;
             m_expSystem.OnExpChanged += (cur, max) => OnExpChanged?.Invoke(cur, max);
@@ -151,35 +207,15 @@ namespace InGame.Player.Player_Base
 
         private void UnsubscribeEvents()
         {
-            PlayStateManager.OnGameOver -= OnGameOver;
-            PlayStateManager.OnGamePause -= OnGamePause;
-            PlayStateManager.OnGameResume -= OnGameResume;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGameOver -= OnGameOver;
+            GameManager.Instance.State.OnGamePause -= OnGamePause;
+            GameManager.Instance.State.OnGameResume -= OnGameResume;
         }
-        #endregion
 
-        #region 게임 상태 핸들러
         private void OnGameResume() => m_collisionHandler?.SetColliderActive(true);
         private void OnGamePause() => m_collisionHandler?.SetColliderActive(false);
         private void OnGameOver() => m_collisionHandler?.SetColliderActive(false);
-        #endregion
-
-        #region 무기 관리 (위임)
-        public void AddController(IWeaponController weapon) => m_weaponManager?.AddController(weapon);
-        public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
-        public void SetTargetProvider(Func<Vector3> provider) => m_weaponManager?.SetTargetProvider(provider);
-        public void EquipWeapon(WeaponDataSO data) => m_weaponManager?.EquipWeapon(data);
-        #endregion
-
-        #region 데미지 및 경험치 처리
-        private void ApplyDamage(float damageAmount)
-        {
-            m_stats.ApplyDamage(damageAmount);
-            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
-            EffectManager.Instance?.PlayPlayerHitCameraShake();
-            PlayHitEffect();
-            
-            if (m_stats.IsDead) Player_Die();
-        }
 
         private void HandleLevelUp(int level)
         {
@@ -194,31 +230,13 @@ namespace InGame.Player.Player_Base
                 PlayerDataManager.Instance.PlayerData.ingameCoin += coinValue;
             }
         }
-        #endregion
 
-        #region 플레이어 액션
-        public virtual void Player_attack(Vector3 attackAngle) { }
-        
-        protected virtual void PlayHitEffect() 
-        { 
-            SoundKeys hitSound = m_config != null ? m_config.HitSoundKey : SoundKeys.playerHit;
-            SoundManager.PlaySound(Sound.SFX, hitSound, false);
-        }
-
-        public virtual void Player_Die()
-        {
-            if (PlayStateManager.instance != null)
-            {
-                PlayStateManager.instance.PlayState = PlayStateManager.GameState.GameOver;
-            }
-            
-            SoundKeys deathSound = m_config != null ? m_config.DeathSoundKey : SoundKeys.PlayerDeth;
-            SoundManager.PlaySound(Sound.SFX, deathSound, false);
-        }
         #endregion
 
         #region 유틸리티
+
         public float GetExpProgress() => m_expSystem.GetProgress();
+
         #endregion
     }
 }

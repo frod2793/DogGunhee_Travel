@@ -5,19 +5,17 @@ using InGame.Mob.MobBase;
 using InGame.ObjectPool;
 using UnityEngine.Rendering.Universal;
 using DG.Tweening;
-using UnityEngine.Pool;
-using InGame.vamsir;
 using InGame.Weapon.Logic;
+using System.Threading;
 
 namespace InGame.Weapon
 {
     /// <summary>
     /// 불기둥(Flame Pillar)의 시각적 연출과 충돌 감지를 담당하는 View 컴포넌트입니다.
-    /// 비즈니스 로직은 FlamePillarLogic에서 처리합니다.
     /// </summary>
     public class FlamePillar : MonoBehaviour
     {
-        #region 인스펙터 설정
+        #region 설정 데이터
 
         [Header("애니메이터 설정")]
         [Tooltip("공격 전 경고 애니메이션을 담당하는 애니메이터")]
@@ -44,10 +42,9 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 내부 변수
+        #region 내부 상태 및 캐시
 
         private FlamePillarLogic m_logic;
-        
         private ContactFilter2D m_contactFilter;
         private readonly List<Collider2D> m_hitResults = new List<Collider2D>(20);
 
@@ -74,15 +71,14 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 공개 메서드
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 불기둥을 지정된 위치에 활성화하고 공격 시정과를 시작합니다.
+        /// 불기둥을 지정된 위치에 활성화하고 공격 시퀀스를 시작합니다.
         /// </summary>
         public void Activate(Vector3 position, FlamePillarLogic logic)
         {
             m_logic = logic;
-            // 로직 상태 리셋 (HashSet 등)
             m_logic.Reset();
             
             ResetViewState();
@@ -93,13 +89,6 @@ namespace InGame.Weapon
             AttackSequenceAsync().Forget();
         }
 
-        #endregion
-
-        #region 내부 시각 로직
-
-        /// <summary>
-        /// View 상태를 초기화합니다.
-        /// </summary>
         private void ResetViewState()
         {
             if (m_flameLight != null)
@@ -119,7 +108,6 @@ namespace InGame.Weapon
                 foreach (var anim in m_flameAnimators)
                 {
                     if (anim == null) continue;
-                    
                     if (anim.TryGetComponent(out SpriteRenderer sr))
                     {
                         DOTween.Kill(sr);
@@ -128,13 +116,19 @@ namespace InGame.Weapon
                     anim.gameObject.SetActive(false);
                 }
             }
-            
             if (m_damageCollider != null) m_damageCollider.enabled = false;
         }
 
-        /// <summary>
-        /// 경고 -> 공격 -> 종료 시퀀스
-        /// </summary>
+        private void FinishAndRelease()
+        {
+            if (m_flameLight != null) m_flameLight.gameObject.SetActive(false);
+            WeaponPoolManager.Instance.Release(this);
+        }
+
+        #endregion
+
+        #region 제어 로직 (비동기 및 물리)
+
         private async UniTaskVoid AttackSequenceAsync()
         {
             var token = this.GetCancellationTokenOnDestroy();
@@ -157,7 +151,7 @@ namespace InGame.Weapon
             }
         }
 
-        private async UniTask PlayWarningCycleAsync(System.Threading.CancellationToken token)
+        private async UniTask PlayWarningCycleAsync(CancellationToken token)
         {
             if (m_warningAnimator == null) return;
 
@@ -179,10 +173,7 @@ namespace InGame.Weapon
             var animator = m_flameAnimators[randomIndex];
             animator.gameObject.SetActive(true);
 
-            if (animator.TryGetComponent(out SpriteRenderer sr))
-            {
-                sr.color = Color.white;
-            }
+            if (animator.TryGetComponent(out SpriteRenderer sr)) sr.color = Color.white;
 
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
             float length = stateInfo.length / Mathf.Max(0.1f, stateInfo.speed);
@@ -190,9 +181,8 @@ namespace InGame.Weapon
             return (animator, length);
         }
 
-        private async UniTask PlayBurnCycleAsync(Animator animator, float length, System.Threading.CancellationToken token)
+        private async UniTask PlayBurnCycleAsync(Animator animator, float length, CancellationToken token)
         {
-            // 조명 페이드 인
             StartLightFadeSequence(animator, length);
 
             if (m_damageCollider != null) m_damageCollider.enabled = true;
@@ -200,12 +190,8 @@ namespace InGame.Weapon
             float elapsed = 0f;
             while (elapsed < length)
             {
-                // 충돌 감지는 매 프레임 수행
                 CheckCollisionsAndApplyDamage();
-                
-                // 조명 스프라이트 동기화
                 SyncLightCookie(animator);
-
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
                 elapsed += Time.deltaTime;
             }
@@ -228,10 +214,7 @@ namespace InGame.Weapon
                .AppendInterval(length * 0.5f)
                .Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, 1f, fadeOutTime));
 
-            if (animator.TryGetComponent(out SpriteRenderer sr))
-            {
-                seq.Join(sr.DOFade(0f, fadeOutTime));
-            }
+            if (animator.TryGetComponent(out SpriteRenderer sr)) seq.Join(sr.DOFade(0f, fadeOutTime));
 
             seq.SetTarget(this).SetLink(gameObject);
         }
@@ -239,11 +222,7 @@ namespace InGame.Weapon
         private void SyncLightCookie(Animator animator)
         {
             if (m_flameLight == null || animator == null) return;
-            
-            if (animator.TryGetComponent(out SpriteRenderer sr))
-            {
-                m_flameLight.lightCookieSprite = sr.sprite;
-            }
+            if (animator.TryGetComponent(out SpriteRenderer sr)) m_flameLight.lightCookieSprite = sr.sprite;
         }
 
         private void CheckCollisionsAndApplyDamage()
@@ -255,35 +234,20 @@ namespace InGame.Weapon
             {
                 if (m_hitResults[i].TryGetComponent(out MobBase mob))
                 {
-                    // 로직 클래스에 피격 여부 위임 (중복 타격 방지)
-                    if (m_logic.TryHit(mob))
-                    {
-                        ProcessDamage(mob);
-                    }
+                    if (m_logic.TryHit(mob)) ProcessDamage(mob);
                 }
             }
         }
 
         private void ProcessDamage(MobBase mob)
         {
-            // 1. 즉각 타격
             mob.TakeDamage(m_logic.DirectDamage);
             mob.PlayDamageEffect(m_logic.HitFlashColor);
 
-            // 2. 지속 피해
             mob.ApplyDamageOverTime(m_logic.DotDamage, m_logic.Duration, m_logic.TickCount, () => 
             {
-                if (mob != null && !mob.IsDead)
-                {
-                    mob.PlayDamageEffect(m_logic.HitFlashColor);
-                }
+                if (mob != null && !mob.IsDead) mob.PlayDamageEffect(m_logic.HitFlashColor);
             });
-        }
-
-        private void FinishAndRelease()
-        {
-            if (m_flameLight != null) m_flameLight.gameObject.SetActive(false);
-            WeaponPoolManager.Instance.Release(this);
         }
 
         #endregion

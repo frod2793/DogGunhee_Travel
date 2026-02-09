@@ -6,17 +6,22 @@ using UnityEngine;
 namespace InGame.Player.Player_Base
 {
     /// <summary>
-    /// 자동 공격 시스템을 전담하는 컴포넌트입니다.
+    /// 플레이어의 자동 공격 로직과 타겟 탐색을 전담하는 컴포넌트입니다.
+    /// 토글 상태에 따라 자동으로 가장 가까운 적을 추적하고 공격 신호를 보냅니다.
     /// </summary>
     public class PlayerAutoAttackSystem : MonoBehaviour
     {
-        #region 설정 변수
+        #region 설정 데이터
+
+        [Header("시스템 설정")]
         [SerializeField] private LayerMask m_enemyLayer;
         [SerializeField] private float m_detectionRadius = 10f;
         [SerializeField] private float m_attackRadius = 1.5f;
+
         #endregion
 
-        #region 내부 변수
+        #region 내부 상태 및 캐시
+
         private const int k_MaxEnemyColliders = 20;
         
         private Transform m_playerTransform;
@@ -27,9 +32,11 @@ namespace InGame.Player.Player_Base
         private CancellationTokenSource m_autoAttackCts;
         private ContactFilter2D m_contactFilter;
         private readonly Collider2D[] m_enemyColliders = new Collider2D[k_MaxEnemyColliders];
+
         #endregion
 
         #region 프로퍼티
+
         public Vector3 AutoMoveDirection { get; private set; }
         public bool IsActive => m_isActive;
         
@@ -40,16 +47,21 @@ namespace InGame.Player.Player_Base
             {
                 if (m_isEnabledByToggle == value) return;
                 m_isEnabledByToggle = value;
+                // 토글이 꺼지면 자동 공격 로직도 즉시 중단
                 if (!m_isEnabledByToggle && m_isActive) Disable();
             }
         }
+
         #endregion
 
         #region 이벤트
+
         public event System.Action<Vector3> OnAttackRequested;
+
         #endregion
 
-        #region 초기화
+        #region 초기화 및 제어
+
         public void Init(Transform playerTransform, PlayerBase playerBase, LayerMask enemyLayer, float detectionRadius, float attackRadius)
         {
             m_playerTransform = playerTransform;
@@ -62,9 +74,7 @@ namespace InGame.Player.Player_Base
             m_contactFilter.SetLayerMask(m_enemyLayer);
             m_contactFilter.useLayerMask = true;
         }
-        #endregion
 
-        #region 활성화/비활성화
         public void Enable()
         {
             if (m_isActive) return;
@@ -83,9 +93,11 @@ namespace InGame.Player.Player_Base
             m_autoAttackCts?.Dispose();
             m_autoAttackCts = null;
         }
+
         #endregion
 
-        #region 자동 공격 루프
+        #region 자동 공격 메인 루프 (비동기)
+
         private async UniTaskVoid AutoAttackLoopAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
@@ -96,6 +108,7 @@ namespace InGame.Player.Player_Base
                     continue;
                 }
 
+                // 가장 가까운 적을 찾아 이동 및 공격 판단
                 MobBase target = FindClosestEnemy();
                 
                 if (target != null)
@@ -105,8 +118,10 @@ namespace InGame.Player.Player_Base
                     Vector3 dirToTarget = (targetPos - myPos).normalized;
                     float dist = Vector3.Distance(myPos, targetPos);
 
+                    // 공격 범위보다 멀면 해당 방향으로 이동, 가까우면 정지
                     AutoMoveDirection = dist > m_attackRadius * 0.9f ? dirToTarget : Vector3.zero;
 
+                    // 공격 유효 범위 내에 있으면 공격 요청 이벤트 발생
                     if (dist <= m_attackRadius * 1.2f)
                     {
                         OnAttackRequested?.Invoke(dirToTarget);
@@ -120,9 +135,14 @@ namespace InGame.Player.Player_Base
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
         }
+
         #endregion
 
-        #region 적 탐지
+        #region 서브 루틴 및 유틸리티
+
+        /// <summary>
+        /// 감지 반경 내에서 가장 가까운 살아있는 적을 찾아 반환합니다.
+        /// </summary>
         public MobBase FindClosestEnemy()
         {
             if (m_playerTransform == null) return null;
@@ -147,6 +167,7 @@ namespace InGame.Player.Player_Base
             }
             return closest;
         }
+
         #endregion
     }
 }

@@ -41,6 +41,8 @@ namespace InGame.Weapon.Controllers
         private int m_head;
         private int m_tail;
         private int m_pointCount;
+        
+        private GameObject m_weaponModelInstance;
 
         private readonly List<Vector2> m_colliderPointsCache = new List<Vector2>(100);
         private readonly Dictionary<int, float> m_damageCooldowns = new Dictionary<int, float>();
@@ -51,36 +53,58 @@ namespace InGame.Weapon.Controllers
 
         #region 초기화
 
-        /// <summary>
-        /// SmellWeaponController를 초기화합니다.
-        /// </summary>
-        public void Init(
+        public override void Init(
             WeaponDataSO data,
             Transform ownerTransform,
-            Func<Vector3> getTargetDirection,
-            Transform selfTransform,
-            ParticleSystem particleSystem,
-            EdgeCollider2D trailCollider,
-            int maxTrailPoints = 50,
-            float pointSpacing = 0.8f,
-            float trailWidth = 1.5f,
-            float trailLifetime = 5f,
-            int cloudDensity = 3,
-            float cloudSpread = 0.3f,
-            float sizeVariation = 0.2f)
+            Func<Vector3> getTargetDirection)
         {
             base.Init(data, ownerTransform, getTargetDirection);
 
-            m_selfTransform = selfTransform;
-            m_particleSystem = particleSystem;
-            m_trailCollider = trailCollider;
-            m_maxTrailPoints = maxTrailPoints;
-            m_pointSpacing = pointSpacing;
-            m_trailWidth = trailWidth;
-            m_trailLifetime = trailLifetime;
-            m_cloudDensity = cloudDensity;
-            m_cloudSpread = cloudSpread;
-            m_sizeVariation = sizeVariation;
+            // 1. 모델 인스턴스화
+            if (data.ProjectilePrefab != null)
+            {
+                // 부모를 Player로 설정하여 따라다니게 함 (Smell은 꼬리에 남으므로 플레이어 자식이거나 따라다녀야 함)
+                // 하지만 TrailRenderer나 ParticleSystem은 World Space여야 할 수도 있음.
+                // 기존 로직: m_selfTransform 사용.
+                // 모델을 생성하고 위치 동기화.
+                m_weaponModelInstance = UnityEngine.Object.Instantiate(data.ProjectilePrefab, ownerTransform);
+                m_weaponModelInstance.transform.localPosition = Vector3.zero;
+                m_weaponModelInstance.transform.localRotation = Quaternion.identity;
+                
+                m_selfTransform = m_weaponModelInstance.transform;
+                m_particleSystem = m_weaponModelInstance.GetComponentInChildren<ParticleSystem>();
+                m_trailCollider = m_weaponModelInstance.GetComponentInChildren<EdgeCollider2D>();
+                
+                // 3. View 연결 (충돌 이벤트 수신용)
+                var view = m_weaponModelInstance.GetComponent<SmellWeaponView>();
+                if (view != null)
+                {
+                    view.Initialize(this);
+                }
+                else
+                {
+                    // View가 없으면 프리팹 루트에 자동 추가 시도 (임시 호환성)
+                    view = m_weaponModelInstance.AddComponent<SmellWeaponView>();
+                    view.Initialize(this);
+                    LogManager.Log("[SmellWeaponController] Prefab에 SmellWeaponView가 없어 런타임에 추가했습니다.", LogManager.LogCategory.Weapon);
+                }
+            }
+
+            if (m_particleSystem == null || m_trailCollider == null)
+            {
+                LogManager.LogError($"[SmellWeaponController] 프리팹에 필수 컴포넌트(ParticleSystem, EdgeCollider2D)가 누락되었습니다: {data.WeaponName}");
+            }
+
+            // 2. 튜닝 데이터 설정 (기본값)
+            m_maxTrailPoints = 50;
+            m_pointSpacing = 0.5f;
+            m_trailWidth = 1.0f;
+            m_trailLifetime = data.BaseDuration > 0 ? data.BaseDuration : 5.0f;
+            
+            // TODO: 추후 WeaponPoolManager에서 View 데이터 가져오기 구현 가능
+            m_cloudDensity = 3;
+            m_cloudSpread = 0.3f;
+            m_sizeVariation = 0.2f;
 
             if (GameManager.Instance != null)
             {
@@ -133,8 +157,25 @@ namespace InGame.Weapon.Controllers
 
         public override void OnUpdate(float deltaTime)
         {
-            // 게임 상태 체크
-            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
+            // 게임이 플레이 상태가 아니면 중단
+            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+            {
+                if (m_particleSystem != null && m_particleSystem.isPlaying) m_particleSystem.Stop();
+                return;
+            }
+
+            // [Optimization] 적이 없으면 흔적 생성 중단 (이동은 계속됨)
+            if (!IsEnemyPresent) // Assuming IsEnemyPresent is defined elsewhere or will be added.
+            {
+                if (m_particleSystem != null && m_particleSystem.isPlaying) m_particleSystem.Stop();
+                return;
+            }
+
+            // 파티클 시스템 관리
+            if (m_particleSystem != null && !m_particleSystem.isPlaying)
+            {
+                m_particleSystem.Play();
+            }
 
             if (m_playerTransform == null || m_trailCollider == null) return;
 
@@ -185,6 +226,14 @@ namespace InGame.Weapon.Controllers
         public override void Dispose()
         {
             ResetTrailData();
+            
+            if (m_weaponModelInstance != null)
+            {
+                UnityEngine.Object.Destroy(m_weaponModelInstance);
+                m_weaponModelInstance = null;
+            }
+            
+            base.Dispose();
         }
 
         #endregion
@@ -198,7 +247,7 @@ namespace InGame.Weapon.Controllers
         public void ProcessTriggerDamage(Collider2D other)
         {
             // 게임 상태 체크
-            if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying) return;
+            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
 
             if (!other.CompareTag("Mob")) return;
 

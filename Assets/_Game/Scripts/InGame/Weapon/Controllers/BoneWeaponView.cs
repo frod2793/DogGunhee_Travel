@@ -9,6 +9,8 @@ namespace InGame.Weapon.Controllers
     {
         [Header("Weapon Settings")]
         [Tooltip("뼈 투사체가 날아가는 속도입니다.")]
-        public float BoneSpeed = 10f;
+        [UnityEngine.Serialization.FormerlySerializedAs("BoneSpeed")]
+        [SerializeField] private float m_boneSpeed = 10f;
+        public float BoneSpeed => m_boneSpeed;
     }
 }

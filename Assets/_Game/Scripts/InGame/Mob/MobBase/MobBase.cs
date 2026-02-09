@@ -50,17 +50,19 @@ namespace InGame.Mob.MobBase
             IsHit = false;
             IsMoveEnabled = true;
             m_dotCts?.Cancel(); // 재사용 시 이전 DoT 취소
-            PlayStateManager.OnGamePause += OnPause;
-            PlayStateManager.OnGameResume += OnResume;
-            PlayStateManager.OnGameOver += OnGameOver;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGamePause += OnPause;
+            GameManager.Instance.State.OnGameResume += OnResume;
+            GameManager.Instance.State.OnGameOver += OnGameOver;
         }
 
         protected virtual void OnDisable()
         {
             m_dotCts?.Cancel(); // 비활성화 시 DoT 중지
-            PlayStateManager.OnGamePause -= OnPause;
-            PlayStateManager.OnGameResume -= OnResume;
-            PlayStateManager.OnGameOver -= OnGameOver;
+            if (GameManager.Instance.State == null) return;
+            GameManager.Instance.State.OnGamePause -= OnPause;
+            GameManager.Instance.State.OnGameResume -= OnResume;
+            GameManager.Instance.State.OnGameOver -= OnGameOver;
         }
 
         #endregion

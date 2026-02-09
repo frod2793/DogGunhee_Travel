@@ -2,6 +2,7 @@ using UnityEngine;
 using R3;
 using System;
 using InGame;
+using InGame.Manager;
 using InGame.Weapon.Base;
 using InGame.Weapon.Strategies;
 
@@ -13,6 +14,8 @@ namespace InGame.Weapon.Core
     /// </summary>
     public class WeaponController : IWeaponController
     {
+        #region 필드 및 프로퍼티
+        
         private WeaponRuntimeStats m_stats;
         private readonly IWeaponStrategy m_strategy;
         private Transform m_owner;
@@ -22,6 +25,10 @@ namespace InGame.Weapon.Core
         private float m_currentCooldown;
         private WeaponDataSO m_data;
         private SkillData m_skillData;
+
+        public WeaponRuntimeStats Stats => m_stats;
+        
+        #endregion
 
         #region IWeaponController 식별자 및 데이터
 
@@ -40,8 +47,8 @@ namespace InGame.Weapon.Core
 
         #endregion
 
-        public WeaponRuntimeStats Stats => m_stats;
-
+        #region 초기화 및 생성자
+        
         // Factory에서는 Strategy만 주입하여 생성
         public WeaponController(IWeaponStrategy strategy)
         {
@@ -60,13 +67,16 @@ namespace InGame.Weapon.Core
             m_strategy?.Initialize(data);
 
             // 스탯 변경 감지 로그 (디버깅용)
-            // 기존 구독 해제 후 재구독 (재사용 시)
             m_disposables.Clear();
             
             m_stats.AttackPowerRP.Subscribe(val => Debug.Log($"[{data.name}] 공격력 변경: {val}")).AddTo(m_disposables);
             m_stats.CurrentLevelRP.Skip(1).Subscribe(lv => Debug.Log($"[{data.name}] 레벨 업: {lv}")).AddTo(m_disposables);
         }
+        
+        #endregion
 
+        #region 업데이트 루프
+        
         public void OnUpdate(float deltaTime)
         {
             // 쿨타임 감소
@@ -81,8 +91,11 @@ namespace InGame.Weapon.Core
             // Auto Attack Implementation
             if (m_currentCooldown <= 0f)
             {
-                // 방향: TargetProvider가 있으면 사용, 없으면 Owner의 forward 등 기본값
-                Vector3 direction = m_targetProvider?.Invoke() ?? (m_owner != null ? m_owner.forward : Vector3.forward);
+                // 맵에 몹이 없거나 타겟 방향이 유효하지 않으면 공격 건너뜀
+                if (GameManager.Instance.ObjectPoolSpawner == null || GameManager.Instance.ObjectPoolSpawner.ActiveMobCount <= 0) return;
+
+                Vector3 direction = m_targetProvider?.Invoke() ?? Vector3.zero;
+                if (direction == Vector3.zero) return;
                 
                 TryAttack(direction);
             }
@@ -92,7 +105,11 @@ namespace InGame.Weapon.Core
         {
             // 필요 시 구현
         }
+        
+        #endregion
 
+        #region 공격 및 레벨업 로직
+        
         public bool TryAttack(Vector3 direction)
         {
             if (m_currentCooldown > 0f) return false;
@@ -115,10 +132,16 @@ namespace InGame.Weapon.Core
         {
             m_stats.LevelUp(m_stats.CurrentLevel + 1);
         }
+        
+        #endregion
 
+        #region 해제
+        
         public void Dispose()
         {
             m_disposables.Dispose();
         }
+        
+        #endregion
     }
 }

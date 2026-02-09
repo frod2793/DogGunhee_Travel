@@ -9,12 +9,20 @@ namespace InGame.Weapon.Strategies
     /// </summary>
     public class ProjectileStrategy : IWeaponStrategy
     {
-        private readonly string m_projectileKey; // ObjectPool에서 식별할 키 (주로 Prefab 이름) or 직접 Prefab 참조 방식을 사용할 수도 있음
+        #region 내부 변수
+
+        private readonly string m_projectileKey; 
+
+        #endregion
+
+        #region 생성자
 
         public ProjectileStrategy(string projectileKey)
         {
             m_projectileKey = projectileKey;
         }
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {

@@ -15,35 +15,7 @@ namespace InGame.Weapon
     [RequireComponent(typeof(TrailRenderer))]
     public class BoomerangProjectile : MonoBehaviour
     {
-        #region 외부 참조
-
-        private Transform m_playerTransform;
-        private SpriteRenderer m_spriteRenderer;
-        private TrailRenderer m_trailRenderer;
-
-        #endregion
-
-        #region 스탯 및 상태
-
-        private float m_damage;
-        private float m_stunTime;
-        private float m_speed;
-        private float m_distance;
-        private System.Action m_onReturn;
-
-        private readonly HashSet<int> m_hitHistory = new HashSet<int>();
-
-        #endregion
-
-        #region 연출 객체
-
-        private Tween m_rotateTween;
-        private Tween m_fadeTween;
-        private Tween m_trailFadeTween;
-
-        #endregion
-
-        #region 설정 (Inspector)
+        #region 설정 데이터
 
         [Header("시각 효과 설정")]
         [SerializeField] private float m_trailTime = 0.2f;
@@ -59,13 +31,32 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 유니티 생명주기
+        #region 내부 상태 및 캐시
+
+        private Transform m_playerTransform;
+        private SpriteRenderer m_spriteRenderer;
+        private TrailRenderer m_trailRenderer;
+
+        private float m_damage;
+        private float m_stunTime;
+        private float m_speed;
+        private float m_distance;
+        private System.Action m_onReturn;
+
+        private readonly HashSet<int> m_hitHistory = new HashSet<int>();
+
+        private Tween m_rotateTween;
+        private Tween m_fadeTween;
+        private Tween m_trailFadeTween;
+
+        #endregion
+
+        #region Unity 라이프사이클
 
         private void Awake()
         {
             m_spriteRenderer = GetComponent<SpriteRenderer>();
             m_trailRenderer = GetComponent<TrailRenderer>();
-            
             SetupTrail();
         }
 
@@ -87,7 +78,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 초기화 및 실행
+        #region 초기화 및 제어
 
         /// <summary>
         /// 투사체를 초기화하고 발사합니다.
@@ -110,7 +101,7 @@ namespace InGame.Weapon
                 if (m_trailRenderer.material != null)
                 {
                     m_trailFadeTween?.Kill();
-                    m_trailRenderer.material.color = Color.white; // 색상 초기화
+                    m_trailRenderer.material.color = Color.white;
                 }
                 m_trailRenderer.emitting = true;
             }
@@ -144,9 +135,40 @@ namespace InGame.Weapon
                 new GradientAlphaKey[] { new GradientAlphaKey(m_trailColor.a, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
             );
             m_trailRenderer.colorGradient = gradient;
-            
             m_trailRenderer.sortingOrder = m_spriteRenderer.sortingOrder - 1;
         }
+
+        private void ReleaseToPool()
+        {
+            m_onReturn?.Invoke();
+            m_onReturn = null;
+
+            m_rotateTween?.Kill();
+            m_fadeTween?.Kill();
+            m_trailFadeTween?.Kill();
+
+            if (m_trailRenderer != null)
+            {
+                m_trailRenderer.emitting = false;
+                if (m_trailRenderer.material != null) m_trailRenderer.material.color = Color.white;
+            }
+
+            if (m_spriteRenderer != null)
+            {
+                Color c = m_spriteRenderer.color;
+                c.a = 1f;
+                m_spriteRenderer.color = c;
+            }
+
+            if (gameObject.activeSelf)
+            {
+                WeaponPoolManager.Instance.Release(this);
+            }
+        }
+
+        #endregion
+
+        #region 제어 로직 (비동기)
 
         private async UniTaskVoid LaunchAsync()
         {
@@ -175,9 +197,8 @@ namespace InGame.Weapon
                     .SetEase(Ease.OutSine)
                     .ToUniTask(cancellationToken: token);
 
-                // 2. [Turn] 잠시 대기 및 히트 기록 초기화 (돌아올 때 다시 때릴 수 있게)
+                // 2. [Turn] 잠시 대기
                 m_hitHistory.Clear();
-                
                 await UniTask.Delay(100, cancellationToken: token);
 
                 // 3. [Return] 플레이어에게 복귀
@@ -196,23 +217,17 @@ namespace InGame.Weapon
                     Vector3 playerPos = m_playerTransform.position;
                     float distToPlayer = Vector3.Distance(myPos, playerPos);
                     
-                    // 플레이어 쪽으로 이동
                     float step = returnSpeed * Time.deltaTime;
                     transform.position = Vector3.MoveTowards(myPos, playerPos, step);
 
-                    // 플레이어와 가까워지면 페이드 아웃 시작 (1.5 유닛 거리)
                     if (!hasStartedFadeOut && distToPlayer <= 1.5f)
                     {
                         hasStartedFadeOut = true;
-                        
-                        // Sprite 페이드 아웃
                         if (m_spriteRenderer != null)
                         {
                             m_fadeTween?.Kill();
                             m_fadeTween = m_spriteRenderer.DOFade(0f, 0.2f).SetEase(Ease.InQuad);
                         }
-                        
-                        // Trail 페이드 아웃
                         if (m_trailRenderer != null && m_trailRenderer.material != null)
                         {
                             m_trailFadeTween?.Kill();
@@ -220,50 +235,13 @@ namespace InGame.Weapon
                         }
                     }
 
-                    // 도달 간주 거리 (0.5 유닛)
                     if (distToPlayer < 0.5f) break;
-
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
                 }
             }
             finally
             {
                 ReleaseToPool();
-            }
-        }
-
-        private void ReleaseToPool()
-        {
-            // 콜백 호출 (BoomerangStrategy의 Active Count 감소 등)
-            m_onReturn?.Invoke();
-            m_onReturn = null;
-
-            // 트윈 정리
-            m_rotateTween?.Kill();
-            m_fadeTween?.Kill();
-            m_trailFadeTween?.Kill();
-
-            if (m_trailRenderer != null)
-            {
-                m_trailRenderer.emitting = false;
-                
-                // 재사용을 위해 색상 원복
-                if (m_trailRenderer.material != null)
-                {
-                    m_trailRenderer.material.color = Color.white;
-                }
-            }
-
-            if (m_spriteRenderer != null)
-            {
-                Color c = m_spriteRenderer.color;
-                c.a = 1f; // 알파값 원복
-                m_spriteRenderer.color = c;
-            }
-
-            if (gameObject.activeSelf)
-            {
-                WeaponPoolManager.Instance.Release(this);
             }
         }
 

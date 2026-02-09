@@ -1,7 +1,7 @@
 using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
-using InGame.Weapon.Logics;
+using InGame.Weapon.Logic;
 using InGame.Weapon.Controllers; 
 using System.Linq;
 
@@ -13,8 +13,14 @@ namespace InGame.Weapon.Strategies
     /// </summary>
     public class SummonStrategy : IWeaponStrategy
     {
+        #region 내부 변수
+
         private readonly WeaponFriendsLogic m_logic;
         private Camera m_camera;
+
+        #endregion
+
+        #region 생성자
 
         public SummonStrategy()
         {
@@ -22,6 +28,8 @@ namespace InGame.Weapon.Strategies
             m_logic = new WeaponFriendsLogic(spawnStrategy);
             m_camera = Camera.main;
         }
+
+        #endregion
 
         public void Initialize(WeaponDataSO data)
         {

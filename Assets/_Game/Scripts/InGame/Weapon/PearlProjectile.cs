@@ -7,35 +7,42 @@ using InGame.Weapon.Controllers;
 
 namespace InGame.Weapon
 {
+    /// <summary>
+    /// 저렴한 진주 무기(Pearl)의 핵심 투사체 컴포넌트입니다.
+    /// 화면 외곽 바운스 및 레벨별 비주얼 효과를 처리합니다.
+    /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     [RequireComponent(typeof(TrailRenderer), typeof(Animator))]
     public class PearlProjectile : MonoBehaviour
     {
-        #region Static Instance
-        
+        #region 내부 상태 및 캐시
+
+        /// <summary>
+        /// 활성화된 진주 투사체에 대한 정적 참조입니다. (Legacy Support)
+        /// </summary>
         public static PearlProjectile Instance { get; private set; }
 
-        #endregion
-
-        #region 내부 변수
-
         private PearlWeaponLogic m_logic;
-        private PearlWeaponView m_view; // Visual Settings
-
+        private PearlWeaponView m_view; 
         private Vector3 m_velocity;
-        
-        public float CurrentSpeed => m_velocity.magnitude;
-
         private Camera m_mainCamera;
         private TrailRenderer m_trailRenderer;
         private Animator m_animator;
         private Renderer m_renderer; 
         private float m_radius = 0.5f; 
 
+        // 적별 타격 쿨다운 관리
         private readonly Dictionary<int, float> m_hitCooldowns = new Dictionary<int, float>();
 
+        // 애니메이터 파라미터 해시
         private static readonly int k_AnimTriggerLv1 = Animator.StringToHash("Level1");
         private static readonly int k_AnimTriggerLv2 = Animator.StringToHash("Level2");
+
+        #endregion
+
+        #region 프로퍼티
+
+        public float CurrentSpeed => m_velocity.magnitude;
 
         #endregion
 
@@ -47,21 +54,15 @@ namespace InGame.Weapon
             m_trailRenderer = GetComponent<TrailRenderer>();
             m_animator = GetComponent<Animator>();
             m_renderer = GetComponent<Renderer>(); 
+            
             if (m_renderer != null) m_radius = m_renderer.bounds.extents.x;
-
-            var col = GetComponent<Collider2D>();
-            if (col != null) col.isTrigger = true;
+            if (TryGetComponent<Collider2D>(out var col)) col.isTrigger = true;
         }
 
         private void OnEnable()
         {
-            m_mainCamera = Camera.main; // 카메라 참조 갱신
-
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogWarning("[PearlProjectile] 두 개 이상의 진주가 활성화되려 합니다. 기존 인스턴스를 파괴합니다.");
-                Destroy(Instance.gameObject);
-            }
+            m_mainCamera = Camera.main;
+            if (Instance != null && Instance != this) return;
             Instance = this;
 
             m_hitCooldowns.Clear();
@@ -70,17 +71,13 @@ namespace InGame.Weapon
 
         private void OnDisable()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
+            if (Instance == this) Instance = null;
         }
 
         private void LateUpdate()
         {
             if (m_logic == null) return;
 
-            // 1. 이동 및 Z축 강제 고정
             Vector3 nextPos = transform.position + m_velocity * Time.deltaTime;
             nextPos.z = 0f;
             transform.position = nextPos;
@@ -89,12 +86,29 @@ namespace InGame.Weapon
             BounceOffScreenEdges();
         }
 
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (m_logic == null || !other.CompareTag("Mob")) return;
+
+            int id = other.gameObject.GetInstanceID();
+            float hitCooldown = (m_view != null) ? m_view.HitCooldown : 0.5f;
+
+            if (!m_hitCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
+            {
+                if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
+                {
+                    mob.TakeDamage(m_logic.AttackPower, m_logic.IsEvolved ? m_logic.StunTime : 0f);
+                    m_hitCooldowns[id] = Time.time + hitCooldown;
+                }
+            }
+        }
+
         #endregion
 
-        #region 초기화 및 상태 업데이트
+        #region 초기화 및 제어
 
         /// <summary>
-        /// PearlProjectile을 초기화합니다. (Logic & View 주입)
+        /// 진주 투사체를 초기화하고 초기 속도를 설정합니다.
         /// </summary>
         public void Initialize(PearlWeaponLogic logic, PearlWeaponView view, Vector3 initialVelocity)
         {
@@ -106,40 +120,28 @@ namespace InGame.Weapon
 
             UpdateState();
             transform.rotation = Quaternion.identity;
-            
-            SetupTrailBase(); // 뷰 설정 적용
+            SetupTrailBase();
         }
         
         /// <summary>
-        /// 진주의 상태(스탯 및 비주얼)를 업데이트합니다.
+        /// 무기 레벨업이나 스탯 변경 시 투사체의 상태를 갱신합니다.
         /// </summary>
         public void UpdateState()
         {
             if (m_logic == null) return;
-
-            float speed = m_logic.AttackSpeed; // Logic에서 보정된 값
-            m_velocity = m_velocity.normalized * speed;
-
+            m_velocity = m_velocity.normalized * m_logic.AttackSpeed;
             UpdateVisualsByLevel();
         }
         
         #endregion
 
-        #region 비주얼 및 물리
+        #region 제어 로직 (비주얼 및 물리)
         
         private void UpdateVisualsByLevel()
         {
             bool isEvolved = m_logic.IsEvolved;
-
-            if (m_animator != null)
-            {
-                m_animator.SetTrigger(isEvolved ? k_AnimTriggerLv2 : k_AnimTriggerLv1);
-            }
-
-            if (m_trailRenderer != null && m_view != null)
-            {
-                SetTrailColor(isEvolved ? m_view.TrailColorLv2 : m_view.TrailColorLv1);
-            }
+            if (m_animator != null) m_animator.SetTrigger(isEvolved ? k_AnimTriggerLv2 : k_AnimTriggerLv1);
+            if (m_trailRenderer != null && m_view != null) SetTrailColor(isEvolved ? m_view.TrailColorLv2 : m_view.TrailColorLv1);
         }
 
         private void SetupTrailBase()
@@ -191,61 +193,14 @@ namespace InGame.Weapon
             Vector3 currentPosition = transform.position;
             bool bounced = false;
 
-            if (currentPosition.x <= minX)
-            {
-                currentPosition.x = minX;
-                if (m_velocity.x < 0) m_velocity.x *= -1;
-                bounced = true;
-            }
-            else if (currentPosition.x >= maxX)
-            {
-                currentPosition.x = maxX;
-                if (m_velocity.x > 0) m_velocity.x *= -1;
-                bounced = true;
-            }
+            if (currentPosition.x <= minX) { currentPosition.x = minX; if (m_velocity.x < 0) m_velocity.x *= -1; bounced = true; }
+            else if (currentPosition.x >= maxX) { currentPosition.x = maxX; if (m_velocity.x > 0) m_velocity.x *= -1; bounced = true; }
 
-            if (currentPosition.y <= minY)
-            {
-                currentPosition.y = minY;
-                if (m_velocity.y < 0) m_velocity.y *= -1;
-                bounced = true;
-            }
-            else if (currentPosition.y >= maxY)
-            {
-                currentPosition.y = maxY;
-                if (m_velocity.y > 0) m_velocity.y *= -1;
-                bounced = true;
-            }
+            if (currentPosition.y <= minY) { currentPosition.y = minY; if (m_velocity.y < 0) m_velocity.y *= -1; bounced = true; }
+            else if (currentPosition.y >= maxY) { currentPosition.y = maxY; if (m_velocity.y > 0) m_velocity.y *= -1; bounced = true; }
 
-            if (bounced)
-            {
-                transform.position = currentPosition;
-            }
-            
-            if (Vector3.Distance(transform.position, camPos) > 40f)
-            {
-                transform.position = new Vector3(camPos.x, camPos.y, 0f);
-            }
-        }
-
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            if (m_logic == null) return;
-
-            if (other.CompareTag("Mob"))
-            {
-                int id = other.gameObject.GetInstanceID();
-                float hitCooldown = (m_view != null) ? m_view.HitCooldown : 0.5f;
-
-                if (!m_hitCooldowns.TryGetValue(id, out float nextTime) || Time.time >= nextTime)
-                {
-                    if (other.TryGetComponent(out MobBase mob) && !mob.IsDead)
-                    {
-                        mob.TakeDamage(m_logic.AttackPower, m_logic.IsEvolved ? m_logic.StunTime : 0f);
-                        m_hitCooldowns[id] = Time.time + hitCooldown;
-                    }
-                }
-            }
+            if (bounced) transform.position = currentPosition;
+            if (Vector3.Distance(transform.position, camPos) > 40f) transform.position = new Vector3(camPos.x, camPos.y, 0f);
         }
         
         #endregion

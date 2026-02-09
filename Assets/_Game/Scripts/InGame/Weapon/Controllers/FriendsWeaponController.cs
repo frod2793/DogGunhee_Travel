@@ -32,34 +32,37 @@ namespace InGame.Weapon.Controllers
         #region 초기화
 
         /// <summary>
-        /// FriendsWeaponController를 초기화합니다.
+        /// 표준 초기화 메서드입니다. WeaponDataSO에서 프리팹을 로드하고 풀을 초기화합니다.
         /// </summary>
-        /// <param name="data">무기 데이터 ScriptableObject</param>
-        /// <param name="ownerTransform">소유자(플레이어)의 Transform</param>
-        /// <param name="getTargetDirection">공격 방향을 가져오는 델리게이트 (Friends는 사용하지 않음)</param>
-        /// <param name="friendCharacterPrefab">친구 캐릭터 프리팹</param>
-        /// <param name="friendsPerAttack">한 번에 소환될 친구 수</param>
-        /// <param name="poolSize">풀 최대 크기</param>
-        public void Init(
+        public override void Init(
             WeaponDataSO data,
             Transform ownerTransform,
-            Func<Vector3> getTargetDirection,
-            FriendCharacter friendCharacterPrefab,
-            int friendsPerAttack = 3,
-            int poolSize = 10)
+            Func<Vector3> getTargetDirection)
         {
             base.Init(data, ownerTransform, getTargetDirection);
 
-            m_friendCharacterPrefab = friendCharacterPrefab;
-            m_friendsPerAttack = friendsPerAttack;
-            m_poolSize = poolSize;
+            // 1. 프리팹 매핑
+            if (data.ProjectilePrefab != null)
+            {
+                m_friendCharacterPrefab = data.ProjectilePrefab.GetComponent<FriendCharacter>();
+            }
+
+            if (m_friendCharacterPrefab == null)
+            {
+                LogManager.LogError($"[FriendsWeaponController] 프리팹에 FriendCharacter 컴포넌트가 누락되었습니다: {data.WeaponName}");
+            }
+
+            // 2. 튜닝 데이터 설정 (기본값)
+            // 추후 WeaponPoolManager > FriendsWeaponView 등을 통해 외부에서 주입 가능하도록 확장 권장
+            m_friendsPerAttack = data.BaseProjectileCount > 0 ? data.BaseProjectileCount : 3; 
+            m_poolSize = m_friendsPerAttack * 3 + 5; // 여유 있게 할당
 
             m_mainCamera = Camera.main;
 
-            // 풀 등록
+            // 3. 풀 등록
             RegisterPool();
 
-            // 공격 루프 시작
+            // 4. 공격 루프 시작
             StartAttackLoop();
         }
 
@@ -95,7 +98,13 @@ namespace InGame.Weapon.Controllers
                 await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
 
                 // 게임이 플레이 중이 아니면 스폰 생략
-                if (PlayStateManager.instance != null && !PlayStateManager.instance.IsPlaying)
+                if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+                {
+                    continue;
+                }
+
+                // [Optimization] 적이 없으면 공격 로직 패스
+                if (!IsEnemyPresent)
                 {
                     continue;
                 }
@@ -113,14 +122,14 @@ namespace InGame.Weapon.Controllers
             }
 
             // 모든 애니메이션 타입 가져오기
-            var allTypes = (FriendAnimationType[])Enum.GetValues(typeof(FriendAnimationType));
+            var allTypes = (FriendCharacter.FriendAnimationType[])Enum.GetValues(typeof(FriendCharacter.FriendAnimationType));
             int typesCount = allTypes.Length;
 
             // 섞을 리스트 준비 (전체 타입 수 이하일 때 중복 방지용)
-            List<FriendAnimationType> uniqueTypesList = null;
+            List<FriendCharacter.FriendAnimationType> uniqueTypesList = null;
             if (m_friendsPerAttack <= typesCount)
             {
-                uniqueTypesList = new List<FriendAnimationType>(allTypes);
+                uniqueTypesList = new List<FriendCharacter.FriendAnimationType>(allTypes);
                 // Fisher-Yates Shuffle 로 섞기
                 for (int j = 0; j < uniqueTypesList.Count; j++)
                 {
@@ -140,7 +149,7 @@ namespace InGame.Weapon.Controllers
                     continue;
                 }
 
-                FriendAnimationType selectedType;
+                FriendCharacter.FriendAnimationType selectedType;
 
                 if (uniqueTypesList != null)
                 {
@@ -150,7 +159,7 @@ namespace InGame.Weapon.Controllers
                 else
                 {
                     // 타입 수보다 많이 소환할 때는 완전 랜덤 (중복 허용)
-                    selectedType = (FriendAnimationType)UnityEngine.Random.Range(0, typesCount);
+                    selectedType = (FriendCharacter.FriendAnimationType)UnityEngine.Random.Range(0, typesCount);
                 }
 
                 friend.Initialize(randomPosition, selectedType, m_runtimeStats.AttackPower, m_runtimeStats.MobStunTime);
