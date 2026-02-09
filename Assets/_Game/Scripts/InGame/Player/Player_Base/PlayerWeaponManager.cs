@@ -84,6 +84,9 @@ namespace InGame.Player.Player_Base
                 
                 m_controllers.Add(controller);
                 LogManager.Log($"[PlayerWeaponManager] Equipped {data.WeaponName}", LogManager.LogCategory.Weapon);
+
+                // [추가] 무기 획득 시 즉시 첫 번째 공격 시도
+                controller.Attack(m_targetProvider?.Invoke() ?? Vector3.zero);
             }
             else
             {
@@ -99,6 +102,9 @@ namespace InGame.Player.Player_Base
             if (controller != null && !m_controllers.Contains(controller))
             {
                 m_controllers.Add(controller);
+                
+                // [추가] 외부 주입 시에도 즉시 첫 번째 공격 시도
+                controller.Attack(m_targetProvider?.Invoke() ?? Vector3.zero);
             }
         }
 

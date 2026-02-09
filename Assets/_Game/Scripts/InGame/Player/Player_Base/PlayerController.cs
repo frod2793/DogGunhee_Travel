@@ -68,6 +68,11 @@ namespace InGame.Player.Player_Base
             set { if (m_autoAttack != null) m_autoAttack.EnabledByToggle = value; }
         }
 
+        /// <summary>
+        /// 자동 공격 시스템 컴포넌트에 대한 참조입니다.
+        /// </summary>
+        public PlayerAutoAttackSystem AutoAttack => m_autoAttack;
+
         #endregion
 
         #region Unity 라이프사이클

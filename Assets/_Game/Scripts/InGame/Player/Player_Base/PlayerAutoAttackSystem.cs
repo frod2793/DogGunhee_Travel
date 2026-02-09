@@ -40,6 +40,11 @@ namespace InGame.Player.Player_Base
         public Vector3 AutoMoveDirection { get; private set; }
         public bool IsActive => m_isActive;
         
+        /// <summary>
+        /// 현재 시스템이 타겟팅하고 있는 가장 가까운 적입니다.
+        /// </summary>
+        public MobBase CurrentTarget { get; private set; }
+        
         public bool EnabledByToggle
         {
             get => m_isEnabledByToggle;
@@ -110,6 +115,7 @@ namespace InGame.Player.Player_Base
 
                 // 가장 가까운 적을 찾아 이동 및 공격 판단
                 MobBase target = FindClosestEnemy();
+                CurrentTarget = target; // [추가] 외부 참조용 타겟 캐싱
                 
                 if (target != null)
                 {
@@ -166,6 +172,35 @@ namespace InGame.Player.Player_Base
                 }
             }
             return closest;
+        }
+
+        #endregion
+
+        #region 기즈모 시각화
+
+        private void OnDrawGizmos()
+        {
+            if (m_playerTransform == null)
+            {
+                // 에디터 모드 대응
+                m_playerTransform = transform;
+            }
+
+            // 1. 감지 범위 (노란색)
+            Gizmos.color = new Color(1f, 1f, 0f, 0.3f);
+            Gizmos.DrawWireSphere(m_playerTransform.position, m_detectionRadius);
+
+            // 2. 이동/공격 범위 (빨간색)
+            Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
+            Gizmos.DrawWireSphere(m_playerTransform.position, m_attackRadius);
+
+            // 3. 현재 타겟 연결선 (하늘색)
+            if (CurrentTarget != null && !CurrentTarget.IsDead)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawLine(m_playerTransform.position, CurrentTarget.transform.position);
+                Gizmos.DrawWireSphere(CurrentTarget.transform.position, 0.5f);
+            }
         }
 
         #endregion

@@ -71,8 +71,11 @@ namespace InGame.Weapon.Base
             // [Refactoring] OnUpdate에서는 자동 공격 시도만 수행합니다.
             if (CanAttack())
             {
-                // [주의] Attack() 내부에서 쿨타임을 재설정하도록 변경되었습니다.
-                Attack(m_getTargetDirection?.Invoke() ?? Vector3.zero);
+                Vector3 direction = m_getTargetDirection?.Invoke() ?? Vector3.zero;
+                // [추가] 적이 감지되지 않으면(방향이 Zero면) 공격을 시도하지 않음
+                if (direction == Vector3.zero) return;
+
+                Attack(direction);
             }
         }
 
@@ -108,6 +111,21 @@ namespace InGame.Weapon.Base
             if (!IsEnemyPresent)
             {
                 return false;
+            }
+
+            // [추가] 무기 사거리 체크
+            if (m_runtimeStats != null && m_runtimeStats.CurrentAttackRange > 0)
+            {
+                var autoAttack = GameManager.Instance.PlayerController.AutoAttack;
+                if (autoAttack != null && autoAttack.CurrentTarget != null)
+                {
+                    float dist = Vector3.Distance(m_ownerTransform.position, autoAttack.CurrentTarget.transform.position);
+                    // 사거리에 여유분(1.1배)을 주어 판정을 넉넉하게 합니다.
+                    if (dist > m_runtimeStats.CurrentAttackRange * 1.1f)
+                    {
+                        return false;
+                    }
+                }
             }
 
             return m_currentCooldownTimer <= 0f;

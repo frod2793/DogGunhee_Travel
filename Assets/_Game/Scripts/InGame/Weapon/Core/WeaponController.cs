@@ -114,6 +114,20 @@ namespace InGame.Weapon.Core
         {
             if (m_currentCooldown > 0f) return false;
 
+            // [추가] 무기 사거리 체크
+            if (m_stats != null && m_stats.CurrentAttackRange > 0)
+            {
+                var autoAttack = GameManager.Instance.PlayerController?.AutoAttack;
+                if (autoAttack != null && autoAttack.CurrentTarget != null)
+                {
+                    float dist = Vector3.Distance(m_owner.position, autoAttack.CurrentTarget.transform.position);
+                    if (dist > m_stats.AttackRange * 1.1f) 
+                    {
+                        return false;
+                    }
+                }
+            }
+
             // 공격 수행
             m_strategy?.Attack(m_stats, m_owner, direction);
 

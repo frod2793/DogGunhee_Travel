@@ -438,6 +438,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 23417076}
   m_CullTransparentMesh: 1
+--- !u!1 &69959449 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+  m_PrefabInstance: {fileID: 3551517958830646567}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &69959459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 69959449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cc0605c2053cb74682aa84328ff2e5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.BallWeaponView
+  RotationOffset: 180
+  RotateWithOrbit: 1
+  RotationSpeedMultiplier: 1
 --- !u!1 &95878362
 GameObject:
   m_ObjectHideFlags: 0
@@ -7536,10 +7556,17 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7427034918349093204, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_effectData
+      value: 
+      objectReference: {fileID: 11400000, guid: d95fefdb30d37fa48a9fa7976868a49c, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 69959459}
   m_SourcePrefab: {fileID: 100100000, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
 --- !u!4 &3867564719337111730 stripped
 Transform:
