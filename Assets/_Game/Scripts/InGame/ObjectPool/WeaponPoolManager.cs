@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
+
 namespace InGame.ObjectPool
 {
     public class WeaponPoolManager : MonoBehaviour
@@ -9,6 +10,7 @@ namespace InGame.ObjectPool
         #region 정적 멤버 및 싱글톤
 
         private static WeaponPoolManager s_instance;
+        private static bool s_isQuitting = false;
 
         /// <summary>
         /// WeaponPoolManager의 전역 싱글톤 인스턴스입니다.
@@ -17,7 +19,7 @@ namespace InGame.ObjectPool
         {
             get
             {
-                if (s_instance == null)
+                if (s_instance == null && !s_isQuitting)
                 {
                     s_instance = FindAnyObjectByType<WeaponPoolManager>();
                     if (s_instance == null)
@@ -27,6 +29,7 @@ namespace InGame.ObjectPool
                         DontDestroyOnLoad(singletonObject);
                     }
                 }
+
                 return s_instance;
             }
         }
@@ -53,15 +56,18 @@ namespace InGame.ObjectPool
         /// <param name="defaultCapacity">초기 풀 용량</param>
         /// <param name="maxSize">풀의 최대 크기</param>
         /// <returns>등록되거나 가져온 오브젝트 풀</returns>
-        public IObjectPool<T> GetOrAddPool<T>(Func<T> createFunc, Action<T> actionOnGet, Action<T> actionOnRelease, Action<T> actionOnDestroy, int defaultCapacity = 10, int maxSize = 100) where T : Component
+        public IObjectPool<T> GetOrAddPool<T>(Func<T> createFunc, Action<T> actionOnGet, Action<T> actionOnRelease,
+            Action<T> actionOnDestroy, int defaultCapacity = 10, int maxSize = 100) where T : Component
         {
             Type type = typeof(T);
             if (!m_pools.TryGetValue(type, out object poolObject))
             {
-                IObjectPool<T> newPool = new ObjectPool<T>(createFunc, actionOnGet, actionOnRelease, actionOnDestroy, true, defaultCapacity, maxSize);
+                IObjectPool<T> newPool = new ObjectPool<T>(createFunc, actionOnGet, actionOnRelease, actionOnDestroy,
+                    true, defaultCapacity, maxSize);
                 m_pools.Add(type, newPool);
                 return newPool;
             }
+
             return (IObjectPool<T>)poolObject;
         }
 
@@ -78,6 +84,7 @@ namespace InGame.ObjectPool
                 IObjectPool<T> pool = (IObjectPool<T>)poolObject;
                 return pool.Get();
             }
+
             Debug.LogError($"Pool for type {type.Name} not found. Please register the pool using GetOrAddPool first.");
             return null;
         }
@@ -89,6 +96,8 @@ namespace InGame.ObjectPool
         /// <param name="item">반환할 오브젝트</param>
         public void Release<T>(T item) where T : Component
         {
+            if (item == null) return;
+
             Type type = typeof(T);
             if (m_pools.TryGetValue(type, out object poolObject))
             {
@@ -97,10 +106,19 @@ namespace InGame.ObjectPool
             }
             else
             {
-                Debug.LogWarning($"Pool for type {type.Name} not found. Cannot release item. Destroying GameObject instead.");
+                // 이미 파괴된 경우(MissingReferenceException 방지)
+                if (item == null || item.gameObject == null) return;
+
+                Debug.LogWarning(
+                    $"Pool for type {type.Name} not found. Cannot release item. Destroying GameObject instead.");
                 // 풀이 없는 경우, 오브젝트를 파괴하여 메모리 누수 방지
                 Destroy(item.gameObject);
             }
+        }
+
+        private void OnApplicationQuit()
+        {
+            s_isQuitting = true;
         }
 
         #endregion

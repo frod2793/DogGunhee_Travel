@@ -22,25 +22,23 @@ namespace InGame.Manager
     {
         #region 설정 데이터
 
-        [Header("하위 View 및 팝업")]
-        [SerializeField] private InGameHUDView m_hudView;
+        [Header("하위 View 및 팝업")] [SerializeField]
+        private InGameHUDView m_hudView;
+
         [SerializeField] private InGameSkillView m_skillView;
         [SerializeField] private GameOverPopup m_gameOverPopup;
         [SerializeField] private GameObject m_menuPanel;
 
-        [Header("메뉴 및 설정")]
-        [SerializeField] private Button m_menuButton;
+        [Header("메뉴 및 설정")] [SerializeField] private Button m_menuButton;
         [SerializeField] private Button m_settingButton;
         [SerializeField] private Button m_exitButton;
         [SerializeField] private SettingsData m_settingsData;
 
-        [Header("조작계")]
-        [SerializeField] private VariableJoystick m_variableJoystick;
+        [Header("조작계")] [SerializeField] private VariableJoystick m_variableJoystick;
         [SerializeField] private RectTransform m_joystickTransform;
         [SerializeField] private Toggle m_autoAttackToggle;
 
-        [Header("데이터")]
-        [SerializeField] private SkillDatabase m_skillDatabase;
+        [Header("데이터")] [SerializeField] private SkillDatabase m_skillDatabase;
         [SerializeField] private TMP_Text m_mobWaveText; // 카운트다운용으로 유지
 
         #endregion
@@ -70,7 +68,7 @@ namespace InGame.Manager
             m_gameManager = GameManager.Instance;
             // [Refactoring] ViewModel에 의존성 주입
             m_viewModel = new InGameViewModel(m_skillDatabase);
-            
+
             InitializeViews();
             BindUIEvents();
             BindViewModel();
@@ -82,10 +80,12 @@ namespace InGame.Manager
             {
                 m_hudView.Bind(m_viewModel);
             }
+
             if (m_skillView != null)
             {
                 m_skillView.Initialize(() => m_viewModel.RefreshSkillChoices());
             }
+
             if (m_gameOverPopup != null)
             {
                 m_gameOverPopup.Setup(RestartGame, ExitToLobby);
@@ -123,6 +123,7 @@ namespace InGame.Manager
             {
                 return;
             }
+
             GameManager.Instance.State.OnGameStart += OnGameStart;
             GameManager.Instance.State.OnGamePause += OnGamePause;
             GameManager.Instance.State.OnGameResume += OnGameResume;
@@ -139,6 +140,7 @@ namespace InGame.Manager
             {
                 return;
             }
+
             GameManager.Instance.State.OnGameStart -= OnGameStart;
             GameManager.Instance.State.OnGamePause -= OnGamePause;
             GameManager.Instance.State.OnGameResume -= OnGameResume;
@@ -166,7 +168,7 @@ namespace InGame.Manager
         {
             // 스킬 선택 활성화 상태 동기화
             m_viewModel.IsSkillSelectionActive
-                .Subscribe(isActive => 
+                .Subscribe(isActive =>
                 {
                     m_gameManager.SetMenuPopupState(isActive); // 게임 일시정지 연동
                     if (m_skillView != null)
@@ -178,7 +180,7 @@ namespace InGame.Manager
 
             // 스킬 목록 갱신
             m_viewModel.SkillChoices
-                .Subscribe(choices => 
+                .Subscribe(choices =>
                 {
                     if (m_skillView != null)
                         m_skillView.RefreshSkillChoices(choices.ToList(), skill => OnSkillSelected(skill).Forget());
@@ -187,7 +189,7 @@ namespace InGame.Manager
 
             // 타이머 갱신
             m_viewModel.SelectionTimer
-                .Subscribe(time => 
+                .Subscribe(time =>
                 {
                     const float maxTime = 6.0f;
                     if (m_skillView != null)
@@ -199,12 +201,15 @@ namespace InGame.Manager
 
             // 자동 선택 이벤트
             m_viewModel.OnAutoSelectSkill
-                .Subscribe(skill => 
+                .Subscribe(async skill =>
                 {
                     if (m_skillView != null)
                     {
-                        m_skillView.PlaySelectionAnimation(skill).Forget();
+                        // 애니메이션 재생 완료 대기
+                        await m_skillView.PlaySelectionAnimation(skill);
                     }
+
+                    // 애니메이션 이후 실제 선택 로직 실행
                     OnSkillSelected(skill).Forget();
                 })
                 .AddTo(m_disposables);
@@ -241,9 +246,10 @@ namespace InGame.Manager
             if (m_gameOverPopup != null)
             {
                 // R3 ReadOnlyReactiveProperty의 현재 값 접근자가 Value가 아닐 경우 CurrentValue를 사용해봅니다.
-                m_gameOverPopup.Show(m_viewModel.CoinCount.CurrentValue, m_viewModel.CurrentWave.CurrentValue, m_viewModel.KillCount.CurrentValue);
+                m_gameOverPopup.Show(m_viewModel.CoinCount.CurrentValue, m_viewModel.CurrentWave.CurrentValue,
+                    m_viewModel.KillCount.CurrentValue);
             }
-            
+
             m_joystickTransform.gameObject.SetActive(false);
             if (m_variableJoystick != null)
             {
@@ -272,7 +278,7 @@ namespace InGame.Manager
                 await ShowWaveTextEffect("2..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("1..", 0.5f, 0.2f);
                 await ShowWaveTextEffect("게임 시작!");
-                
+
                 // 카운트다운 종료 후 조이스틱 활성화
                 if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
 
@@ -296,6 +302,7 @@ namespace InGame.Manager
             {
                 return;
             }
+
             m_mobWaveText.text = text;
             m_mobWaveText.alpha = 0f;
             m_mobWaveText.gameObject.SetActive(true);
@@ -343,6 +350,7 @@ namespace InGame.Manager
             {
                 return;
             }
+
             m_joystickTransform.localScale = Vector3.one * m_settingsData.JoystickSize;
             m_variableJoystick.SetMode((JoystickType)m_settingsData.JoystickType);
             if (IsJoystickVisible(m_settingsData.JoystickPos))
@@ -362,6 +370,7 @@ namespace InGame.Manager
             {
                 return false;
             }
+
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
             Rect joystickRect = new Rect(pos.x - (m_joystickTransform.rect.width * 0.5f),
                 pos.y - (m_joystickTransform.rect.height * 0.5f), m_joystickTransform.rect.width,
@@ -429,7 +438,7 @@ namespace InGame.Manager
 
             InventoryDataManager.Instance.AddInGameSkill(selectedSkill);
             m_viewModel.UpdateIconLists();
-            
+
             m_pendingSkillSelections--;
             if (m_pendingSkillSelections > 0)
             {
@@ -447,8 +456,10 @@ namespace InGame.Manager
             {
                 return;
             }
+
             var weaponToUpgrade =
-                m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.SkillData?.upgradeItemCode == passiveItemCode);
+                m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w =>
+                    w.SkillData?.upgradeItemCode == passiveItemCode);
             if (weaponToUpgrade != null)
             {
                 weaponToUpgrade.LevelUp();
@@ -479,7 +490,8 @@ namespace InGame.Manager
 
         private void RestartGame()
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene()
+                .name);
         }
 
         #endregion

@@ -17,28 +17,26 @@ namespace InGame.Weapon
     {
         #region 내부 상태 및 변수
 
-        [Header("애니메이터 설정")]
-        [Tooltip("공격 전 경고 애니메이션을 담당하는 애니메이터")]
-        [SerializeField] private Animator m_warningAnimator;
+        [Header("애니메이터 설정")] [Tooltip("공격 전 경고 애니메이션을 담당하는 애니메이터")] [SerializeField]
+        private Animator m_warningAnimator;
 
-        [Tooltip("실제 불기둥 애니메이터 리스트 (랜덤 재생)")]
-        [SerializeField] private List<Animator> m_flameAnimators;
+        [Tooltip("실제 불기둥 애니메이터 리스트 (랜덤 재생)")] [SerializeField]
+        private List<Animator> m_flameAnimators;
 
-        [Tooltip("불기둥과 함께 활성화될 조명 (Light2D)")]
-        [SerializeField] private Light2D m_flameLight;
+        [Tooltip("불기둥과 함께 활성화될 조명 (Light2D)")] [SerializeField]
+        private Light2D m_flameLight;
 
-        [Tooltip("조명 최소 강도 (Falloff)")]
-        [SerializeField] private float m_minFalloffStrength = 0.35f;
+        [Tooltip("조명 최소 강도 (Falloff)")] [SerializeField]
+        private float m_minFalloffStrength = 0.35f;
 
-        [Tooltip("조명 최대 강도 (Falloff)")]
-        [SerializeField] private float m_maxFalloffStrength = 0.5f;
+        [Tooltip("조명 최대 강도 (Falloff)")] [SerializeField]
+        private float m_maxFalloffStrength = 0.5f;
 
-        [Header("공격 판정 설정")]
-        [Tooltip("데미지를 입힐 콜라이더")]
-        [SerializeField] private Collider2D m_damageCollider;
+        [Header("공격 판정 설정")] [Tooltip("데미지를 입힐 콜라이더")] [SerializeField]
+        private Collider2D m_damageCollider;
 
-        [Tooltip("공격 대상 레이어 마스크")]
-        [SerializeField] private LayerMask m_targetLayer;
+        [Tooltip("공격 대상 레이어 마스크")] [SerializeField]
+        private LayerMask m_targetLayer;
 
         private FlamePillarLogic m_logic;
         private ContactFilter2D m_contactFilter;
@@ -53,7 +51,7 @@ namespace InGame.Weapon
             m_contactFilter = new ContactFilter2D();
             m_contactFilter.SetLayerMask(m_targetLayer);
             m_contactFilter.useTriggers = true;
-            
+
             InitComponents();
         }
 
@@ -88,12 +86,12 @@ namespace InGame.Weapon
         {
             m_logic = logic;
             m_logic.Reset();
-            
+
             ResetViewState();
-            
+
             transform.position = position;
             gameObject.SetActive(true);
-            
+
             AttackSequenceAsync().Forget();
         }
 
@@ -128,6 +126,7 @@ namespace InGame.Weapon
                         DOTween.Kill(sr);
                         sr.color = Color.white;
                     }
+
                     anim.gameObject.SetActive(false);
                 }
             }
@@ -143,6 +142,8 @@ namespace InGame.Weapon
         /// </summary>
         private void FinishAndRelease()
         {
+            if (this == null) return;
+
             if (m_flameLight != null)
             {
                 m_flameLight.gameObject.SetActive(false);
@@ -182,7 +183,10 @@ namespace InGame.Weapon
             }
             finally
             {
-                FinishAndRelease();
+                if (this != null)
+                {
+                    FinishAndRelease();
+                }
             }
         }
 
@@ -198,10 +202,10 @@ namespace InGame.Weapon
 
             m_warningAnimator.gameObject.SetActive(true);
             await UniTask.Yield(PlayerLoopTiming.Update, token);
-            
+
             AnimatorStateInfo stateInfo = m_warningAnimator.GetCurrentAnimatorStateInfo(0);
             float duration = stateInfo.length / Mathf.Max(0.1f, stateInfo.speed);
-            
+
             await UniTask.Delay(System.TimeSpan.FromSeconds(duration), cancellationToken: token);
             m_warningAnimator.gameObject.SetActive(false);
         }
@@ -227,7 +231,7 @@ namespace InGame.Weapon
 
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
             float length = stateInfo.length / Mathf.Max(0.1f, stateInfo.speed);
-            
+
             return (animator, length);
         }
 
@@ -275,9 +279,11 @@ namespace InGame.Weapon
             float fadeOutTime = length * 0.3f;
 
             Sequence seq = DOTween.Sequence();
-            seq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, targetStrength, length * 0.2f))
-               .AppendInterval(length * 0.5f)
-               .Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, 1f, fadeOutTime));
+            seq.Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x,
+                    targetStrength, length * 0.2f))
+                .AppendInterval(length * 0.5f)
+                .Append(DOTween.To(() => m_flameLight.falloffIntensity, x => m_flameLight.falloffIntensity = x, 1f,
+                    fadeOutTime));
 
             if (animator.TryGetComponent(out SpriteRenderer sr))
             {
@@ -334,7 +340,7 @@ namespace InGame.Weapon
             mob.TakeDamage(m_logic.DirectDamage);
             mob.PlayDamageEffect(m_logic.HitFlashColor);
 
-            mob.ApplyDamageOverTime(m_logic.DotDamage, m_logic.Duration, m_logic.TickCount, () => 
+            mob.ApplyDamageOverTime(m_logic.DotDamage, m_logic.Duration, m_logic.TickCount, () =>
             {
                 if (mob != null && !mob.IsDead)
                 {
