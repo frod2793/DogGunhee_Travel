@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using InGame.ObjectPool;
 using InGame.Manager;
 using InGame.Weapon.Base;
@@ -11,280 +10,287 @@ using InGame.Weapon.Logic;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 히어로 랜딩(방패) 공격의 View와 애니메이션 제어를 담당하는 컨트롤러입니다.
-    /// 실제 비즈니스 로직은 ShieldWeaponLogic에서 처리합니다.
+    /// 히어로 랜딩(방패) 공격의 시각적 연출과 비동기 제어를 담당하는 컨트롤러입니다.
+    /// <br/> 충격파 생성, 부메랑 투사체 발사 등의 타이밍을 애니메이션과 동기화합니다.
+    /// <br/> 실제 데미지 계산 및 물리 로직은 ShieldWeaponLogic에 수행니다.
     /// </summary>
     public class ShieldWeaponController : WeaponControllerBase
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 및 컴포넌트 (Components & State)
 
+        // 비주얼 오브젝트 (방패 모델)
         private GameObject m_shieldObj;
-        private Animator m_shieldAnimator;
-        private ShieldShockwave m_shockwavePrefab;
-        private GameObject m_boomerangPrefab;
-
-        private ShieldWeaponLogic m_logic;
         private Transform m_shieldTransform;
-        private Transform m_playerTransform;
-        private CancellationTokenSource m_attackCts;
+        private Animator[] m_shieldAnimators; // 하위 애니메이터 포함 캐싱
 
-        // 애니메이션 해시 (Animator Normalize)
+        // 프리팹 참조
+        private ShieldShockwave m_shockwavePrefab; // 이펙트
+        private ShieldProjectile m_boomerangPrefab; // 투사체
+
+        // 로직 및 제어
+        private ShieldWeaponLogic m_logic;
+        private CancellationTokenSource m_attackCts;
+        private Transform m_playerTransform;
+
+        // 애니메이션 해시 (최적화)
         private static readonly int k_AnimHashAttack = Animator.StringToHash("Attack");
 
         #endregion
 
-        #region 초기화 및 해제
+        #region 2. 초기화 및 해제 (Init & Dispose)
 
-        /// <summary>
-        /// 무기를 초기화하고 방패 모델 및 관련 효과/투사체 풀을 설정합니다.
-        /// </summary>
-        public override void Init(WeaponDataSO data, Transform owner, Func<Vector3> getTargetDirection)
+        public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
         {
-            base.Init(data, owner, getTargetDirection);
+            base.Init(data, owner, poolManager, getTargetDirection);
 
-            // 1. 비주얼 생성 및 설정 컴포넌트 추출
-            ShieldWeaponTuningData? tuningData = null;
+            // 1. 방패 모델 인스턴스화
             if (data.ModelPrefab != null)
             {
                 m_shieldObj = UnityEngine.Object.Instantiate(data.ModelPrefab, m_ownerTransform);
                 m_shieldTransform = m_shieldObj.transform;
-                m_shieldAnimator = m_shieldObj.GetComponentInChildren<Animator>();
                 
-                // 설정 보정값 추출 (WeaponPoolManager 자식 뷰 참조)
-                ShieldWeaponView viewSettings = null;
-                if (WeaponPoolManager.Instance != null)
-                {
-                    viewSettings = WeaponPoolManager.Instance.GetComponent<ShieldWeaponView>();
-                }
-
-                if (viewSettings != null)
-                {
-                    tuningData = new ShieldWeaponTuningData
-                    {
-                        ImpactTriggerTime = viewSettings.ImpactTriggerTime,
-                        FollowThroughDelay = viewSettings.FollowThroughDelay,
-                        BoomerangSpeed = viewSettings.BoomerangSpeed,
-                        ReturnDelay = viewSettings.ReturnDelay,
-                        RotationsPerSecond = viewSettings.RotationsPerSecond
-                    };
-                }
-                
-                if (m_shieldAnimator == null)
-                {
-                    LogManager.LogError($"[ShieldWeaponController] {data.WeaponName} 프리팹 자식에 Animator가 없습니다.");
-                }
-                
+                // 위치 초기화
                 m_shieldTransform.localPosition = Vector3.zero;
                 m_shieldTransform.localRotation = Quaternion.identity;
+
+                // 애니메이터 캐싱 (배열로 관리하여 일괄 제어)
+                m_shieldAnimators = m_shieldObj.GetComponentsInChildren<Animator>(true);
+                
+                if (m_shieldAnimators == null || m_shieldAnimators.Length == 0)
+                {
+                    LogManager.LogError($"[ShieldWeaponController] {data.WeaponName} 모델에 Animator가 없습니다.", LogManager.LogCategory.Weapon);
+                }
             }
 
-            // 2. POCO Logic 생성
+            // 2. 튜닝 데이터 및 로직(POCO) 초기화
+            ShieldWeaponTuningData tuningData = new ShieldWeaponTuningData(); // 기본값
+            if (m_poolManager != null)
+            {
+                var view = m_poolManager.GetComponent<ShieldWeaponView>();
+                if (view != null)
+                {
+                    tuningData.ImpactTriggerTime = view.ImpactTriggerTime;
+                    tuningData.FollowThroughDelay = view.FollowThroughDelay;
+                    tuningData.BoomerangSpeed = view.BoomerangSpeed;
+                    tuningData.ReturnDelay = view.ReturnDelay;
+                    tuningData.RotationsPerSecond = view.RotationsPerSecond;
+                }
+            }
             m_logic = new ShieldWeaponLogic(m_runtimeStats, tuningData);
 
             // 3. 프리팹 캐싱
-            if (data.EffectPrefab != null)
-            {
-                m_shockwavePrefab = data.EffectPrefab.GetComponent<ShieldShockwave>();
-            }
-
-            if (data.ProjectilePrefab != null)
-            {
-                m_boomerangPrefab = data.ProjectilePrefab;
-            }
+            if (data.EffectPrefab != null) m_shockwavePrefab = data.EffectPrefab.GetComponent<ShieldShockwave>();
+            if (data.ProjectilePrefab != null) m_boomerangPrefab = data.ProjectilePrefab.GetComponent<ShieldProjectile>();
 
             if (GameManager.Instance != null)
             {
                 m_playerTransform = GameManager.Instance.PlayerTransfrom();
             }
 
+            // 4. 상태 초기화 및 풀 등록
             ResetShieldState();
             RegisterPools();
         }
 
         /// <summary>
-        /// 부메랑 및 충격파 효과를 위한 오브젝트 풀을 등록합니다.
+        /// 투사체(부메랑)와 이펙트(충격파)를 위한 오브젝트 풀을 등록합니다.
         /// </summary>
         private void RegisterPools()
         {
+            if (m_poolManager == null) return;
+
+            // 부메랑 풀 (투사체 개수 기반으로 넉넉하게 설정)
             if (m_boomerangPrefab != null)
             {
-                WeaponPoolManager.Instance.GetOrAddPool<ShieldProjectile>(
-                    CreateBoomerangProjectile,
-                    OnGetBoomerangProjectile,
-                    OnReleaseBoomerangProjectile,
-                    OnDestroyBoomerangProjectile,
+                int maxBoomerangs = m_logic.BoomerangCount * 3 + 5;
+                m_poolManager.GetOrAddPool<ShieldProjectile>(
+                    createFunc: CreateBoomerangProjectile,
+                    actionOnGet: OnGetProjectile,
+                    actionOnRelease: OnReleaseProjectile,
+                    actionOnDestroy: OnDestroyProjectile,
                     defaultCapacity: m_logic.BoomerangCount,
-                    maxSize: m_logic.BoomerangCount * 3
+                    maxSize: maxBoomerangs
                 );
             }
 
+            // 충격파 풀
             if (m_shockwavePrefab != null)
             {
-                WeaponPoolManager.Instance.GetOrAddPool<ShieldShockwave>(
-                    CreateShockwave,
-                    OnGetShockwave,
-                    OnReleaseShockwave,
-                    OnDestroyShockwave,
+                m_poolManager.GetOrAddPool<ShieldShockwave>(
+                    createFunc: CreateShockwave,
+                    actionOnGet: OnGetShockwave,
+                    actionOnRelease: OnReleaseShockwave,
+                    actionOnDestroy: OnDestroyShockwave,
                     defaultCapacity: 2,
                     maxSize: 5
                 );
             }
         }
 
-        /// <summary>
-        /// 무기 해제 시 활성화된 트윈 및 비동기 작업을 정리합니다.
-        /// </summary>
         public override void Dispose()
         {
-            m_ownerTransform.DOKill();
-            m_attackCts?.Cancel();
-            m_attackCts?.Dispose();
-            m_attackCts = null;
-            ResetShieldState();
+            CancelAttack();
+            
+            if (m_shieldObj != null)
+            {
+                UnityEngine.Object.Destroy(m_shieldObj);
+                m_shieldObj = null;
+            }
+
+            base.Dispose();
         }
 
-        /// <summary>
-        /// 방패 모델과 애니메이터 상태를 초기화합니다.
-        /// </summary>
         private void ResetShieldState()
         {
-            if (m_shieldTransform != null) 
+            if (m_shieldTransform != null)
             {
                 m_shieldTransform.localPosition = Vector3.zero;
                 m_shieldTransform.localRotation = Quaternion.identity;
             }
 
-            if (m_shieldAnimator != null)
+            if (m_shieldAnimators != null)
             {
-                m_shieldAnimator.Rebind();
-                m_shieldAnimator.speed = 1f;
+                foreach (var anim in m_shieldAnimators)
+                {
+                    if (anim != null)
+                    {
+                        anim.Rebind();
+                        anim.speed = 1f;
+                    }
+                }
             }
 
-            SetShieldActive(false);
+            if (m_shieldObj != null) m_shieldObj.SetActive(false);
         }
 
         #endregion
 
-        #region 공격 실행 및 비동기 루틴
+        #region 3. 공격 실행 (Attack Execution)
 
         protected override void ExecuteAttack(Vector3 direction)
         {
-            m_attackCts?.Cancel();
+            // 이전 공격 취소 및 새 토큰 생성
+            CancelAttack();
             m_attackCts = new CancellationTokenSource();
+            
+            // 비동기 공격 루틴 시작
             AnimateShieldAttackAsync(m_attackCts.Token).Forget();
         }
 
+        private void CancelAttack()
+        {
+            if (m_attackCts != null)
+            {
+                m_attackCts.Cancel();
+                m_attackCts.Dispose();
+                m_attackCts = null;
+            }
+        }
+
         /// <summary>
-        /// 방패 공격 애니메이션 재생 및 임팩트 시점의 효과/투사체 생성을 제어합니다.
+        /// 방패 공격 애니메이션을 재생하고, 특정 타이밍에 충격파와 부메랑을 생성합니다.
         /// </summary>
         private async UniTaskVoid AnimateShieldAttackAsync(CancellationToken token)
         {
             try
             {
-                if (m_shieldTransform != null)
-                {
-                    m_shieldTransform.localPosition = Vector3.zero;
-                }
-
+                // 1. 방패 활성화 및 애니메이션 시작
                 if (m_shieldObj != null)
                 {
-                    SetShieldActive(true);
+                    m_shieldObj.SetActive(true);
                     
-                    var animators = m_shieldObj.GetComponentsInChildren<Animator>(true);
-                    foreach (var anim in animators)
+                    // 애니메이터 활성화 및 재생
+                    if (m_shieldAnimators != null)
                     {
-                        if (anim == null)
+                        foreach (var anim in m_shieldAnimators)
                         {
-                            continue;
+                            if (anim == null || !anim.gameObject.activeSelf) continue;
+                            
+                            anim.speed = m_logic.AttackSpeed; // 공속 반영
+                            anim.Play(k_AnimHashAttack, -1, 0f);
+                            anim.Update(0f); // 첫 프레임 즉시 갱신
                         }
-                        
-                        anim.gameObject.SetActive(true);
-                        anim.enabled = true;
-                    }
-
-                    // 활성화 직후 상태 갱신을 위해 한 프레임 대기
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    
-                    foreach (var anim in animators)
-                    {
-                        if (anim == null || anim.runtimeAnimatorController == null)
-                        {
-                            continue;
-                        }
-
-                        anim.speed = m_logic.AttackSpeed;
-                        
-                        // 애니메이션 즉시 재생 강제 (Play + Trigger + Update)
-                        anim.Play(k_AnimHashAttack, -1, 0f);
-                        anim.SetTrigger(k_AnimHashAttack);
-                        anim.Update(0f);
                     }
                 }
 
-                // 1단계: 임팩트(충격파) 시점까지 대기
-                float waitTime = m_logic.GetAdjustedWaitTime(m_logic.ImpactTriggerTime);
-                await UniTask.Delay(TimeSpan.FromSeconds(waitTime), cancellationToken: token);
+                // 2. 임팩트 시점까지 대기 (내려찍는 동작)
+                float impactTime = m_logic.GetAdjustedWaitTime(m_logic.ImpactTriggerTime);
+                await UniTask.Delay(TimeSpan.FromSeconds(impactTime), cancellationToken: token);
 
-                // 진화 시 부메랑 발사 및 공통 충격파 생성
+                // 3. 효과 발생 (충격파 & 부메랑)
+                SpawnShockwaveEffect();
+
                 if (m_logic.IsEvolved)
                 {
                     LaunchBoomerangs();
                 }
 
-                SpawnShockwaveEffect();
-
-                // 2단계: 후속 동작(Follow-through) 대기
-                float followDelay = m_logic.GetAdjustedWaitTime(m_logic.FollowThroughDelay);
-                await UniTask.Delay(TimeSpan.FromSeconds(followDelay), cancellationToken: token);
+                // 4. 후속 동작(Follow-through) 대기
+                float followTime = m_logic.GetAdjustedWaitTime(m_logic.FollowThroughDelay);
+                await UniTask.Delay(TimeSpan.FromSeconds(followTime), cancellationToken: token);
             }
             catch (OperationCanceledException)
             {
-                // 정상 취소
+                // 공격 취소됨 (정상)
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[ShieldWeapon] 공격 중 오류: {ex.Message}", LogManager.LogCategory.Weapon);
             }
             finally
             {
+                // 5. 종료 및 상태 리셋
                 ResetShieldState();
             }
         }
 
-        /// <summary>
-        /// 충격파 이펙트를 생성(오브젝트 풀 활용)하고 초기화합니다.
-        /// </summary>
+        #endregion
+
+        #region 4. 투사체 및 효과 생성 (Spawning)
+
         private void SpawnShockwaveEffect()
         {
-            ShieldShockwave effect = WeaponPoolManager.Instance.Get<ShieldShockwave>();
+            if (m_poolManager == null || m_shockwavePrefab == null) return;
+
+            ShieldShockwave effect = m_poolManager.Get<ShieldShockwave>();
             if (effect != null)
             {
-                effect.transform.position = m_ownerTransform.position + effect.SpawnOffset;
+                // 위치 설정
+                effect.transform.position = m_ownerTransform.position;
                 effect.transform.rotation = Quaternion.identity;
-                effect.Init(m_logic.AttackPower, m_logic.MobStunTime, m_logic.AttackSpeed);
+                
+                // 데이터 초기화
+                effect.Init(
+                    m_logic.AttackPower, 
+                    m_logic.MobStunTime, 
+                    m_logic.AttackSpeed, 
+                    m_poolManager
+                );
             }
         }
 
-        /// <summary>
-        /// 방패 파편(부메랑)들을 계산된 궤적으로 발사합니다.
-        /// </summary>
         private void LaunchBoomerangs()
         {
-            if (m_boomerangPrefab == null || m_playerTransform == null)
-            {
-                return;
-            }
+            if (m_poolManager == null || m_boomerangPrefab == null || m_playerTransform == null) return;
 
             Vector3 spawnPos = m_playerTransform.position;
 
             for (int i = 0; i < m_logic.BoomerangCount; i++)
             {
+                // 로직에서 발사 정보(방향, 회전) 계산
                 var (direction, rotation) = m_logic.CalculateBoomerangLaunchInfo(i);
 
-                var boomerang = WeaponPoolManager.Instance.Get<ShieldProjectile>();
+                ShieldProjectile boomerang = m_poolManager.Get<ShieldProjectile>();
                 if (boomerang != null)
                 {
                     boomerang.transform.SetPositionAndRotation(spawnPos, rotation);
+                    
+                    // 데이터 초기화
                     boomerang.Init(
                         m_logic.AttackPower,
                         m_logic.MobStunTime,
                         m_playerTransform,
+                        m_poolManager,
                         direction,
                         m_logic.BoomerangSpeed,
                         m_logic.BoomerangDistance,
@@ -295,70 +301,36 @@ namespace InGame.Weapon.Controllers
             }
         }
 
-        private void SetShieldActive(bool isActive)
-        {
-            if (m_shieldObj != null)
-            {
-                m_shieldObj.SetActive(isActive);
-            }
-        }
-
         #endregion
 
-        #region 오브젝트 풀 관리 델리게이트
+        #region 5. 오브젝트 풀 델리게이트 (Pool Callbacks)
 
+        // --- 부메랑 (Projectile) ---
         private ShieldProjectile CreateBoomerangProjectile()
         {
-            if (m_boomerangPrefab == null)
-            {
-                return null;
-            }
-            return UnityEngine.Object.Instantiate(m_boomerangPrefab).GetComponent<ShieldProjectile>();
+            if (m_boomerangPrefab == null) return null;
+            return UnityEngine.Object.Instantiate(m_boomerangPrefab);
         }
 
-        private void OnGetBoomerangProjectile(ShieldProjectile p)
+        private void OnGetProjectile(ShieldProjectile p) => p.gameObject.SetActive(true);
+        private void OnReleaseProjectile(ShieldProjectile p) => p.gameObject.SetActive(false);
+        private void OnDestroyProjectile(ShieldProjectile p)
         {
-            p.gameObject.SetActive(true);
+            if (p != null) UnityEngine.Object.Destroy(p.gameObject);
         }
 
-        private void OnReleaseBoomerangProjectile(ShieldProjectile p)
-        {
-            p.gameObject.SetActive(false);
-        }
-
-        private void OnDestroyBoomerangProjectile(ShieldProjectile p)
-        {
-            if (p != null)
-            {
-                UnityEngine.Object.Destroy(p.gameObject);
-            }
-        }
-
+        // --- 충격파 (Effect) ---
         private ShieldShockwave CreateShockwave()
         {
-            if (m_shockwavePrefab == null)
-            {
-                return null;
-            }
+            if (m_shockwavePrefab == null) return null;
             return UnityEngine.Object.Instantiate(m_shockwavePrefab);
         }
 
-        private void OnGetShockwave(ShieldShockwave effect)
+        private void OnGetShockwave(ShieldShockwave e) => e.gameObject.SetActive(true);
+        private void OnReleaseShockwave(ShieldShockwave e) => e.gameObject.SetActive(false);
+        private void OnDestroyShockwave(ShieldShockwave e)
         {
-            effect.gameObject.SetActive(true);
-        }
-
-        private void OnReleaseShockwave(ShieldShockwave effect)
-        {
-            effect.gameObject.SetActive(false);
-        }
-
-        private void OnDestroyShockwave(ShieldShockwave effect)
-        {
-            if (effect != null)
-            {
-                UnityEngine.Object.Destroy(effect.gameObject);
-            }
+            if (e != null) UnityEngine.Object.Destroy(e.gameObject);
         }
 
         #endregion

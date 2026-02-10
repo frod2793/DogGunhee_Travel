@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using InGame.Weapon.Base;
 using InGame.Manager;
 using InGame.ObjectPool;
@@ -7,45 +8,47 @@ using InGame.Weapon.Controllers;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 플레이어 주위에서 궤적을 그리며 회전하는 투사체(Orbit Ball)를 관리하는 전략 클래스입니다.
+    /// 플레이어 주위를 공전하는 투사체(Orbit Ball)를 관리하는 전략입니다.
+    /// <br/> 무기 레벨(투사체 개수)에 따라 실시간으로 공 개수를 동기화합니다.
     /// </summary>
     public class OrbitProjectileStrategy : IWeaponStrategy
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
         private WeaponDataSO m_data;
-        private readonly System.Collections.Generic.List<OrbitProjectile> m_activeBalls = new();
+        private WeaponPoolManager m_poolManager;
+        private BallWeaponView m_view; // 튜닝 데이터
         private GameObject m_ballPrefab;
-        private BallWeaponView m_view;
+
+        private readonly List<OrbitProjectile> m_activeBalls = new();
 
         #endregion
 
-        #region IWeaponStrategy 구현
+        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
 
-        public void Init(WeaponDataSO data)
+        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
             m_data = data;
+            m_poolManager = poolManager;
             m_ballPrefab = data.ProjectilePrefab;
 
-            // 1. View 컴포넌트 추출 (전역 설정 컴포넌트)
-            if (WeaponPoolManager.Instance != null)
+            if (m_poolManager == null) return;
+
+            // View 컴포넌트 설정 (전역 튜닝값)
+            m_view = m_poolManager.GetComponent<BallWeaponView>();
+            if (m_view == null)
             {
-                m_view = WeaponPoolManager.Instance.GetComponent<BallWeaponView>();
+                m_view = m_poolManager.gameObject.AddComponent<BallWeaponView>();
             }
 
-            if (m_view == null && WeaponPoolManager.Instance != null)
-            {
-                m_view = WeaponPoolManager.Instance.gameObject.AddComponent<BallWeaponView>();
-            }
-
-            // 2. 투사체 오브젝트 풀 등록
+            // 투사체 풀 등록
             if (m_ballPrefab != null)
             {
-                WeaponPoolManager.Instance.GetOrAddPool<OrbitProjectile>(
-                    CreateBall,
-                    OnGetBall,
-                    OnReleaseBall,
-                    OnDestroyBall,
+                m_poolManager.GetOrAddPool<OrbitProjectile>(
+                    createFunc: CreateBall,
+                    actionOnGet: p => p.gameObject.SetActive(true),
+                    actionOnRelease: p => p.gameObject.SetActive(false),
+                    actionOnDestroy: p => Object.Destroy(p.gameObject),
                     defaultCapacity: 5,
                     maxSize: 20
                 );
@@ -54,12 +57,13 @@ namespace InGame.Weapon.Strategies
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
+            // 공격 시마다 개수 동기화
             SyncBallCount(stats, owner);
         }
 
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
-            // 플레이어 생존 시 실시간 탄환 도수 동기화
+            // 플레이어가 살아있다면 계속 동기화 유지
             if (GameManager.Instance != null && GameManager.Instance.SpawnedPlayer != null)
             {
                 SyncBallCount(stats, GameManager.Instance.SpawnedPlayer.transform);
@@ -68,23 +72,24 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 탄환 동기화 로직
+        #region 3. 상세 로직 (Logic)
 
-        /// <summary>
-        /// 무기 레벨에 따른 탄환 개수를 실시간으로 맞춥니다.
-        /// </summary>
         private void SyncBallCount(WeaponRuntimeStats stats, Transform owner)
         {
+            if (m_poolManager == null) return;
+
             int targetCount = stats.ProjectileCount;
-            
+
+            // 부족한 개수만큼 추가 생성
             while (m_activeBalls.Count < targetCount)
             {
-                var ball = WeaponPoolManager.Instance.Get<OrbitProjectile>();
+                var ball = m_poolManager.Get<OrbitProjectile>();
                 if (ball != null)
                 {
+                    // 각도 등분
                     float angle = (360f / targetCount) * m_activeBalls.Count;
-                    
-                    // 뷰 튜닝 데이터 및 스탯 기반 속도 계산
+
+                    // 속도 및 오프셋 계산 (View 데이터 활용)
                     float baseSpeed = 180f * (m_view != null ? m_view.RotationSpeedMultiplier : 1.0f);
                     float rotSpeed = baseSpeed * stats.AttackSpeed;
                     float offset = m_view != null ? m_view.RotationOffset : 0f;
@@ -98,31 +103,15 @@ namespace InGame.Weapon.Strategies
                     break;
                 }
             }
+            
+            // NOTE: 개수가 줄어드는 경우에 대한 처리가 필요하다면 여기에 추가 (현재는 늘어나는 것만 고려)
         }
-
-        #endregion
-
-        #region 오브젝트 풀 델리게이트
 
         private OrbitProjectile CreateBall()
         {
-            if (m_ballPrefab == null)
-            {
-                return null;
-            }
-            
+            if (m_ballPrefab == null) return null;
             var go = Object.Instantiate(m_ballPrefab);
             return go.GetComponent<OrbitProjectile>() ?? go.AddComponent<OrbitProjectile>();
-        }
-
-        private void OnGetBall(OrbitProjectile ball) => ball.gameObject.SetActive(true);
-        private void OnReleaseBall(OrbitProjectile ball) => ball.gameObject.SetActive(false);
-        private void OnDestroyBall(OrbitProjectile ball)
-        {
-            if (ball != null)
-            {
-                Object.Destroy(ball.gameObject);
-            }
         }
 
         #endregion

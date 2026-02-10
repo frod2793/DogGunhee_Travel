@@ -4,7 +4,7 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 뼈 무기(Bone)의 에디터 조정 데이터를 담는 구조체입니다.
+    /// 뼈다귀(Bone) 무기의 에디터 조정 데이터를 담는 구조체입니다.
     /// </summary>
     public struct BoneWeaponTuningData
     {
@@ -12,26 +12,27 @@ namespace InGame.Weapon.Logic
     }
 
     /// <summary>
-    /// 뼈 무기의 비즈니스 로직을 담당하는 POCO 클래스입니다.
+    /// 뼈다귀 무기의 비즈니스 로직(속도, 지속시간 등)을 담당하는 클래스입니다.
     /// </summary>
     public class BoneWeaponLogic
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
         private WeaponRuntimeStats m_runtimeStats;
-        
+
         #endregion
 
-        #region 프로퍼티
+        #region 2. 프로퍼티 (Properties)
 
         public float BoneSpeed { get; private set; } = 10f;
+        
         public float AttackPower => m_runtimeStats.AttackPower;
         public float Duration => m_runtimeStats.CurrentDuration;
         public bool IsEvolved => m_runtimeStats.CurrentLevel >= 6; // 6레벨 진화 가정
 
         #endregion
 
-        #region 생성자 및 초기화
+        #region 3. 생성자 및 초기화 (Constructor & Init)
 
         public BoneWeaponLogic(WeaponRuntimeStats stats, BoneWeaponTuningData? tuningData = null)
         {

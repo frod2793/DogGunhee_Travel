@@ -1,30 +1,32 @@
 using UnityEngine;
 using InGame.Mob.MobBase;
-using InGame.ObjectPool;
 
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 공놀이(Ball) 무기의 데미지 판정을 담당하는 컴포넌트입니다.
-    /// 구체 콜라이더를 통해 범위 내 적에게 데미지와 경직을 줍니다.
+    /// 공놀이(Ball) 무기의 물리 충돌 및 데미지 판정을 담당하는 컴포넌트입니다.
+    /// <br/> 투사체 프리팹에 부착되어 Trigger 충돌 시 적에게 데미지와 경직을 부여합니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class BallDamageDealer : MonoBehaviour
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
+        private Collider2D m_collider;
+        
+        // 초기화 데이터
         private float m_attackPower;
         private float m_stunTime;
-        private Collider2D m_collider;
 
         #endregion
 
-        #region Unity 라이프사이클
+        #region 2. Unity 라이프사이클 (Unity Lifecycle)
 
         private void Awake()
         {
             m_collider = GetComponent<Collider2D>();
             
+            // 트리거 설정 강제 (물리 충돌 방지)
             if (m_collider != null)
             {
                 m_collider.isTrigger = true;
@@ -33,23 +35,31 @@ namespace InGame.Weapon
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.CompareTag("Mob") && other.TryGetComponent<MobBase>(out var mob))
+            // Mob 태그 확인
+            if (!other.CompareTag("Mob")) return;
+
+            // MobBase 컴포넌트 확인 및 데미지 적용
+            if (other.TryGetComponent(out MobBase mob))
             {
                 if (!mob.IsDead)
                 {
                     mob.TakeDamage(m_attackPower, m_stunTime);
-                    mob.PlayDamageEffect();
+                    
+                    // 피격 이펙트 재생 (MobBase에 해당 메서드가 있다고 가정)
+                    // mob.PlayDamageEffect(); 
                 }
             }
         }
 
         #endregion
 
-        #region 초기화 및 제어
+        #region 3. 초기화 및 제어 (Initialization)
 
         /// <summary>
-        /// 데미지 딜러의 공격 수치를 설정합니다.
+        /// 데미지 딜러의 전투 수치를 초기화합니다.
         /// </summary>
+        /// <param name="damage">적에게 입힐 데미지</param>
+        /// <param name="stunTime">적에게 적용할 경직 시간</param>
         public void Init(float damage, float stunTime)
         {
             m_attackPower = damage;

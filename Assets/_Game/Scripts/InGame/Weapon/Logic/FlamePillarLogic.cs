@@ -5,18 +5,18 @@ using UnityEngine;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 불기둥(Flame Pillar)의 비즈니스 로직(데미지 계산, 피격 상태 관리)을 담당하는 POCO 클래스입니다.
-    /// MonoBehaviour 의존성 없이 순수 C# 로직만 포함합니다.
+    /// 불기둥(Flame Pillar)의 비즈니스 로직(데미지 계산, 중복 피격 관리)을 담당하는 클래스입니다.
     /// </summary>
     public class FlamePillarLogic
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
         
+        // 피격된 몹 관리
         private readonly HashSet<MobBase> m_hitMobs = new HashSet<MobBase>();
         
         #endregion
 
-        #region 프로퍼티
+        #region 2. 프로퍼티 (Properties)
         
         public float DirectDamage { get; private set; }
         public float DotDamage { get; private set; }
@@ -26,7 +26,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 생성자 및 상태 관리
+        #region 3. 생성자 및 초기화 (Constructor & Init)
 
         public FlamePillarLogic(float directDamage, float dotDamage, float duration, int tickCount, Color hitFlashColor)
         {
@@ -38,7 +38,7 @@ namespace InGame.Weapon.Logic
         }
 
         /// <summary>
-        /// 씬에 배치될 때 상태를 초기화합니다.
+        /// 오브젝트가 활성화될 때 피격 목록을 초기화합니다.
         /// </summary>
         public void Reset()
         {
@@ -47,13 +47,13 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 로직 메서드
+        #region 4. 로직 메서드 (Logic Methods)
 
         /// <summary>
-        /// 특정 몹이 이미 피격되었는지 확인하고, 안 되었다면 등록합니다.
+        /// 특정 몹이 이미 피격되었는지 확인하고, 아직이라면 등록합니다.
         /// </summary>
-        /// <param name="mob">대상 몹</param>
-        /// <returns>이미 피격된 적이면 false, 새로 피격된 적이면 true</returns>
+        /// <param name="mob">대상 몬스터</param>
+        /// <returns>신규 피격이면 true, 이미 맞았다면 false</returns>
         public bool TryHit(MobBase mob)
         {
             if (mob == null || mob.IsDead)
@@ -71,7 +71,7 @@ namespace InGame.Weapon.Logic
         }
 
         /// <summary>
-        /// 현재 피격된 몹 목록에서 죽은 몹 등을 정리합니다. (선택사항)
+        /// 피격 목록에서 소멸된 몹을 정리합니다. (메모리 관리용)
         /// </summary>
         public void Cleanup()
         {

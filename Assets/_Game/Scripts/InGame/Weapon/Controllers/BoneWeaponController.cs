@@ -1,150 +1,132 @@
 using System;
 using UnityEngine;
-using InGame.ObjectPool;
-using InGame.Weapon.Base;
-using InGame.Weapon.Logic;
-using InGame.Manager;
+using InGame.ObjectPool; 
+using InGame.Weapon.Base; 
+using InGame.Weapon.Logic; 
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 뼈다귀 투사체를 던지는 원거리 무기 컨트롤러입니다.
+    /// 뼈다귀(Bone) 투사체를 포물선으로 던지는 원거리 무기 컨트롤러입니다.
     /// </summary>
     public class BoneWeaponController : WeaponControllerBase
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 및 로직
 
-        /// <summary>
-        /// 뼈다귀 무기의 핵심 비즈니스 로직
-        /// </summary>
         private BoneWeaponLogic m_logic;
 
         #endregion
 
-        #region 초기화 및 해제
+        #region 2. 초기화 및 해제
 
-        /// <summary>
-        /// 무기를 초기화하고 필요한 리소스(로직, 오브젝트 풀)를 설정합니다.
-        /// </summary>
-        public override void Init(WeaponDataSO data, Transform owner, Func<Vector3> getTargetDirection)
+        public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
         {
-            base.Init(data, owner, getTargetDirection);
+            base.Init(data, owner, poolManager, getTargetDirection);
 
-            // 1. 비주얼 튜닝 데이터 추출 (WeaponPoolManager에서 View 참조)
-            BoneWeaponTuningData? tuningData = null;
-            if (WeaponPoolManager.Instance != null)
+            // 튜닝 데이터 가져오기
+            BoneWeaponTuningData tuningData = new BoneWeaponTuningData();
+            if (m_poolManager != null)
             {
-                var view = WeaponPoolManager.Instance.GetComponent<BoneWeaponView>();
+                var view = m_poolManager.GetComponent<BoneWeaponView>();
                 if (view != null)
                 {
-                    tuningData = new BoneWeaponTuningData 
-                    { 
-                        BoneSpeed = view.BoneSpeed 
-                    };
+                    tuningData.BoneSpeed = view.BoneSpeed;
                 }
             }
 
-            // 2. POCO 로직 인스턴스 생성
+            // 로직 인스턴스 생성
             m_logic = new BoneWeaponLogic(m_runtimeStats, tuningData);
 
-            // 3. 오브젝트 풀 등록 (BoneBullet)
-            if (m_runtimeStats.Data.ProjectilePrefab != null)
-            {
-                WeaponPoolManager.Instance.GetOrAddPool<BoneBullet>(
-                    CreateBullet, 
-                    OnGet, 
-                    OnRelease, 
-                    OnDestroyPoolItem,
-                    maxSize: 10 + m_runtimeStats.CurrentProjectileCount * 2
-                );
-            }
+            // 풀 초기화
+            InitializeProjectilePool();
         }
 
-        /// <summary>
-        /// 무기 사용 중단 시 호출됩니다.
-        /// </summary>
+        private void InitializeProjectilePool()
+        {
+            if (m_runtimeStats.Data.ProjectilePrefab == null)
+            {
+                Debug.LogError($"[BoneWeaponController] '{WeaponName}'의 ProjectilePrefab이 누락되었습니다.");
+                return;
+            }
+
+            if (m_poolManager == null) return;
+
+            int initialSize = 10 + (m_runtimeStats.CurrentProjectileCount * 2);
+
+            m_poolManager.GetOrAddPool<BoneBullet>(
+                CreateBullet,
+                OnGetBullet,
+                OnReleaseBullet,
+                OnDestroyBullet,
+                initialSize,
+                100
+            );
+        }
+
         public override void Dispose()
         {
-            // 전역 풀을 사용하므로 별도의 정리는 필요 없음
+            base.Dispose();
         }
 
         #endregion
 
-        #region 공격 실행 로직
+        #region 3. 공격 실행 로직
 
-        /// <summary>
-        /// 추상 메서드를 통해 실제 공격 행위를 수행합니다.
-        /// </summary>
         protected override void ExecuteAttack(Vector3 direction)
         {
             ThrowBone(direction);
         }
 
-        /// <summary>
-        /// 뼈다귀 투사체를 생성하고 발사합니다.
-        /// </summary>
         private void ThrowBone(Vector3 direction)
         {
-            // 오브젝트 풀에서 투사체 획득
-            BoneBullet bullet = WeaponPoolManager.Instance.Get<BoneBullet>();
-            if (bullet == null)
-            {
-                return;
-            }
+            if (m_poolManager == null || m_logic == null) return;
+
+            BoneBullet bullet = m_poolManager.Get<BoneBullet>();
+            if (bullet == null) return;
 
             bullet.transform.position = m_ownerTransform.position;
-            bullet.transform.SetParent(null);
-
-            // 투사체 데이터 초기화 (Initialize -> Init 변경 필요 시 진행)
+            bullet.transform.rotation = Quaternion.identity; 
+            bullet.transform.SetParent(null); 
+            
             bullet.Init(
                 m_logic.AttackPower,
-                m_logic.Duration,
+                m_logic.Duration,    
                 m_logic.BoneSpeed,
-                m_logic.IsEvolved
+                m_logic.IsEvolved,
+                m_poolManager
             );
 
-            // 발사 방향 결정
-            Vector3 dir = direction == Vector3.zero ? m_ownerTransform.up : direction;
-            bullet.ThrowBullet(dir);
+            Vector3 finalDir = direction == Vector3.zero ? Vector3.up : direction;
+            bullet.ThrowBullet(finalDir);
         }
 
         #endregion
 
-        #region 오브젝트 풀 관리 델리게이트
+        #region 4. 오브젝트 풀 델리게이트
 
-        /// <summary>
-        /// 새로운 뼈다귀 투사체를 생성합니다.
-        /// </summary>
         private BoneBullet CreateBullet()
         {
-            var go = UnityEngine.Object.Instantiate(m_runtimeStats.Data.ProjectilePrefab);
+            if (m_runtimeStats.Data.ProjectilePrefab == null) return null;
+            GameObject go = UnityEngine.Object.Instantiate(m_runtimeStats.Data.ProjectilePrefab);
             return go.GetComponent<BoneBullet>();
         }
 
-        /// <summary>
-        /// 풀에서 활성화될 때 호출되는 콜백입니다.
-        /// </summary>
-        private void OnGet(BoneBullet obj)
+        private void OnGetBullet(BoneBullet bullet)
         {
-            obj.gameObject.SetActive(true);
-            obj.ResetState();
+            bullet.gameObject.SetActive(true);
+            bullet.ResetState();
         }
 
-        /// <summary>
-        /// 풀로 반환될 때 호출되는 콜백입니다.
-        /// </summary>
-        private void OnRelease(BoneBullet obj)
+        private void OnReleaseBullet(BoneBullet bullet)
         {
-            obj.gameObject.SetActive(false);
-            obj.transform.SetParent(null);
+            bullet.gameObject.SetActive(false);
+            if (m_poolManager != null)
+                bullet.transform.SetParent(m_poolManager.transform);
         }
 
-        /// <summary>
-        /// 풀 아이템 파괴 시 호출됩니다.
-        /// </summary>
-        private void OnDestroyPoolItem(BoneBullet obj)
+        private void OnDestroyBullet(BoneBullet bullet)
         {
-            UnityEngine.Object.Destroy(obj.gameObject);
+            if (bullet != null) UnityEngine.Object.Destroy(bullet.gameObject);
         }
 
         #endregion

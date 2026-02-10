@@ -4,6 +4,8 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Serialization;
+using InGame.ObjectPool;
+using InGame.Manager; // GameManager 참조가 필요할 수도 있으니 확인
 
 namespace InGame.vamsir
 {
@@ -15,31 +17,26 @@ namespace InGame.vamsir
     {
         #region 프로퍼티 및 필드
 
-        // 인터페이스 구현 (PascalCase 적용)
-        public ObjectPoolSpawner ObjectPoolSpawner { get; set; }
+        // 인터페이스 구현
+        public InGame.ObjectPool.ObjectPoolSpawner ObjectPoolSpawner { get; set; }
 
-        [Header("플로팅 효과 설정")]
-        [Tooltip("아이템이 위아래로 떠다니는 최대 높이")]
-        [FormerlySerializedAs("floatHeight")]
-        [SerializeField] protected float m_floatHeight = 0.5f;
-        
-        [Tooltip("한 번 위아래(Yoyo) 왕복하는 시간")]
-        [FormerlySerializedAs("floatDuration")]
-        [SerializeField] protected float m_floatDuration = 1.0f;
+        [Header("플로팅 효과 설정")] [Tooltip("아이템이 위아래로 떠다니는 최대 높이")] [FormerlySerializedAs("floatHeight")] [SerializeField]
+        protected float m_floatHeight = 0.5f;
+
+        [Tooltip("한 번 위아래(Yoyo) 왕복하는 시간")] [FormerlySerializedAs("floatDuration")] [SerializeField]
+        protected float m_floatDuration = 1.0f;
 
         [Header("회전 효과 설정")]
         [Tooltip("회전 각도 (Y축 기준, 3D 느낌 연출 시 사용)")]
         [FormerlySerializedAs("rotationAngle")]
-        [SerializeField] protected float m_rotationAngle = 180f;
-        
-        [Tooltip("회전 지속 시간")]
-        [FormerlySerializedAs("rotationDuration")]
-        [SerializeField] protected float m_rotationDuration = 2.0f;
+        [SerializeField]
+        protected float m_rotationAngle = 180f;
 
-        [Header("생명주기 설정")]
-        [Tooltip("자동으로 사라지기까지의 시간 (초)")]
-        [FormerlySerializedAs("lifeTime")]
-        [SerializeField] protected float m_lifeTime = 30f;
+        [Tooltip("회전 지속 시간")] [FormerlySerializedAs("rotationDuration")] [SerializeField]
+        protected float m_rotationDuration = 2.0f;
+
+        [Header("생명주기 설정")] [Tooltip("자동으로 사라지기까지의 시간 (초)")] [FormerlySerializedAs("lifeTime")] [SerializeField]
+        protected float m_lifeTime = 30f;
 
         // 내부 변수
         private CancellationTokenSource m_lifeTimeCts;
@@ -55,6 +52,12 @@ namespace InGame.vamsir
         {
             // 풀링 시 크기가 변형될 수 있으므로 초기 크기 저장
             m_initialLocalScale = transform.localScale;
+
+            // 트리거 판정을 보장하여 물리적 밀림 방지
+            if (TryGetComponent<Collider2D>(out var col))
+            {
+                col.isTrigger = true;
+            }
         }
 
         protected virtual void OnEnable()
@@ -100,7 +103,8 @@ namespace InGame.vamsir
 
             // 2. 회전 효과
             // 2D 게임에서 Y축 회전은 동전이 뒤집히는 듯한 연출을 줍니다.
-            m_rotateTween = transform.DOLocalRotate(new Vector3(0, m_rotationAngle, 0), m_rotationDuration, RotateMode.FastBeyond360)
+            m_rotateTween = transform.DOLocalRotate(new Vector3(0, m_rotationAngle, 0), m_rotationDuration,
+                    RotateMode.FastBeyond360)
                 .SetRelative(true)
                 .SetEase(Ease.Linear)
                 .SetLoops(-1, LoopType.Incremental) // 계속해서 회전
@@ -147,7 +151,7 @@ namespace InGame.vamsir
 
             if (ObjectPoolSpawner != null)
             {
-                ObjectPoolSpawner.ReturnObject(gameObject);
+                ObjectPoolSpawner.ReturnItem(this);
             }
             else
             {
@@ -157,5 +161,4 @@ namespace InGame.vamsir
 
         #endregion
     }
-    
 }

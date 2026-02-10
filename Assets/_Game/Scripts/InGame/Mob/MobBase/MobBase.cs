@@ -1,39 +1,70 @@
+using System;
+using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using System.Threading;
 using InGame.Manager;
+using InGame.ObjectPool;
 using InGame.Player.Player_Base;
-using InGame;
 
 namespace InGame.Mob.MobBase
 {
     /// <summary>
-    /// 모든 몬스터의 최상위 부모 클래스입니다.
-    /// 기본 스탯(MobStats), 전투 처리(피격, DoT), 오브젝트 풀링 인터페이스를 제공합니다.
+    /// 모든 몬스터의 최상위 추상 클래스입니다.
+    /// <br/> 기본 스탯 관리, 상태 머신 기반 행동 제어, 전투(피격/DoT), 오브젝트 풀링 인터페이스를 제공합니다.
     /// </summary>
     public abstract class MobBase : MonoBehaviour, IObjectPoolUser
     {
-        #region 상수 및 정적 변수
+        #region 1. 상수 및 정적 변수
 
+        // 피격 사운드 중복 재생 방지를 위한 정적 쿨타임
         private const float k_HitSoundCooldown = 0.1f;
         private static float s_lastHitSoundTime;
 
         #endregion
 
-        #region 설정 데이터
+        #region 2. 에디터 설정 (Inspector)
 
-        /// <summary>몬스터의 주요 스탯을 관리하는 구조체입니다.</summary>
-        [Header("몬스터 스탯")]
-        [SerializeField] protected MobStats m_stats;
+        [Header("몬스터 설정")] 
+        [SerializeField, Tooltip("몬스터의 기본 스탯 데이터")] 
+        protected MobStats m_stats;
+
+        [SerializeField, Tooltip("현재 몬스터의 상태 (디버깅용)")] 
+        protected MobState m_currentState;
 
         #endregion
 
-        #region 프로퍼티
+        #region 3. 내부 상태 및 데이터
+
+        /// <summary>
+        /// 몬스터의 동작 상태 정의
+        /// </summary>
+        public enum MobState
+        {
+            Idle,
+            Move,
+            Stun,
+            Attack,
+            Die
+        }
+
+        // 상태 제어 플래그
+        protected bool m_canMoveByState = true;
+        
+        // 타겟 참조
+        protected PlayerBase m_player;
+        protected Transform m_playerTransform;
+
+        // 비동기 작업 관리 (DoT)
+        private CancellationTokenSource m_dotCts;
+
+        #endregion
+
+        #region 4. 공개 프로퍼티 (Accessors)
 
         /// <summary>오브젝트 풀 관리를 위한 스포너 참조입니다.</summary>
         public ObjectPoolSpawner ObjectPoolSpawner { get; set; }
 
-        // 편의를 위한 프로퍼티 래퍼 (외부 의존성 최소화를 위해 유지)
+        // --- 스탯 래퍼 프로퍼티 ---
         public float MoveSpeed { get => m_stats.MoveSpeed; set => m_stats.MoveSpeed = value; }
         public float CurrentHp { get => m_stats.Hp; protected set => m_stats.Hp = value; }
         public float AttackDamage { get => m_stats.AttackDamage; set => m_stats.AttackDamage = value; }
@@ -41,69 +72,51 @@ namespace InGame.Mob.MobBase
         public float AttackRange { get => m_stats.AttackRange; set => m_stats.AttackRange = value; }
         public float StunTime { get => m_stats.StunTime; set => m_stats.StunTime = value; }
 
-        /// <summary>사망 여부입니다.</summary>
+        // --- 상태 프로퍼티 ---
         public bool IsDead { get; protected set; }
-
-        /// <summary>현재 피격 중인지 여부입니다.</summary>
         public bool IsHit { get; protected set; }
-
-        /// <summary>이동 및 행동 가능 여부입니다. (상태 및 게임 정지 여부 자동 확인)</summary>
-        public bool IsMoveEnabled => m_canMoveByState && (GameManager.Instance.State?.IsPlaying ?? false);
-
-        /// <summary>현재 몬스터 상태를 반환합니다.</summary>
         public MobState CurrentState => m_currentState;
 
-        #endregion
-
-        #region 내부 상태 및 캐시
-
-        /// <summary>현재 타켓팅 중인 플레이어입니다.</summary>
-        protected PlayerBase m_player;
-
-        /// <summary>플레이어의 메인 트랜스폼(부모 포함)입니다.</summary>
-        protected Transform m_playerTransform;
-
-        /// <summary>몬스터의 현재 상태(애니메이션 및 View 동기화용)입니다.</summary>
-        public enum MobState { Idle, Move, Stun, Attack, Die }
-
-        [SerializeField]
-        protected MobState m_currentState;
-
-        private bool m_canMoveByState = true;
-
-        // 지속 데미지(DoT) 관리용 토큰
-        private CancellationTokenSource m_dotCts;
+        /// <summary>
+        /// 현재 이동 가능 여부를 반환합니다. (몬스터 상태 + 게임 전체 일시정지 여부 고려)
+        /// </summary>
+        public bool IsMoveEnabled
+        {
+            get
+            {
+                if (GameManager.Instance == null || GameManager.Instance.State == null) return false;
+                return m_canMoveByState && GameManager.Instance.State.IsPlaying;
+            }
+        }
 
         #endregion
 
-        #region Unity 라이프사이클
+        #region 5. 유니티 생명주기
 
         public virtual void OnEnable()
         {
+            // 상태 초기화
             IsDead = false;
             IsHit = false;
             m_canMoveByState = true;
 
-            // 이전 DoT 작업 취소
-            m_dotCts?.Cancel();
-            m_dotCts?.Dispose();
-            m_dotCts = null;
+            // 이전 비동기 작업 정리
+            ResetDotToken();
 
-            if (GameManager.Instance.State != null)
+            // 이벤트 구독
+            if (GameManager.Instance != null && GameManager.Instance.State != null)
             {
-                // 게임 오버 이벤트만 구독 (Pause/Resume은 프로퍼티에서 자동 처리)
                 GameManager.Instance.State.OnGameOver += OnGameOver;
             }
         }
 
         protected virtual void OnDisable()
         {
-            // DoT 및 비동기 로직 정리
-            m_dotCts?.Cancel();
-            m_dotCts?.Dispose();
-            m_dotCts = null;
+            // 비동기 작업 취소
+            ResetDotToken();
 
-            if (GameManager.Instance.State != null)
+            // 이벤트 해제
+            if (GameManager.Instance != null && GameManager.Instance.State != null)
             {
                 GameManager.Instance.State.OnGameOver -= OnGameOver;
             }
@@ -111,7 +124,7 @@ namespace InGame.Mob.MobBase
 
         #endregion
 
-        #region 초기화
+        #region 6. 초기화 및 설정
 
         /// <summary>
         /// 몬스터의 추적 대상을 설정합니다.
@@ -121,29 +134,40 @@ namespace InGame.Mob.MobBase
             m_player = target;
             if (m_player != null)
             {
-                m_playerTransform = m_player.transform.parent;
+                // 일반적으로 모델링 구조상 최상위 부모를 타겟으로 잡음
+                m_playerTransform = m_player.transform.parent != null ? m_player.transform.parent : m_player.transform;
+            }
+        }
+
+        private void ResetDotToken()
+        {
+            if (m_dotCts != null)
+            {
+                m_dotCts.Cancel();
+                m_dotCts.Dispose();
+                m_dotCts = null;
             }
         }
 
         #endregion
 
-        #region 상태 제어 및 로직
+        #region 7. 상태 제어 (State Machine)
 
         /// <summary>
-        /// 몬스터의 상태를 설정합니다. (단순 상태 값 변경 및 이동 가능 여부 갱신)
-        /// 로직은 Behavior Tree 등 외부 시스템에서 처리해야 합니다.
+        /// 몬스터의 상태를 변경하고 관련 플래그를 갱신합니다.
         /// </summary>
         public void SetState(MobState state)
         {
             m_currentState = state;
 
-            // 상태에 따른 기본 플래그 설정
+            // 상태별 이동 가능 여부 설정
             switch (state)
             {
                 case MobState.Stun:
                 case MobState.Die:
                     m_canMoveByState = false;
                     break;
+                
                 case MobState.Move:
                 case MobState.Idle:
                 case MobState.Attack:
@@ -157,38 +181,34 @@ namespace InGame.Mob.MobBase
             }
         }
 
+        /// <summary>
+        /// 사망 처리 로직입니다.
+        /// </summary>
         protected virtual void OnDie()
         {
-            if (!IsDead)
+            if (IsDead) return;
+
+            IsDead = true;
+            m_canMoveByState = false;
+            ResetDotToken(); // DoT 중지
+
+            // 킬 카운트 증가
+            if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
             {
-                IsDead = true;
-                m_canMoveByState = false;
+                PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt++;
+            }
 
-                m_dotCts?.Cancel(); // 사망 시 DoT 중지
-
-                if (PlayerDataManager.Instance != null)
-                {
-                    PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt++;
-                }
-
-                if (ObjectPoolSpawner != null)
-                {
-                    ObjectPoolSpawner.MobObjectPool.Release(this);
-                }
-                else
-                {
-                    Destroy(gameObject);
-                }
+            // 오브젝트 반환 또는 파괴
+            if (ObjectPoolSpawner != null)
+            {
+                ObjectPoolSpawner.ReturnMob(this);
+            }
+            else
+            {
+                Destroy(gameObject);
             }
         }
 
-        #endregion
-
-        #region 이벤트 핸들러
-
-        /// <summary>
-        /// 게임 오버 시 호출됩니다.
-        /// </summary>
         private void OnGameOver()
         {
             m_canMoveByState = false;
@@ -196,71 +216,65 @@ namespace InGame.Mob.MobBase
 
         #endregion
 
-        #region 전투 로직
+        #region 8. 전투 및 데미지 로직 (Combat)
 
         /// <summary>
-        /// 데미지를 입고 체력을 감소시킵니다.
+        /// 일반 데미지를 입힙니다. (자식 클래스에서 구체적 구현)
         /// </summary>
-        /// <param name="damage">양의 데미지 양</param>
-        /// <param name="stunTime">경직 시간 (초)</param>
+        /// <param name="damage">데미지 수치</param>
+        /// <param name="stunTime">경직 시간 (0이면 경직 없음)</param>
         public virtual void TakeDamage(float damage, float stunTime = 0f)
         {
+            // Base implementation can be empty or handle basic HP reduction
         }
 
         /// <summary>
-        /// 지속 피해(DoT)를 적용합니다. 새로운 DoT가 적용되면 이전 DoT는 취소됩니다.
+        /// 지속 피해(DoT)를 적용합니다. 기존 DoT는 취소되고 새로운 DoT로 덮어씌워집니다.
         /// </summary>
-        public void ApplyDamageOverTime(float totalDamage, float duration, int tickCount, System.Action onTickAction = null)
+        public void ApplyDamageOverTime(float totalDamage, float duration, int tickCount, Action onTickAction = null)
         {
-            if (IsDead || tickCount <= 0 || duration <= 0)
-            {
-                return;
-            }
+            if (IsDead || tickCount <= 0 || duration <= 0) return;
 
-            // 이전 DoT 취소
-            m_dotCts?.Cancel();
-            m_dotCts?.Dispose();
+            // 기존 DoT 취소 및 새 토큰 생성
+            ResetDotToken();
             m_dotCts = new CancellationTokenSource();
 
             float damagePerTick = totalDamage / tickCount;
             float interval = duration / tickCount;
 
+            // Fire-and-Forget 방식으로 비동기 루프 실행
             DamageOverTimeLoopAsync(damagePerTick, interval, tickCount, m_dotCts.Token, onTickAction).Forget();
         }
 
-        private async UniTaskVoid DamageOverTimeLoopAsync(float damage, float interval, int ticks, CancellationToken token, System.Action onTickAction)
+        private async UniTaskVoid DamageOverTimeLoopAsync(float damage, float interval, int ticks, CancellationToken token, Action onTickAction)
         {
             try
             {
                 for (int i = 0; i < ticks; i++)
                 {
-                    await UniTask.Delay(System.TimeSpan.FromSeconds(interval), cancellationToken: token);
-                    if (IsDead)
-                    {
-                        break;
-                    }
+                    // 인터벌 대기 (UniTask)
+                    await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: token);
+                    
+                    if (IsDead) break;
 
                     TakeDotDamage(damage);
                     onTickAction?.Invoke();
                 }
             }
-            catch (System.OperationCanceledException)
+            catch (OperationCanceledException)
             {
+                // DoT 취소됨 (새로운 DoT 적용, 사망, 혹은 비활성화)
             }
         }
 
         /// <summary>
-        /// 지속 피해 전용 데미지 처리 (피격음, 스턴, 무적 시간 없음)
+        /// DoT 전용 데미지 처리 (피격 모션/사운드 없이 체력만 감소)
         /// </summary>
         protected virtual void TakeDotDamage(float damage)
         {
-            if (IsDead)
-            {
-                return;
-            }
+            if (IsDead) return;
 
             CurrentHp -= damage;
-
             if (CurrentHp <= 0)
             {
                 OnDie();
@@ -268,21 +282,23 @@ namespace InGame.Mob.MobBase
         }
 
         /// <summary>
-        /// 이동 속도 감소 효과(Slow)를 적용합니다.
+        /// 이동 속도 감소(CC)를 적용합니다.
         /// </summary>
         public virtual void ApplySlow(float slowMultiplier, float duration)
         {
+            // Override in child classes
         }
 
         /// <summary>
-        /// 피격 이펙트를 재생합니다.
+        /// 피격 이펙트 및 셰이더 효과를 재생합니다.
         /// </summary>
         public virtual void PlayDamageEffect(Color? color = null)
         {
+            // Override in child classes
         }
 
         /// <summary>
-        /// 피격 사운드 재생 가능 여부를 확인하고 쿨타임을 갱신합니다.
+        /// 전역 쿨타임을 고려하여 피격 사운드 재생 가능 여부를 확인합니다.
         /// </summary>
         protected bool CanPlayHitSound()
         {

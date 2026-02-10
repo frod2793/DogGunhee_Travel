@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96c1a3d786ac4724599da769f831c711, type: 3}
+  m_Name: StageDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.StageDatabase
+  m_stages:
+  - stageId: 1
+    stageName: "\uC9D1 \uC55E\uB9C8\uB2F9"
+    waves:
+    - waveId: 1
+      waveName: "\uD3C9\uC628\uD55C \uC2DC\uC791"
+      duration: 0
+      spawnInterval: 2
+      waitDuration: 10
+      count: 10
+      mobs:
+      - mobKey: Mob_Normal
+        spawnRate: 100
+    - waveId: 2
+      waveName: "\uAE34\uC7A5 \uACE0\uC870"
+      duration: 0
+      spawnInterval: 1.5
+      waitDuration: 3
+      count: 20
+      mobs:
+      - mobKey: Mob_Normal
+        spawnRate: 80
+    - waveId: 3
+      waveName: "\uCD5C\uD6C4\uC758 \uC800\uD56D"
+      duration: 0
+      spawnInterval: 1
+      waitDuration: 5
+      count: 30
+      mobs:
+      - mobKey: Mob_Normal
+        spawnRate: 60
+  m_xmlPath: Data/StageData

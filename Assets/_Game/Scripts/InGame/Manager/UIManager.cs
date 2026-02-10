@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using R3;
@@ -9,64 +7,97 @@ using UnityEngine;
 using DG.Tweening;
 using InGame.Player.Player_Base;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 using InGame.Lobby;
-using InGame.vamsir;
-using InGame.Weapon.Base;
 using InGame.UI.ViewModels;
 using InGame.UI.Views;
 
 namespace InGame.Manager
 {
+    /// <summary>
+    /// 인게임의 모든 UI 요소(HUD, 팝업, 메뉴)를 총괄 관리하는 매니저 클래스입니다.
+    /// <br/> ViewModel과 View 사이를 연결(Binding)하고, 사용자 입력 및 게임 이벤트를 처리합니다.
+    /// </summary>
     public class UIManager : MonoBehaviour
     {
-        #region 설정 데이터
+        #region 1. 에디터 설정 (Inspector)
 
-        [Header("하위 View 및 팝업")] [SerializeField]
+        [Header("하위 View 및 팝업")] 
+        [SerializeField, Tooltip("인게임 HUD (체력, 경험치 등)")] 
         private InGameHUDView m_hudView;
 
-        [SerializeField] private InGameSkillView m_skillView;
-        [SerializeField] private GameOverPopup m_gameOverPopup;
-        [SerializeField] private GameObject m_menuPanel;
+        [SerializeField, Tooltip("스킬 선택 팝업 View")] 
+        private InGameSkillView m_skillView;
+        
+        [SerializeField, Tooltip("게임 오버 팝업")] 
+        private GameOverPopup m_gameOverPopup;
+        
+        [SerializeField, Tooltip("일시정지 메뉴 패널")] 
+        private GameObject m_menuPanel;
+        
+        [SerializeField, Tooltip("확인/취소 공용 팝업")] 
+        private ConfirmPopup m_confirmPopup;
 
-        [Header("메뉴 및 설정")] [SerializeField] private Button m_menuButton;
-        [SerializeField] private Button m_settingButton;
-        [SerializeField] private Button m_exitButton;
-        [SerializeField] private SettingsData m_settingsData;
+        [Header("메뉴 및 버튼")] 
+        [SerializeField, Tooltip("일시정지/메뉴 버튼")] 
+        private Button m_menuButton;
+        
+        [SerializeField, Tooltip("설정 팝업 열기 버튼")] 
+        private Button m_settingButton;
+        
+        [SerializeField, Tooltip("로비로 나가기 버튼")] 
+        private Button m_exitButton;
+        
+        [SerializeField, Tooltip("메뉴 닫기 버튼")] 
+        private Button m_closeButton;
+        
+        [Header("조작계 (Joystick & Input)")] 
+        [SerializeField, Tooltip("가상 조이스틱 컴포넌트")] 
+        private VariableJoystick m_variableJoystick;
+        
+        [SerializeField, Tooltip("조이스틱 UI 트랜스폼")] 
+        private RectTransform m_joystickTransform;
+        
+        [SerializeField, Tooltip("자동 공격 토글")] 
+        private Toggle m_autoAttackToggle;
 
-        [Header("조작계")] [SerializeField] private VariableJoystick m_variableJoystick;
-        [SerializeField] private RectTransform m_joystickTransform;
-        [SerializeField] private Toggle m_autoAttackToggle;
-
-        [Header("데이터")] [SerializeField] private SkillDatabase m_skillDatabase;
-        [SerializeField] private TMP_Text m_mobWaveText; // 카운트다운용으로 유지
+        [Header("데이터 및 기타")] 
+        [SerializeField, Tooltip("설정 데이터 (저장/로드)")] 
+        private SettingsData m_settingsData;
+        
+        [SerializeField, Tooltip("스킬 데이터베이스")] 
+        private SkillDatabase m_skillDatabase;
+        
+        [SerializeField, Tooltip("웨이브 시작 카운트다운 텍스트")] 
+        private TMP_Text m_mobWaveText;
 
         #endregion
 
-        #region 내부 상태 및 캐시
-
+        #region 2. 내부 변수 및 상태
+        // ViewModel
         private InGameViewModel m_viewModel;
 
+        // 외부 참조
         private GameManager m_gameManager;
         private PlayerController m_playerController;
-        private CancellationTokenSource m_skillSelectionTimerCts;
+
+        // R3 리소스 관리
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
-        private readonly List<SkillData> m_skillChoices = new List<SkillData>(3);
+        // 스킬 선택 상태 관리
+        private int m_pendingSkillSelections;
+        private bool m_isSkillSelectionActive;
 
-        private int m_pendingSkillSelections = 0;
-        private bool m_isSkillSelectionActive = false;
-
+        // 상수
         private static readonly Vector2 k_DefaultJoystickPosition = new Vector2(300, 300);
-
         #endregion
 
-        #region Unity 라이프사이클
+        #region 3. 유니티 생명주기
 
         private void Awake()
         {
             m_gameManager = GameManager.Instance;
-            // [Refactoring] ViewModel에 의존성 주입
+            
+            // ViewModel 생성 (UIManager가 소유권 가짐)
             m_viewModel = new InGameViewModel(m_skillDatabase);
 
             InitializeViews();
@@ -74,29 +105,15 @@ namespace InGame.Manager
             BindViewModel();
         }
 
-        private void InitializeViews()
-        {
-            if (m_hudView != null)
-            {
-                m_hudView.Bind(m_viewModel);
-            }
-
-            if (m_skillView != null)
-            {
-                m_skillView.Initialize(() => m_viewModel.RefreshSkillChoices());
-            }
-
-            if (m_gameOverPopup != null)
-            {
-                m_gameOverPopup.Setup(RestartGame, ExitToLobby);
-            }
-        }
-
         private void Start()
         {
-            m_playerController = m_gameManager.PlayerController;
-            m_variableJoystick = m_gameManager.Joystick;
+            if (m_gameManager != null)
+            {
+                m_playerController = m_gameManager.PlayerController;
+                m_variableJoystick = m_gameManager.Joystick;
+            }
 
+            // 설정 로드
             if (m_settingsData != null)
             {
                 m_settingsData.LoadSettings();
@@ -109,68 +126,102 @@ namespace InGame.Manager
         private void OnDestroy()
         {
             UnsubscribeFromEvents();
+            
+            // 리소스 정리
             m_disposables.Dispose();
             m_viewModel?.Dispose();
         }
 
         #endregion
 
-        #region 초기화
+        #region 4. 초기화 및 바인딩
 
-        private void SubscribeToEvents()
+        private void InitializeViews()
         {
-            if (GameManager.Instance.State == null)
+            if (m_hudView != null)
             {
-                return;
+                m_hudView.Bind(m_viewModel);
             }
 
-            GameManager.Instance.State.OnGameStart += OnGameStart;
-            GameManager.Instance.State.OnGamePause += OnGamePause;
-            GameManager.Instance.State.OnGameResume += OnGameResume;
-            GameManager.Instance.State.OnGameOver += OnGameOver;
-            PlayerBase.OnExpChanged += OnPlayerExpChanged;
-            PlayerBase.OnLevelUp += OnPlayerLevelUp;
-            SettingsData.OnSettingsChanged += ApplyJoystickSettings;
-            GameManager.OnPlayerChanged += OnPlayerChanged;
-        }
-
-        private void UnsubscribeFromEvents()
-        {
-            if (GameManager.Instance.State == null)
+            if (m_skillView != null)
             {
-                return;
+                // 스킬 뷰 초기화 (새로고침 콜백 연결)
+                m_skillView.Initialize(() => m_viewModel.RefreshSkillChoices());
             }
 
-            GameManager.Instance.State.OnGameStart -= OnGameStart;
-            GameManager.Instance.State.OnGamePause -= OnGamePause;
-            GameManager.Instance.State.OnGameResume -= OnGameResume;
-            GameManager.Instance.State.OnGameOver -= OnGameOver;
-            PlayerBase.OnExpChanged -= OnPlayerExpChanged;
-            PlayerBase.OnLevelUp -= OnPlayerLevelUp;
-            SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
-            GameManager.OnPlayerChanged -= OnPlayerChanged;
+            if (m_gameOverPopup != null)
+            {
+                m_gameOverPopup.Setup(RestartGame, ExitToLobby);
+            }
+
+            if (m_confirmPopup != null)
+            {
+                m_confirmPopup.Bind(m_viewModel.ConfirmPopupViewModel);
+            }
+            
+            // 초기 UI 상태 갱신
+            m_viewModel.UpdateIconLists();
         }
 
         private void BindUIEvents()
         {
-            m_menuButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
-            m_exitButton.OnClickAsObservable().Subscribe(_ => TogglePauseMenu()).AddTo(m_disposables);
-            m_settingButton.OnClickAsObservable().Subscribe(_ => m_gameManager.OpenOptionPopup()).AddTo(m_disposables);
+            // 메뉴 버튼
+            if (m_menuButton != null)
+            {
+                m_menuButton.OnClickAsObservable()
+                    .Subscribe(_ => TogglePauseMenu())
+                    .AddTo(m_disposables);
+            }
 
+            // 종료 버튼 (확인 팝업 띄우기)
+            if (m_exitButton != null)
+            {
+                m_exitButton.OnClickAsObservable()
+                    .Subscribe(_ => ShowExitConfirmPopup())
+                    .AddTo(m_disposables);
+            }
+
+            // 닫기 버튼
+            if (m_closeButton != null)
+            {
+                m_closeButton.OnClickAsObservable()
+                    .Subscribe(_ => TogglePauseMenu())
+                    .AddTo(m_disposables);
+            }
+
+            // 설정 버튼
+            if (m_settingButton != null)
+            {
+                m_settingButton.OnClickAsObservable()
+                    .Subscribe(_ => 
+                    {
+                        if (m_gameManager != null) m_gameManager.OpenOptionPopup();
+                    })
+                    .AddTo(m_disposables);
+            }
+
+            // 자동 공격 토글
             if (m_autoAttackToggle != null)
             {
-                m_autoAttackToggle.OnValueChangedAsObservable().Subscribe(OnAutoAttackToggleChanged)
+                m_autoAttackToggle.OnValueChangedAsObservable()
+                    .Subscribe(OnAutoAttackToggleChanged)
                     .AddTo(m_disposables);
             }
         }
 
         private void BindViewModel()
         {
-            // 스킬 선택 활성화 상태 동기화
+            // 1. 스킬 선택 활성화 상태 동기화
             m_viewModel.IsSkillSelectionActive
                 .Subscribe(isActive =>
                 {
-                    m_gameManager.SetMenuPopupState(isActive); // 게임 일시정지 연동
+                    m_isSkillSelectionActive = isActive;
+                    
+                    if (m_gameManager != null)
+                    {
+                        m_gameManager.SetMenuPopupState(isActive); // 게임 일시정지 연동
+                    }
+
                     if (m_skillView != null)
                     {
                         m_skillView.Show(isActive);
@@ -178,16 +229,19 @@ namespace InGame.Manager
                 })
                 .AddTo(m_disposables);
 
-            // 스킬 목록 갱신
+            // 2. 스킬 목록 데이터 바인딩
             m_viewModel.SkillChoices
                 .Subscribe(choices =>
                 {
                     if (m_skillView != null)
-                        m_skillView.RefreshSkillChoices(choices.ToList(), skill => OnSkillSelected(skill).Forget());
+                    {
+                        // 선택 콜백을 비동기 처리(Fire-and-Forget)로 연결
+                        m_skillView.RefreshSkillChoices(choices.ToList(), skill => OnSkillSelectedAsync(skill).Forget());
+                    }
                 })
                 .AddTo(m_disposables);
 
-            // 타이머 갱신
+            // 3. 타이머 바인딩
             m_viewModel.SelectionTimer
                 .Subscribe(time =>
                 {
@@ -199,45 +253,81 @@ namespace InGame.Manager
                 })
                 .AddTo(m_disposables);
 
-            // 자동 선택 이벤트
+            // 4. 자동 선택 이벤트 처리
             m_viewModel.OnAutoSelectSkill
                 .Subscribe(async skill =>
                 {
                     if (m_skillView != null)
                     {
-                        // 애니메이션 재생 완료 대기
+                        // 연출 대기
                         await m_skillView.PlaySelectionAnimation(skill);
                     }
-
-                    // 애니메이션 이후 실제 선택 로직 실행
-                    OnSkillSelected(skill).Forget();
+                    // 실제 선택 로직 실행
+                    OnSkillSelectedAsync(skill).Forget();
                 })
                 .AddTo(m_disposables);
         }
 
-        private void InitializeUI()
-        {
-            // ViewModel 데이터 갱신 유도
-            m_viewModel.UpdateIconLists();
-        }
-
         #endregion
 
-        #region 이벤트 핸들러
+        #region 5. 이벤트 핸들러 (Events)
+
+        private void SubscribeToEvents()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.State == null) return;
+
+            // 게임 상태 이벤트
+            GameManager.Instance.State.OnGameStart += OnGameStart;
+            GameManager.Instance.State.OnGamePause += OnGamePause;
+            GameManager.Instance.State.OnGameResume += OnGameResume;
+            GameManager.Instance.State.OnGameOver += OnGameOver;
+
+            // 플레이어 이벤트
+            PlayerBase.OnExpChanged += OnPlayerExpChanged;
+            PlayerBase.OnLevelUp += OnPlayerLevelUp;
+            GameManager.OnPlayerChanged += OnPlayerChanged;
+
+            // 설정 변경 이벤트
+            SettingsData.OnSettingsChanged += ApplyJoystickSettings;
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.State == null) return;
+
+            GameManager.Instance.State.OnGameStart -= OnGameStart;
+            GameManager.Instance.State.OnGamePause -= OnGamePause;
+            GameManager.Instance.State.OnGameResume -= OnGameResume;
+            GameManager.Instance.State.OnGameOver -= OnGameOver;
+
+            PlayerBase.OnExpChanged -= OnPlayerExpChanged;
+            PlayerBase.OnLevelUp -= OnPlayerLevelUp;
+            GameManager.OnPlayerChanged -= OnPlayerChanged;
+
+            SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
+        }
+
+        // --- Game State Handlers ---
 
         private void OnGameStart()
         {
-            m_settingsData.LoadSettings();
+            if (m_settingsData != null) m_settingsData.LoadSettings();
+            
             ApplyJoystickSettings();
-            SoundManager.Instance.LoadSoundSetting();
-            InitializeUI();
+            
+            if (SoundManager.Instance != null) SoundManager.Instance.LoadSoundSetting();
+            
+            InitializeViews(); // UI 리셋
         }
 
-        private void OnGamePause() => m_joystickTransform.gameObject.SetActive(false);
+        private void OnGamePause()
+        {
+            if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(false);
+        }
 
         private void OnGameResume()
         {
-            m_joystickTransform.gameObject.SetActive(true);
+            if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
             ApplyJoystickSettings();
         }
 
@@ -245,72 +335,26 @@ namespace InGame.Manager
         {
             if (m_gameOverPopup != null)
             {
-                // R3 ReadOnlyReactiveProperty의 현재 값 접근자가 Value가 아닐 경우 CurrentValue를 사용해봅니다.
-                m_gameOverPopup.Show(m_viewModel.CoinCount.CurrentValue, m_viewModel.CurrentWave.CurrentValue,
-                    m_viewModel.KillCount.CurrentValue);
+                // ReactiveProperty의 현재 값 사용
+                m_gameOverPopup.Show(
+                    m_viewModel.CoinCount.CurrentValue, 
+                    m_viewModel.CurrentWave.CurrentValue,
+                    m_viewModel.KillCount.CurrentValue
+                );
             }
 
-            m_joystickTransform.gameObject.SetActive(false);
+            // 조이스틱 비활성화
+            if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(false);
             if (m_variableJoystick != null)
             {
-                m_variableJoystick.OnPointerUp(null);
+                m_variableJoystick.OnPointerUp(null); // 터치 입력 강제 해제
                 m_variableJoystick.enabled = false;
             }
 
             if (m_autoAttackToggle != null) m_autoAttackToggle.isOn = false;
         }
 
-        public async void StartGameCountdown()
-        {
-            if (m_mobWaveText == null)
-            {
-                GameManager.Instance.State.StartGame();
-                return;
-            }
-
-            try
-            {
-                // 카운트다운 시작 시 조이스틱 비활성화
-                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(false);
-
-                m_mobWaveText.gameObject.SetActive(true);
-                await ShowWaveTextEffect("3..", 0.5f, 0.2f);
-                await ShowWaveTextEffect("2..", 0.5f, 0.2f);
-                await ShowWaveTextEffect("1..", 0.5f, 0.2f);
-                await ShowWaveTextEffect("게임 시작!");
-
-                // 카운트다운 종료 후 조이스틱 활성화
-                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
-
-                GameManager.Instance.State.StartGame();
-            }
-            catch (Exception ex)
-            {
-                LogManager.LogError($"카운트다운 오류: {ex.Message}", LogManager.LogCategory.VamserLikeUI);
-                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true); // 오류 시에도 활성화 보장
-                GameManager.Instance.State.StartGame();
-            }
-        }
-
-        #endregion
-
-        // UpdateUILoopAsync는 ViewModel이 내부적으로 R3 Interval로 처리하므로 제거 가능
-
-        private async UniTask ShowWaveTextEffect(string text, float holdDuration = 1.0f, float fadeDuration = 0.5f)
-        {
-            if (m_mobWaveText == null)
-            {
-                return;
-            }
-
-            m_mobWaveText.text = text;
-            m_mobWaveText.alpha = 0f;
-            m_mobWaveText.gameObject.SetActive(true);
-            await m_mobWaveText.DOFade(1f, fadeDuration).AsyncWaitForCompletion();
-            await UniTask.Delay(TimeSpan.FromSeconds(holdDuration));
-            await m_mobWaveText.DOFade(0f, fadeDuration).AsyncWaitForCompletion();
-            m_mobWaveText.gameObject.SetActive(false);
-        }
+        // --- Player Event Handlers ---
 
         private void OnPlayerChanged(PlayerBase player)
         {
@@ -319,11 +363,12 @@ namespace InGame.Manager
 
         private void OnPlayerExpChanged(float currentExp, float maxExp)
         {
-            // ViewModel이 처리함
+            // ViewModel에서 처리됨 (UI 바인딩을 통해 자동 갱신)
         }
 
         private void OnPlayerLevelUp(float newLevel)
         {
+            // 레벨 2부터 스킬 선택 큐에 추가
             if (newLevel >= 2)
             {
                 m_pendingSkillSelections++;
@@ -334,7 +379,146 @@ namespace InGame.Manager
             }
         }
 
-        #region 설정 및 조작
+        #endregion
+
+        #region 6. 게임 로직 및 연출 (Logic & Effects)
+
+        /// <summary>
+        /// 게임 시작 카운트다운을 표시하고 게임을 시작합니다.
+        /// </summary>
+        public async UniTaskVoid StartGameCountdown()
+        {
+            // 텍스트가 없으면 즉시 시작
+            if (m_mobWaveText == null)
+            {
+                GameManager.Instance.State.StartGame();
+                return;
+            }
+
+            try
+            {
+                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(false);
+
+                // 카운트다운 연출
+                m_mobWaveText.gameObject.SetActive(true);
+                await ShowWaveTextEffect("3..", 0.5f, 0.2f);
+                await ShowWaveTextEffect("2..", 0.5f, 0.2f);
+                await ShowWaveTextEffect("1..", 0.5f, 0.2f);
+                await ShowWaveTextEffect("게임 시작!");
+
+                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
+
+                GameManager.Instance.State.StartGame();
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[UIManager] 카운트다운 오류: {ex.Message}", LogManager.LogCategory.UIManager);
+                // 오류 발생 시 안전하게 게임 시작 처리
+                if (m_joystickTransform != null) m_joystickTransform.gameObject.SetActive(true);
+                GameManager.Instance.State.StartGame();
+            }
+        }
+
+        private async UniTask ShowWaveTextEffect(string text, float holdDuration = 1.0f, float fadeDuration = 0.5f)
+        {
+            if (m_mobWaveText == null) return;
+
+            m_mobWaveText.text = text;
+            m_mobWaveText.alpha = 0f;
+            m_mobWaveText.gameObject.SetActive(true);
+
+            // Fade In -> Wait -> Fade Out
+            await m_mobWaveText.DOFade(1f, fadeDuration).AsyncWaitForCompletion();
+            await UniTask.Delay(TimeSpan.FromSeconds(holdDuration));
+            await m_mobWaveText.DOFade(0f, fadeDuration).AsyncWaitForCompletion();
+            
+            m_mobWaveText.gameObject.SetActive(false);
+        }
+
+        #endregion
+
+        #region 7. 스킬 선택 시스템 (Skill Selection)
+
+        private void ProcessSkillSelectionQueue()
+        {
+            if (m_pendingSkillSelections > 0)
+            {
+                // ViewModel에 선택 프로세스 시작 요청
+                // (ViewModel 상태 변경 -> BindViewModel 구독 동작 -> UI 표시)
+                m_viewModel.StartSkillSelection();
+            }
+        }
+
+        private async UniTaskVoid OnSkillSelectedAsync(SkillData selectedSkill)
+        {
+            // 1. 선택 로직 종료 (타이머 정지 등)
+            m_viewModel.EndSkillSelection();
+
+            // 2. 실제 스킬 적용 (GameManager 위임)
+            if (m_gameManager != null && m_gameManager.SpawnedPlayer != null)
+            {
+                var player = m_gameManager.SpawnedPlayer;
+                var renderer = player.GetComponent<SpriteRenderer>();
+
+                if (selectedSkill.skillType == SkillType.Weapon)
+                {
+                    var ownedWeapon = player.Weapons.FirstOrDefault(w => w.SkillCode == selectedSkill.skillCode);
+                    if (ownedWeapon != null)
+                    {
+                        // 기존 무기 레벨업
+                        ownedWeapon.LevelUp();
+                        EffectManager.Instance.PlayLevelUpEffect(renderer);
+                    }
+                    else
+                    {
+                        // 신규 무기 장착
+                        await m_gameManager.EquipNewWeapon(selectedSkill);
+                    }
+                }
+                else // Passive
+                {
+                    TryUpgradeWeaponByPassive(selectedSkill.skillCode);
+                    EffectManager.Instance.PlayLevelUpEffect(renderer);
+                }
+            }
+
+            // 3. 인벤토리 데이터 갱신
+            if (InventoryDataManager.Instance != null)
+            {
+                InventoryDataManager.Instance.AddInGameSkill(selectedSkill);
+            }
+            m_viewModel.UpdateIconLists();
+
+            // 4. 다음 선택 처리
+            m_pendingSkillSelections--;
+            if (m_pendingSkillSelections > 0)
+            {
+                ProcessSkillSelectionQueue();
+            }
+            else
+            {
+                // 모든 선택 완료
+                m_viewModel.EndSkillSelection();
+            }
+        }
+
+        private void TryUpgradeWeaponByPassive(string passiveItemCode)
+        {
+            if (m_gameManager == null || m_gameManager.SpawnedPlayer == null) return;
+
+            // 패시브 아이템 코드와 매칭되는 업그레이드 가능 무기 찾기
+            var weaponToUpgrade = m_gameManager.SpawnedPlayer.Weapons
+                .FirstOrDefault(w => w.SkillData?.upgradeItemCode == passiveItemCode);
+            
+            if (weaponToUpgrade != null)
+            {
+                weaponToUpgrade.LevelUp();
+            }
+        }
+
+        #endregion
+
+        #region 8. 설정 및 조작 (Settings & Input)
 
         private void OnAutoAttackToggleChanged(bool isOn)
         {
@@ -346,13 +530,13 @@ namespace InGame.Manager
 
         private void ApplyJoystickSettings()
         {
-            if (m_variableJoystick == null || m_settingsData == null)
-            {
-                return;
-            }
+            if (m_variableJoystick == null || m_settingsData == null || m_joystickTransform == null) return;
 
+            // 크기 및 타입 적용
             m_joystickTransform.localScale = Vector3.one * m_settingsData.JoystickSize;
             m_variableJoystick.SetMode((JoystickType)m_settingsData.JoystickType);
+
+            // 위치 적용 (화면 밖으로 나가는지 검사)
             if (IsJoystickVisible(m_settingsData.JoystickPos))
             {
                 m_joystickTransform.anchoredPosition = m_settingsData.JoystickPos;
@@ -365,25 +549,45 @@ namespace InGame.Manager
 
         private bool IsJoystickVisible(Vector2 pos)
         {
+            if (m_joystickTransform == null) return false;
+            
             var canvas = m_joystickTransform.GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                return false;
-            }
+            if (canvas == null) return false;
 
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
-            Rect joystickRect = new Rect(pos.x - (m_joystickTransform.rect.width * 0.5f),
-                pos.y - (m_joystickTransform.rect.height * 0.5f), m_joystickTransform.rect.width,
-                m_joystickTransform.rect.height);
+            if (canvasRect == null) return false;
+
+            // 조이스틱의 예상 Rect 계산
+            Rect joystickRect = new Rect(
+                pos.x - (m_joystickTransform.rect.width * 0.5f),
+                pos.y - (m_joystickTransform.rect.height * 0.5f),
+                m_joystickTransform.rect.width,
+                m_joystickTransform.rect.height
+            );
+
+            // 캔버스 Rect와 겹치는지 확인
             return canvasRect.rect.Overlaps(joystickRect);
         }
 
         private void TogglePauseMenu()
         {
+            if (m_menuPanel == null) return;
+
             bool isActive = !m_menuPanel.activeSelf;
             m_menuPanel.SetActive(isActive);
-            m_gameManager.SetMenuPopupState(isActive);
-            m_joystickTransform.gameObject.SetActive(!isActive);
+            
+            // GameManager에 일시정지 요청
+            if (m_gameManager != null)
+            {
+                m_gameManager.SetMenuPopupState(isActive);
+            }
+
+            // 메뉴 열림 -> 조이스틱 숨김
+            if (m_joystickTransform != null)
+            {
+                m_joystickTransform.gameObject.SetActive(!isActive);
+            }
+
             if (isActive)
             {
                 m_viewModel.UpdateIconLists();
@@ -392,106 +596,43 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 스킬 선택 및 UI 갱신
+        #region 9. 팝업 및 종료 처리 (Popups)
 
-        private void ProcessSkillSelectionQueue()
+        private void ShowExitConfirmPopup()
         {
-            if (m_pendingSkillSelections > 0)
+            if (m_confirmPopup != null)
             {
-                // ViewModel에 선택 시작 요청
-                m_viewModel.StartSkillSelection();
-                // IsSkillSelectionActive 구독에서 SetMenuPopupState(true)가 호출됨
-            }
-        }
-
-        private async UniTask OnSkillSelected(SkillData selectedSkill)
-        {
-            // ViewModel의 타이머 중지 요청
-            m_viewModel.EndSkillSelection();
-
-            if (selectedSkill.skillType == SkillType.Weapon)
-            {
-                var ownedWeapon =
-                    m_gameManager.SpawnedPlayer?.Weapons.FirstOrDefault(w => w.SkillCode == selectedSkill.skillCode);
-                if (ownedWeapon != null)
-                {
-                    // 이미 보유한 무기 -> 레벨업
-                    ownedWeapon.LevelUp();
-                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer
-                        .GetComponent<SpriteRenderer>());
-                }
-                else
-                {
-                    // 새로운 무기 -> 장착
-                    await m_gameManager.EquipNewWeapon(selectedSkill);
-                }
-            }
-            else // Passive
-            {
-                TryUpgradeWeapon(selectedSkill.skillCode);
-                if (m_gameManager.SpawnedPlayer != null)
-                {
-                    EffectManager.Instance.PlayLevelUpEffect(m_gameManager.SpawnedPlayer
-                        .GetComponent<SpriteRenderer>());
-                }
-            }
-
-            InventoryDataManager.Instance.AddInGameSkill(selectedSkill);
-            m_viewModel.UpdateIconLists();
-
-            m_pendingSkillSelections--;
-            if (m_pendingSkillSelections > 0)
-            {
-                ProcessSkillSelectionQueue();
+                // ViewModel을 통해 팝업 데이터 전달
+                m_viewModel.ConfirmPopupViewModel.ShowPopup(
+                    "게임 종료",
+                    "로비로 돌아가시겠습니까?\n진행 상황이 저장됩니다.",
+                    onConfirm: ExitToLobby
+                );
             }
             else
             {
-                CloseSkillSelection();
+                // 팝업 없으면 즉시 종료
+                ExitToLobby();
             }
         }
 
-        private void TryUpgradeWeapon(string passiveItemCode)
+        private async void ExitToLobby()
         {
-            if (m_gameManager.SpawnedPlayer == null)
+            // 종료 전 결과 저장 시도
+            if (GameManager.Instance != null)
             {
-                return;
+                await GameManager.Instance.SaveGameResult();
             }
 
-            var weaponToUpgrade =
-                m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w =>
-                    w.SkillData?.upgradeItemCode == passiveItemCode);
-            if (weaponToUpgrade != null)
-            {
-                weaponToUpgrade.LevelUp();
-            }
-        }
-
-        private void CloseSkillSelection()
-        {
-            // 모든 선택 종료
-            m_viewModel.EndSkillSelection();
-        }
-
-        #endregion
-
-        #region 게임 종료 처리
-
-        private void ResumeGame()
-        {
-            m_gameManager.SetMenuPopupState(false);
-            m_menuPanel.SetActive(false);
-            m_joystickTransform.gameObject.SetActive(true);
-        }
-
-        private void ExitToLobby()
-        {
+            // 로비 씬 로드
             SceneLoader.Instance.LoadLobbyScene();
         }
 
         private void RestartGame()
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene()
-                .name);
+            // 현재 씬 재로드
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(currentScene);
         }
 
         #endregion

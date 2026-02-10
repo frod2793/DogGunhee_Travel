@@ -5,7 +5,7 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 개별 투사체(Projectile)의 초기화 인터페이스입니다.
+    /// 개별 투사체(Projectile)의 공통 초기화 인터페이스입니다.
     /// </summary>
     public interface IProjectile
     {
@@ -13,32 +13,36 @@ namespace InGame.Weapon.Strategies
     }
 
     /// <summary>
-    /// 제네릭을 사용하여 범용적인 투사체 타입을 발사하는 전략입니다.
+    /// 제네릭 타입의 투사체를 발사하는 범용 전략입니다.
     /// </summary>
-    /// <typeparam name="TProjectile">MonoBehaviour 상속 및 IProjectile 구현 클래스</typeparam>
-    public class GenericProjectileStrategy<TProjectile> : IWeaponStrategy 
+    /// <typeparam name="TProjectile">IProjectile을 구현한 MonoBehaviour</typeparam>
+    public class GenericProjectileStrategy<TProjectile> : IWeaponStrategy
         where TProjectile : MonoBehaviour, IProjectile
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
         private WeaponDataSO m_data;
+        private WeaponPoolManager m_poolManager;
 
         #endregion
 
-        #region IWeaponStrategy 구현
+        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
 
-        public void Init(WeaponDataSO data)
+        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
             m_data = data;
-            
-            // 프리팹 기반 오브젝트 풀 자동 등록
+            m_poolManager = poolManager;
+
+            if (m_poolManager == null) return;
+
+            // 투사체 풀 자동 등록
             if (data.ProjectilePrefab != null)
             {
-                WeaponPoolManager.Instance.GetOrAddPool<TProjectile>(
-                    () => Object.Instantiate(data.ProjectilePrefab).GetComponent<TProjectile>(),
-                    OnGet,
-                    OnRelease,
-                    OnDestroy,
+                m_poolManager.GetOrAddPool<TProjectile>(
+                    createFunc: () => Object.Instantiate(data.ProjectilePrefab).GetComponent<TProjectile>(),
+                    actionOnGet: p => p.gameObject.SetActive(true),
+                    actionOnRelease: p => p.gameObject.SetActive(false),
+                    actionOnDestroy: p => Object.Destroy(p.gameObject),
                     maxSize: 20
                 );
             }
@@ -46,20 +50,22 @@ namespace InGame.Weapon.Strategies
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
+            if (m_poolManager == null) return;
+
             int count = stats.CurrentProjectileCount;
 
             for (int i = 0; i < count; i++)
             {
-                var projectile = WeaponPoolManager.Instance.Get<TProjectile>();
+                var projectile = m_poolManager.Get<TProjectile>();
                 if (projectile != null)
                 {
                     projectile.transform.position = owner.position;
-                    
-                    // 투사체 초기화 (공격력, 속도, 지속시간, 진화여부)
+
+                    // 투사체 초기화
                     projectile.Init(
-                        direction, 
-                        stats.CurrentAttackPower, 
-                        stats.CurrentAttackSpeed, 
+                        direction,
+                        stats.CurrentAttackPower,
+                        stats.CurrentAttackSpeed,
                         stats.CurrentDuration,
                         stats.IsEvolved
                     );
@@ -69,16 +75,8 @@ namespace InGame.Weapon.Strategies
 
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
-            // 범용 투사체 전략은 별도의 프레임 업데이트가 필요 없음
+            // 투사체는 발사 후 자체 로직으로 동작하므로 업데이트 없음
         }
-
-        #endregion
-
-        #region 오브젝트 풀 이벤트
-
-        private void OnGet(TProjectile p) => p.gameObject.SetActive(true);
-        private void OnRelease(TProjectile p) => p.gameObject.SetActive(false);
-        private void OnDestroy(TProjectile p) => Object.Destroy(p.gameObject);
 
         #endregion
     }

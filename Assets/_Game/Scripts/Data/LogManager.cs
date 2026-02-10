@@ -2,11 +2,20 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
-// 모든 스크립트의 디버그 로그를 관여하는 디버그 로그 매니저
+/// <summary>
+/// 게임의 전역 로그 출력을 관리하며, 카테고리별 필터링 및 컬러링 기능을 제공하는 싱글톤 매니저입니다.
+/// </summary>
 public class LogManager : MonoBehaviour
 {
-    public enum LogCategory // 로그 카테고리 열거형
+    #region 로그 카테고리 정의
+
+    /// <summary>
+    /// 로그를 분류하기 위한 카테고리 열거형입니다.
+    /// </summary>
+    public enum LogCategory
     {
         Default,
         ServerManager,
@@ -25,150 +34,204 @@ public class LogManager : MonoBehaviour
         InventoryManager,
         PlayerDataManager,
         VamserLikeUI,
-        mobBase,
+        MobBase,
         Weapon,
         EffectManager,
         StoreManager,
-        QuestManager
+        QuestManager,
+        System
     }
 
-    [Tooltip("전체 디버그 로그 활성화 여부")]
-    [SerializeField] private bool m_enableDebugLog = true;
-    [Tooltip("전체 오류 로그 활성화 여부")]
-    [SerializeField] private bool m_enableErrorLog = true;
-    [Tooltip("전체 경고 로그 활성화 여부")]
-    [SerializeField] private bool m_enableWarningLog = true;
+    #endregion
 
-    // 각 매니저별 로그 활성화 설정 (인스펙터 노출용)
-    [SerializeField]
-    private List<bool> m_logCategoryEnables = new List<bool>();
+    #region 1. 필드 및 설정
 
-    // 성능 최적화를 위한 딕셔너리 캐시
-    private readonly Dictionary<LogCategory, bool> m_logEnables = new Dictionary<LogCategory, bool>();
-    
-    // 카테고리별 로그 색상 정의
-    private readonly Dictionary<LogCategory, string> m_categoryColors = new Dictionary<LogCategory, string>
+    [Header("로그 전체 활성화 설정")] [Tooltip("전체 일반 로그 활성화 여부")] [SerializeField]
+    private bool m_enableDebugLog = true;
+
+    [Tooltip("전체 경고 로그 활성화 여부")] [SerializeField]
+    private bool m_enableWarningLog = true;
+
+    [Tooltip("전체 에러 로그 활성화 여부")] [SerializeField]
+    private bool m_enableErrorLog = true;
+
+    [Header("카테고리별 개별 설정")] [SerializeField]
+    private List<LogCategorySetting> m_categorySettings = new List<LogCategorySetting>();
+
+    // 런타임 최적화를 위한 캐시 데이터
+    private Dictionary<LogCategory, bool> m_logEnablesCached = new Dictionary<LogCategory, bool>();
+    private Dictionary<LogCategory, string> m_categoryPrefixesCached = new Dictionary<LogCategory, string>();
+
+    // 싱글톤
+    private static LogManager s_instance;
+
+    public static LogManager Instance
     {
-        { LogCategory.ServerManager, "#00FF00" },       // Green
-        { LogCategory.UIManager, "#00FFFF" },           // Cyan
-        { LogCategory.SoundManager, "#FF00FF" },        // Magenta
-        { LogCategory.SettingsManager, "#C0C0C0" },     // Silver
-        { LogCategory.ItemManager, "#FFD700" },         // Gold
-        { LogCategory.PostManager, "#FFA500" },         // Orange
-        { LogCategory.CharacterManager, "#FF69B4" },    // HotPink
-        { LogCategory.ObjectPoolSpawner, "#ADFF2F" },   // GreenYellow
-        { LogCategory.PlayStateManager, "#87CEEB" },    // SkyBlue
-        { LogCategory.VamserLikeGameManager, "#DA70D6" }, // Orchid
-        { LogCategory.NormalMob, "#F08080" },           // LightCoral
-        { LogCategory.PlayerBase, "#00BFFF" },          // DeepSkyBlue
-        { LogCategory.SceneLoader, "#F4A460" },         // SandyBrown
-        { LogCategory.InventoryManager, "#FFA500" },    // Orange
-        { LogCategory.PlayerDataManager, "#7FFFD4" },   // Aquamarine
-        { LogCategory.VamserLikeUI, "#FF6347" },        // Tomato
-        { LogCategory.mobBase, "#CD5C5C" },             // IndianRed
-        { LogCategory.Weapon, "#FF4500" },              // OrangeRed
-        { LogCategory.EffectManager, "#BA55D3" },       // MediumOrchid
-        { LogCategory.StoreManager, "#FFD700" },        // Gold
-        { LogCategory.QuestManager, "#ADFF2F" }         // GreenYellow
-    };
+        get
+        {
+            if (s_instance == null)
+            {
+                s_instance = FindFirstObjectByType<LogManager>();
+            }
 
-    public static LogManager Instance { get; private set; }
+            return s_instance;
+        }
+    }
+
+    [Serializable]
+    public struct LogCategorySetting
+    {
+        public LogCategory Category;
+        public bool Enabled;
+        public Color TextColor;
+
+        public LogCategorySetting(LogCategory category, bool enabled, Color color)
+        {
+            Category = category;
+            Enabled = enabled;
+            TextColor = color;
+        }
+    }
+
+    #endregion
+
+    #region 2. 라이프사이클
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (s_instance != null && s_instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+
+        s_instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // 딕셔너리 캐시 초기화
-        m_logEnables.Clear();
-        var categories = Enum.GetValues(typeof(LogCategory)).Cast<LogCategory>().ToArray();
+        InitializeCache();
+    }
 
-        // 리스트 크기가 Enum 개수와 맞지 않으면 초기화
-        if (m_logCategoryEnables.Count != categories.Length)
+    #endregion
+
+    #region 3. 내부 로직 (Optimization)
+
+    /// <summary>
+    /// 카테고리별 활성화 여부와 프리픽스 문자열을 미리 계산하여 캐싱합니다.
+    /// </summary>
+    private void InitializeCache()
+    {
+        m_logEnablesCached.Clear();
+        m_categoryPrefixesCached.Clear();
+
+        var categories = Enum.GetValues(typeof(LogCategory)).Cast<LogCategory>();
+
+        foreach (var category in categories)
         {
-            // [Optimization] 임시 배열(new bool[]) 생성 방지
-            // new List<bool>(capacity)로 내부 배열만 할당 후 Add로 값 채움
-            m_logCategoryEnables = new List<bool>(categories.Length);
-            for (int i = 0; i < categories.Length; i++)
-            {
-                m_logCategoryEnables.Add(true);
-            }
-        }
-        
-        for (int i = 0; i < categories.Length; i++)
-        {
-            m_logEnables[categories[i]] = m_logCategoryEnables[i];
+            // 1. 활성화 여부 캐싱
+            var setting = m_categorySettings.Find(x => x.Category == category);
+            bool isEnabled = m_categorySettings.Count == 0 || setting.Enabled; // 설정이 없으면 기본 활성
+            m_logEnablesCached[category] = isEnabled;
+
+            // 2. 프리픽스 문자열 캐싱 (GC Alloc 줄이기 위함)
+            string colorHex =
+                ColorUtility.ToHtmlStringRGB(setting.TextColor == default ? Color.white : setting.TextColor);
+            m_categoryPrefixesCached[category] = $"<color=#{colorHex}><b>[{category}]</b></color>";
         }
     }
 
     private bool IsCategoryEnabled(LogCategory category)
     {
-        // 딕셔너리를 사용하여 O(1) 시간 복잡도로 조회
-        if (m_logEnables.TryGetValue(category, out bool isEnabled))
+        if (m_logEnablesCached.TryGetValue(category, out bool isEnabled))
         {
             return isEnabled;
         }
-        // 딕셔너리에 없는 경우(Awake 전 호출 등) 기본값 true 반환
+
         return true;
     }
 
-    private string GetColoredMessage(LogCategory category, string message)
+    private string GetFormattedMessage(LogCategory category, string message)
     {
-        if (m_categoryColors.TryGetValue(category, out string colorHex))
+        if (m_categoryPrefixesCached.TryGetValue(category, out string prefix))
         {
-            return $"<color={colorHex}><b>[{category}]</b></color> {message}";
+            return $"{prefix} {message}";
         }
+
         return $"[{category}] {message}";
     }
 
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
-    public static void Log(string message, LogCategory category = LogCategory.Default, UnityEngine.Object context = null)
+    #endregion
+
+    #region 4. 공개 정적 메서드 (Static API)
+
+    [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+    public static void Log(string message, LogCategory category = LogCategory.Default,
+        UnityEngine.Object context = null)
     {
-        if (Instance == null || !Instance.m_enableDebugLog) return;
-        if (!Instance.IsCategoryEnabled(category)) return;
-        
-        Debug.Log(Instance.GetColoredMessage(category, message), context);
+        if (Instance == null || !Instance.m_enableDebugLog || !Instance.IsCategoryEnabled(category)) return;
+        Debug.Log(Instance.GetFormattedMessage(category, message), context);
     }
 
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
-    public static void LogWarning(string message, LogCategory category = LogCategory.Default, UnityEngine.Object context = null)
+    [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+    public static void LogFormat(LogCategory category, string format, params object[] args)
     {
-        if (Instance == null || !Instance.m_enableWarningLog) return;
-        if (!Instance.IsCategoryEnabled(category)) return;
-
-        Debug.LogWarning(Instance.GetColoredMessage(category, message), context);
+        if (Instance == null || !Instance.m_enableDebugLog || !Instance.IsCategoryEnabled(category)) return;
+        string message = string.Format(format, args); // Note: params object[] still causes some alloc, but structured
+        Debug.Log(Instance.GetFormattedMessage(category, message));
     }
 
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
-    public static void LogError(string message, LogCategory category = LogCategory.Default, UnityEngine.Object context = null)
+    [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+    public static void LogWarning(string message, LogCategory category = LogCategory.Default,
+        UnityEngine.Object context = null)
     {
-        if (Instance == null || !Instance.m_enableErrorLog) return;
-        if (!Instance.IsCategoryEnabled(category)) return;
-
-        Debug.LogError(Instance.GetColoredMessage(category, message), context);
+        if (Instance == null || !Instance.m_enableWarningLog || !Instance.IsCategoryEnabled(category)) return;
+        Debug.LogWarning(Instance.GetFormattedMessage(category, message), context);
     }
 
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
-    public static void LogException(Exception exception, LogCategory category = LogCategory.Default, UnityEngine.Object context = null)
+    [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+    public static void LogError(string message, LogCategory category = LogCategory.Default,
+        UnityEngine.Object context = null)
     {
-        if (Instance == null || !Instance.m_enableErrorLog) return;
-        if (!Instance.IsCategoryEnabled(category)) return;
+        if (Instance == null || !Instance.m_enableErrorLog || !Instance.IsCategoryEnabled(category)) return;
+        Debug.LogError(Instance.GetFormattedMessage(category, message), context);
+    }
 
-        // Exception은 별도의 포맷팅 없이 그대로 출력 (스택트레이스 중요)
+    [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+    public static void LogException(Exception exception, LogCategory category = LogCategory.Default,
+        UnityEngine.Object context = null)
+    {
+        if (Instance == null || !Instance.m_enableErrorLog || !Instance.IsCategoryEnabled(category)) return;
         Debug.LogException(exception, context);
     }
 
-    public void SetDebugLog(bool enabled) => m_enableDebugLog = enabled;
-    public void SetErrorLog(bool enabled) => m_enableErrorLog = enabled;
-    public void SetWarningLog(bool enabled) => m_enableWarningLog = enabled;
+    /// <summary>
+    /// 조건이 거짓일 때 에러 로그를 출력합니다.
+    /// </summary>
+    [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+    public static void LogAssert(bool condition, string message, LogCategory category = LogCategory.Default,
+        UnityEngine.Object context = null)
+    {
+        if (condition) return;
+        LogError($"Assert Failed: {message}", category, context);
+    }
 
+    #endregion
+
+    #region 5. 런타임 제어 API
+
+    public void SetDebugLog(bool enabled) => m_enableDebugLog = enabled;
+    public void SetWarningLog(bool enabled) => m_enableWarningLog = enabled;
+    public void SetErrorLog(bool enabled) => m_enableErrorLog = enabled;
+
+    /// <summary>
+    /// 동적으로 카테고리 활성화 여부를 변경합니다.
+    /// </summary>
+    public void SetCategoryEnable(LogCategory category, bool enabled)
+    {
+        if (m_logEnablesCached.ContainsKey(category))
+        {
+            m_logEnablesCached[category] = enabled;
+        }
+    }
+
+    #endregion
 }

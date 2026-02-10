@@ -4,117 +4,172 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace InGame.vamsir
+namespace InGame.Effect
 {
     /// <summary>
-    /// 오브젝트 풀링되는 이펙트 프리팹에 부착되는 컴포넌트입니다.
-    /// 파티클 시스템이 재생을 마치면 자동으로 자신을 풀에 반환합니다.
+    /// 오브젝트 풀링되는 이펙트(파티클, 애니메이션) 프리팹에 부착되는 컴포넌트입니다.
+    /// <br/> 재생이 완료되면 자동으로 자신을 풀에 반환합니다.
     /// </summary>
     [DisallowMultipleComponent]
     public class PooledEffect : MonoBehaviour
     {
-        [SerializeField] private float overrideDuration = -1f;
+        #region 1. 에디터 설정 (Inspector)
 
-        private IObjectPool<PooledEffect> _pool;
-        private ParticleSystem _particleSystem;
-        private Animator _animator;
+        [Header("설정")]
+        [SerializeField, Tooltip("자동 반환 시간을 강제로 설정합니다. (0보다 크면 우선 적용)")] 
+        private float m_overrideDuration = -1f;
+
+        #endregion
+
+        #region 2. 내부 변수 (Fields)
+
+        private IObjectPool<PooledEffect> m_pool;
+        private ParticleSystem m_particleSystem;
+        private Animator m_animator;
         
-        private CancellationTokenSource _cts;
-        private bool _isReleasing = false;
+        // 비동기 제어
+        private CancellationTokenSource m_cts;
+
+        #endregion
+
+        #region 3. 유니티 생명주기
 
         private void Awake()
         {
-            _particleSystem = GetComponent<ParticleSystem>();
-            _animator = GetComponent<Animator>();
-        }
-
-        public void SetPool(IObjectPool<PooledEffect> pool)
-        {
-            _pool = pool;
+            m_particleSystem = GetComponent<ParticleSystem>();
+            m_animator = GetComponent<Animator>();
         }
 
         private void OnEnable()
         {
-            _isReleasing = false;
-            StartAutoReturnToPool().Forget();
+            // 활성화될 때마다 타이머 시작
+            StartAutoReturnToPoolAsync().Forget();
         }
 
         private void OnDisable()
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
-            _cts = null;
-
-            // 외부 요인(예: 부모 비활성화)으로 인해 비활성화된 경우, 풀로 반환 시도
-            // 단, 풀에서 Release를 호출하여 비활성화된 경우(_isReleasing)는 제외 (무한루프/중복반환 방지)
-            if (!_isReleasing && _pool != null)
+            // 비활성화 시 진행 중인 타이머 취소
+            if (m_cts != null)
             {
-                // 주의: 이미 Destroy된 경우나 앱 종료 시점 등 예외 처리 필요할 수 있음
-                // 여기서는 간단하게 처리
-                _isReleasing = true;
-               try
-               {
-                    _pool.Release(this);
-               }
-               catch
-               {
-                   // 이미 풀에 있거나 파괴된 경우 무시
-               }
-               _isReleasing = false;
+                m_cts.Cancel();
+                m_cts.Dispose();
+                m_cts = null;
             }
+            
+            // 주의: 여기서 m_pool.Release(this)를 호출하면 안 됩니다.
+            // Pool.Release()가 객체를 비활성화(OnDisable)시키기 때문에 무한 루프나 예외가 발생할 수 있습니다.
         }
 
-        private async UniTaskVoid StartAutoReturnToPool()
+        #endregion
+
+        #region 4. 초기화 및 설정
+
+        /// <summary>
+        /// 이 객체를 관리하는 오브젝트 풀을 설정합니다. (생성 시 1회 호출)
+        /// </summary>
+        public void SetPool(IObjectPool<PooledEffect> pool)
         {
-            _cts = new CancellationTokenSource();
+            m_pool = pool;
+        }
+
+        #endregion
+
+        #region 5. 반환 로직
+
+        private async UniTaskVoid StartAutoReturnToPoolAsync()
+        {
+            // 기존 토큰 정리
+            m_cts?.Cancel();
+            m_cts?.Dispose();
+            m_cts = new CancellationTokenSource();
+            
+            var token = m_cts.Token;
+
+            // 지속 시간 계산
             float duration = GetDuration();
 
             if (duration > 0f)
             {
                 try
                 {
-                    await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: _cts.Token);
+                    // 시간 대기
+                    await UniTask.Delay(TimeSpan.FromSeconds(duration), cancellationToken: token);
+
+                    // 시간이 다 되면 풀로 반환
+                    ReturnToPool();
                 }
                 catch (OperationCanceledException)
                 {
-                    return;
+                    // 비활성화되어 취소됨 -> 아무것도 하지 않음
                 }
-                
-                // 시간이 다 됨 -> 풀 반환
-                if (gameObject.activeInHierarchy && !_isReleasing)
-                {
-                    _isReleasing = true;
-                    _pool?.Release(this);
-                    _isReleasing = false;
-                }
+            }
+            else if (duration == -1f)
+            {
+                // 무한 루프거나 지속 시간을 알 수 없는 경우 경고 로그 (필요 시 주석 처리)
+                // LogManager.LogWarning($"[PooledEffect] '{name}'의 지속 시간을 계산할 수 없습니다. 수동으로 반환해야 합니다.", LogManager.LogCategory.Effect);
             }
         }
 
+        /// <summary>
+        /// 안전하게 객체를 풀에 반환합니다.
+        /// </summary>
+        public void ReturnToPool()
+        {
+            if (m_pool != null && gameObject.activeSelf)
+            {
+                m_pool.Release(this);
+            }
+            else if (m_pool == null)
+            {
+                // 풀이 없으면 그냥 파괴 (방어 코드)
+                Destroy(gameObject);
+            }
+        }
+
+        /// <summary>
+        /// 이펙트의 재생 시간을 계산합니다.
+        /// </summary>
         private float GetDuration()
         {
-            // 1. 수동으로 설정한 지속 시간이 최우선입니다.
-            if (overrideDuration > 0f)
+            // 1. 수동 설정 우선
+            if (m_overrideDuration > 0f)
             {
-                return overrideDuration;
+                return m_overrideDuration;
             }
 
-            // 2. 파티클 시스템의 최대 지속 시간을 계산합니다.
-            if (_particleSystem != null)
+            // 2. 파티클 시스템 계산
+            if (m_particleSystem != null)
             {
-                // 루핑 파티클은 자동으로 반환되지 않도록 하여, 수동으로 제어하거나 Override Duration을 사용하도록 유도합니다.
-                if (_particleSystem.main.loop) return -1f; 
-                return _particleSystem.main.duration + _particleSystem.main.startLifetime.constantMax;
+                // 루핑 파티클은 자동 반환 불가 (-1 반환)
+                if (m_particleSystem.main.loop) return -1f;
+
+                // Duration(방출 시간) + StartLifetime(입자 생존 시간) 중 가장 긴 것
+                float maxLifetime = m_particleSystem.main.startLifetime.constantMax;
+                return m_particleSystem.main.duration + maxLifetime;
             }
 
-            // 3. 애니메이터의 현재 클립 길이를 가져옵니다.
-            if (_animator != null && _animator.runtimeAnimatorController != null && _animator.GetCurrentAnimatorStateInfo(0).length > 0)
+            // 3. 애니메이터 계산
+            if (m_animator != null && m_animator.runtimeAnimatorController != null)
             {
-                return _animator.GetCurrentAnimatorStateInfo(0).length;
+                // 현재 상태의 길이를 가져오기 위해 클립 확인
+                // OnEnable 직후에는 GetCurrentAnimatorStateInfo가 갱신되지 않았을 수 있으므로 클립 리스트 검색
+                var clips = m_animator.runtimeAnimatorController.animationClips;
+                if (clips != null && clips.Length > 0)
+                {
+                    // 첫 번째 클립의 길이를 사용하거나, 별도 로직으로 특정 클립 찾기
+                    // 여기서는 가장 긴 클립을 기준으로 함 (안전책)
+                    float maxDuration = 0f;
+                    foreach (var clip in clips)
+                    {
+                        if (clip.length > maxDuration) maxDuration = clip.length;
+                    }
+                    return maxDuration;
+                }
             }
 
-            // 4. 지속 시간을 결정할 수 없는 경우, 자동으로 반환하지 않습니다.
-            LogManager.LogWarning($"'{gameObject.name}' 이펙트의 지속 시간을 자동으로 결정할 수 없습니다. 'Override Duration'을 설정하거나 수동으로 풀에 반환해야 합니다.", LogManager.LogCategory.EffectManager, this);
-            return -1f;
+            return -1f; // 결정 불가
         }
+
+        #endregion
     }
 }

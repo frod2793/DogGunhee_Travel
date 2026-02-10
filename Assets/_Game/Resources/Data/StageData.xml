@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Stages>
+    <Stage id="1" name="초보자의 숲">
+        <Wave id="1" name="평온한 시작" duration="0" count="10" spawnInterval="2.0" wait="10.0">
+            <Mob key="Mob_Normal" rate="100" />
+        </Wave>
+        <Wave id="2" name="긴장 고조" duration="0" count="20" spawnInterval="1.5" wait="3.0">
+            <Mob key="Mob_Normal" rate="80" />
+        </Wave>
+        <Wave id="3" name="최후의 저항" duration="0" count="30" spawnInterval="1.0" wait="5.0">
+            <Mob key="Mob_Normal" rate="60" />
+        </Wave>
+    </Stage>
+</Stages>

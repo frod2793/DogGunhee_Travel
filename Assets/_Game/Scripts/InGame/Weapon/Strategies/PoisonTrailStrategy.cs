@@ -1,37 +1,41 @@
 using UnityEngine;
+using InGame.ObjectPool;
 using InGame.Weapon.Base;
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 독 구름/자국(Poison Trail) 생성 전략입니다.
+    /// 독 구름(Poison Trail) 생성 전략입니다.
+    /// <br/> 플레이어를 따라다니는 Emitter 인스턴스를 생성하고 관리합니다.
     /// </summary>
     public class PoisonTrailStrategy : IWeaponStrategy
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
         private PoisonTrailEmitter m_emitterInstance;
         private WeaponDataSO m_data;
+        private WeaponPoolManager m_poolManager;
 
         #endregion
 
-        #region IWeaponStrategy 구현
+        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
 
-        public void Init(WeaponDataSO data)
+        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
             m_data = data;
+            m_poolManager = poolManager;
         }
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
-            // 이미터가 없으면 생성 (Lazy Initialization)
+            // Emitter가 없으면 생성 (Lazy Initialization)
             if (m_emitterInstance == null)
             {
                 if (m_data.ModelPrefab != null)
                 {
                     var obj = Object.Instantiate(m_data.ModelPrefab, owner.position, Quaternion.identity, owner);
                     m_emitterInstance = obj.GetComponent<PoisonTrailEmitter>();
-                    
+
                     if (m_emitterInstance != null)
                     {
                         m_emitterInstance.Init(
@@ -41,14 +45,10 @@ namespace InGame.Weapon.Strategies
                         );
                     }
                 }
-                else
-                {
-                    Debug.LogWarning("[PoisonTrailStrategy] ModelPrefab이 설정되지 않았습니다.");
-                }
             }
             else
             {
-                // 이미 존재하면 스탯만 실시간 동기화
+                // 이미 존재하면 스탯 동기화
                 UpdateEmitterStats(stats);
             }
         }
@@ -63,17 +63,11 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 상세 로직
+        #region 3. 상세 로직 (Logic)
 
-        /// <summary>
-        /// 이미터의 스탯 정보를 최신화합니다.
-        /// </summary>
         private void UpdateEmitterStats(WeaponRuntimeStats stats)
         {
-            if (m_emitterInstance == null)
-            {
-                return;
-            }
+            if (m_emitterInstance == null) return;
 
             m_emitterInstance.UpdateStats(
                 stats.CurrentAttackPower,

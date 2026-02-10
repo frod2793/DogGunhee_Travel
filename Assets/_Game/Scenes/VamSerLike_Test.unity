@@ -438,26 +438,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 23417076}
   m_CullTransparentMesh: 1
---- !u!1 &69959449 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-  m_PrefabInstance: {fileID: 3551517958830646567}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &69959459
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 69959449}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1cc0605c2053cb74682aa84328ff2e5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.BallWeaponView
-  m_rotationOffset: 180
-  m_rotateWithOrbit: 1
-  m_rotationSpeedMultiplier: 1
 --- !u!1 &95878362
 GameObject:
   m_ObjectHideFlags: 0
@@ -2534,7 +2514,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 542925831}
   m_HandleRect: {fileID: 542925830}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -5448,7 +5428,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1959605086}
   - {fileID: 299948192}
   - {fileID: 109534681}
   m_Father: {fileID: 0}
@@ -6189,50 +6168,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7133637481206034452, guid: 06242541335b81f49a2f66a68f92f2c8, type: 3}
   m_PrefabInstance: {fileID: 1906269120987961682}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1959605085
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1959605086}
-  - component: {fileID: 1959605087}
-  m_Layer: 0
-  m_Name: PlayerData_(DonDestroy)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1959605086
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1959605085}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.9878943, y: -3.4888525, z: 90.091576}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1735073661}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1959605087
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1959605085}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5852d493f67eb724fbe3810b42d07969, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1985083989
 GameObject:
   m_ObjectHideFlags: 0
@@ -7556,29 +7491,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6708719489541973917, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_hitFlashColor.b
-      value: 0.019607835
-      objectReference: {fileID: 0}
-    - target: {fileID: 6708719489541973917, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_hitFlashColor.g
-      value: 0.22948264
-      objectReference: {fileID: 0}
-    - target: {fileID: 6708719489541973917, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_hitFlashColor.r
-      value: 0.6117647
-      objectReference: {fileID: 0}
-    - target: {fileID: 7427034918349093204, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      propertyPath: m_effectData
-      value: 
-      objectReference: {fileID: 11400000, guid: d95fefdb30d37fa48a9fa7976868a49c, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3445842017805381484, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 69959459}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
 --- !u!4 &3867564719337111730 stripped
 Transform:

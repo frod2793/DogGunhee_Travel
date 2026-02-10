@@ -6,12 +6,11 @@ using InGame.Weapon.Strategies;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 친구 소환 무기(Friends)의 비즈니스 로직을 담당하는 POCO 클래스입니다.
-    /// 친구 타입 셔플 및 소환 위치 계산 로직을 포함합니다.
+    /// 친구 소환 무기(Friends)의 비즈니스 로직(타입 셔플, 소환 위치 계산)을 담당하는 클래스입니다.
     /// </summary>
     public class WeaponFriendsLogic
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
         private readonly ISpawnPositionStrategy m_spawnStrategy;
         private readonly FriendCharacter.FriendAnimationType[] m_allTypes;
@@ -19,7 +18,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 생성자 및 초기화
+        #region 2. 생성자 및 초기화 (Constructor & Init)
 
         public WeaponFriendsLogic(ISpawnPositionStrategy spawnStrategy)
         {
@@ -30,12 +29,13 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 로직 메서드
+        #region 3. 로직 메서드 (Logic Methods)
 
         /// <summary>
-        /// 한 번의 공격(다수 소환)에 사용할 친구 타입 리스트를 반환합니다.
+        /// 이번 소환 주기에 사용할 친구 타입들을 반환합니다.
+        /// <br/> 중복을 최소화하기 위해 셔플 로직을 사용합니다.
         /// </summary>
-        /// <param name="count">소환할 마리 수</param>
+        /// <param name="count">소환할 친구 수</param>
         public IEnumerable<FriendCharacter.FriendAnimationType> GetNextFriendTypes(int count)
         {
             // 요청 수보다 타입 종류가 많으면 셔플해서 중복 없이 반환
@@ -49,7 +49,7 @@ namespace InGame.Weapon.Logic
             }
             else
             {
-                // 타입 종류보다 많이 요청하면 랜덤 반환
+                // 타입 종류보다 더 많이 요청하면 랜덤 반환 (중복 허용)
                 for (int i = 0; i < count; i++)
                 {
                     yield return (FriendCharacter.FriendAnimationType)UnityEngine.Random.Range(0, m_allTypes.Length);
@@ -58,7 +58,7 @@ namespace InGame.Weapon.Logic
         }
 
         /// <summary>
-        /// 소환 위치 전략에 따라 소환 위치를 계산합니다.
+        /// 주입받은 전략(Strategy)을 사용하여 소환 위치를 계산합니다.
         /// </summary>
         public Vector3 CalculateSpawnPosition(Transform owner, Camera camera)
         {
@@ -66,7 +66,7 @@ namespace InGame.Weapon.Logic
         }
 
         /// <summary>
-        /// Fisher-Yates 알고리즘을 사용하여 친구 타입을 무작위로 섞습니다.
+        /// Fisher-Yates 알고리즘을 사용하여 친구 타입 리스트를 무작위로 섞습니다.
         /// </summary>
         private void ShuffleTypes()
         {

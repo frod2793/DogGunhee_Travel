@@ -1,46 +1,51 @@
 using UnityEngine;
+using InGame.ObjectPool;
 using InGame.Weapon.Base;
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 범위 공격 무기를 위한 이펙트 인터페이스입니다.
+    /// 범위 공격 효과를 정의하는 인터페이스입니다.
     /// </summary>
     public interface IAreaAttackEffect
     {
         /// <summary>
-        /// 특정 위치에서 공격 효과를 활성화합니다.
+        /// 지정된 위치에서 이펙트를 활성화합니다.
         /// </summary>
         void Activate(Vector3 position, WeaponRuntimeStats stats);
     }
 
     /// <summary>
-    /// 특정 위치에 범위 공격(TEffect)을 생성하는 범용 공격 전략 클래스입니다.
+    /// 특정 위치에 범위 공격(Area of Effect)을 생성하는 범용 전략 클래스입니다.
     /// </summary>
-    public class AreaAttackStrategy<TEffect> : IWeaponStrategy 
+    /// <typeparam name="TEffect">IAreaAttackEffect를 구현하는 MonoBehaviour</typeparam>
+    public class AreaAttackStrategy<TEffect> : IWeaponStrategy
         where TEffect : MonoBehaviour, IAreaAttackEffect
     {
-        #region 내부 상태 및 변수
+        #region 1. 내부 변수 (Internal State)
 
         private WeaponDataSO m_data;
+        private WeaponPoolManager m_poolManager;
 
         #endregion
 
-        #region IWeaponStrategy 구현
+        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
 
-        public void Init(WeaponDataSO data)
+        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
             m_data = data;
+            m_poolManager = poolManager;
         }
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
-            // 기본 로직은 상속받거나 구체화하여 사용
+            // 구체적인 범위 공격 로직은 상속받거나 이곳에 구현
+            // 예: 풀에서 TEffect를 가져와 Activate 호출
         }
 
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
-            // 지속 피해 등 필요 시 업데이트
+            // 지속 피해 로직 등이 필요할 경우 구현
         }
 
         #endregion

@@ -1,70 +1,83 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 히어로 랜딩(방패) 무기의 프리팹 설정 및 시각적 데이터를 관리하는 컴포넌트입니다.
-    /// 에디터 인스펙터에서 하드코딩된 수치들을 조정할 수 있도록 합니다.
+    /// 히어로 랜딩(Shield) 무기의 애니메이션 타이밍 및 투사체 물리를 설정하는 뷰 컴포넌트입니다.
+    /// <br/> WeaponPoolManager나 무기 프리팹에 부착되어 로직(Controller/Logic)에 튜닝 데이터를 제공합니다.
     /// </summary>
     public class ShieldWeaponView : MonoBehaviour
     {
-        #region 설정 데이터
+        #region 1. 에디터 설정 (Inspector)
 
-        [Header("애니메이션 타이밍")]
-        [Tooltip("공격 시작 후 충격파/부메랑이 발생하는 타이밍(초)입니다.")]
-        [UnityEngine.Serialization.FormerlySerializedAs("ImpactTriggerTime")]
+        [Header("1. 애니메이션 타이밍")]
+        [Tooltip("공격 애니메이션 시작 후, 실제 충격파나 부메랑이 생성되는 시점(초)입니다.")]
+        [FormerlySerializedAs("ImpactTriggerTime")]
+        [Range(0.0f, 5.0f)]
         [SerializeField] private float m_impactTriggerTime = 1.07f;
         
-        [Tooltip("공격 판정 후 애니메이션 마무리를 위해 대기하는 시간(초)입니다.")]
-        [UnityEngine.Serialization.FormerlySerializedAs("FollowThroughDelay")]
+        [Tooltip("공격 판정 후, 다음 동작으로 넘어가기 전 대기하는 시간(초)입니다. (후딜레이)")]
+        [FormerlySerializedAs("FollowThroughDelay")]
+        [Range(0.0f, 2.0f)]
         [SerializeField] private float m_followThroughDelay = 0.5f;
 
-        [Header("진화 후(부메랑) 설정")]
-        [Tooltip("부메랑이 날아가는 속도입니다.")]
-        [UnityEngine.Serialization.FormerlySerializedAs("BoomerangSpeed")]
+        [Header("2. 진화 무기(부메랑) 설정")]
+        [Tooltip("방패 파편(부메랑)이 날아가는 속도입니다.")]
+        [FormerlySerializedAs("BoomerangSpeed")]
+        [Range(1.0f, 20.0f)]
         [SerializeField] private float m_boomerangSpeed = 5f;
         
-        [Tooltip("부메랑이 반환을 시작하기 전 대기 시간(초)입니다.")]
-        [UnityEngine.Serialization.FormerlySerializedAs("ReturnDelay")]
+        [Tooltip("부메랑이 최대 거리 도달 후 돌아오기 전 대기하는 시간(초)입니다.")]
+        [FormerlySerializedAs("ReturnDelay")]
+        [Range(0.0f, 2.0f)]
         [SerializeField] private float m_returnDelay = 0.1f;
         
-        [Tooltip("부메랑의 초당 회전 수입니다.")]
-        [UnityEngine.Serialization.FormerlySerializedAs("RotationsPerSecond")]
+        [Tooltip("부메랑의 초당 회전 수입니다. (높을수록 빨리 돔)")]
+        [FormerlySerializedAs("RotationsPerSecond")]
+        [Range(0.0f, 10.0f)]
         [SerializeField] private float m_rotationsPerSecond = 2.5f;
 
         #endregion
 
-        #region 프로퍼티
+        #region 2. 공개 프로퍼티 (Properties)
 
+        /// <summary>
+        /// 임팩트(충격파) 발생 트리거 시간
+        /// </summary>
         public float ImpactTriggerTime => m_impactTriggerTime;
+
+        /// <summary>
+        /// 공격 후 마무리 동작 지연 시간
+        /// </summary>
         public float FollowThroughDelay => m_followThroughDelay;
+
+        /// <summary>
+        /// 부메랑 비행 속도
+        /// </summary>
         public float BoomerangSpeed => m_boomerangSpeed;
+
+        /// <summary>
+        /// 부메랑 반환 대기 시간
+        /// </summary>
         public float ReturnDelay => m_returnDelay;
+
+        /// <summary>
+        /// 부메랑 초당 회전 속도
+        /// </summary>
         public float RotationsPerSecond => m_rotationsPerSecond;
 
         #endregion
 
-        #region 유틸리티
-
+        #region 3. 유효성 검사 (Validation)
+        
         /// <summary>
-        /// 프리팹에서 필요한 컴포넌트나 설정을 미리 검증합니다.
+        /// 에디터에서 값이 변경될 때 실시간으로 범위를 제한합니다.
         /// </summary>
-        public void ValidateSettings()
+        private void OnValidate()
         {
-            if (m_impactTriggerTime <= 0)
-            {
-                m_impactTriggerTime = 1.07f;
-            }
-            
-            if (m_followThroughDelay <= 0)
-            {
-                m_followThroughDelay = 0.5f;
-            }
-
-            if (m_boomerangSpeed <= 0)
-            {
-                m_boomerangSpeed = 5f;
-            }
+            m_impactTriggerTime = Mathf.Max(0.1f, m_impactTriggerTime);
+            m_boomerangSpeed = Mathf.Max(1.0f, m_boomerangSpeed);
         }
 
         #endregion

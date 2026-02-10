@@ -9196,7 +9196,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: m_logCategoryEnables.Array.size
-      value: 20
+      value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 8225297430024969645, guid: ebd531508aea242398acd36b57ace97d, type: 3}
       propertyPath: 'm_logCategoryEnables.Array.data[0]'

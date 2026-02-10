@@ -4,36 +4,41 @@ using UnityEngine;
 namespace InGame.Mob.MobBase
 {
     /// <summary>
-    /// 몬스터의 주요 전투 능력치를 정의하는 구조체입니다.
+    /// 몬스터의 기본 전투 능력치(체력, 공격력, 속도 등)를 정의하는 데이터 구조체입니다.
+    /// <br/> Unity Inspector 노출을 위해 [Serializable]로 선언되었습니다.
     /// </summary>
     [Serializable]
     public struct MobStats
     {
-        #region 설정 데이터
+        #region 1. 설정 데이터 (Inspector)
 
-        [Header("기본 스탯")]
-        [Tooltip("현재 체력")]
+        [Header("1. 생존 및 이동")]
+        [Tooltip("현재 체력 (MaxHp와 동일하게 시작하거나 로직에 따라 변동)")]
         public float Hp;
 
-        [Tooltip("이동 속도")]
+        [Tooltip("초당 이동 속도")]
         public float MoveSpeed;
 
-        [Tooltip("공격력")]
+        [Tooltip("피격 시 경직(스턴) 지속 시간")]
+        public float StunTime;
+
+        [Header("2. 전투 능력치")]
+        [Tooltip("기본 공격력")]
         public float AttackDamage;
 
-        [Tooltip("공격 속도")]
+        [Tooltip("초당 공격 횟수 (또는 쿨타임 계산용)")]
         public float AttackSpeed;
 
-        [Tooltip("공격 사거리")]
+        [Tooltip("공격 사거리 (추적 중지 및 공격 시작 거리)")]
         public float AttackRange;
-
-        [Tooltip("피격 시 경직 시간")]
-        public float StunTime;
 
         #endregion
 
-        #region 생성자 및 유틸리티
+        #region 2. 생성자 및 초기화
 
+        /// <summary>
+        /// 모든 스탯을 초기화하는 생성자입니다.
+        /// </summary>
         public MobStats(float hp, float speed, float damage, float atkSpeed, float range, float stun)
         {
             Hp = hp;
@@ -45,13 +50,26 @@ namespace InGame.Mob.MobBase
         }
 
         /// <summary>
-        /// 스탯 데이터를 초기값으로 재설정합니다.
+        /// 주요 스탯을 재설정합니다. (공격 속도와 사거리는 유지됩니다)
         /// </summary>
         public void Reset(float hp, float speed, float damage, float stun)
         {
             Hp = hp;
             MoveSpeed = speed;
             AttackDamage = damage;
+            StunTime = stun;
+        }
+
+        /// <summary>
+        /// 모든 스탯 값을 덮어씁니다.
+        /// </summary>
+        public void SetAll(float hp, float speed, float damage, float atkSpeed, float range, float stun)
+        {
+            Hp = hp;
+            MoveSpeed = speed;
+            AttackDamage = damage;
+            AttackSpeed = atkSpeed;
+            AttackRange = range;
             StunTime = stun;
         }
 

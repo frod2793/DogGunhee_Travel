@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ccc4344296a87442940a782d2a69a54
+    m_Address: Assets/_Game/ScriptableObjects/SettingsData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 123776dc046cd354b85728f75de088d7
     m_Address: Player_Character_1
     m_ReadOnly: 0
@@ -35,6 +40,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 181c388667c224c4aa40128d63aa48b3
+    m_Address: Assets/_Game/ScriptableObjects/CharacterConfig_DogGun.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2225193fdf9ff0f4bada47f6ba2e5534
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_BALLData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22709bcd67a9bf048a1df3ea99d78a49
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_BOOMERANGData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ffe1ae531407134cbfb751aeb0a6331
     m_Address: Prefab_Weapon_Boomerang
     m_ReadOnly: 0
@@ -45,8 +65,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35b424dfd3cc7cd46818c4a2a9f27d3d
+    m_Address: Assets/_Game/Art/Game_Resource/Common/Prefabs/Weaphon/MiniShield.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3870babb907260340a8eeef11ad9609e
     m_Address: Assets/Game_Resource/VamserLike/Prefb/Weaphon/BoomerangProjectile.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d670bc900d21f647bb9f4a5e621a615
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_BONEData.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -60,6 +90,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4464f6a372c6942469f7ea34158454b6
+    m_Address: Assets/_Game/Art/Game_Resource/Common/Prefabs/Weaphon/ballPlay.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c3e8fd5331c03f4eb9f8ae4ccb22182
+    m_Address: Assets/_Game/Art/Game_Resource/Common/Prefabs/Weaphon/WeaPhon_Bone_Bullet.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4efd0e3627cd2420197c95134841c170
     m_Address: Weaphon/Jinjoo.prefab
     m_ReadOnly: 0
@@ -70,8 +110,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60a6abe97709a3547b2d99e8af6bafc7
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_FIREData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7be80992cb8ec064c8c2e586560305ee
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_FRIENDSData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 821ef9c335b6c144bb5835894543add6
     m_Address: Prefab_Weapon_Ink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a903bf4adc68e6448e2e4b27cef3661
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_INKData.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -85,6 +140,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97b1848101b569847b64d8cc68e2f43b
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_LANDINGData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9990d404d42a6ae4abc0e629718dadeb
     m_Address: Exp
     m_ReadOnly: 0
@@ -95,8 +155,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a287ec1fd21c70b4490ad81987a3f9e6
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_PUNCHData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0afd2fc64f8bf345bcdbe3b66b0399d
+    m_Address: Assets/_Game/ScriptableObjects/NewSkillDatabase.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b85873dafbcca034e9d5efd9a31d77d3
+    m_Address: Assets/_Game/ScriptableObjects/CharacterConfig_shelfish.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb7bc972af1334ecfae1ae0f4db37e58
     m_Address: Assets/Scripts/ScriptableOJB/SoundData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bbed90bc3c2d841fdb5c8cf0973ea605
+    m_Address: Assets/_Game/Art/Game_Resource/Common/Prefabs/Weaphon/Shield_Impackt.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd78ed65519a03448a5d727b9974ca5b
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_PEARLData.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -106,7 +191,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c471a13dad9b00644acffbffcbad0eb4
-    m_Address: normal_mob
+    m_Address: Mob_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd17b3a75615bae499b1e9aba25e4193
+    m_Address: Assets/_Game/ScriptableObjects/CharacterConfig_Octopus.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -115,8 +205,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d06e317a66a50084eacfb4ad783f41ad
+    m_Address: Assets/_Game/ScriptableObjects/StageDatabase.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d61b8e77b96600f4d9b90a80751ff0a0
+    m_Address: Assets/_Game/ScriptableObjects/CharacterConfig_Racoon.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d95fefdb30d37fa48a9fa7976868a49c
     m_Address: Assets/Scripts/ScriptableOJB/EffectData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da952313feaec0140b03e8fa8e451171
+    m_Address: Assets/_Game/ScriptableObjects/Weapons/WP_SMELLData.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -135,8 +240,24 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef2895a6296aad04f8774815b8ca70a5
+    m_Address: Assets/_Game/Art/Game_Resource/Common/Prefabs/Weaphon/FriendCharacter.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f12391ae88c4b2742944ab27fdce585c
     m_Address: Prefab_Weapon_Landing
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa983924ddb921d4899675957f8351ee
+    m_Address: Assets/_Game/ScriptableObjects/Weapons
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ffdc961651f29439ea5c5ae26284c606
+    m_Address: Assets/_Game/Art/Game_Resource/Common/Prefabs/Weaphon/FlamePillar
+      .prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
