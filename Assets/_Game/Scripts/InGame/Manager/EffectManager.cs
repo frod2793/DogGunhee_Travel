@@ -15,6 +15,7 @@ namespace InGame.Manager
     public class EffectManager : MonoBehaviour
     {
         #region 1. 싱글톤 (Singleton)
+
         private static EffectManager s_instance;
 
         public static EffectManager Instance
@@ -25,25 +26,25 @@ namespace InGame.Manager
                 {
                     s_instance = FindFirstObjectByType<EffectManager>();
                 }
+
                 return s_instance;
             }
         }
+
         #endregion
 
         #region 2. 에디터 설정 (Inspector)
-        
-        [Header("설정 데이터")]
-        [Tooltip("이펙트 종류(Enum)와 프리팹(Prefab)을 매핑한 ScriptableObject")]
-        [SerializeField] private EffectData m_effectData;
 
-        [Header("카메라 흔들림 (Camera Shake)")]
-        [SerializeField, Tooltip("피격 시 흔들림 지속 시간")] 
+        [Header("설정 데이터")] [Tooltip("이펙트 종류(Enum)와 프리팹(Prefab)을 매핑한 ScriptableObject")] [SerializeField]
+        private EffectData m_effectData;
+
+        [Header("카메라 흔들림 (Camera Shake)")] [SerializeField, Tooltip("피격 시 흔들림 지속 시간")]
         private float m_shakeDuration = 0.2f;
-        
-        [SerializeField, Tooltip("피격 시 흔들림 강도")] 
+
+        [SerializeField, Tooltip("피격 시 흔들림 강도")]
         private float m_shakeStrength = 0.5f;
-        
-        [SerializeField, Tooltip("피격 시 흔들림 진동수")] 
+
+        [SerializeField, Tooltip("피격 시 흔들림 진동수")]
         private int m_shakeVibrato = 10;
 
         #endregion
@@ -71,8 +72,9 @@ namespace InGame.Manager
                 Destroy(gameObject);
                 return;
             }
+
             s_instance = this;
-            
+
             // 카메라 참조 캐싱
             m_mainCamera = Camera.main;
             if (m_mainCamera != null)
@@ -111,28 +113,30 @@ namespace InGame.Manager
                 return;
             }
 
-            foreach (var mapping in m_effectData.effects)
+            foreach (var mapping in m_effectData.Effects)
             {
-                if (mapping.prefab == null)
+                if (mapping.Prefab == null)
                 {
-                    LogManager.LogWarning($"[EffectManager] '{mapping.type}' 타입의 프리팹이 누락되었습니다.", LogManager.LogCategory.EffectManager);
+                    LogManager.LogWarning($"[EffectManager] '{mapping.Type}' 타입의 프리팹이 누락되었습니다.",
+                        LogManager.LogCategory.EffectManager);
                     continue;
                 }
 
                 // 프리팹 유효성 검사 및 등록
-                GameObject prefab = mapping.prefab;
+                GameObject prefab = mapping.Prefab;
                 if (prefab.GetComponent<PooledEffect>() == null)
                 {
                     // 런타임에 컴포넌트를 추가하는 것은 위험하므로(저장 안됨), 경고만 출력하고 스킵하거나 런타임 추가를 명시적으로 수행
-                    LogManager.LogWarning($"[EffectManager] '{prefab.name}' 프리팹에 PooledEffect 컴포넌트가 없습니다. 런타임에 추가합니다.", LogManager.LogCategory.EffectManager);
+                    LogManager.LogWarning($"[EffectManager] '{prefab.name}' 프리팹에 PooledEffect 컴포넌트가 없습니다. 런타임에 추가합니다.",
+                        LogManager.LogCategory.EffectManager);
                     // 주의: 원본 프리팹을 수정하는 것이 아니라 인스턴스화 시점에 추가해야 함. 여기서는 생성 로직에서 처리.
                 }
 
-                m_effectPrefabs[mapping.type] = prefab;
+                m_effectPrefabs[mapping.Type] = prefab;
 
                 // 오브젝트 풀 생성
-                m_effectPools[mapping.type] = new ObjectPool<PooledEffect>(
-                    createFunc: () => CreateEffect(mapping.type),
+                m_effectPools[mapping.Type] = new ObjectPool<PooledEffect>(
+                    createFunc: () => CreateEffect(mapping.Type),
                     actionOnGet: OnGetEffect,
                     actionOnRelease: OnReleaseEffect,
                     actionOnDestroy: OnDestroyEffect,
@@ -148,7 +152,7 @@ namespace InGame.Manager
 
             // EffectManager 하위에 생성하여 Hierarchy 정리
             GameObject instance = Instantiate(prefab, transform);
-            
+
             // 컴포넌트 확보
             PooledEffect pooledEffect = instance.GetComponent<PooledEffect>();
             if (pooledEffect == null)
@@ -164,6 +168,7 @@ namespace InGame.Manager
         // 풀 이벤트 핸들러
         private void OnGetEffect(PooledEffect effect) => effect.gameObject.SetActive(true);
         private void OnReleaseEffect(PooledEffect effect) => effect.gameObject.SetActive(false);
+
         private void OnDestroyEffect(PooledEffect effect)
         {
             if (effect != null) Destroy(effect.gameObject);
@@ -189,7 +194,8 @@ namespace InGame.Manager
             }
             else
             {
-                LogManager.LogWarning($"[EffectManager] '{type}' 타입의 풀을 찾을 수 없습니다.", LogManager.LogCategory.EffectManager);
+                LogManager.LogWarning($"[EffectManager] '{type}' 타입의 풀을 찾을 수 없습니다.",
+                    LogManager.LogCategory.EffectManager);
             }
         }
 
@@ -236,7 +242,7 @@ namespace InGame.Manager
         public void PlayLevelUpEffect(SpriteRenderer targetRenderer)
         {
             if (targetRenderer == null) return;
-            
+
             // 기존 트윈 중지 및 초기화
             targetRenderer.DOKill();
             targetRenderer.color = Color.white;
@@ -246,11 +252,11 @@ namespace InGame.Manager
             for (int i = 0; i < 3; i++)
             {
                 sequence.Append(targetRenderer.DOColor(Color.yellow, 0.1f).SetEase(Ease.OutQuad))
-                        .Append(targetRenderer.DOColor(Color.white, 0.1f).SetEase(Ease.InQuad));
+                    .Append(targetRenderer.DOColor(Color.white, 0.1f).SetEase(Ease.InQuad));
             }
-            
+
             // 타겟이 파괴되면 시퀀스도 자동 중단되도록 설정
-            sequence.SetTarget(targetRenderer.transform); 
+            sequence.SetTarget(targetRenderer.transform);
         }
 
         /// <summary>
@@ -290,7 +296,7 @@ namespace InGame.Manager
 
             // 현재 위치에서 방향 벡터만큼 이동
             Vector3 targetPos = targetTransform.position + direction.normalized * distance;
-            
+
             targetTransform.DOMove(targetPos, duration)
                 .SetEase(Ease.OutQuad)
                 .SetTarget(targetTransform);

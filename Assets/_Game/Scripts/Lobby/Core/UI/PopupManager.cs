@@ -5,14 +5,18 @@ using UnityEngine;
 namespace InGame.UI
 {
     /// <summary>
-    /// UI 팝업 스택을 관리하는 싱글톤 매니저
-    /// ESC 키 입력 시 최상단 팝업을 닫는 기능을 수행합니다.
+    /// UI 팝업 스택을 관리하는 싱글톤 매니저입니다.
+    /// <br/>ESC 키 입력 시 최상단 팝업을 닫는 기능을 수행합니다.
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
-        #region 싱글톤
+        #region 1. 싱글톤 패턴
 
         private static PopupManager s_instance;
+
+        /// <summary>
+        /// PopupManager의 전역 접근 인스턴스입니다.
+        /// </summary>
         public static PopupManager Instance
         {
             get
@@ -26,19 +30,23 @@ namespace InGame.UI
                         s_instance = go.AddComponent<PopupManager>();
                     }
                 }
+
                 return s_instance;
             }
         }
 
         #endregion
 
-        #region 내부 상태
+        #region 2. 내부 변수 및 상태
 
+        /// <summary>
+        /// 현재 활성화된 팝업들의 닫기 액션을 저장하는 스택입니다.
+        /// </summary>
         private readonly Stack<Action> m_closePopupActions = new Stack<Action>();
 
         #endregion
 
-        #region Unity 라이프사이클
+        #region 3. 유니티 생명주기
 
         private void Awake()
         {
@@ -54,6 +62,7 @@ namespace InGame.UI
 
         private void Update()
         {
+            // ESC 키 입력 시 최상단 팝업 닫기
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 CloseTopPopup();
@@ -62,16 +71,18 @@ namespace InGame.UI
 
         #endregion
 
-        #region 공개 메서드
+        #region 4. 공개 메서드
 
         /// <summary>
         /// 팝업을 닫을 때 실행할 액션을 등록합니다. (스택에 Push)
         /// </summary>
+        /// <param name="closeAction">팝업을 비활성화하거나 파괴하는 메서드</param>
         public void RegisterPopup(Action closeAction)
         {
             if (closeAction != null)
             {
                 m_closePopupActions.Push(closeAction);
+                LogManager.LogError("팝업 클로즈 액션이 유효하지 않습니다.", LogManager.LogCategory.System);
             }
         }
 
@@ -84,6 +95,7 @@ namespace InGame.UI
             {
                 var action = m_closePopupActions.Pop();
                 action?.Invoke();
+                LogManager.Log("[PopupManager] 새 팝업 등록됨", LogManager.LogCategory.System);
             }
         }
 
@@ -95,6 +107,7 @@ namespace InGame.UI
             if (m_closePopupActions.Count > 0)
             {
                 m_closePopupActions.Pop();
+                LogManager.Log("[PopupManager] 최상단 팝업 액션 제거됨 (실행 안함)", LogManager.LogCategory.System);
             }
         }
 
@@ -104,6 +117,7 @@ namespace InGame.UI
         public void ClearAllPopups()
         {
             m_closePopupActions.Clear();
+            LogManager.Log("[PopupManager] 모든 팝업 스택 초기화됨", LogManager.LogCategory.System);
         }
 
         #endregion

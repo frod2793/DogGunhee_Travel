@@ -11,39 +11,41 @@ using InGame.UI.Elements;
 namespace InGame.UI.Popups
 {
     /// <summary>
-    /// 상점 UI를 관리하는 View 클래스
-    /// Addressable로 아이템 프리팹을 로드하고 StoreViewModel과 연동합니다.
+    /// 게임 내 상점 시스템을 총괄적으로 시각화하는 View 클래스입니다.
+    /// <br/>Addressable 시스템을 연동하여 런타임에 동적으로 아이템 프리팹을 로드하고 표시합니다.
     /// </summary>
     public class StoreView : MonoBehaviour
     {
-        #region UI 컴포넌트
+        #region 1. 에디터 설정 (Inspector)
 
-        [Header("상점 UI")]
-        [SerializeField] private GameObject m_storePanel;
-        [SerializeField] private RectTransform m_storeItemListContainer;
-        
-        // 아이템 프리팹 리스트 (Addressable 로드 결과)
-        private List<GameObject> m_storeItemPrefabs = new List<GameObject>(); 
-        
-        // 생성된 아이템 뷰 리스트
-        private List<StoreItemView> m_spawnedItems = new List<StoreItemView>();
+        [Header("<color=green>상점 메인 설정</color>")] [SerializeField, Tooltip("상점 팝업 패널 오브젝트")]
+        private GameObject m_storePanel;
+
+        [SerializeField, Tooltip("상점 아이템들이 배치될 리스트 부모 컨테이너")]
+        private RectTransform m_storeItemListContainer;
 
         #endregion
 
-        #region ViewModel & 상태
+        #region 2. 내부 변수 및 상태
 
         private StoreViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
+        // Addressable로 로드된 에셋 및 활성화된 인스턴스 관리
+        private readonly List<GameObject> m_storeItemPrefabs = new List<GameObject>();
+        private readonly List<StoreItemView> m_spawnedItems = new List<StoreItemView>();
+
         #endregion
 
-        #region Unity 라이프사이클
+        #region 3. 유니티 생명주기
 
         private void Start()
         {
-            m_viewModel = new StoreViewModel();
+            InitializeViewModel();
             BindViewModel();
-            LoadAddressableStoreItems(); // 비동기 로드 시작
+
+            // 상점 에셋(아이템들) 비동기 로드 시작
+            LoadAddressableStoreAssets();
         }
 
         private void OnDestroy()
@@ -54,44 +56,59 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region MVVM 바인딩
+        #region 4. MVVM 데이터 바인딩
 
+        /// <summary>
+        /// 상점 거래 로직을 담당하는 뷰모델을 생성합니다.
+        /// </summary>
+        private void InitializeViewModel()
+        {
+            m_viewModel = new StoreViewModel();
+        }
+
+        /// <summary>
+        /// 뷰모델의 상태 피드백을 구독하여 로그 또는 UI 이벤트를 처리합니다.
+        /// </summary>
         private void BindViewModel()
         {
-            // 에러 메시지
+            if (m_viewModel == null) return;
+
+            // 1. 구매 중 에러 발생 시 처리
             m_viewModel.OnError
-                .Subscribe(msg => LogManager.LogError(msg, LogManager.LogCategory.StoreManager))
+                .Subscribe(msg => LogManager.LogError($"[StoreView] {msg}", LogManager.LogCategory.StoreManager))
                 .AddTo(m_disposables);
 
-            // 구매 성공 메시지
+            // 2. 구매 성공 피드백 알림
             m_viewModel.OnPurchaseSuccess
-                .Subscribe(msg => 
+                .Subscribe(msg =>
                 {
-                    LogManager.Log(msg, LogManager.LogCategory.StoreManager);
-                    // TODO: 성공 팝업 표시
+                    LogManager.Log($"[StoreView] {msg}", LogManager.LogCategory.StoreManager);
+                    // TODO: 연출용 성공 팝업 트리거
                 })
                 .AddTo(m_disposables);
-
-            // 재화 갱신 구독 (상점 UI에 재화 표시가 있다면 연결)
-            // m_viewModel.Gold.Subscribe(...);
         }
 
         #endregion
 
-        #region UI 제어 (Public)
+        #region 5. 상점 패널 제어 (Public)
 
+        /// <summary>
+        /// 상점 패널을 활성화하고 최신 재화 상태를 뷰모델에 요청합니다.
+        /// </summary>
         public void OpenStorePanel()
         {
-            if (m_storePanel != null)
-            {
-                m_storePanel.SetActive(true);
-                PopupManager.Instance.RegisterPopup(CloseStorePanel);
-                
-                // 열릴 때 재화 정보 갱신
-                m_viewModel.RefreshCurrency();
-            }
+            if (m_storePanel == null) return;
+
+            m_storePanel.SetActive(true);
+            PopupManager.Instance.RegisterPopup(CloseStorePanel);
+
+            // 열릴 때 최신 골드/다이아 갱신
+            m_viewModel?.RefreshCurrency();
         }
 
+        /// <summary>
+        /// 상점 패널을 비활성화합니다.
+        /// </summary>
         public void CloseStorePanel()
         {
             if (m_storePanel != null)
@@ -102,15 +119,20 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 아이템 로드 및 생성
+        #region 6. Addressable 아이템 관리 로직
 
-        private void LoadAddressableStoreItems()
+        /// <summary>
+        /// 'Store_Item' 라벨이 붙은 모든 Addressable 에셋을 비동기로 로드합니다.
+        /// </summary>
+        private void LoadAddressableStoreAssets()
         {
-            // 'Store_Item' 라벨로 에셋 로드
-            Addressables.LoadAssetsAsync<GameObject>("Store_Item", null).Completed += OnStoreItemsLoaded;
+            Addressables.LoadAssetsAsync<GameObject>("Store_Item", null).Completed += OnStoreItemsLoadedNotify;
         }
 
-        private void OnStoreItemsLoaded(AsyncOperationHandle<IList<GameObject>> op)
+        /// <summary>
+        /// 에셋 로드가 완료되었을 때 호출되는 콜백입니다. 성공 시 인스턴스화를 시작합니다.
+        /// </summary>
+        private void OnStoreItemsLoadedNotify(AsyncOperationHandle<IList<GameObject>> op)
         {
             if (op.Status == AsyncOperationStatus.Succeeded)
             {
@@ -122,46 +144,45 @@ namespace InGame.UI.Popups
                         m_storeItemPrefabs.Add(item);
                     }
                 }
-                SpawnStoreItems();
+
+                BuildStoreItemUI();
             }
             else
             {
-                LogManager.LogError("상점 아이템 로드 실패", LogManager.LogCategory.StoreManager);
+                LogManager.LogError("[StoreView] 상점 프리팹 에셋 로딩에 실패했습니다.", LogManager.LogCategory.StoreManager);
             }
         }
 
-        private void SpawnStoreItems()
+        /// <summary>
+        /// 로드된 프리팹 목록을 바탕으로 실제 UI 아이템들을 생성하고 이벤트를 연결합니다.
+        /// </summary>
+        private void BuildStoreItemUI()
         {
-            // 기존 아이템 제거
+            // 기존 목록 청소
             foreach (var item in m_spawnedItems)
             {
-                if (item != null) Destroy(item.gameObject);
+                if (item != null)
+                {
+                    Destroy(item.gameObject);
+                }
             }
+
             m_spawnedItems.Clear();
 
-            // 프리팹 인스턴스화
+            // 컨테이너에 신규 아이템들 배치
             foreach (var prefab in m_storeItemPrefabs)
             {
                 GameObject instance = Instantiate(prefab, m_storeItemListContainer);
-                
-                // StoreItemView 컴포넌트 확인
                 StoreItemView itemView = instance.GetComponent<StoreItemView>();
-                if (itemView == null)
-                {
-                    // 만약 프리팹에 아직 예전 스크립트(Store_Item)가 붙어있다면?
-                    // GUID를 유지했으므로 StoreItemView로 인식될 것임.
-                    itemView = instance.GetComponent<StoreItemView>();
-                }
 
                 if (itemView != null)
                 {
-                    // 이름 정리
-                    instance.name = prefab.name + "_Item";
+                    instance.name = $"{prefab.name}_ViewItem";
                     instance.transform.localScale = Vector3.one;
 
-                    // 구매 이벤트 연결
-                    itemView.OnPurchaseRequest += (code) => m_viewModel.PurchaseItem(code);
-                    
+                    // 개별 아이템의 구매 요청 이벤트를 뷰모델에 바인딩
+                    itemView.OnPurchaseRequest += (code) => m_viewModel?.PurchaseItem(code);
+
                     m_spawnedItems.Add(itemView);
                 }
             }

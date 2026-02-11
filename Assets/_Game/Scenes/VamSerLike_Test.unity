@@ -7403,6 +7403,10 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1424236142}
+    - target: {fileID: 668436066541803204, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_attackDuration
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1170362487552334879, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_Name
       value: '[ - GAME - ]'

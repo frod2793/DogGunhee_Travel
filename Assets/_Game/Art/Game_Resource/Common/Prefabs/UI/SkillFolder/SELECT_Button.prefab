@@ -103,6 +103,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -239,6 +240,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -560,9 +562,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab454f5bf0643bf80ac3c2f5e3e224a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillThumbnailImage: {fileID: 4047951971084671897}
-  skillNameText: {fileID: 265532589707726448}
-  skillDescriptionText: {fileID: 4540434952812430534}
+  m_skillThumbnailImage: {fileID: 4047951971084671897}
+  m_skillNameText: {fileID: 265532589707726448}
+  m_skillDescriptionText: {fileID: 4540434952812430534}
 --- !u!1 &3432680482742613592
 GameObject:
   m_ObjectHideFlags: 0

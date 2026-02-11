@@ -7,6 +7,9 @@ using InGame.Services;
 
 namespace InGame.Lobby.ViewModels
 {
+    /// <summary>
+    /// 개별 퀘스트 요소의 상태를 나타내는 데이터 구조입니다.
+    /// </summary>
     public class QuestData
     {
         public int QuestId { get; set; }
@@ -18,103 +21,144 @@ namespace InGame.Lobby.ViewModels
     }
 
     /// <summary>
-    /// 퀘스트 시스템의 비즈니스 로직을 관리하는 ViewModel
+    /// 로비의 퀘스트 시스템의 데이터 처리와 보상 획득 로직을 담당하는 ViewModel 클래스입니다.
+    /// <br/>서버 또는 로컬 데이터로부터 퀘스트 목록을 구성하고 상태 변화를 View에 전달합니다.
     /// </summary>
     public class QuestViewModel : IDisposable
     {
-        #region 상태 프로퍼티
+        #region 1. 반응형 프로퍼티 (View가 구독)
 
-        // 퀘스트 리스트
+        /// <summary> 전체 퀘스트 목록 데이터 </summary>
         public ReadOnlyReactiveProperty<List<QuestData>> Quests => m_quests;
-        private readonly ReactiveProperty<List<QuestData>> m_quests = new ReactiveProperty<List<QuestData>>(new List<QuestData>());
 
-        // 현재 선택된 퀘스트
+        private readonly ReactiveProperty<List<QuestData>> m_quests =
+            new ReactiveProperty<List<QuestData>>(new List<QuestData>());
+
+        /// <summary> 현재 상세 내용을 확인 중인 퀘스트 </summary>
         public ReadOnlyReactiveProperty<QuestData> CurrentSelectedQuest => m_currentSelectedQuest;
+
         private readonly ReactiveProperty<QuestData> m_currentSelectedQuest = new ReactiveProperty<QuestData>();
 
         #endregion
 
-        #region 이벤트
+        #region 2. 이벤트 발행 (View가 리슨)
 
-        // 에러 발생 이벤트
+        /// <summary> 퀘스트 로드 또는 보상 수령 실패 시 안내 </summary>
         public Observable<string> OnError => m_errorSubject;
+
         private readonly Subject<string> m_errorSubject = new Subject<string>();
 
-        // 보상 수령 완료 이벤트
+        /// <summary> 성공적으로 퀘스트 보상을 수령했을 때의 알림 </summary>
         public Observable<string> OnRewardClaimed => m_rewardClaimedSubject;
+
         private readonly Subject<string> m_rewardClaimedSubject = new Subject<string>();
 
         #endregion
 
+        #region 3. 내부 변수 및 생성자
+
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
+        /// <summary>
+        /// QuestViewModel의 기본 생성자입니다.
+        /// </summary>
         public QuestViewModel()
         {
-            // 초기화
+            // 초기화 로직 (필요 시 작성)
         }
 
+        #endregion
+
+        #region 4. 비즈니스 로직 (Public)
+
+        /// <summary>
+        /// 서버 또는 데이터 파일로부터 퀘스트 목록을 로드하여 상태를 갱신합니다.
+        /// </summary>
         public void LoadQuests()
         {
-            // TODO: 실제 데이터 로드 (서버/로컬)
-            // 현재는 QuestPanelManager의 더미 로직을 그대로 옮김
+            // [TODO] 실제 로직: 어드레스블 또는 서버 API 호출
+            // 현재 구조에서는 시연 및 정합성을 위해 더미 목록 구성
             var list = new List<QuestData>();
             for (int i = 0; i < 10; i++)
             {
                 list.Add(new QuestData
                 {
                     QuestId = i,
-                    Title = $"퀘스트 {i}",
-                    Description = "퀘스트 상세 내용",
-                    RewardName = "보상 아이템",
+                    Title = $"일일 모험 퀘스트 {i + 1}",
+                    Description = $"이 퀘스트는 캐릭터의 모험 성장을 돕는 상세 가이드 0{i + 1}입니다.",
+                    RewardName = "성장 비약",
                     RewardItemCode = 1001,
                     IsCompleted = false
                 });
             }
+
             m_quests.Value = list;
         }
 
+        /// <summary>
+        /// 특정 퀘스트를 선택 처리하여 상세 정보와 연결합니다.
+        /// </summary>
         public void SelectQuest(QuestData quest)
         {
             m_currentSelectedQuest.Value = quest;
         }
 
+        /// <summary>
+        /// 현재 선택된 퀘스트가 완료 가능한 상태라면 보상을 지급하고 상태를 반영합니다.
+        /// </summary>
         public void ClaimReward()
         {
             var quest = m_currentSelectedQuest.Value;
-            if (quest == null) return;
-            
-            if (quest.IsCompleted)
+            if (quest == null)
             {
-                m_errorSubject.OnNext("이미 완료된 퀘스트입니다.");
                 return;
             }
 
-            // 보상 지급 로직
+            if (quest.IsCompleted)
+            {
+                m_errorSubject.OnNext("이미 보상 수령이 완료된 퀘스트입니다.");
+                return;
+            }
+
+            // 1. 보상 아이템 지급 (인벤토리 매니저 연동)
             if (InventoryDataManager.Instance != null)
             {
                 InventoryDataManager.Instance.GetItemByItemCode(quest.RewardItemCode);
-                
-                // 완료 처리
-                quest.IsCompleted = true; // 실제로는 서버 통신 후 처리
-                
-                m_rewardClaimedSubject.OnNext($"{quest.RewardName}을(를) 수령했습니다.");
-                
-                // 리스트 갱신 알림 (새로운 리스트 인스턴스로 교체해야 ReactiveProperty가 반응함)
-                m_quests.Value = new List<QuestData>(m_quests.Value); 
+                InventoryDataManager.Instance.SaveInventoryData();
+
+                // 2. 내부 데이터 상태 완료 처리 (서버 연동 시 API 응답에 맞춰 처리)
+                quest.IsCompleted = true;
+
+                // 3. UI 갱신 알림 (새 인스턴스 할당을 통한 반응 유도)
+                m_quests.Value = new List<QuestData>(m_quests.Value);
+
+                m_rewardClaimedSubject.OnNext($"[{quest.RewardName}] 보상을 수령하였습니다.");
             }
             else
             {
-                m_errorSubject.OnNext("인벤토리 매니저를 찾을 수 없습니다.");
+                LogManager.LogError("[QuestViewModel] 인벤토리 매니저 참조를 찾을 수 없습니다.", LogManager.LogCategory.QuestManager);
+                m_errorSubject.OnNext("시스템 연동 오류로 보상을 수령할 수 없습니다.");
             }
         }
 
+        #endregion
+
+        #region 5. 리소스 해제 (IDisposable)
+
+        /// <summary>
+        /// 뷰모델 파생 시 모든 반응형 데이터와 구독을 해제합니다.
+        /// </summary>
         public void Dispose()
         {
             m_disposables.Dispose();
+
             m_quests.Dispose();
             m_currentSelectedQuest.Dispose();
+
             m_errorSubject.Dispose();
             m_rewardClaimedSubject.Dispose();
         }
+
+        #endregion
     }
 }

@@ -9,90 +9,85 @@ using UnityEngine.Serialization;
 namespace Lobby
 {
     /// <summary>
-    /// 옵션 팝업의 UI 바인딩 및 시각화를 담당하는 View 클래스입니다.
-    /// MVVM 패턴을 따르며, 실제 로직은 OptionPopupViewModel에 위임합니다.
+    /// 게임 설정 옵션 팝업의 시각적 요소와 사용자 입력을 담당하는 View 클래스입니다.
+    /// <br/>MVVM 패턴을 사용하여 실제 비즈니스 로직(OptionPopupViewModel)과 데이터를 동기화합니다.
     /// </summary>
     public class OptionPopupView : MonoBehaviour
     {
-        #region 필드 및 프로퍼티
+        #region 1. 에디터 설정 (Inspector)
 
-        [Header("참조 데이터 및 프리팹")]
-        [Tooltip("게임의 전반적인 설정을 관리하는 ScriptableObject입니다.")]
-        [FormerlySerializedAs("settingsData")]
-        [SerializeField] private SettingsData m_settingsData;
-        
-        [Tooltip("동적으로 생성할 조이스틱 설정 팝업 프리팹입니다.")]
-        [FormerlySerializedAs("joysticSetterPopUpPrefb")]
-        [SerializeField] private JoystickSetter m_joystickSetterPopupPrefab;
+        [Header("<color=green>참조 데이터 및 프리팹</color>")]
+        [SerializeField, Tooltip("게임 설정 저장 및 관리 ScriptableObject"), FormerlySerializedAs("settingsData")]
+        private SettingsData m_settingsData;
 
-        [Header("UI 컴포넌트")]
-        [Tooltip("효과음 볼륨을 조절하는 슬라이더입니다.")]
-        [FormerlySerializedAs("effectSoundVolum")]
-        [SerializeField] private Slider m_effectSoundVolumeSlider;
-        
-        [Tooltip("배경음 볼륨을 조절하는 슬라이더입니다.")]
-        [FormerlySerializedAs("bgMsoundVolum")]
-        [SerializeField] private Slider m_bgmSoundVolumeSlider;
-        
-        [Tooltip("설정 창을 닫고 변경사항을 저장하는 버튼입니다.")]
-        [FormerlySerializedAs("exitBtn")]
-        [SerializeField] private Button m_exitButton;
-        
-        [Tooltip("조이스틱 설정 팝업을 여는 버튼입니다.")]
-        [FormerlySerializedAs("joystickSizeBtn")]
-        [SerializeField] private Button m_joystickSizeButton;
-        
-        [Tooltip("게임의 목표 프레임(FPS)을 설정하는 슬라이더입니다.")]
-        [SerializeField] private Slider m_frameRateSlider;
-        
-        [Tooltip("현재 설정된 FPS 값을 표시하는 텍스트입니다.")]
-        [SerializeField] private TMP_Text m_frameRateValueText;
+        [SerializeField, Tooltip("조이스틱 설정 레이어 프리팹"), FormerlySerializedAs("joysticSetterPopUpPrefb")]
+        private JoystickSetter m_joystickSetterPopupPrefab;
 
-        // --- 내부 상태 ---
+        [Header("<color=green>UI 컴포넌트</color>")]
+        [SerializeField, Tooltip("효과음(SFX) 볼륨 조절 슬라이더"), FormerlySerializedAs("effectSoundVolum")]
+        private Slider m_effectSoundVolumeSlider;
+
+        [SerializeField, Tooltip("배경음(BGM) 볼륨 조절 슬라이더"), FormerlySerializedAs("bgMsoundVolum")]
+        private Slider m_bgmSoundVolumeSlider;
+
+        [SerializeField, Tooltip("설정창 닫기 버튼 (저장 포함)"), FormerlySerializedAs("exitBtn")]
+        private Button m_exitButton;
+
+        [SerializeField, Tooltip("조이스틱 크기 설정 열기 버튼"), FormerlySerializedAs("joystickSizeBtn")]
+        private Button m_joystickSizeButton;
+
+        [SerializeField, Tooltip("목표 프레임 레이트 설정 슬라이더")]
+        private Slider m_frameRateSlider;
+
+        [SerializeField, Tooltip("현재 FPS 설정값 표시 텍스트")]
+        private TMP_Text m_frameRateValueText;
+
+        #endregion
+
+        #region 2. 내부 변수 및 상태
+
         private OptionPopupViewModel m_viewModel;
-        private readonly CompositeDisposable m_disposables = new();
+        private readonly CompositeDisposable m_disposables = new CompositeDisposable();
         private Canvas m_canvas;
 
         #endregion
 
-        #region Unity 라이프사이클
+        #region 3. 유니티 생명주기
 
         private void Awake()
         {
             InitializeViewModel();
             InitializeComponents();
-            Bind();
+            BindViewModel();
         }
 
         private void OnDestroy()
         {
-            // 모든 구독 정리
             m_disposables.Dispose();
-            // ViewModel 해제
             m_viewModel?.Dispose();
         }
 
         #endregion
 
-        #region 초기화 및 바인딩
+        #region 4. 초기화 및 바인딩 로직
 
         /// <summary>
-        /// ViewModel을 초기화하고 의존성을 주입합니다.
+        /// 옵션 조절을 위한 뷰모델을 생성하고 사운드 매니저와 연동합니다.
         /// </summary>
         private void InitializeViewModel()
         {
-            // 의존성 주입 (SoundManager는 싱글톤으로 제공됨)
+            // SoundManager 싱글톤을 주입하여 결합도를 낮춤
             m_viewModel = new OptionPopupViewModel(m_settingsData, SoundManager.Instance);
         }
 
         /// <summary>
-        /// 필요한 컴포넌트 참조 및 기본 설정을 수행합니다.
+        /// 필요한 컴포넌트를 캐싱하고 UI 컨트롤의 기본값을 설정합니다.
         /// </summary>
         private void InitializeComponents()
         {
             m_canvas = GetComponentInParent<Canvas>();
 
-            // 프레임 레이트 슬라이더 범위 설정
+            // 프레임 레이트 슬라이더 범위 동적 설정
             if (m_frameRateSlider != null && m_viewModel != null)
             {
                 m_frameRateSlider.minValue = 0;
@@ -102,59 +97,67 @@ namespace Lobby
         }
 
         /// <summary>
-        /// ViewModel과 View 사이의 데이터 바인딩을 수행합니다. (MVVM 패턴)
+        /// ViewModel과 UI 요소 간의 양방향 데이터 동기화를 수행합니다.
         /// </summary>
-        private void Bind()
+        private void BindViewModel()
         {
             if (m_viewModel == null) return;
 
             #region ViewModel -> View (상태 동기화)
 
-            // 볼륨 상태 동기화
+            // 효과음 볼륨 동기화
             m_viewModel.EffectSoundVolume
-                .Subscribe(v => m_effectSoundVolumeSlider.SetValueWithoutNotify(v))
+                .Subscribe(v => m_effectSoundVolumeSlider?.SetValueWithoutNotify(v))
                 .AddTo(m_disposables);
 
+            // 배경음 볼륨 동기화
             m_viewModel.BgmSoundVolume
-                .Subscribe(v => m_bgmSoundVolumeSlider.SetValueWithoutNotify(v))
+                .Subscribe(v => m_bgmSoundVolumeSlider?.SetValueWithoutNotify(v))
                 .AddTo(m_disposables);
 
-            // 프레임 레이트 상태 동기화
+            // 목표 프레임 레이트 동기화
             m_viewModel.TargetFrameRate
                 .Subscribe(v =>
                 {
-                    if (m_frameRateValueText != null) m_frameRateValueText.text = $"{v} FPS";
-                    m_frameRateSlider.SetValueWithoutNotify(m_viewModel.GetFrameRateIndex());
+                    if (m_frameRateValueText != null)
+                    {
+                        m_frameRateValueText.text = $"{v} FPS";
+                    }
+
+                    m_frameRateSlider?.SetValueWithoutNotify(m_viewModel.GetFrameRateIndex());
                 })
                 .AddTo(m_disposables);
 
             #endregion
 
-            #region View -> ViewModel (이벤트 전달)
+            #region View -> ViewModel (이벤트 핸들링)
 
-            // UI 변경 이벤트를 ViewModel에 전달
-            m_effectSoundVolumeSlider.OnValueChangedAsObservable()
+            // 사용자의 슬라이더 입력을 뷰모델에 전달
+            m_effectSoundVolumeSlider?.OnValueChangedAsObservable()
                 .Subscribe(v => m_viewModel.EffectSoundVolume.Value = v)
                 .AddTo(m_disposables);
 
-            m_bgmSoundVolumeSlider.OnValueChangedAsObservable()
+            m_bgmSoundVolumeSlider?.OnValueChangedAsObservable()
                 .Subscribe(v => m_viewModel.BgmSoundVolume.Value = v)
                 .AddTo(m_disposables);
 
-            m_frameRateSlider.OnValueChangedAsObservable()
+            m_frameRateSlider?.OnValueChangedAsObservable()
                 .Subscribe(v =>
                 {
                     int index = (int)v;
-                    m_viewModel.TargetFrameRate.Value = m_viewModel.FrameRateOptions[index];
+                    if (index >= 0 && index < m_viewModel.FrameRateOptions.Length)
+                    {
+                        m_viewModel.TargetFrameRate.Value = m_viewModel.FrameRateOptions[index];
+                    }
                 })
                 .AddTo(m_disposables);
 
             #endregion
 
-            #region 명령 바인딩 (Buttons)
+            #region 버튼 명령 바인딩
 
-            // 설정 저장 및 팝업 닫기
-            m_exitButton.OnClickAsObservable()
+            // 종료 시 저장 로직 실행
+            m_exitButton?.OnClickAsObservable()
                 .Subscribe(_ =>
                 {
                     m_viewModel.SaveSettings();
@@ -162,8 +165,8 @@ namespace Lobby
                 })
                 .AddTo(m_disposables);
 
-            // 조이스틱 설정 열기
-            m_joystickSizeButton.OnClickAsObservable()
+            // 조이스틱 설정 창 팝업
+            m_joystickSizeButton?.OnClickAsObservable()
                 .Subscribe(_ => OpenJoystickSettings())
                 .AddTo(m_disposables);
 
@@ -172,16 +175,16 @@ namespace Lobby
 
         #endregion
 
-        #region UI 동작
+        #region 5. UI 기능 메서드
 
         /// <summary>
-        /// 조이스틱 설정 레이어를 생성하여 표시합니다.
+        /// 인게임에서 사용되는 조이스틱 크기 및 감도 설정 창을 화면에 생성합니다.
         /// </summary>
         private void OpenJoystickSettings()
         {
             if (m_joystickSetterPopupPrefab == null || m_canvas == null)
             {
-                Debug.LogWarning("참조가 누락되어 조이스틱 설정을 열 수 없습니다.");
+                LogManager.LogWarning("뷰모델이 유효하지 않습니다.", LogManager.LogCategory.System);
                 return;
             }
 

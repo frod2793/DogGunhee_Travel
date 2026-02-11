@@ -32,7 +32,8 @@ private async UniTask SpawnPlayerAndInitialWeaponsAsync()
 
     try
     {
-        int charIndex = PlayerDataManagerDontdesytoy.Instance.SelectCharacterIndex;
+        // 최신 데이터 매니저 참조 (싱글톤)
+        int charIndex = PlayerDataManager.Instance.SelectCharacterIndex;
         string charKey = $"Player_Character_{charIndex}"; // Addressable Key
 
         // 비동기로 캐릭터 프리팹 로드 및 생성
@@ -71,17 +72,26 @@ private async UniTask SpawnPlayerAndInitialWeaponsAsync()
 - **이펙트 처리 최적화:** 적 피격 시 발생하는 플래시 이펙트의 처리 병목을 제거하기 위해 순차적 큐(Queue) 방식에서 **즉시 실행(Parallel)** 방식으로 변경하여, 수십 마리의 적을 동시에 타격해도 밀림 없는 시각 효과를 구현했습니다.
 
 ```csharp
-// 오브젝트 풀을 활용하여 획득한 경험치 오브젝트를 반환하는 코드 (PlayerBase.cs)
+// 오브젝트 풀을 활용하여 획득한 경험치 오브젝트를 반환하는 코드 (PlayerCollisionHandler.cs)
 private void HandleExpCollision(GameObject expObject)
 {
-    // TryGetComponent로 컴포넌트 캐싱 및 유효성 검사
-    if (expObject.TryGetComponent(out EXP_Obj expObj) && expObj.ObjectPoolSpawner != null)
+    // TryGetComponent로 컴포넌트 캐싱 및 유효성 검사 (Garbage Free)
+    if (expObject.TryGetComponent(out EXP_Obj expObj))
     {
-        AddExperience(expObj.ExpValue);
+        // 이벤트 기반 데이터 전달 (Decoupling)
+        OnExpCollected?.Invoke(expObj.ExpValue);
         
+        // 사운드 재생
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
+        }
+
         // 사용이 끝난 오브젝트를 풀로 반환 (Destroy 호출 방지 -> GC 최소화)
-        expObj.ObjectPoolSpawner.ExpObjectPool.Release(expObj);
-        SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
+        if (expObj.ObjectPoolSpawner != null && expObj.ObjectPoolSpawner.ExpObjectPool != null)
+        {
+            expObj.ObjectPoolSpawner.ExpObjectPool.Release(expObj);
+        }
     }
 }
 ```
@@ -140,6 +150,104 @@ public EncryptedPacket Encrypt(string plainJson, string publicKey)
 
 ---
 
+### 6. 코드 아키텍처 및 표준화 (Architecture & Standardization)
+본 프로젝트는 **Unity Technologies의 'Clean Code'** 철학을 기반으로 엄격한 코딩 표준을 준수합니다. 이를 통해 코드의 가독성, 유지보수성, 협업 효율성을 극대화합니다.
+
+- **Core Philosophy:** `PlayerBase` 클래스를 표준 모델로 삼아, 모든 스크립트가 통일된 구조를 갖도록 설계했습니다.
+- **MVVM 패턴 적용:** UI와 비즈니스 로직을 철저히 분리하기 위해 Title 씬 등 주요 UI 시스템에 **MVVM (Model-View-ViewModel)** 패턴을 도입했습니다.
+  - **View:** `MonoBehaviour`를 상속받아 오직 데이터 바인딩과 시각화만 담당합니다. (예: `LoginViewMVVM.cs`)
+  - **ViewModel:** 순수 C# 클래스(POCO)로 작성되며, 상태 관리와 비즈니스 로직을 수행합니다. (예: `LoginViewModel.cs`)
+- **Naming Convention:**
+  - `m_`: Private/Protected 필드 접두사 (예: `m_health`)
+  - `s_`: Static 필드 접두사
+  - `k_`: Constant 및 Readonly 필드 접두사
+- **Documentation:** 모든 주요 클래스와 메서드에는 한국어 XML 문서 주석을 작성하며, `#region`을 활용해 코드 섹션을 명확히 구분합니다.
+
+### 7. MVVM 패턴 적용 예시 (Title Scene)
+View와 ViewModel을 분리하여 UI 로직의 의존성을 낮추고 테스트 용이성을 확보했습니다.
+
+**ViewModel (비즈니스 로직 & 상태 관리):**
+`MonoBehaviour`를 상속받지 않는 순수 C# 클래스로, View를 전혀 참조하지 않습니다. 오직 상태(State)를 변경하고 이벤트를 발행합니다.
+
+```csharp
+// LoginViewModel.cs
+public class LoginViewModel
+{
+    // 1. 상태 변경 감지를 위한 이벤트 (Action 또는 UniRx)
+    public event Action<bool> OnBusyStateChanged;
+    public event Action<string> OnErrorMessage;
+
+    private bool m_isBusy;
+    public bool IsBusy
+    {
+        get => m_isBusy;
+        private set
+        {
+            m_isBusy = value;
+            OnBusyStateChanged?.Invoke(m_isBusy); // 상태 변경 알림
+        }
+    }
+
+    // 2. 비즈니스 로직 수행 (Async/Await)
+    public async UniTask LoginAsync(string id, string pw)
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+
+        try 
+        {
+            // 서버 통신 및 데이터 처리
+            await m_authService.LoginAsync(id, pw);
+            OnLoginSuccess?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            OnErrorMessage?.Invoke(ex.Message);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}
+```
+
+**View (UI 표현 & 입력 전달):**
+ViewModel의 상태 변화를 구독(Subscribe)하여 UI를 갱신하고, 사용자 입력을 ViewModel의 메서드 호출로 전달합니다.
+
+```csharp
+// LoginViewMVVM.cs
+public class LoginViewMVVM : MonoBehaviour
+{
+    [SerializeField] private GameObject m_loadingIndicator;
+    private LoginViewModel m_viewModel;
+
+    // 1. ViewModel 바인딩 (이벤트 구독)
+    private void BindViewModel()
+    {
+        m_viewModel.OnBusyStateChanged += isBusy => 
+        {
+            m_loadingIndicator.SetActive(isBusy); // 로딩 중 UI 표시
+            m_loginButton.interactable = !isBusy; // 버튼 비활성화
+        };
+
+        m_viewModel.OnErrorMessage += ShowErrorPopup;
+    }
+
+    // 2. UI 입력 -> ViewModel 명령 전달
+    public void OnClickLogin()
+    {
+        string id = m_idInputField.text;
+        string pw = m_pwInputField.text;
+        
+        // Fire-and-Forget 방식으로 비동기 호출
+        m_viewModel.LoginAsync(id, pw).Forget();
+    }
+}
+```
+
+---
+
 ## 📂 프로젝트 구조
 
 ### 🗂️ Assets/Game_Resource (리소스)
@@ -166,11 +274,11 @@ Assets/Scripts/
 │   ├── Mob/             # 몬스터 AI 및 행동 로직
 │   ├── ObjectPool/      # 최적화를 위한 풀링 시스템
 │   ├── Player/          # 플레이어 컨트롤 및 스탯 관리
-│   └── Weaphon/         # 무기 및 투사체 구현 (Weapon)
+│   └── Weapon/          # 무기 및 투사체 구현 (Weapon)
 ├── Lobby/               # 로비 씬 로직 및 UI
 ├── Manager/             # 전역 관리 매니저 (SceneLoader 등)
 ├── protect/             # 보안 및 암호화 (HybridEncryption)
 ├── ScriptableOJB/       # 스크립터블 오브젝트 데이터
 ├── Test/                # 테스트용 스크립트
-└── Title/               # 타이틀 화면 로직
+└── Title/               # 타이틀 화면 로직 (MVVM 패턴 적용)
 ```
