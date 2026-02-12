@@ -82,6 +82,8 @@ namespace InGame.Manager
         private UIManager m_uiManager;
         private PlayStateManager m_state;
         private WeaponPoolManager m_weaponPoolManager;
+        private PlayerHUD m_playerHUD;
+        private PlayerCameraAgent m_playerCameraAgent;
 
         // 상수
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
@@ -180,6 +182,8 @@ namespace InGame.Manager
             m_variableJoystick = FindFirstObjectByType<VariableJoystick>();
             m_uiManager = FindFirstObjectByType<UIManager>();
             m_weaponPoolManager = FindFirstObjectByType<WeaponPoolManager>();
+            m_playerHUD = FindFirstObjectByType<PlayerHUD>();
+            m_playerCameraAgent = FindFirstObjectByType<PlayerCameraAgent>();
             m_mainCamera = Camera.main;
         }
 
@@ -376,8 +380,9 @@ namespace InGame.Manager
                 // 4. 컨트롤러 연결
                 if (m_playerController != null)
                 {
-                    m_playerController.AssignCharacter(SpawnedPlayer);
+                    m_playerController.AssignCharacter(SpawnedPlayer, m_playerCameraAgent, m_playerHUD);
                 }
+
 
                 OnPlayerChanged?.Invoke(SpawnedPlayer);
             }

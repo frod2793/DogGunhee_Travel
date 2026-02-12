@@ -19,7 +19,7 @@ namespace InGame.Player.Player_Base
 
         // 참조 컴포넌트
         private readonly Camera m_mainCamera;
-        private readonly Transform m_targetTransform;
+        private Transform m_targetTransform;
         private readonly SpriteRenderer m_mapBoundary;
 
         // SmoothDamp용 참조 속도 변수
@@ -58,6 +58,22 @@ namespace InGame.Player.Player_Base
             // 즉시 이동 시에는 속도 초기화
             m_currentVelocity = Vector3.zero;
             m_mainCamera.transform.position = CalculateClampedTargetPosition();
+        }
+
+        /// <summary>
+        /// 추적 대상을 런타임에 변경합니다.
+        /// </summary>
+        /// <param name="newTarget">새로운 타겟 Transform</param>
+        /// <param name="snapToTarget">즉시 이동 여부 (true면 텔레포트)</param>
+        public void SetTarget(Transform newTarget, bool snapToTarget = false)
+        {
+            m_targetTransform = newTarget;
+            
+            if (snapToTarget)
+            {
+                ResetPosition();
+            }
+            // else: 부드럽게 새 타겟으로 이동
         }
 
         /// <summary>

@@ -1371,12 +1371,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_startCharacterIndex: 0
+  TestWeapons: []
   m_skillDatabase: {fileID: 11400000, guid: b0afd2fc64f8bf345bcdbe3b66b0399d, type: 2}
   m_settingsData: {fileID: 11400000, guid: 0ccc4344296a87442940a782d2a69a54, type: 2}
   m_playerContainer: {fileID: 3904192412624442642}
   m_mapRange: {fileID: 6380052682920689255}
   m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
-  TestWeapons: []
 --- !u!1 &673049610497628459
 GameObject:
   m_ObjectHideFlags: 0
@@ -5779,7 +5779,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e3c3df66a7d69a44bf7891bdbee7540, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.CatPunchWeaponView
-  m_attackDuration: 2
+  m_attackDuration: 1
   m_rotationOffset: 0
   m_targetLayer:
     serializedVersion: 2
@@ -5808,7 +5808,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cc0605c2053cb74682aa84328ff2e5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Weapon.Controllers.BallWeaponView
-  m_rotationOffset: 180
+  m_rotationOffset: 0
   m_rotateWithOrbit: 1
   m_rotationSpeedMultiplier: 1
 --- !u!1 &3645499937260719106
@@ -6985,15 +6985,15 @@ MonoBehaviour:
   m_skillView: {fileID: 7821433048122398979}
   m_gameOverPopup: {fileID: 6400248701400626312}
   m_menuPanel: {fileID: 8680412533363948918}
+  m_confirmPopup: {fileID: 7783218146216876954}
   m_menuButton: {fileID: 6484211315223021118}
   m_settingButton: {fileID: 4598682413901158561}
   m_exitButton: {fileID: 2176910946093467014}
   m_closeButton: {fileID: 4867211213326860758}
-  m_confirmPopup: {fileID: 7783218146216876954}
-  m_settingsData: {fileID: 11400000, guid: 0ccc4344296a87442940a782d2a69a54, type: 2}
   m_variableJoystick: {fileID: 828506961107316506}
   m_joystickTransform: {fileID: 828506961372771170}
   m_autoAttackToggle: {fileID: 1455662123896014048}
+  m_settingsData: {fileID: 11400000, guid: 0ccc4344296a87442940a782d2a69a54, type: 2}
   m_skillDatabase: {fileID: 11400000, guid: b0afd2fc64f8bf345bcdbe3b66b0399d, type: 2}
   m_mobWaveText: {fileID: 3097138278563862329}
 --- !u!114 &5921426791677108141
@@ -7040,9 +7040,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGame.UI.Views.InGameSkillView
   m_skillSelectionPanel: {fileID: 2703381375941911504}
+  m_skillButtonContainer: {fileID: 5910445723532851813}
   m_refreshButton: {fileID: 8456642198871269253}
   m_skillSelectionButtonPrefab: {fileID: 7077696939418672509, guid: cef5008464231864c912a757027d750b, type: 3}
-  m_skillButtonContainer: {fileID: 5910445723532851813}
   m_countdownText: {fileID: 8940687763278491046}
   m_countDownSlider: {fileID: 5711089526905010961}
 --- !u!114 &6400248701400626312
@@ -10343,6 +10343,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2977578344186954463}
   - component: {fileID: 2980731818090852763}
+  - component: {fileID: 5393611520747222272}
+  - component: {fileID: 2812597619397275339}
   m_Layer: 0
   m_Name: '[ - player Controll - ]'
   m_TagString: Untagged
@@ -10379,14 +10381,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Player.Player_Base.PlayerController
   m_playerObject: {fileID: 3904192412624442642}
   m_playerCharacter: {fileID: 0}
-  m_playerHpSliderPrefab: {fileID: 8185285322273779487, guid: 4953059d40def43a788e717e4a533007, type: 3}
   m_mapRange: {fileID: 6380052682920689255}
-  m_cameraSmoothTime: 0.1
   m_enemyLayer:
     serializedVersion: 2
     m_Bits: 64
   m_detectionRadius: 10
   m_attackRadius: 1.5
+--- !u!114 &5393611520747222272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6713757303475557523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea6d5ac7c29f5db4eba3043d53efa531, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Player.Player_Base.PlayerHUD
+  m_hpSliderPrefab: {fileID: 8185285322273779487, guid: 4953059d40def43a788e717e4a533007, type: 3}
+  m_targetTransform: {fileID: 6488801475886781776}
+  m_offset: {x: 0, y: -0.5, z: 0}
+--- !u!114 &2812597619397275339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6713757303475557523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56c59aa923cb3964798a353bdd431a1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Player.Player_Base.PlayerCameraAgent
+  m_targetTransform: {fileID: 6488801475886781776}
+  m_mapBoundary: {fileID: 6380052682920689255}
+  m_smoothTime: 0.1
 --- !u!1 &6729624359695587028
 GameObject:
   m_ObjectHideFlags: 0
@@ -11140,17 +11170,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_mapRange: {fileID: 6380052682920689255}
+  m_mobParent: {fileID: 3963251007470096304}
   m_stageDatabase: {fileID: 11400000, guid: d06e317a66a50084eacfb4ad783f41ad, type: 2}
   m_maxPoolSize: 100
-  m_mobParent: {fileID: 3963251007470096304}
   m_expPrefabReference:
     m_AssetGUID: 9990d404d42a6ae4abc0e629718dadeb
-    m_SubObjectName: 
-    m_SubObjectType: 
-    m_SubObjectGUID: 
-    m_EditorAssetChanged: 0
-  m_bigExpPrefabReference:
-    m_AssetGUID: cf3e8c61dfbfa344b9ca98f921f02227
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 

@@ -1,13 +1,13 @@
 using InGame.Manager;
 using InGame.Mob.MobBase;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace InGame.Player.Player_Base
 {
     /// <summary>
     /// 플레이어의 전체적인 제어를 관리하는 최상위 컨트롤러(Facade)입니다.
-    /// <br/> 입력 처리, 캐릭터 이동, 카메라 추적, 자동 공격 시스템 등을 조율합니다.
+    /// <br/> 역할 분리를 통해 UI(HUD)와 카메라는 별도 컴포넌트가 담당하며,
+    /// <br/> 이 클래스는 오직 입력 처리와 캐릭터 행동 제어(이동/공격)에만 집중합니다.
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
@@ -18,15 +18,9 @@ namespace InGame.Player.Player_Base
 
         [SerializeField, Tooltip("플레이어 캐릭터 (데이터/모델)")]
         private PlayerBase m_playerCharacter;
-
-        [SerializeField, Tooltip("HP 슬라이더 프리팹")]
-        private Slider m_playerHpSliderPrefab;
-
-        [SerializeField, Tooltip("맵 경계 스프라이트")]
+        
+        [SerializeField, Tooltip("맵 경계 스프라이트 (이동 제한용)")]
         private SpriteRenderer m_mapRange;
-
-        [Header("카메라 설정")] [SerializeField, Tooltip("카메라 이동 부드러움 정도")]
-        private float m_cameraSmoothTime = 0.1f;
 
         [Header("자동 공격 설정")] [SerializeField, Tooltip("적 감지 레이어")]
         private LayerMask m_enemyLayer;
@@ -41,8 +35,10 @@ namespace InGame.Player.Player_Base
 
         private PlayerInputHandler m_inputHandler;
         private PlayerMovement m_movement;
-        private PlayerCameraController m_cameraController;
-        private PlayerUIHandler m_uiHandler;
+        
+        // UI와 카메라는 별도 컴포넌트로 분리됨
+        // private PlayerCameraController m_cameraController; 
+        // private PlayerUIHandler m_uiHandler;
 
         private PlayerAutoAttackSystem m_autoAttack;
         private Animator m_playerAnimator;
@@ -126,11 +122,7 @@ namespace InGame.Player.Player_Base
             HandleControlLogic();
         }
 
-        private void LateUpdate()
-        {
-            // 3. 카메라 추적 (이동 후 처리)
-            m_cameraController?.OnLateUpdate();
-        }
+        // LateUpdate에서 카메라를 처리하던 로직은 제거됨 (PlayerCameraAgent로 이관)
 
         #endregion
 
@@ -139,26 +131,31 @@ namespace InGame.Player.Player_Base
         /// <summary>
         /// 플레이어 캐릭터를 할당하고 관련 하위 시스템들을 초기화합니다.
         /// </summary>
-        public void AssignCharacter(PlayerBase character)
+        public void AssignCharacter(PlayerBase character, PlayerCameraAgent cameraAgent = null, PlayerHUD playerHUD = null)
         {
             if (character == null) return;
 
             // 캐릭터 설정
             m_playerCharacter = character;
             m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
-            m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
-
-            // 하위 POCO 시스템 초기화
-            m_movement = new PlayerMovement(m_playerCharacter, m_playerObject.transform, m_playerCharacter.transform,
-                m_mapRange);
-
-            if (GameManager.Instance != null)
+            
+            // 카메라 타겟 설정 (요청사항 반영)
+            if (cameraAgent != null)
             {
-                m_cameraController = new PlayerCameraController(GameManager.Instance.MainCamera,
-                    m_playerObject.transform, m_mapRange, m_cameraSmoothTime);
+                cameraAgent.SetTarget(m_playerCharacter.transform);
             }
 
-            m_uiHandler = new PlayerUIHandler(m_playerHpSliderPrefab, m_playerObject.transform);
+            // HUD 초기화 (요청사항 반영)
+            if (playerHUD != null)
+            {
+                playerHUD.Initialize(m_playerCharacter);
+            }
+            m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
+
+            // 하위 POCO 시스템 초기화 (이동만 남음)
+            m_movement = new PlayerMovement(m_playerCharacter, m_playerObject.transform, m_playerCharacter.transform,
+                m_mapRange);
+            
 
             // 자동 공격 시스템 초기화
             m_autoAttack.Init(m_playerObject.transform, m_playerCharacter, m_enemyLayer, m_detectionRadius,
@@ -166,13 +163,9 @@ namespace InGame.Player.Player_Base
 
             // 초기 상태 동기화
             m_previousHealth = m_playerCharacter.CurrentHealth;
-            m_uiHandler.UpdateHpUI(m_playerCharacter.CurrentHealth, m_playerCharacter.MaxHealth);
-
+            
             // 이벤트 연결
             m_playerCharacter.OnHealthChanged += OnPlayerHealthChanged;
-
-            // 카메라 초기 위치 리셋
-            m_cameraController?.ResetPosition();
         }
 
         /// <summary>
@@ -285,7 +278,7 @@ namespace InGame.Player.Player_Base
 
         #endregion
 
-        #region 8. 애니메이션 및 UI (Visuals)
+        #region 8. 애니메이션 (Visuals)
 
         private void UpdateAnimationState(float speed)
         {
@@ -297,8 +290,7 @@ namespace InGame.Player.Player_Base
 
         private void OnPlayerHealthChanged(float current, float max)
         {
-            // UI 갱신
-            m_uiHandler?.UpdateHpUI(current, max);
+            // UI 갱신 로직 제거됨 (PlayerHUD가 담당)
 
             // 피격 애니메이션 (데미지를 입었을 때만)
             if (current < m_previousHealth && current > 0)
