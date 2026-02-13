@@ -38,6 +38,10 @@ namespace InGame.Weapon.Controllers
         [Range(0.0f, 10.0f)]
         [SerializeField] private float m_rotationsPerSecond = 2.5f;
 
+        [Tooltip("충격파 생성 위치 미세 조정 (로컬 좌표 기준 X, Y, Z)")]
+        [FormerlySerializedAs("ShockwaveOffset")]
+        [SerializeField] private Vector3 m_shockwaveOffset = Vector3.zero;
+
         #endregion
 
         #region 2. 공개 프로퍼티 (Properties)
@@ -46,6 +50,11 @@ namespace InGame.Weapon.Controllers
         /// 임팩트(충격파) 발생 트리거 시간
         /// </summary>
         public float ImpactTriggerTime => m_impactTriggerTime;
+
+        /// <summary>
+        /// 충격파 생성 위치 오프셋
+        /// </summary>
+        public Vector3 ShockwaveOffset => m_shockwaveOffset;
 
         /// <summary>
         /// 공격 후 마무리 동작 지연 시간

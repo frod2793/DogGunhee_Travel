@@ -2514,7 +2514,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 542925831}
   m_HandleRect: {fileID: 542925830}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7490,6 +7490,10 @@ PrefabInstance:
     - target: {fileID: 5707357700545301199, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7541989760840961933, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
+      propertyPath: m_shockwaveOffset.y
+      value: -0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

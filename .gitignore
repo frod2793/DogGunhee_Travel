@@ -59,7 +59,7 @@ ExportedObj/
 /.utmp/
 
 /.plastic/
-/.agent/
+.agent/
 .continue
 
 # Unity3D generated meta files

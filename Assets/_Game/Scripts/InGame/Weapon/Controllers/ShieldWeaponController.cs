@@ -33,7 +33,7 @@ namespace InGame.Weapon.Controllers
         private Transform m_playerTransform;
 
         // 애니메이션 해시 (최적화)
-        private static readonly int k_AnimHashAttack = Animator.StringToHash("Attack");
+        private static readonly int k_AnimHashAttack = Animator.StringToHash("Drop_shield");
 
         #endregion
 
@@ -56,25 +56,46 @@ namespace InGame.Weapon.Controllers
                 // 애니메이터 캐싱 (배열로 관리하여 일괄 제어)
                 m_shieldAnimators = m_shieldObj.GetComponentsInChildren<Animator>(true);
                 
+                // 프리팹에서 비활성화되어 있을 수 있으므로 강제 활성화
+                if (m_shieldAnimators != null)
+                {
+                    foreach (var anim in m_shieldAnimators)
+                    {
+                        anim.enabled = true;
+                    }
+                }
+                
                 if (m_shieldAnimators == null || m_shieldAnimators.Length == 0)
                 {
                     LogManager.LogError($"[ShieldWeaponController] {data.WeaponName} 모델에 Animator가 없습니다.", LogManager.LogCategory.Weapon);
                 }
             }
 
-            // 2. 튜닝 데이터 및 로직(POCO) 초기화
-            ShieldWeaponTuningData tuningData = new ShieldWeaponTuningData(); // 기본값
-            if (m_poolManager != null)
+            // 2. 튜닝 데이터 및 로직(POCO) 초기화 (수정: Nullable을 사용하여 데이터 부재 시 기본값 보호)
+            ShieldWeaponTuningData? tuningData = null;
+            ShieldWeaponView view = null;
+            if (m_shieldObj != null)
             {
-                var view = m_poolManager.GetComponent<ShieldWeaponView>();
-                if (view != null)
+                view = m_shieldObj.GetComponentInChildren<ShieldWeaponView>();
+            }
+
+            // 무기 오브젝트에 없으면 PoolManager에서 시도
+            if (view == null && m_poolManager != null)
+            {
+                view = m_poolManager.GetComponent<ShieldWeaponView>();
+            }
+
+            if (view != null)
+            {
+                tuningData = new ShieldWeaponTuningData
                 {
-                    tuningData.ImpactTriggerTime = view.ImpactTriggerTime;
-                    tuningData.FollowThroughDelay = view.FollowThroughDelay;
-                    tuningData.BoomerangSpeed = view.BoomerangSpeed;
-                    tuningData.ReturnDelay = view.ReturnDelay;
-                    tuningData.RotationsPerSecond = view.RotationsPerSecond;
-                }
+                    ImpactTriggerTime = view.ImpactTriggerTime,
+                    FollowThroughDelay = view.FollowThroughDelay,
+                    BoomerangSpeed = view.BoomerangSpeed,
+                    ReturnDelay = view.ReturnDelay,
+                    RotationsPerSecond = view.RotationsPerSecond,
+                    ShockwaveOffset = view.ShockwaveOffset
+                };
             }
             m_logic = new ShieldWeaponLogic(m_runtimeStats, tuningData);
 
@@ -207,7 +228,7 @@ namespace InGame.Weapon.Controllers
                             if (anim == null || !anim.gameObject.activeSelf) continue;
                             
                             anim.speed = m_logic.AttackSpeed; // 공속 반영
-                            anim.Play(k_AnimHashAttack, -1, 0f);
+                            anim.Play(k_AnimHashAttack, 0, 0f);
                             anim.Update(0f); // 첫 프레임 즉시 갱신
                         }
                     }
@@ -255,8 +276,10 @@ namespace InGame.Weapon.Controllers
             ShieldShockwave effect = m_poolManager.Get<ShieldShockwave>();
             if (effect != null)
             {
-                // 위치 설정
-                effect.transform.position = m_ownerTransform.position;
+                // 위치 설정 (오프셋 반영)
+                // 로컬 좌표계 오프셋을 월드 좌표로 변환하여 적용
+                Vector3 offset = m_ownerTransform.TransformDirection(m_logic.ShockwaveOffset);
+                effect.transform.position = m_ownerTransform.position + offset;
                 effect.transform.rotation = Quaternion.identity;
                 
                 // 데이터 초기화

@@ -197,8 +197,14 @@ namespace InGame.Weapon.Base
                 return false;
             }
 
-            // 2. 적 존재 여부 체크
-            if (!IsEnemyPresent)
+            // 2. 적 존재 여부 체크 (수정: 적이 없어도 이동 중이면 공격 허용)
+            bool isMoving = false;
+            if (GameManager.Instance.PlayerController != null)
+            {
+                isMoving = GameManager.Instance.PlayerController.MoveDirection != Vector3.zero;
+            }
+
+            if (!IsEnemyPresent && !isMoving)
             {
                 return false;
             }

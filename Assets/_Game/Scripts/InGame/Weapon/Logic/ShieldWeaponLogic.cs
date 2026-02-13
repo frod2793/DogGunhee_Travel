@@ -14,6 +14,7 @@ namespace InGame.Weapon.Logic
         public float BoomerangSpeed;
         public float ReturnDelay;
         public float RotationsPerSecond;
+        public Vector3 ShockwaveOffset;
     }
 
     /// <summary>
@@ -32,6 +33,7 @@ namespace InGame.Weapon.Logic
         // 애니메이션 및 타이밍 설정
         public float ImpactTriggerTime { get; private set; } = 1.07f;
         public float FollowThroughDelay { get; private set; } = 0.5f;
+        public Vector3 ShockwaveOffset { get; private set; } = Vector3.zero;
 
         // 진화(부메랑) 설정
         public int BoomerangCount { get; private set; }
@@ -75,6 +77,7 @@ namespace InGame.Weapon.Logic
                 BoomerangSpeed = data.BoomerangSpeed;
                 ReturnDelay = data.ReturnDelay;
                 RotationsPerSecond = data.RotationsPerSecond;
+                ShockwaveOffset = data.ShockwaveOffset;
             }
         }
 
