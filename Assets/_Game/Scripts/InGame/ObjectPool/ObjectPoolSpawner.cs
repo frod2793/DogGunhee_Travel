@@ -5,7 +5,8 @@ using Cysharp.Threading.Tasks;
 using InGame.Manager;
 using InGame.Mob.MobBase;
 using InGame.Player.Player_Base;
-using InGame.vamsir; // 아이템 관련 네임스페이스 (EXP_Obj, Coin_Obj 등)
+using InGame.vamsir;
+using InGame.Mob.Systems;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Pool;
@@ -49,6 +50,7 @@ namespace InGame.ObjectPool
         private PlayerBase m_player;
         private Camera m_mainCamera;
         private Bounds m_mapBounds;
+        private MobManager m_mobManager;
 
         // POCO 시스템 (로직 위임)
         private WaveSystem m_waveSystem;
@@ -98,7 +100,7 @@ namespace InGame.ObjectPool
 
         #region 5. 유니티 생명주기 (Lifecycle)
 
-        private void Awake()
+        private void Start()
         {
             m_mainCamera = Camera.main;
 
@@ -149,16 +151,49 @@ namespace InGame.ObjectPool
 
         private void InitializeMapBounds()
         {
+            // 1. m_mapRange 탐색
             if (m_mapRange == null)
             {
                 var mapObj = GameObject.FindGameObjectWithTag("Map");
                 if (mapObj != null) m_mapRange = mapObj.GetComponent<SpriteRenderer>();
             }
 
-            // 맵이 없으면 임의의 큰 영역 설정
-            m_mapBounds = m_mapRange != null
-                ? m_mapRange.bounds
-                : new Bounds(Vector3.zero, Vector3.one * 1000f);
+            // 2. 경계값 계산
+            if (m_mapRange != null)
+            {
+                if (m_mapRange.sprite != null)
+                {
+                    m_mapBounds = m_mapRange.bounds;
+                    Debug.Log($"[Spawner] SpriteRenderer Bounds 사용: {m_mapBounds}");
+                }
+                else
+                {
+                    // 스프라이트가 없어도 트랜스폼 위치를 중심으로 사용
+                    m_mapBounds = new Bounds(m_mapRange.transform.position, new Vector3(100f, 100f, 10f));
+                    Debug.LogWarning($"[Spawner] 맵 스프라이트가 없어 {m_mapRange.name}의 위치를 기반으로 기본 범위 생성: {m_mapBounds}");
+                }
+            }
+            else if (GameManager.Instance != null && GameManager.Instance.MapBounds.size.sqrMagnitude > 1f)
+            {
+                m_mapBounds = GameManager.Instance.MapBounds;
+                Debug.Log($"[Spawner] GameManager.MapBounds 사용: {m_mapBounds}");
+            }
+            else
+            {
+                // 최후의 수단: 현재 위치 또는 원점 기준
+                m_mapBounds = new Bounds(transform.position, new Vector3(100f, 100f, 10f));
+                Debug.LogWarning($"[Spawner] 맵 정보를 전혀 찾을 수 없어 현재 위치 기준 기본 범위 생성: {m_mapBounds}");
+            }
+
+            // [보정] Z축은 0으로 고정 (2D 평면 대응)
+            Vector3 center = m_mapBounds.center;
+            center.z = 0;
+            m_mapBounds.center = center;
+
+            if (m_mapBounds.size.x < 1f || m_mapBounds.size.y < 1f)
+            {
+                m_mapBounds.size = new Vector3(100f, 100f, 10f);
+            }
         }
 
         private void InitializeSystems()
@@ -166,9 +201,9 @@ namespace InGame.ObjectPool
             // 위치 계산기 초기화
             m_positionSolver = new SpawnPositionSolver(
                 mapBounds: m_mapBounds,
-                minSpawnDistance: 12f, // 카메라 밖에서 생성되도록 거리 조정 권장
-                maxSpawnDistance: 20f,
-                maxAttempts: 10
+                minSpawnDistance: 4f, // 화면 끝에서 4유닛 정도 여유를 두고 스폰 (가시 영역 확실히 배제)
+                maxSpawnDistance: 12f,
+                maxAttempts: 50
             );
 
             // 웨이브 시스템 초기화
@@ -181,10 +216,15 @@ namespace InGame.ObjectPool
         /// <summary>
         /// 스포너를 초기화하고 첫 웨이브를 시작합니다.
         /// </summary>
-        public async UniTask InitializeAndStartSpawning(PlayerBase player, int startStageId = 1)
+        public async UniTask InitializeAndStartSpawning(PlayerBase player, MobManager mobManager, int startStageId = 1)
         {
             m_player = player;
+            m_mobManager = mobManager;
             if (m_player == null) return;
+
+            // 스폰 시작 전 맵 경계 및 시스템 확정 (Awake 시점보다 안전함)
+            InitializeMapBounds();
+            InitializeSystems();
 
             // 1. 아이템 프리팹 로드 및 풀 생성
             await LoadItemPrefabsAsync();
@@ -357,14 +397,16 @@ namespace InGame.ObjectPool
 
         private void OnGetMob(MobBase mob)
         {
-            mob.gameObject.SetActive(true);
-
-            // 위치 계산 및 배치
+            // [중요] 위치 계산 및 배치를 활성화(OnEnable) 전에 수행
+            // 그래야 MobLogic이 올바른 시작 위치를 캡처할 수 있음
             Vector3 spawnPos =
                 m_positionSolver.CalculateSpawnPosition(m_mainCamera != null ? m_mainCamera : Camera.main);
             mob.transform.position = spawnPos;
 
+            mob.gameObject.SetActive(true);
+
             // 상태 초기화
+            mob.Init(m_mobManager);
             mob.SetTarget(m_player);
 
             // 시스템 알림

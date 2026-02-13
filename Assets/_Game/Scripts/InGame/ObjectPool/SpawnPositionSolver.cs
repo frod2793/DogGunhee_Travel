@@ -51,67 +51,91 @@ namespace InGame.ObjectPool
         {
             if (camera == null)
             {
-                // 카메라가 없으면 맵 전체 랜덤 반환
                 return GetRandomPositionInBounds();
             }
 
-            return CalculateSpawnPosition(
-                camera.transform.position, 
-                camera.orthographicSize, 
-                camera.aspect
-            );
+            // 카메라의 가시 영역(Viewport) 계산
+            float height = camera.orthographicSize * 2f;
+            float width = height * camera.aspect;
+            
+            // 여유 범위를 포함한 카메라 영역(Bounds) 생성
+            // 최소 스폰 거리만큼 확장하여 화면 바로 끝에서 나타나는 것을 방지
+            Vector3 camPos = camera.transform.position;
+            camPos.z = 0;
+            
+            Bounds viewportBounds = new Bounds(camPos, new Vector3(width + (m_minSpawnDistance * 2f), height + (m_minSpawnDistance * 2f), 100f));
+
+            return CalculateSpawnPositionInternal(viewportBounds);
         }
 
         /// <summary>
-        /// 주어진 카메라 매개변수를 사용하여 스폰 위치를 계산합니다. (핵심 로직)
+        /// 카메라 가시 영역을 제외한 맵 내부의 유효 위치를 계산합니다.
         /// </summary>
-        public Vector3 CalculateSpawnPosition(Vector3 cameraPosition, float cameraHalfHeight, float cameraAspect)
+        private Vector3 CalculateSpawnPositionInternal(Bounds viewportBounds)
         {
-            // 2D 게임 기준 Z축 보정
-            cameraPosition.z = 0f;
-
-            // 카메라의 대각선 길이(반지름) 계산
-            float cameraHalfWidth = cameraHalfHeight * cameraAspect;
-            float cameraRadius = Mathf.Sqrt((cameraHalfWidth * cameraHalfWidth) + (cameraHalfHeight * cameraHalfHeight));
-
-            // 스폰 가능한 도넛 범위(Annulus)의 안쪽/바깥쪽 반지름 설정
-            float minRadius = cameraRadius + m_minSpawnDistance;
-            float maxRadius = cameraRadius + m_maxSpawnDistance;
-
-            // 1차 시도: 카메라 주변 도넛 형태의 랜덤 위치 탐색
+            // 1차 시도: 맵 전체 범위에서 랜덤하게 샘플링하되 가시 영역 제외
+            // 시도 횟수를 늘려 정밀도를 높임
             for (int i = 0; i < m_maxAttempts; i++)
             {
-                // 랜덤 방향 및 거리
-                Vector2 randomDir = Random.insideUnitCircle.normalized;
-                
-                // insideUnitCircle이 (0,0)일 경우 방어 코드 (매우 희박함)
-                if (randomDir == Vector2.zero) randomDir = Vector2.right;
+                Vector3 candidate = GetRandomPositionInBounds();
 
-                float distance = Random.Range(minRadius, maxRadius);
-                Vector3 candidatePos = cameraPosition + (Vector3)(randomDir * distance);
-
-                // 생성된 위치가 맵 경계 안에 있는지 확인
-                if (IsPositionValid(candidatePos))
+                // 가시 영역 밖에 있고 맵 내부에 있는지 확인
+                if (!IsInsideViewport(candidate, viewportBounds))
                 {
-                    return candidatePos;
+                    if (IsPositionValid(candidate))
+                    {
+                        return candidate;
+                    }
                 }
             }
 
-            // 2차 시도: 도넛 범위 탐색 실패 시, 맵 전체에서 랜덤 샘플링하되 카메라와 먼 곳 찾기
-            // (맵 구석에 몰렸을 때 몬스터가 안 나오는 현상 방지)
+            // 2차 시도: 카메라 주변 도넛 영역에서 탐색 (맵 경계 근처일 때 유용)
+            Vector3 camPos = viewportBounds.center;
+            float viewportRadius = Mathf.Max(viewportBounds.size.x, viewportBounds.size.y) * 0.5f;
+            float minRadius = viewportRadius;
+            float maxRadius = minRadius + m_maxSpawnDistance;
+
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 randomDir = Random.insideUnitCircle.normalized;
+                float distance = Random.Range(minRadius, maxRadius);
+                Vector3 candidate = camPos + (Vector3)(randomDir * distance);
+
+                if (!IsInsideViewport(candidate, viewportBounds) && IsPositionValid(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            // 3차 시도: 최후의 수단으로 맵 전체 랜덤 위치 중 가시 영역 밖인 곳 검색
             for (int i = 0; i < 10; i++)
             {
-                Vector3 randomMapPos = GetRandomPositionInBounds();
-                
-                // 카메라와 최소한의 거리는 유지되는지 확인
-                if (Vector3.Distance(cameraPosition, randomMapPos) >= minRadius)
+                Vector3 candidate = GetRandomPositionInBounds();
+                if (!IsInsideViewport(candidate, viewportBounds))
                 {
-                    return randomMapPos;
+                    return candidate;
                 }
             }
 
-            // 최후의 수단: 조건 무시하고 맵 내 랜덤 위치 반환
-            return GetRandomPositionInBounds();
+            // 진짜 모든 수단이 실패했을 때만 맵 전체 랜덤 위치 반환
+            Vector3 finalFallback = GetRandomPositionInBounds();
+            Debug.LogWarning($"[SpawnSolver] 모든 화면 밖 스폰 시도 실패. 맵 랜덤 위치 반환: {finalFallback}");
+            return finalFallback;
+        }
+
+        /// <summary>
+        /// 좌표가 카메라 가시 영역(viewportBounds) 내부에 있는지 판정합니다.
+        /// </summary>
+        private bool IsInsideViewport(Vector3 position, Bounds viewportBounds)
+        {
+            // Z축을 무시한 2D 평면 판정
+            float halfWidth = viewportBounds.size.x * 0.5f;
+            float halfHeight = viewportBounds.size.y * 0.5f;
+
+            return (position.x >= viewportBounds.center.x - halfWidth &&
+                    position.x <= viewportBounds.center.x + halfWidth &&
+                    position.y >= viewportBounds.center.y - halfHeight &&
+                    position.y <= viewportBounds.center.y + halfHeight);
         }
 
         #endregion
@@ -123,12 +147,8 @@ namespace InGame.ObjectPool
         /// </summary>
         private bool IsPositionValid(Vector3 position)
         {
-            // Bounds.Contains는 3D 검사입니다.
-            // 2D 게임에서 맵의 Z축 두께가 얇거나 위치가 다르면 실패할 수 있으므로
-            // Z축을 맵의 중심 Z로 맞춰서 검사합니다.
             Vector3 checkPos = position;
             checkPos.z = m_mapBounds.center.z;
-
             return m_mapBounds.Contains(checkPos);
         }
 
@@ -139,8 +159,6 @@ namespace InGame.ObjectPool
         {
             float x = Random.Range(m_mapBounds.min.x, m_mapBounds.max.x);
             float y = Random.Range(m_mapBounds.min.y, m_mapBounds.max.y);
-            
-            // Z축은 0으로 고정 (2D 평면)
             return new Vector3(x, y, 0f);
         }
 

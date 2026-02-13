@@ -18,10 +18,7 @@ namespace InGame.Mob.MobBase
 
         [Tooltip("초당 이동 속도")]
         public float MoveSpeed;
-
-        [Tooltip("피격 시 경직(스턴) 지속 시간")]
-        public float StunTime;
-
+        
         [Header("2. 전투 능력치")]
         [Tooltip("기본 공격력")]
         public float AttackDamage;
@@ -32,6 +29,10 @@ namespace InGame.Mob.MobBase
         [Tooltip("공격 사거리 (추적 중지 및 공격 시작 거리)")]
         public float AttackRange;
 
+        [Tooltip("경직 저항력 (0: 저항 없음, 1: 완전 면역)")]
+        [Range(0f, 1f)]
+        public float StunResistance;
+
         #endregion
 
         #region 2. 생성자 및 초기화
@@ -39,38 +40,38 @@ namespace InGame.Mob.MobBase
         /// <summary>
         /// 모든 스탯을 초기화하는 생성자입니다.
         /// </summary>
-        public MobStats(float hp, float speed, float damage, float atkSpeed, float range, float stun)
+        public MobStats(float hp, float speed, float damage, float atkSpeed, float range, float resistance)
         {
             Hp = hp;
             MoveSpeed = speed;
             AttackDamage = damage;
             AttackSpeed = atkSpeed;
             AttackRange = range;
-            StunTime = stun;
+            StunResistance = resistance;
         }
 
         /// <summary>
         /// 주요 스탯을 재설정합니다. (공격 속도와 사거리는 유지됩니다)
         /// </summary>
-        public void Reset(float hp, float speed, float damage, float stun)
+        public void Reset(float hp, float speed, float damage, float resistance)
         {
             Hp = hp;
             MoveSpeed = speed;
             AttackDamage = damage;
-            StunTime = stun;
+            StunResistance = resistance;
         }
 
         /// <summary>
         /// 모든 스탯 값을 덮어씁니다.
         /// </summary>
-        public void SetAll(float hp, float speed, float damage, float atkSpeed, float range, float stun)
+        public void SetAll(float hp, float speed, float damage, float atkSpeed, float range, float resistance)
         {
             Hp = hp;
             MoveSpeed = speed;
             AttackDamage = damage;
             AttackSpeed = atkSpeed;
             AttackRange = range;
-            StunTime = stun;
+            StunResistance = resistance;
         }
 
         #endregion

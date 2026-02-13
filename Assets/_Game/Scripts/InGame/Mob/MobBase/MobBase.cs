@@ -2,9 +2,11 @@ using System;
 using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using InGame.Manager;
 using InGame.ObjectPool;
 using InGame.Player.Player_Base;
+using InGame.Mob.Systems;
 
 namespace InGame.Mob.MobBase
 {
@@ -12,7 +14,7 @@ namespace InGame.Mob.MobBase
     /// 모든 몬스터의 최상위 추상 클래스입니다.
     /// <br/> 기본 스탯 관리, 상태 머신 기반 행동 제어, 전투(피격/DoT), 오브젝트 풀링 인터페이스를 제공합니다.
     /// </summary>
-    public abstract class MobBase : MonoBehaviour, IObjectPoolUser
+    public abstract class MobBase : MonoBehaviour, IObjectPoolUser, ITargetable
     {
         #region 1. 상수 및 정적 변수
 
@@ -25,11 +27,11 @@ namespace InGame.Mob.MobBase
         #region 2. 에디터 설정 (Inspector)
 
         [Header("몬스터 설정")] 
-        [SerializeField, Tooltip("몬스터의 기본 스탯 데이터")] 
-        protected MobStats m_stats;
-
         [SerializeField, Tooltip("현재 몬스터의 상태 (디버깅용)")] 
         protected MobState m_currentState;
+
+        protected MobLogic m_logic;
+        protected MobBrain m_brain;
 
         #endregion
 
@@ -56,6 +58,12 @@ namespace InGame.Mob.MobBase
 
         // 비동기 작업 관리 (DoT)
         private CancellationTokenSource m_dotCts;
+        
+        // 의존성 주입
+        protected MobManager m_mobManager;
+        
+        // 경직 타이머 관리
+        private DG.Tweening.Tween m_stunTween;
 
         #endregion
 
@@ -64,18 +72,19 @@ namespace InGame.Mob.MobBase
         /// <summary>오브젝트 풀 관리를 위한 스포너 참조입니다.</summary>
         public ObjectPoolSpawner ObjectPoolSpawner { get; set; }
 
-        // --- 스탯 래퍼 프로퍼티 ---
-        public float MoveSpeed { get => m_stats.MoveSpeed; set => m_stats.MoveSpeed = value; }
-        public float CurrentHp { get => m_stats.Hp; protected set => m_stats.Hp = value; }
-        public float AttackDamage { get => m_stats.AttackDamage; set => m_stats.AttackDamage = value; }
-        public float AttackSpeed { get => m_stats.AttackSpeed; set => m_stats.AttackSpeed = value; }
-        public float AttackRange { get => m_stats.AttackRange; set => m_stats.AttackRange = value; }
-        public float StunTime { get => m_stats.StunTime; set => m_stats.StunTime = value; }
+        // --- 스탯 래퍼 프로퍼티 (Logic 위임) ---
+        public float MoveSpeed { get => m_logic?.MoveSpeed ?? 0f; set => m_logic?.InitializeStats(new MobStats(m_logic.CurrentHp, value, m_logic.AttackDamage, m_logic.AttackSpeed, m_logic.AttackRange, m_logic.StunResistance)); }
+        public float CurrentHp { get => m_logic?.CurrentHp ?? 0f; }
+        public float MaxHp { get => m_logic?.MaxHp ?? 0f; }
+        public float AttackDamage { get => m_logic?.AttackDamage ?? 0f; }
+        public float AttackSpeed { get => m_logic?.AttackSpeed ?? 0f; }
+        public float AttackRange { get => m_logic?.AttackRange ?? 0f; }
+        public float StunResistance { get => m_logic?.StunResistance ?? 0f; }
 
         // --- 상태 프로퍼티 ---
         public bool IsDead { get; protected set; }
         public bool IsHit { get; protected set; }
-        public MobState CurrentState => m_currentState;
+        public MobState CurrentState => m_logic?.CurrentState ?? m_currentState;
 
         /// <summary>
         /// 현재 이동 가능 여부를 반환합니다. (몬스터 상태 + 게임 전체 일시정지 여부 고려)
@@ -88,6 +97,11 @@ namespace InGame.Mob.MobBase
                 return m_canMoveByState && GameManager.Instance.State.IsPlaying;
             }
         }
+
+        // --- ITargetable 구현 ---
+        public Vector3 Position => transform.position;
+        public Transform Transform => transform;
+        public bool IsActive => gameObject.activeInHierarchy;
 
         #endregion
 
@@ -108,10 +122,30 @@ namespace InGame.Mob.MobBase
             {
                 GameManager.Instance.State.OnGameOver += OnGameOver;
             }
+
+            // 타겟 관리자 등록
+            if (m_mobManager != null)
+            {
+                m_mobManager.Register(this);
+            }
+
+            m_brain?.OnEnable();
         }
 
         protected virtual void OnDisable()
         {
+            m_brain?.OnDisable();
+ 
+            // 타이머 정리
+            m_stunTween?.Kill();
+            m_stunTween = null;
+
+            // 타겟 관리자 해제
+            if (m_mobManager != null)
+            {
+                m_mobManager.Unregister(this);
+            }
+
             // 비동기 작업 취소
             ResetDotToken();
 
@@ -125,6 +159,20 @@ namespace InGame.Mob.MobBase
         #endregion
 
         #region 6. 초기화 및 설정
+
+        /// <summary>
+        /// 몬스터의 의존성을 주입합니다.
+        /// </summary>
+        public virtual void Init(MobManager mobManager)
+        {
+            m_mobManager = mobManager;
+            
+            // 이미 활성화된 상태라면 즉시 등록
+            if (isActiveAndEnabled && m_mobManager != null)
+            {
+                m_mobManager.Register(this);
+            }
+        }
 
         /// <summary>
         /// 몬스터의 추적 대상을 설정합니다.
@@ -156,11 +204,14 @@ namespace InGame.Mob.MobBase
         /// <summary>
         /// 몬스터의 상태를 변경하고 관련 플래그를 갱신합니다.
         /// </summary>
-        public void SetState(MobState state)
+        public virtual void SetState(MobState state)
         {
+            if (m_logic == null) return;
+
+            m_logic.SetState(state);
             m_currentState = state;
 
-            // 상태별 이동 가능 여부 설정
+            // 상태별 이동 가능 여부 플래그 동기화
             switch (state)
             {
                 case MobState.Stun:
@@ -225,7 +276,13 @@ namespace InGame.Mob.MobBase
         /// <param name="stunTime">경직 시간 (0이면 경직 없음)</param>
         public virtual void TakeDamage(float damage, float stunTime = 0f)
         {
-            // Base implementation can be empty or handle basic HP reduction
+            if (IsDead || m_logic == null) return;
+            m_logic.TakeDamage(damage, stunTime);
+
+            if (stunTime > 0)
+            {
+                ApplyStun(stunTime);
+            }
         }
 
         /// <summary>
@@ -272,13 +329,36 @@ namespace InGame.Mob.MobBase
         /// </summary>
         protected virtual void TakeDotDamage(float damage)
         {
-            if (IsDead) return;
+            if (IsDead || m_logic == null) return;
+            m_logic.TakeDamage(damage);
+        }
 
-            CurrentHp -= damage;
-            if (CurrentHp <= 0)
+        /// <summary>
+        /// 몬스터에게 경직을 적용합니다. 기존 경직 타이머가 있다면 취소하고 새로 시작합니다.
+        /// </summary>
+        public virtual void ApplyStun(float duration)
+        {
+            if (IsDead || m_logic == null) return;
+
+            // 경직 저항 공식 적용: 최종 시간 = 입력 시간 * (1 - 저항력)
+            float resistance = m_logic.StunResistance;
+            float finalDuration = duration * (1.0f - Mathf.Clamp01(resistance));
+
+            if (finalDuration <= 0) return;
+
+            // 기존 경직 타이머가 있다면 확실히 취소
+            m_stunTween?.Kill();
+            
+            m_logic.SetState(MobState.Stun);
+
+            m_stunTween = DG.Tweening.DOVirtual.DelayedCall(finalDuration, () =>
             {
-                OnDie();
-            }
+                if (!IsDead && m_logic.CurrentState == MobState.Stun)
+                {
+                    SetState(MobState.Idle);
+                }
+                m_stunTween = null;
+            }).SetLink(gameObject);
         }
 
         /// <summary>

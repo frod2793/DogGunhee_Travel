@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Lobby;
 using InGame.Weapon;
+using InGame.Mob.Systems;
 
 namespace InGame.Manager
 {
@@ -84,6 +85,7 @@ namespace InGame.Manager
         private WeaponPoolManager m_weaponPoolManager;
         private PlayerHUD m_playerHUD;
         private PlayerCameraAgent m_playerCameraAgent;
+        private MobManager m_mobManager;
 
         // 상수
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
@@ -119,6 +121,9 @@ namespace InGame.Manager
         /// <summary>현재 활성화된 몬스터 수입니다.</summary>
         public int ActiveMobCount => m_objectPoolSpawner != null ? m_objectPoolSpawner.ActiveMobCount : 0;
 
+        /// <summary>몬스터 타겟팅 및 탐색 관리자입니다.</summary>
+        public MobManager MobManager => m_mobManager;
+
         #endregion
 
         #region 5. 유니티 생명주기
@@ -134,6 +139,9 @@ namespace InGame.Manager
 
             // 상태 관리자 초기화 (POCO)
             m_state = new PlayStateManager();
+            
+            // 타겟 관리자 초기화 (DI 방식 대비)
+            m_mobManager = new MobManager();
 
             // 모바일 환경 최적화
             Application.targetFrameRate = 120;
@@ -245,7 +253,7 @@ namespace InGame.Manager
                 if (SpawnedPlayer != null && m_objectPoolSpawner != null)
                 {
                     // 기본 스테이지 1로 시작
-                    await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer, 1);
+                    await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer, m_mobManager, 1);
                 }
             }
             catch (Exception e)
@@ -380,7 +388,7 @@ namespace InGame.Manager
                 // 4. 컨트롤러 연결
                 if (m_playerController != null)
                 {
-                    m_playerController.AssignCharacter(SpawnedPlayer, m_playerCameraAgent, m_playerHUD);
+                    m_playerController.AssignCharacter(SpawnedPlayer, m_mobManager, m_playerCameraAgent, m_playerHUD);
                 }
 
 

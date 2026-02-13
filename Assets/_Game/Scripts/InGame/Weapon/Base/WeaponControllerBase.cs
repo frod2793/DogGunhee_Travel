@@ -213,7 +213,7 @@ namespace InGame.Weapon.Base
                     // 자동 공격 시스템이 타겟을 잡고 있다면 거리 계산
                     if (autoAttack != null && autoAttack.CurrentTarget != null)
                     {
-                        float dist = Vector3.Distance(m_ownerTransform.position, autoAttack.CurrentTarget.transform.position);
+                        float dist = Vector3.Distance(m_ownerTransform.position, autoAttack.CurrentTarget.Position);
 
                         // 사거리의 110% 까지는 공격 허용 (약간의 유예 범위)
                         if (dist > m_runtimeStats.CurrentAttackRange * 1.1f)

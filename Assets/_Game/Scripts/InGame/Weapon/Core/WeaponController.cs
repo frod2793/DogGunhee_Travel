@@ -189,7 +189,7 @@ namespace InGame.Weapon.Core
                     if (autoAttack != null && autoAttack.CurrentTarget != null)
                     {
                         float dist = Vector3.Distance(m_ownerTransform.position,
-                            autoAttack.CurrentTarget.transform.position);
+                            autoAttack.CurrentTarget.Position);
 
                         // 사거리의 110% 까지 허용 (보정치)
                         if (dist > m_stats.AttackRange * 1.1f)

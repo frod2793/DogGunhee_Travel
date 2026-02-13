@@ -23,6 +23,7 @@ MonoBehaviour:
   m_baseAttackRange: 0
   m_baseDuration: 0
   m_baseProjectileCount: 1
+  m_baseStunDuration: 0.2
   m_projectilePrefab: {fileID: 8365072899406657265, guid: 440271337e4a6df43a3314571b76e325, type: 3}
   m_modelPrefab: {fileID: 8365072899406657265, guid: 440271337e4a6df43a3314571b76e325, type: 3}
   m_effectPrefab: {fileID: 0}

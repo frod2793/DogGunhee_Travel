@@ -1,5 +1,6 @@
 using InGame.Manager;
 using InGame.Mob.MobBase;
+using InGame.Mob.Systems;
 using UnityEngine;
 
 namespace InGame.Player.Player_Base
@@ -131,7 +132,7 @@ namespace InGame.Player.Player_Base
         /// <summary>
         /// 플레이어 캐릭터를 할당하고 관련 하위 시스템들을 초기화합니다.
         /// </summary>
-        public void AssignCharacter(PlayerBase character, PlayerCameraAgent cameraAgent = null, PlayerHUD playerHUD = null)
+        public void AssignCharacter(PlayerBase character, MobManager mobManager, PlayerCameraAgent cameraAgent = null, PlayerHUD playerHUD = null)
         {
             if (character == null) return;
 
@@ -139,26 +140,23 @@ namespace InGame.Player.Player_Base
             m_playerCharacter = character;
             m_playerCharacter.transform.SetParent(m_playerObject.transform, false);
             
-            // 카메라 타겟 설정 (요청사항 반영)
             if (cameraAgent != null)
             {
                 cameraAgent.SetTarget(m_playerCharacter.transform);
             }
 
-            // HUD 초기화 (요청사항 반영)
             if (playerHUD != null)
             {
                 playerHUD.Initialize(m_playerCharacter);
             }
             m_playerAnimator = m_playerCharacter.GetComponent<Animator>();
 
-            // 하위 POCO 시스템 초기화 (이동만 남음)
             m_movement = new PlayerMovement(m_playerCharacter, m_playerObject.transform, m_playerCharacter.transform,
                 m_mapRange);
             
 
             // 자동 공격 시스템 초기화
-            m_autoAttack.Init(m_playerObject.transform, m_playerCharacter, m_enemyLayer, m_detectionRadius,
+            m_autoAttack.Init(m_playerObject.transform, m_playerCharacter, mobManager, m_enemyLayer, m_detectionRadius,
                 m_attackRadius);
 
             // 초기 상태 동기화
@@ -175,15 +173,19 @@ namespace InGame.Player.Player_Base
         {
             if (m_autoAttack == null) return Vector3.zero;
 
-            MobBase closestEnemy = m_autoAttack.FindClosestEnemy();
-
-            // 1순위: 감지된 가장 가까운 적 방향 (공격 허용)
+            // 1순위: 감지 범위 내의 적
+            ITargetable closestEnemy = m_autoAttack.FindClosestEnemy(m_autoAttack.DetectionRadius);
             if (closestEnemy != null)
             {
-                return (closestEnemy.transform.position - m_playerObject.transform.position).normalized;
+                return (closestEnemy.Position - m_playerObject.transform.position).normalized;
             }
 
-            // 2순위: 주변에 적이 없으면 공격 중단 (Vector3.zero 반환)
+            // 2순위: 조이스틱 이동 방향
+            if (m_inputHandler != null && m_inputHandler.IsMoving)
+            {
+                return m_inputHandler.MoveDirection;
+            }
+
             return Vector3.zero;
         }
 
@@ -235,21 +237,24 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 수동 조작 시의 공격 방향을 계산하고 공격을 시도합니다.
+        /// 수동 조작 중 지역/상황에 따른 공격 방향을 계산합니다.
+        /// (1순위: 공격 사거리 내 적, 2순위: 조이스틱 방향)
         /// </summary>
         private void ProcessManualAttack(Vector3 joystickDir, bool isJoystickActive)
         {
             Vector3 attackDirection = Vector3.zero;
 
-            // 1. 가장 가까운 적이 있으면 그 쪽을 향해 공격
-            MobBase closestEnemy = m_autoAttack.FindClosestEnemy();
+            // 1순위: 감지 범위(Detection Radius) 내에 적이 있는지 확인 (사용자 요청: 감지 시 항상 조준)
+            ITargetable closestEnemy = m_autoAttack.FindClosestEnemy(m_autoAttack.DetectionRadius);
+            
             if (closestEnemy != null)
             {
-                attackDirection = (closestEnemy.transform.position - m_playerObject.transform.position).normalized;
+                // 감지된 적이 있다면 해당 방향 조준
+                attackDirection = (closestEnemy.Position - m_playerObject.transform.position).normalized;
             }
-            // 2. 적이 없으면 조이스틱 방향으로 공격
             else if (isJoystickActive)
             {
+                // 주변에 적이 없고 조이스틱 입력이 있다면 조이스틱 방향으로 공격
                 attackDirection = joystickDir;
             }
 

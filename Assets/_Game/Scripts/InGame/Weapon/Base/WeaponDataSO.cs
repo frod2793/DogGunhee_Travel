@@ -48,6 +48,9 @@ namespace InGame.Weapon.Base
         [Tooltip("한 번에 발사되거나 생성되는 투사체의 개수입니다.")]
         [SerializeField] private int m_baseProjectileCount = 1;
 
+        [Tooltip("적 타격 시 기본 경직 시간(초)입니다.")]
+        [SerializeField] private float m_baseStunDuration = 0.2f;
+
         #endregion
 
         #region 프리팹 참조
@@ -88,6 +91,7 @@ namespace InGame.Weapon.Base
         public float BaseAttackRange { get => m_baseAttackRange; set => m_baseAttackRange = value; }
         public float BaseDuration { get => m_baseDuration; set => m_baseDuration = value; }
         public int BaseProjectileCount { get => m_baseProjectileCount; set => m_baseProjectileCount = value; }
+        public float BaseStunDuration { get => m_baseStunDuration; set => m_baseStunDuration = value; }
 
         public GameObject ProjectilePrefab { get => m_projectilePrefab; set => m_projectilePrefab = value; }
         public GameObject ModelPrefab { get => m_modelPrefab; set => m_modelPrefab = value; }

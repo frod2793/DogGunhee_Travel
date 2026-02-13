@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using InGame.Mob.MobBase;
+using InGame.Mob.Systems;
 using UnityEngine;
 
 namespace InGame.Player.Player_Base
@@ -29,6 +30,7 @@ namespace InGame.Player.Player_Base
 
         private Transform m_playerTransform;
         private PlayerBase m_playerBase;
+        private MobManager m_mobManager;
 
         private bool m_isActive = false;
         private bool m_isEnabledByToggle = false;
@@ -43,7 +45,9 @@ namespace InGame.Player.Player_Base
 
         public Vector3 AutoMoveDirection { get; private set; }
         public bool IsActive => m_isActive;
-        public MobBase CurrentTarget { get; private set; }
+        public ITargetable CurrentTarget { get; private set; }
+        public float AttackRadius => m_attackRadius;
+        public float DetectionRadius => m_detectionRadius;
 
         public bool EnabledByToggle
         {
@@ -85,11 +89,12 @@ namespace InGame.Player.Player_Base
         #region 6. 초기화 및 제어 (Public Methods)
 
         // PlayerController에서 호출: Init
-        public void Init(Transform playerTransform, PlayerBase playerBase, LayerMask enemyLayer, float detectionRadius,
+        public void Init(Transform playerTransform, PlayerBase playerBase, MobManager mobManager, LayerMask enemyLayer, float detectionRadius,
             float attackRadius)
         {
             m_playerTransform = playerTransform;
             m_playerBase = playerBase;
+            m_mobManager = mobManager;
             m_enemyLayer = enemyLayer;
             m_detectionRadius = detectionRadius;
             m_attackRadius = attackRadius;
@@ -151,16 +156,15 @@ namespace InGame.Player.Player_Base
             {
                 if (m_playerTransform == null || m_playerBase == null)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
                     continue;
                 }
-
-                MobBase target = FindClosestEnemy();
+ 
+                ITargetable target = FindClosestEnemy();
                 CurrentTarget = target;
-
+ 
                 if (target != null)
                 {
-                    Vector3 targetPos = target.transform.position;
+                    Vector3 targetPos = target.Position;
                     Vector3 myPos = m_playerTransform.position;
 
                     float dist = Vector3.Distance(myPos, targetPos);
@@ -191,40 +195,12 @@ namespace InGame.Player.Player_Base
             }
         }
 
-        public MobBase FindClosestEnemy()
+        public ITargetable FindClosestEnemy(float? customRange = null)
         {
-            if (m_playerTransform == null) return null;
+            if (m_playerTransform == null || m_mobManager == null) return null;
 
-            int count = Physics2D.OverlapCircle(
-                m_playerTransform.position,
-                m_detectionRadius,
-                m_contactFilter,
-                m_enemyColliders
-            );
-
-            MobBase closestMob = null;
-            float minDstSqr = float.MaxValue;
-            Vector3 myPos = m_playerTransform.position;
-
-            for (int i = 0; i < count; i++)
-            {
-                Collider2D col = m_enemyColliders[i];
-                if (col == null) continue;
-
-                if (col.TryGetComponent(out MobBase mob))
-                {
-                    if (mob.IsDead) continue;
-
-                    float dstSqr = (mob.transform.position - myPos).sqrMagnitude;
-                    if (dstSqr < minDstSqr)
-                    {
-                        minDstSqr = dstSqr;
-                        closestMob = mob;
-                    }
-                }
-            }
-
-            return closestMob;
+            float range = customRange ?? m_detectionRadius;
+            return m_mobManager.GetClosestTarget(m_playerTransform.position, range);
         }
 
         #endregion
@@ -244,8 +220,8 @@ namespace InGame.Player.Player_Base
             if (CurrentTarget != null && !CurrentTarget.IsDead)
             {
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(center, CurrentTarget.transform.position);
-                Gizmos.DrawWireSphere(CurrentTarget.transform.position, 0.5f);
+                Gizmos.DrawLine(center, CurrentTarget.Position);
+                Gizmos.DrawWireSphere(CurrentTarget.Position, 0.5f);
             }
         }
 

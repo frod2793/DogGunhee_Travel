@@ -141,7 +141,7 @@ namespace InGame.Weapon.Base
             ProjectileCount = Data.BaseProjectileCount;
             
             // 고정값 및 상태 초기화
-            MobStunTime = 0.5f;
+            MobStunTime = Data.BaseStunDuration;
             IsEvolved = false;
         }
 
