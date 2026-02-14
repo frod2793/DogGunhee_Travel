@@ -7,17 +7,17 @@ using InGame.Weapon.Logic;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 뼈다귀(Bone) 투사체를 포물선으로 던지는 원거리 무기 컨트롤러입니다.
+    /// [설명]: 뼈다귀(Bone) 투사체를 포물선으로 던지는 원거리 무기 컨트롤러입니다.
     /// </summary>
     public class BoneWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 변수 및 로직
+        #region 내부 변수
 
         private BoneWeaponLogic m_logic;
 
         #endregion
 
-        #region 2. 초기화 및 해제
+        #region 초기화 및 해제
 
         public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
         {
@@ -70,7 +70,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 공격 실행 로직
+        #region 공격 실행 로직
 
         protected override void ExecuteAttack(Vector3 direction)
         {
@@ -102,7 +102,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 오브젝트 풀 델리게이트
+        #region 오브젝트 풀 델리게이트
 
         private BoneBullet CreateBullet()
         {
@@ -121,7 +121,9 @@ namespace InGame.Weapon.Controllers
         {
             bullet.gameObject.SetActive(false);
             if (m_poolManager != null)
+            {
                 bullet.transform.SetParent(m_poolManager.transform);
+            }
         }
 
         private void OnDestroyBullet(BoneBullet bullet)

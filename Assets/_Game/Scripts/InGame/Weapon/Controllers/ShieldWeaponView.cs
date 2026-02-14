@@ -4,14 +4,14 @@ using UnityEngine.Serialization;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 히어로 랜딩(Shield) 무기의 애니메이션 타이밍 및 투사체 물리를 설정하는 뷰 컴포넌트입니다.
-    /// <br/> WeaponPoolManager나 무기 프리팹에 부착되어 로직(Controller/Logic)에 튜닝 데이터를 제공합니다.
+    /// [설명]: 히어로 랜딩(Shield) 무기의 애니메이션 타이밍 및 투사체 물리를 설정하는 뷰 컴포넌트입니다.
+    /// WeaponPoolManager나 무기 프리팹에 부착되어 로직(Controller/Logic)에 튜닝 데이터를 제공합니다.
     /// </summary>
     public class ShieldWeaponView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("1. 애니메이션 타이밍")]
+        [Header("애니메이션 타이밍")]
         [Tooltip("공격 애니메이션 시작 후, 실제 충격파나 부메랑이 생성되는 시점(초)입니다.")]
         [FormerlySerializedAs("ImpactTriggerTime")]
         [Range(0.0f, 5.0f)]
@@ -22,7 +22,7 @@ namespace InGame.Weapon.Controllers
         [Range(0.0f, 2.0f)]
         [SerializeField] private float m_followThroughDelay = 0.5f;
 
-        [Header("2. 진화 무기(부메랑) 설정")]
+        [Header("진화 무기(부메랑) 설정")]
         [Tooltip("방패 파편(부메랑)이 날아가는 속도입니다.")]
         [FormerlySerializedAs("BoomerangSpeed")]
         [Range(1.0f, 20.0f)]
@@ -44,7 +44,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 공개 프로퍼티 (Properties)
+        #region 공개 프로퍼티
 
         /// <summary>
         /// 임팩트(충격파) 발생 트리거 시간
@@ -78,10 +78,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 유효성 검사 (Validation)
+        #region 유효성 검사
         
         /// <summary>
-        /// 에디터에서 값이 변경될 때 실시간으로 범위를 제한합니다.
+        /// 인스펙터에서 값이 변경될 때 실시간으로 범위를 제한합니다.
         /// </summary>
         private void OnValidate()
         {

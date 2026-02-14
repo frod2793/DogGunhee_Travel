@@ -2,37 +2,37 @@ using UnityEngine;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Mob.MobBase;
 using InGame.ObjectPool;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 개다귀(Bone) 무기의 투사체 로직을 처리하는 컴포넌트입니다.
-    /// <br/> 직선 이동과 회전 연출을 수행하며, 벽에 부딪히거나 일정 시간 후 소멸합니다.
-    /// <br/> 진화 시(Evolution) 적중 후 폭발하여 광역 데미지를 입힙니다.
+    /// [설명]: 개다귀(Bone) 무기의 투사체 로직을 처리하는 컴포넌트입니다.
+    /// 직선 이동과 회전 연출을 수행하며, 벽에 부딪히거나 일정 시간 후 소멸합니다.
+    /// 진화 시(Evolution) 적중 후 폭발하여 광역 데미지를 입힙니다.
     /// </summary>
     public class BoneBullet : MonoBehaviour
     {
-        #region 1. 내부 변수 및 설정 (Internal State)
+        #region 내부 변수 및 설정
 
-        [Header("1. 이동 설정")]
+        [Header("이동 설정")]
         [Tooltip("투사체가 날아가는 최대 거리")]
         [SerializeField] private float m_travelDistance = 20f;
 
-        [Header("2. 회전 설정")]
+        [Header("회전 설정")]
         [Tooltip("초당 회전 속도 (도/s)")]
         [SerializeField] private float m_rotateSpeed = 720f;
 
-        [Header("3. 진화(폭발) 설정")]
+        [Header("진화(폭발) 설정")]
         [Tooltip("폭발 반경")]
         [SerializeField] private float m_explosionRadius = 1.5f;
 
         [Tooltip("폭발 시 발생하는 추가 고정 데미지")]
         [SerializeField] private float m_explosionDamage = 10f;
 
-        [Header("4. 감지 설정")]
+        [Header("감지 설정")]
         [Tooltip("적(Mob)으로 인식할 레이어")]
         [SerializeField] private LayerMask m_mobLayerMask;
 
@@ -70,7 +70,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
 
         /// <summary>
         /// 투사체의 이동 속도
@@ -83,7 +83,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 생명주기 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -145,10 +145,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 초기화 및 제어 (Init & Control)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 투사체의 전투 파라미터를 초기화합니다.
+        /// [설명]: 투사체의 전투 파라미터를 초기화합니다.
         /// </summary>
         /// <param name="damage">기본 데미지</param>
         /// <param name="stunTime">스턴 시간</param>
@@ -165,7 +165,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 투사체를 지정된 방향으로 발사하고 수명 주기를 관리합니다.
+        /// [설명]: 투사체를 지정된 방향으로 발사하고 수명 주기를 관리합니다.
         /// </summary>
         public void ThrowBullet(Vector3 direction)
         {
@@ -176,7 +176,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 풀에서 재사용될 때 상태를 리셋합니다.
+        /// [설명]: 풀에서 재사용될 때 상태를 리셋합니다.
         /// </summary>
         public void ResetState()
         {
@@ -205,10 +205,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 이동 및 연출 (Movement & Visuals)
+        #region 이동 및 연출
 
         /// <summary>
-        /// 투사체 이동 및 비행 수명 주기를 처리하는 비동기 메서드입니다.
+        /// [설명]: 투사체 이동 및 비행 수명 주기를 처리하는 비동기 메서드입니다.
         /// </summary>
         private async UniTaskVoid ThrowAndTrackLifecycleAsync(Vector3 direction)
         {
@@ -246,6 +246,8 @@ namespace InGame.Weapon.Controllers
                 .SetEase(Ease.Linear);
 
             // 이동 완료 대기 (취소 예외는 무시하고 bool 반환)
+            // SuppressCancellationThrow로 인해 취소 시 false가 아니라 true로 동작할 수 있으므로 주의 (ToUniTask 반환값: 취소여부 아님)
+            // ToUniTask().SuppressCancellationThrow()는 (bool cancelled, TResult result)가 아니라 (bool isCanceled)를 리턴함. (UniTask v2 기준)
             bool cancelled = await m_moveTween.ToUniTask(cancellationToken: destroyToken).SuppressCancellationThrow();
 
             // 정상적으로 이동이 끝났고 아직 활성 상태라면 회수 (타겟에 맞지 않고 사거리 끝까지 감)
@@ -256,7 +258,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 진화 상태일 때 적중 시 발생하는 폭발 효과를 처리합니다.
+        /// [설명]: 진화 상태일 때 적중 시 발생하는 폭발 효과를 처리합니다.
         /// </summary>
         private void Explode()
         {
@@ -285,10 +287,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 6. 유틸리티 (Utils)
+        #region 유틸리티
 
         /// <summary>
-        /// 투사체가 벽 등에 막혀 제자리에서 멈춰있는지 감지하여 회수합니다.
+        /// [설명]: 투사체가 벽 등에 막혀 제자리에서 멈춰있는지 감지하여 회수합니다.
         /// </summary>
         private void UpdateStoppedDetection()
         {
@@ -312,9 +314,6 @@ namespace InGame.Weapon.Controllers
             }
         }
 
-        /// <summary>
-        /// 투사체가 비정상적으로 오래 살아남는 것을 방지하는 안전장치입니다.
-        /// </summary>
         private async UniTaskVoid LifetimeGuardAsync(float maxLifetime, CancellationToken token)
         {
             try

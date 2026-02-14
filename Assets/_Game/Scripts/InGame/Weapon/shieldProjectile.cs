@@ -8,13 +8,13 @@ using InGame.ObjectPool;
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 히어로 랜딩(Shield) 무기에서 발사되는 방패 파편(부메랑) 투사체입니다.
-    /// <br/> 목표 지점까지 포물선 혹은 직선으로 이동 후 플레이어에게 복귀하며 경로상의 적을 타격합니다.
+    /// [설명]: 히어로 랜딩(Shield) 무기에서 발사되는 방패 파편(부메랑) 투사체입니다.
+    /// 목표 지점까지 포물선 혹은 직선으로 이동 후 플레이어에게 복귀하며 경로상의 적을 타격합니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     public class ShieldProjectile : MonoBehaviour
     {
-        #region 1. 내부 변수 및 컴포넌트 (Internal State)
+        #region 내부 변수 및 컴포넌트
 
         // 컴포넌트 참조
         private Transform m_playerTransform;
@@ -33,7 +33,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -85,19 +85,16 @@ namespace InGame.Weapon
                 {
                     m_hitHistory.Add(id);
                     mob.TakeDamage(m_attackPower, m_mobStunTime);
-                    
-                    // 피격 이펙트 재생 (MobBase 인터페이스에 따라 호출)
-                    // mob.PlayDamageEffect();
                 }
             }
         }
 
         #endregion
 
-        #region 3. 초기화 및 제어 (Init & Control)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 부메랑 투사체를 초기화하고 발사 시퀀스를 시작합니다.
+        /// [설명]: 부메랑 투사체를 초기화하고 발사 시퀀스를 시작합니다.
         /// </summary>
         /// <param name="attackPower">공격력</param>
         /// <param name="mobStunTime">경직 시간</param>
@@ -145,10 +142,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 4. 비동기 이동 시퀀스 (Movement Logic)
+        #region 비동기 이동 시퀀스
 
         /// <summary>
-        /// 부메랑의 왕복 이동 및 회전 애니메이션을 제어하는 메인 시퀀스입니다.
+        /// [설명]: 부메랑의 왕복 이동 및 회전 애니메이션을 제어하는 메인 시퀀스입니다.
         /// </summary>
         private async UniTaskVoid AnimateBoomerangAsync(
             Vector3 direction,
@@ -196,7 +193,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 플레이어 위치를 향해 실시간으로 이동하며 복귀하는 루프입니다.
+        /// [설명]: 플레이어 위치를 향해 실시간으로 이동하며 복귀하는 루프입니다.
         /// </summary>
         private async UniTask ReturnToPlayerAsync(float speed, System.Threading.CancellationToken token)
         {

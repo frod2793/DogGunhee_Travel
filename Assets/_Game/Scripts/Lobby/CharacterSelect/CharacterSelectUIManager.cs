@@ -6,12 +6,12 @@ using InGame.UI;
 namespace InGame.Lobby
 {
     /// <summary>
-    /// 캐릭터 선택 UI의 전반적인 상태와 시각적 요소를 제어하는 관리 클래스입니다.
-    /// <br/>캐릭터 리스트 생성, 스킨 선택, 패널 전환 및 데이터 동기화를 담당합니다.
+    /// [설명]: 캐릭터 선택 UI의 전반적인 상태와 시각적 요소를 제어하는 관리 클래스입니다.
+    /// 캐릭터 리스트 생성, 스킨 선택, 패널 전환 및 데이터 동기화를 담당합니다.
     /// </summary>
     public class CharacterSelectUIManager : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [Header("<color=green>UI 패널 설정</color>")]
         [SerializeField, Tooltip("캐릭터 선택 메인 패널"), FormerlySerializedAs("characterSelectPanel")]
@@ -39,7 +39,7 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 2. 내부 변수 및 데이터
+        #region 내부 변수
 
         // 캐릭터 및 스킨 데이터 리스트
         private List<CharacterData> m_characterDataList = new List<CharacterData>();
@@ -55,10 +55,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         /// <summary>
-        /// 컴포넌트 시작 시 데이터를 로드하고 UI를 초기화합니다.
+        /// [설명]: 컴포넌트 시작 시 데이터를 로드하고 UI를 초기화합니다.
         /// </summary>
         private void Start()
         {
@@ -68,10 +68,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 4. 초기화 로직
+        #region 초기화 로직
 
         /// <summary>
-        /// 패널들의 초기 활성 상태를 설정합니다. (현재 Awake에서 호출 주석 처리됨)
+        /// [설명]: 패널들의 초기 활성 상태를 설정합니다.
         /// </summary>
         private void InitializePanels()
         {
@@ -81,19 +81,19 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 외부 저장소나 매니저로부터 캐릭터 및 스킨 데이터를 불러옵니다.
+        /// [설명]: 외부 저장소나 매니저로부터 캐릭터 및 스킨 데이터를 불러옵니다.
         /// </summary>
         private void LoadCharacterData()
         {
             LogManager.Log("[CharacterSelectUIManager] 캐릭터 데이터 로드 시작", LogManager.LogCategory.CharacterManager);
 
             // 기존에 선택되었던 인덱스 정보 복원
-            m_currentCharacterIndex = PlayerDataManager.Instance ? PlayerDataManager.Instance.SelectCharacterIndex : 0;
+            m_currentCharacterIndex = PlayerDataManager.Instance != null ? PlayerDataManager.Instance.SelectCharacterIndex : 0;
             m_currentSkinIndex = PlayerPrefs.GetInt("SelectedSkinIndex", 0);
         }
 
         /// <summary>
-        /// 전체적인 캐릭터 선택 화면의 UI 요소들을 생성하고 초기화합니다.
+        /// [설명]: 전체적인 캐릭터 선택 화면의 UI 요소들을 생성하고 초기화합니다.
         /// </summary>
         private void InitializeCharacterUI()
         {
@@ -112,7 +112,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 동적으로 호출되었던 모든 UI 인스턴스들을 파괴하고 리스트를 비웁니다.
+        /// [설명]: 동적으로 호출되었던 모든 UI 인스턴스들을 파괴하고 리스트를 비웁니다.
         /// </summary>
         private void ClearUIItems()
         {
@@ -141,10 +141,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 5. UI 생성 및 갱신
+        #region UI 생성 및 갱신
 
         /// <summary>
-        /// 설정된 데이터를 기반으로 캐릭터 선택 버튼들을 생성합니다.
+        /// [설명]: 설정된 데이터를 기반으로 캐릭터 선택 버튼들을 생성합니다.
         /// </summary>
         private void CreateCharacterSelectItems()
         {
@@ -160,9 +160,9 @@ namespace InGame.Lobby
             {
                 var characterItem = Instantiate(m_characterSelectIndexPrefab, m_characterSelectIndexParent);
 
-                if (characterItem.characterName != null)
+                if (characterItem.CharacterName != null)
                 {
-                    characterItem.characterName.text = $"캐릭터 {i}";
+                    characterItem.CharacterName.text = $"캐릭터 {i}";
                 }
 
                 int index = i;
@@ -181,7 +181,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 특정 캐릭터에 할당된 스킨 버튼들을 생성합니다.
+        /// [설명]: 특정 캐릭터에 할당된 스킨 버튼들을 생성합니다.
         /// </summary>
         /// <param name="characterIndex">대상 캐릭터 인덱스</param>
         private void CreateSkinSelectItems(int characterIndex)
@@ -198,9 +198,9 @@ namespace InGame.Lobby
             {
                 var skinItem = Instantiate(m_characterSkinIndexPrefab, m_characterSkinIndexParent);
 
-                if (skinItem.characterName != null)
+                if (skinItem.CharacterName != null)
                 {
-                    skinItem.characterName.text = $"스킨 {i}";
+                    skinItem.CharacterName.text = $"스킨 {i}";
                 }
 
                 int index = i;
@@ -215,7 +215,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 변경 시 연결된 스킨 UI 리스트를 새로고침합니다.
+        /// [설명]: 캐릭터 변경 시 연결된 스킨 UI 리스트를 새로고침합니다.
         /// </summary>
         private void UpdateSkinUI(int characterIndex)
         {
@@ -235,10 +235,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 6. 선택 로직 (Data Handling)
+        #region 선택 로직
 
         /// <summary>
-        /// 사용자가 선택한 캐릭터를 현재 활성 캐릭터로 설정하고 데이터를 저장합니다.
+        /// [설명]: 사용자가 선택한 캐릭터를 현재 활성 캐릭터로 설정하고 데이터를 저장합니다.
         /// </summary>
         private void SelectCharacter(int characterIndex)
         {
@@ -255,7 +255,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 사용자가 선택한 스킨을 저장하고 적용합니다.
+        /// [설명]: 사용자가 선택한 스킨을 저장하고 적용합니다.
         /// </summary>
         private void SelectSkin(int skinIndex)
         {
@@ -269,10 +269,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 7. 패널 제어 (Navigation)
+        #region 패널 제어
 
         /// <summary>
-        /// 캐릭터 선택 메인 화면을 엽니다.
+        /// [설명]: 캐릭터 선택 메인 화면을 엽니다.
         /// </summary>
         public void OpenCharacterSelectPanel()
         {
@@ -286,7 +286,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 리스트 화면을 열고 충돌할 수 있는 다른 패널을 정리합니다.
+        /// [설명]: 캐릭터 리스트 화면을 열고 충돌할 수 있는 다른 패널을 정리합니다.
         /// </summary>
         public void OpenCharacterListPanel()
         {
@@ -299,7 +299,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 스킬 및 정보 확장 패널을 엽니다.
+        /// [설명]: 캐릭터 스킬 및 정보 확장 패널을 엽니다.
         /// </summary>
         public void OpenCharacterSkinViewPanel()
         {
@@ -312,7 +312,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 선택 메인 패널을 닫습니다.
+        /// [설명]: 캐릭터 선택 메인 패널을 닫습니다.
         /// </summary>
         public void CloseCharacterSelectPanel()
         {
@@ -320,7 +320,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 리스트 패널을 닫습니다.
+        /// [설명]: 캐릭터 리스트 패널을 닫습니다.
         /// </summary>
         private void CloseCharacterListPanel()
         {
@@ -328,7 +328,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 정보 확장 패널을 닫습니다.
+        /// [설명]: 캐릭터 정보 확장 패널을 닫습니다.
         /// </summary>
         private void CloseCharacterSkinViewPanel()
         {
@@ -337,10 +337,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 8. 유틸리티 및 데이터 구조
+        #region 유틸리티 및 데이터 구조
 
         /// <summary>
-        /// 게임 오브젝트의 활성 상태를 안전하게 제어합니다.
+        /// [설명]: 게임 오브젝트의 활성 상태를 안전하게 제어합니다.
         /// </summary>
         private static void SetGameObjectActive(GameObject obj, bool isActive)
         {
@@ -356,7 +356,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터의 기본 정보를 담는 구조체입니다.
+        /// [설명]: 캐릭터의 기본 정보를 담는 구조체입니다.
         /// </summary>
         [System.Serializable]
         private struct CharacterData
@@ -368,7 +368,7 @@ namespace InGame.Lobby
         }
 
         /// <summary>
-        /// 캐릭터 스킨 정보를 담는 구조체입니다.
+        /// [설명]: 캐릭터 스킨 정보를 담는 구조체입니다.
         /// </summary>
         [System.Serializable]
         private struct CharacterSkinData

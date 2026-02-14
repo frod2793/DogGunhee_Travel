@@ -9,37 +9,42 @@ using InGame.Lobby;
 namespace InGame.UI.Elements
 {
     /// <summary>
-    /// 상점에서 개별 아이템의 정보를 표시하고 구매 요청을 담당하는 항목형 View 클래스입니다.
+    /// [설명]: 상점에서 개별 아이템의 정보를 표시하고 구매 요청을 담당하는 항목형 View 클래스입니다.
     /// </summary>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, null, "Lobby", "Store_Item")]
     public class StoreItemView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("<color=green>아이템 데이터 정보</color>")] [SerializeField, Tooltip("아이템 식별 코드")]
+        [Header("<color=green>아이템 데이터 정보</color>")]
+        [SerializeField, Tooltip("아이템 식별 코드")]
         private int m_itemCode;
 
         [SerializeField, Tooltip("UI에 표시될 아이템 상세 설명")]
         private string m_itemDescription;
 
-        [Header("<color=green>내부 UI 참조</color>")] [SerializeField, Tooltip("아이템 이름 텍스트")]
+        [Header("<color=green>내부 UI 참조</color>")]
+        [SerializeField, Tooltip("아이템 이름 텍스트")]
         private TMP_Text m_itemNameText;
 
-        [SerializeField, Tooltip("판매 가격 텍스트")] private TMP_Text m_itemCoinCountText;
+        [SerializeField, Tooltip("판매 가격 텍스트")]
+        private TMP_Text m_itemCoinCountText;
 
         [SerializeField, Tooltip("아이템 설명 텍스트")]
         private TMP_Text m_itemDescriptionText;
 
-        [SerializeField, Tooltip("아이템 이미지")] private Image m_itemImage;
+        [SerializeField, Tooltip("아이템 이미지")]
+        private Image m_itemImage;
 
-        [SerializeField, Tooltip("구매 버튼")] private Button m_itemButton;
+        [SerializeField, Tooltip("구매 버튼")]
+        private Button m_itemButton;
 
         #endregion
 
-        #region 2. 이벤트 및 상태
+        #region 내부 변수 및 이벤트
 
         /// <summary>
-        /// 아이템 구매를 요청할 때 발생하는 이벤트입니다. (파라미터: ItemCode)
+        /// [설명]: 아이템 구매를 요청할 때 발생하는 이벤트입니다. (파라미터: ItemCode)
         /// </summary>
         public event Action<int> OnPurchaseRequest;
 
@@ -47,7 +52,7 @@ namespace InGame.UI.Elements
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Start()
         {
@@ -57,10 +62,10 @@ namespace InGame.UI.Elements
 
         #endregion
 
-        #region 4. 로직 및 UI 제어
+        #region 로직 및 UI 제어
 
         /// <summary>
-        /// 특정 아이템 코드를 전달받아 데이터 매니저로부터 실데이터를 불러오고 UI를 동기화합니다.
+        /// [설명]: 특정 아이템 코드를 전달받아 데이터 매니저로부터 실데이터를 불러오고 UI를 동기화합니다.
         /// </summary>
         /// <param name="code">초기화할 아이템 코드</param>
         public void Initialize(int code)
@@ -75,7 +80,7 @@ namespace InGame.UI.Elements
 
             if (m_itemData == null)
             {
-                LogManager.LogWarning("아이템 정보가 올바르지 않습니다.", LogManager.LogCategory.System);
+                LogManager.LogWarning("[StoreItemView] 아이템 정보가 올바르지 않습니다.", LogManager.LogCategory.System);
                 gameObject.SetActive(false);
                 return;
             }
@@ -91,7 +96,7 @@ namespace InGame.UI.Elements
         }
 
         /// <summary>
-        /// 로드된 ItemDataSO 데이터를 기반으로 UI 요소들을 갱신합니다.
+        /// [설명]: 로드된 ItemDataSO 데이터를 기반으로 UI 요소들을 갱신합니다.
         /// </summary>
         private void UpdateUI()
         {

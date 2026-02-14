@@ -1,88 +1,103 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Weapon.Base;
 
 namespace InGame.Player.Player_Base
 {
     /// <summary>
-    /// 플레이어의 공통 데이터(HP, Exp, Stat)와 핵심 시스템(무기, 충돌)을 관리하는 최상위 클래스입니다.
-    /// <br/> Manager 및 외부 시스템과의 의존성을 주입(DI)받아 초기화할 수 있습니다.
+    /// [설명]: 플레이어의 공통 데이터(HP, 경험치, 스탯)와 핵심 시스템(무기, 충돌 처리)을 관리하는 최상위 클래스입니다.
+    /// 외부 시스템과의 의존성을 주입받아 초기화되며, 플레이어의 생존 및 무기 업데이트 사이클을 주도합니다.
     /// </summary>
     public class PlayerBase : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("기본 설정")] [SerializeField, Tooltip("캐릭터 기본 설정 데이터 (SO)")]
+        [Header("기본 설정")]
+        [SerializeField, Tooltip("캐릭터 기본 설정 데이터 (ScriptableObject)")]
         private CharacterConfigSO m_config;
 
-        [Header("데이터 및 시스템")] [SerializeField, Tooltip("현재 플레이어의 스탯 정보")]
+        [Header("데이터 및 시스템")]
+        [SerializeField, Tooltip("현재 플레이어의 스탯 정보 객체")]
         private PlayerStats m_stats = new PlayerStats();
 
         #endregion
 
-        #region 2. 내부 변수 및 시스템
+        #region 내부 필드 및 서브 시스템
 
-        // 하위 시스템 객체
+        /// <summary> 플레이어의 경험치 및 레벨업 관리 시스템 </summary>
         private ExperienceSystem m_expSystem = new ExperienceSystem();
+
+        /// <summary> 무기 생성 및 리스트 관리자 </summary>
         private PlayerWeaponManager m_weaponManager;
+
+        /// <summary> 트리거 및 컬렉션 이벤트 충돌 처리기 </summary>
         private PlayerCollisionHandler m_collisionHandler;
 
         #endregion
 
-        #region 3. 이벤트 선언
+        #region 이벤트
 
-        // 전역 이벤트 (Static)
+        /// <summary> [설명]: 전역 레벨업 이벤트 (전달 파라미터: 새로운 레벨) </summary>
         public static event Action<float> OnLevelUp;
+
+        /// <summary> [설명]: 전역 경험치 변경 이벤트 (현재 경험치, 최대 경험치) </summary>
         public static event Action<float, float> OnExpChanged;
 
-        // 인스턴스 이벤트
+        /// <summary> [설명]: 현재 플레이어의 인스턴스 체력 변경 이벤트 (현재 체력, 최대 체력) </summary>
         public event Action<float, float> OnHealthChanged;
 
         #endregion
 
-        #region 4. 프로퍼티 (데이터 접근)
+        #region 공개 프로퍼티
 
-        // 스탯 연결 (Pass-through)
+        /// <summary> [설명]: 현재 플레이어의 방어력 값입니다. </summary>
         public float Defense
         {
             get => m_stats.Defense;
             set => m_stats.Defense = value;
         }
 
+        /// <summary> [설명]: 현재 플레이어의 이동 속도 값입니다. </summary>
         public float MoveSpeed
         {
             get => m_stats.MoveSpeed;
             set => m_stats.MoveSpeed = value;
         }
 
-        // 체력 로직
+        /// <summary> [설명]: 현재 인스턴스의 남은 체력량입니다. </summary>
         public float CurrentHealth => m_stats.CurrentHealth;
 
+        /// <summary> [설명]: 현재 인스턴스의 최대 체력량입니다. </summary>
         public float MaxHealth
         {
             get => m_stats.MaxHealth;
             set
             {
                 m_stats.MaxHealth = value;
-                // 최대 체력이 변경되면 UI 갱신을 위해 현재 체력 비율과 함께 이벤트를 호출합니다.
                 OnHealthChanged?.Invoke(m_stats.CurrentHealth, m_stats.MaxHealth);
             }
         }
 
-        // 시스템 접근자
+        /// <summary> [설명]: 플레이어의 현재 레벨 값입니다. </summary>
         public float Level => m_expSystem.Level;
+
+        /// <summary> [설명]: 현재 보유 중인 경험치량입니다. </summary>
         public float CurrentExp => m_expSystem.CurrentExp;
+
+        /// <summary> [설명]: 다음 레벨업을 위한 총 경험치량입니다. </summary>
         public float MaxExp => m_expSystem.MaxExp;
+
+        /// <summary> [설명]: 현재 장착된 모든 무기 컨트롤러 목록입니다. </summary>
         public IReadOnlyList<IWeaponController> Weapons => m_weaponManager?.Controllers;
 
         #endregion
 
-        #region 5. 유니티 생명주기
+        #region 유니티 생명주기
 
         /// <summary>
-        /// 오브젝트가 활성화될 때 호출됩니다. 초기화가 누락되었을 경우 안전장치로 Init을 호출합니다.
+        /// [설명]: 플레이어 오브젝트가 활성화될 때 필수 시스템이 초기화되지 않았다면 초기화를 수행합니다.
         /// </summary>
         public virtual void OnEnable()
         {
@@ -93,7 +108,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 오브젝트가 비활성화될 때 호출됩니다. 모든 이벤트를 구독 해제하여 메모리 누수를 방지합니다.
+        /// [설명]: 비활성화 시 등록된 시스템 이벤트를 구독 해제하여 메모리 누수를 방지합니다.
         /// </summary>
         protected virtual void OnDisable()
         {
@@ -101,7 +116,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 매 프레임 호출됩니다. 무기 시스템의 업데이트 로직을 위임합니다.
+        /// [설명]: 매 프레임 무기 시스템의 업데이트 로직을 호출합니다.
         /// </summary>
         private void Update()
         {
@@ -109,7 +124,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 모든 Update가 끝난 후 호출됩니다. 카메라 추적이나 무기의 후처리 로직을 위임합니다.
+        /// [설명]: 로직 업데이트 이후 무기 시스템의 후처리를 수행합니다.
         /// </summary>
         private void LateUpdate()
         {
@@ -117,7 +132,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 오브젝트가 파괴될 때 호출됩니다. 무기 풀링 등 리소스를 정리합니다.
+        /// [설명]: 파괴 시 장착된 모든 무기 리소스를 정리합니다.
         /// </summary>
         protected virtual void OnDestroy()
         {
@@ -126,35 +141,34 @@ namespace InGame.Player.Player_Base
 
         #endregion
 
-        #region 6. 초기화 및 의존성 주입
+        #region 초기화
 
         /// <summary>
-        /// 플레이어 시스템을 초기화합니다. 
-        /// 테스트 코드나 외부 매니저에서 의존성을 주입(DI)할 수 있습니다.
+        /// [설명]: 플레이어 시스템의 의존성을 주입하고 내부 스탯과 기능을 초기화합니다.
         /// </summary>
-        /// <param name="weaponManager">무기 관리자 (null일 경우 기본값 생성)</param>
-        /// <param name="expSystem">경험치 시스템 (null일 경우 기본값 생성)</param>
+        /// <param name="weaponManager">무기 관리자 주입 (생략 시 기본 생성)</param>
+        /// <param name="expSystem">경험치 시스템 주입 (생략 시 기본 생성)</param>
         public void Init(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null)
         {
-            // 1. 의존성 주입 또는 기본값 생성
+            // 의존성 주입 또는 기본 객체 생성
             m_weaponManager = weaponManager ?? CreateDefaultWeaponManager();
             m_expSystem = expSystem ?? new ExperienceSystem();
 
-            // 2. 내부 컴포넌트 및 데이터 설정
+            // 내부 컴포넌트 및 데이터 로드
             InitializeComponents();
             InitializeStats();
 
-            // 3. 이벤트 연결
+            // 게임 이벤트 연결
             SubscribeEvents();
 
-            // 4. 초기 상태 UI 갱신을 위한 알림
+            // 초기 UI 갱신을 위한 알림 호출
             NotifyInitialState();
 
             LogManager.Log("[PlayerBase] 초기화 완료", LogManager.LogCategory.PlayerBase);
         }
 
         /// <summary>
-        /// 기본 무기 관리자를 생성합니다. GameManager의 오브젝트 풀을 참조합니다.
+        /// [설명]: 무기 관리를 담당하는 기본 객체를 생성합니다.
         /// </summary>
         private PlayerWeaponManager CreateDefaultWeaponManager()
         {
@@ -162,7 +176,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 충돌 처리기 등 필수 컴포넌트를 가져오거나 없으면 동적으로 추가합니다.
+        /// [설명]: 충돌 핸들러 등 필수 MonoBehaviour 컴포넌트를 캐싱하거나 추가합니다.
         /// </summary>
         private void InitializeComponents()
         {
@@ -176,7 +190,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// ScriptableObject(Config)에서 기본 스탯을 불러와 초기화합니다.
+        /// [설명]: SO 설정 데이터를 로드하여 기본 전투 스탯을 할당합니다.
         /// </summary>
         private void InitializeStats()
         {
@@ -189,7 +203,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 초기화 직후 현재 레벨, 경험치, 체력 상태를 UI에 알립니다.
+        /// [설명]: 초기화 완료 후 첫 이벤트를 발생시켜 UI와 연동된 시스템을 동기화합니다.
         /// </summary>
         private void NotifyInitialState()
         {
@@ -200,20 +214,20 @@ namespace InGame.Player.Player_Base
 
         #endregion
 
-        #region 7. 공개 메서드 (외부 제어)
+        #region 공개 인터페이스
 
         /// <summary>
-        /// 특정 무기 컨트롤러(IWeaponController)를 플레이어에게 추가하고 관리 대상에 등록합니다.
+        /// [설명]: 플레이어에게 새로운 무기 컨트롤러를 추가합니다.
         /// </summary>
         public void AddController(IWeaponController weapon) => m_weaponManager?.AddController(weapon);
 
         /// <summary>
-        /// 스킬 코드(ID)를 기반으로 해당 무기를 찾아 제거합니다.
+        /// [설명]: 무기 식별 코드를 기반으로 특정 무기를 장착 해제합니다.
         /// </summary>
         public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
 
         /// <summary>
-        /// 플레이어 사망 시 호출됩니다. 게임 오버 상태로 전환하고 사운드를 재생합니다.
+        /// [설명]: 플레이어의 체력이 0이 되어 사망했을 때의 처리를 수행합니다. (Game Over 전환 및 사운드 재생)
         /// </summary>
         public virtual void Player_Die()
         {
@@ -227,24 +241,22 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 현재 경험치의 진행률(0.0 ~ 1.0)을 반환합니다. UI 슬라이더 표시에 사용됩니다.
+        /// [설명]: 현재 경험지 진행 상태(0~1)를 반환합니다.
         /// </summary>
         public float GetExpProgress() => m_expSystem.GetProgress();
 
         #endregion
 
-        #region 8. 내부 로직 및 이벤트 핸들러
+        #region 내부 핸들링 및 이벤트 응답
 
         /// <summary>
-        /// 데미지를 적용하고, 체력 변화 이벤트를 발생시킵니다. 체력이 0이 되면 사망 처리합니다.
+        /// [설명]: 데미지를 입었을 때 스탯을 갱신하고 연출(카메라 쉐이크, VFX)을 실행합니다.
         /// </summary>
-        /// <param name="damageAmount">받은 데미지 양</param>
         private void ApplyDamage(float damageAmount)
         {
             m_stats.ApplyDamage(damageAmount);
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
 
-            // 피격 피드백 (카메라 쉐이크 및 사운드)
             if (EffectManager.Instance != null)
             {
                 EffectManager.Instance.PlayPlayerHitCameraShake();
@@ -259,7 +271,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 피격 시 사운드를 재생합니다. (자식 클래스에서 VFX 등을 추가하도록 override 가능)
+        /// [설명]: 피격 시 사운드 및 피드백 효과를 재생합니다.
         /// </summary>
         protected virtual void PlayHitEffect()
         {
@@ -268,11 +280,10 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 게임 매니저 및 내부 시스템의 이벤트들을 구독합니다.
+        /// [설명]: 외부 전역 시스템 및 내부 모듈의 이벤트를 바인딩합니다.
         /// </summary>
         private void SubscribeEvents()
         {
-            // 1. 게임 상태 변경 이벤트 구독
             if (GameManager.Instance.State != null)
             {
                 GameManager.Instance.State.OnGameOver += OnGameOver;
@@ -280,11 +291,9 @@ namespace InGame.Player.Player_Base
                 GameManager.Instance.State.OnGameResume += OnGameResume;
             }
 
-            // 2. 내부 시스템(경험치, 충돌) 이벤트 구독
             m_expSystem.OnLevelUp += HandleLevelUp;
-            m_expSystem.OnExpChanged += (cur, max) => OnExpChanged?.Invoke(cur, max); // 람다로 외부 정적 이벤트 연결
+            m_expSystem.OnExpChanged += (cur, max) => OnExpChanged?.Invoke(cur, max);
 
-            // 3. 충돌 핸들러 이벤트 연결
             if (m_collisionHandler != null)
             {
                 m_collisionHandler.OnDamageReceived += ApplyDamage;
@@ -294,7 +303,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 구독했던 모든 이벤트를 해제합니다.
+        /// [설명]: 파괴 또는 비활성화 시 등록된 시스템 이벤트를 모두 해제합니다.
         /// </summary>
         private void UnsubscribeEvents()
         {
@@ -308,11 +317,7 @@ namespace InGame.Player.Player_Base
             m_expSystem.OnLevelUp -= HandleLevelUp;
         }
 
-        // --- 이벤트 콜백 (Event Callbacks) ---
-
-        /// <summary>
-        /// 게임 재개 시 충돌체를 다시 활성화합니다.
-        /// </summary>
+        /// <summary> [설명]: 게임 재개 시 물리 상호작용을 재활성화합니다. </summary>
         private void OnGameResume()
         {
             if (m_collisionHandler != null)
@@ -321,9 +326,7 @@ namespace InGame.Player.Player_Base
             }
         }
 
-        /// <summary>
-        /// 게임 일시정지 시 충돌체를 비활성화하여 불필요한 물리 연산을 막습니다.
-        /// </summary>
+        /// <summary> [설명]: 게임 일시정지 시 불필요한 물리 판정을 차단합니다. </summary>
         private void OnGamePause()
         {
             if (m_collisionHandler != null)
@@ -332,9 +335,7 @@ namespace InGame.Player.Player_Base
             }
         }
 
-        /// <summary>
-        /// 게임 오버 시 충돌체를 비활성화합니다.
-        /// </summary>
+        /// <summary> [설명]: 게임 오버 시 모든 충돌 감지를 중단합니다. </summary>
         private void OnGameOver()
         {
             if (m_collisionHandler != null)
@@ -344,7 +345,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 레벨업 발생 시 전역 이벤트를 호출하고 축하 사운드를 재생합니다.
+        /// [설명]: 레벨업 시 전역 알림을 수행하고 연출 사운드를 재생합니다.
         /// </summary>
         private void HandleLevelUp(int level)
         {
@@ -353,7 +354,7 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 코인 획득 시 플레이어 데이터 매니저에 재화를 추가합니다.
+        /// [설명]: 코인 수집 시 플레이어의 재화 데이터를 갱신합니다.
         /// </summary>
         private void HandleCoinCollected(int coinValue)
         {

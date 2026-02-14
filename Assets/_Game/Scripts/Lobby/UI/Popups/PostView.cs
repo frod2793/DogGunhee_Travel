@@ -12,14 +12,15 @@ using InGame.Lobby;
 namespace InGame.UI.Popups
 {
     /// <summary>
-    /// 로비의 우편함 시스템을 시각화하고 제어하는 View 클래스입니다.
-    /// <br/>비동기 데이터 로딩과 오브젝트 풀링을 통해 대량의 우편 목록을 효율적으로 처리합니다.
+    /// [설명]: 로비의 우편함 시스템을 시각화하고 제어하는 View 클래스입니다.
+    /// 비동기 데이터 로딩과 오브젝트 풀링을 통해 대량의 우편 목록을 효율적으로 처리합니다.
     /// </summary>
     public class PostView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("<color=green>우편 목록 설정</color>")] [SerializeField, Tooltip("우편함 메인 패널 오브젝트")]
+        [Header("<color=green>우편 목록 설정</color>")]
+        [SerializeField, Tooltip("우편함 메인 패널 오브젝트")]
         private GameObject m_postBoxPanel;
 
         [SerializeField, Tooltip("우편 항목들이 생성될 부모 컨테이너")]
@@ -28,10 +29,12 @@ namespace InGame.UI.Popups
         [SerializeField, Tooltip("우편 인덱스 프리팹")]
         private PostIndex m_postBoxPrefab;
 
-        [Header("<color=green>우편 상세 내용창</color>")] [SerializeField, Tooltip("상세 내용 표시 패널")]
+        [Header("<color=green>우편 상세 내용창</color>")]
+        [SerializeField, Tooltip("상세 내용 표시 패널")]
         private GameObject m_postBoxDetailPanel;
 
-        [SerializeField, Tooltip("본문 내용 텍스트")] private TMP_Text m_postBoxDetailText;
+        [SerializeField, Tooltip("본문 내용 텍스트")]
+        private TMP_Text m_postBoxDetailText;
 
         [SerializeField, Tooltip("보낸 사람 이름 텍스트")]
         private TMP_Text m_postBoxSenderNameText;
@@ -41,7 +44,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
+        #region 내부 변수
 
         private PostViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
@@ -52,7 +55,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Start()
         {
@@ -71,10 +74,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 4. MVVM 데이터 바인딩
+        #region MVVM 데이터 바인딩
 
         /// <summary>
-        /// 우편 로직을 담당하는 뷰모델을 생성합니다.
+        /// [설명]: 우편 로직을 담당하는 뷰모델을 생성합니다.
         /// </summary>
         private void InitializeViewModel()
         {
@@ -82,11 +85,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 뷰모델의 상태 변화에 따라 UI 갱신 시퀀스를 작동시킵니다.
+        /// [설명]: 뷰모델의 상태 변화에 따라 UI 갱신 시퀀스를 작동시킵니다.
         /// </summary>
         private void BindViewModel()
         {
-            if (m_viewModel == null) return;
+            if (m_viewModel == null)
+            {
+                return;
+            }
 
             // 1. 우편 목록 데이터 갱신 시 UI 리스트 리프레시
             m_viewModel.Posts
@@ -110,10 +116,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 5. UI 리스트 갱신 (오브젝트 풀링 연동)
+        #region UI 리스트 갱신
 
         /// <summary>
-        /// 전달받은 우편 정보 목록을 기반으로 인스턴스를 하나씩 재사용하거나 생성합니다.
+        /// [설명]: 전달받은 우편 정보 목록을 기반으로 인스턴스를 하나씩 재사용하거나 생성합니다.
         /// </summary>
         private void RefreshPostList(List<PostService.PostInfo> postList)
         {
@@ -129,7 +135,10 @@ namespace InGame.UI.Popups
 
             m_activeItems.Clear();
 
-            if (postList == null) return;
+            if (postList == null)
+            {
+                return;
+            }
 
             // 2. 새로운 리스트 정보로 아이템 활성화
             foreach (var info in postList)
@@ -152,14 +161,17 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 6. 패널 제어 및 상호작용 (Public/Private)
+        #region 패널 제어 및 상호작용
 
         /// <summary>
-        /// 우편함 패널을 활성화하고 팝업 스택에 관리 동작을 등록합니다.
+        /// [설명]: 우편함 패널을 활성화하고 팝업 스택에 관리 동작을 등록합니다.
         /// </summary>
         public void OpenPostBoxPanel()
         {
-            if (m_postBoxPanel == null) return;
+            if (m_postBoxPanel == null)
+            {
+                return;
+            }
 
             m_postBoxPanel.SetActive(true);
             PopupManager.Instance.RegisterPopup(ClosePostBoxPanel);
@@ -169,7 +181,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 우편함 패널을 닫습니다.
+        /// [설명]: 우편함 패널을 닫습니다.
         /// </summary>
         private void ClosePostBoxPanel()
         {
@@ -180,11 +192,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 특정 우편의 본문과 보상 내용을 포함한 상세 패널을 엽니다.
+        /// [설명]: 특정 우편의 본문과 보상 내용을 포함한 상세 패널을 엽니다.
         /// </summary>
         private void OpenPostDetailPanel(PostService.PostInfo postInfo)
         {
-            if (postInfo == null) return;
+            if (postInfo == null)
+            {
+                return;
+            }
 
             m_viewModel?.SelectPost(postInfo);
 
@@ -201,7 +216,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 우편 상세 정보 패널을 닫습니다.
+        /// [설명]: 우편 상세 정보 패널을 닫습니다.
         /// </summary>
         private void ClosePostDetailPanel()
         {
@@ -212,7 +227,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 상세 정보창 내의 보상 수령 버튼 클릭 시 호출됩니다.
+        /// [설명]: 상세 정보창 내의 보상 수령 버튼 클릭 시 호출됩니다.
         /// </summary>
         public void OnClickDetailRewardBtn()
         {
@@ -221,10 +236,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 7. 내부 풀링 유틸리티
+        #region 내부 풀링 유틸리티
 
         /// <summary>
-        /// 비활성화된 우편 아이템을 풀에서 하나 가져오거나, 없으면 새로 생성합니다.
+        /// [설명]: 비활성화된 우편 아이템을 풀에서 하나 가져오거나, 없으면 새로 생성합니다.
         /// </summary>
         private PostIndex GetPooledItem()
         {
@@ -243,11 +258,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 우편 데이터로부터 보상 목록을 읽기 좋은 문자열로 가공합니다.
+        /// [설명]: 우편 데이터로부터 보상 목록을 읽기 좋은 문자열로 가공합니다.
         /// </summary>
         private string FormatRewardList(Dictionary<string, int> items)
         {
-            if (items == null || items.Count == 0) return "지급 보상 없음";
+            if (items == null || items.Count == 0)
+            {
+                return "지급 보상 없음";
+            }
 
             var stringBuilder = new System.Text.StringBuilder();
             foreach (var kvp in items)

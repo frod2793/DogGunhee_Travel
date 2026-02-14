@@ -4,13 +4,13 @@ using InGame.Mob.MobBase;
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 공놀이(Ball) 무기의 물리 충돌 및 데미지 판정을 담당하는 컴포넌트입니다.
-    /// <br/> 투사체 프리팹에 부착되어 Trigger 충돌 시 적에게 데미지와 경직을 부여합니다.
+    /// [설명]: 공놀이(Ball) 무기의 물리 충돌 및 데미지 판정을 담당하는 컴포넌트입니다.
+    /// 투사체 프리팹에 부착되어 Trigger 충돌 시 적에게 데미지와 경직을 부여합니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class BallDamageDealer : MonoBehaviour
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private Collider2D m_collider;
         
@@ -20,7 +20,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. Unity 라이프사이클 (Unity Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -44,19 +44,16 @@ namespace InGame.Weapon
                 if (!mob.IsDead)
                 {
                     mob.TakeDamage(m_attackPower, m_stunTime);
-                    
-                    // 피격 이펙트 재생 (MobBase에 해당 메서드가 있다고 가정)
-                    // mob.PlayDamageEffect(); 
                 }
             }
         }
 
         #endregion
 
-        #region 3. 초기화 및 제어 (Initialization)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 데미지 딜러의 전투 수치를 초기화합니다.
+        /// [설명]: 데미지 딜러의 전투 수치를 초기화합니다.
         /// </summary>
         /// <param name="damage">적에게 입힐 데미지</param>
         /// <param name="stunTime">적에게 적용할 경직 시간</param>

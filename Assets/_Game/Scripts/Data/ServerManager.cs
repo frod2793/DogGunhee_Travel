@@ -9,38 +9,37 @@ using UnityEngine;
 namespace InGame
 {
     /// <summary>
-    /// 서버 통신을 관리하는 Facade 클래스입니다.
-    /// 실제 비즈니스 로직은 각 서비스(Auth, GameData, Post)에 위임합니다.
+    /// [설명]: 서버 통신을 관리하는 Facade 클래스입니다.
     /// </summary>
     public class ServerManager : MonoBehaviour
     {
-        #region 서비스 프로퍼티
+        #region 서비스 프로퍼티 
 
         private IAuthenticationService m_auth;
         private IGameDataService m_gameData;
         private IPostService m_post;
 
-        public IAuthenticationService Auth 
-        { 
+        public IAuthenticationService Auth
+        {
             get => m_auth ??= new AuthenticationService(m_isInitialized);
             private set => m_auth = value;
         }
-        
-        public IGameDataService GameData 
-        { 
+
+        public IGameDataService GameData
+        {
             get => m_gameData ??= new GameDataService(m_isInitialized);
             private set => m_gameData = value;
         }
-        
-        public IPostService Post 
-        { 
+
+        public IPostService Post
+        {
             get => m_post ??= new PostService(m_isInitialized);
             private set => m_post = value;
         }
 
         #endregion
 
-        #region 싱글톤 패턴
+        #region 싱글톤 
 
         private static ServerManager m_instance;
         public static ServerManager Instance
@@ -62,12 +61,14 @@ namespace InGame
 
         #endregion
 
-        #region 내부 필드
+        #region 내부 필드 
+
         private readonly UniTaskCompletionSource<bool> m_isInitialized = new UniTaskCompletionSource<bool>();
         private const int k_InitTimeoutSec = 10;
+
         #endregion
 
-        #region Unity 라이프사이클
+        #region 유니티 생명주기 
 
         private void Awake()
         {
@@ -90,7 +91,7 @@ namespace InGame
 
         #endregion
 
-        #region 초기화 메서드
+        #region 초기화 
 
         private async UniTask InitializeAsync()
         {
@@ -130,7 +131,7 @@ namespace InGame
 
         #endregion
 
-        #region 기존 API 호환 레이어 (Facade)
+        #region Facade 메서드 
 
         public UniTask<(bool success, string error)> LoginAsync(string id, string pw) => Auth.LoginAsync(id, pw);
         public UniTask<(bool success, string error)> GuestLoginAsync() => Auth.GuestLoginAsync();

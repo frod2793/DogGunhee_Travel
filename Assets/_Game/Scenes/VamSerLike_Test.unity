@@ -7493,7 +7493,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7541989760840961933, guid: e2e3a15c925e1c548a23e87b0ae31c85, type: 3}
       propertyPath: m_shockwaveOffset.y
-      value: -0.5
+      value: -0.25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

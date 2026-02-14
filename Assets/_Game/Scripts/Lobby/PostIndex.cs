@@ -7,11 +7,11 @@ using UnityEngine.UI;
 namespace InGame.Lobby
 {
     /// <summary>
-    /// 로비의 우편 목록 팝업 내 개별 우편 항목을 표시하고 제어하는 클래스입니다.
+    /// [설명]: 로비의 우편 목록 팝업 내 개별 우편 항목을 표시하고 제어하는 클래스입니다.
     /// </summary>
     public class PostIndex : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [Header("<color=green>이미지 설정</color>")]
         [SerializeField, Tooltip("보낸 사람 프로필 이미지"), FormerlySerializedAs("postprofile")]
@@ -39,10 +39,10 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 2. 데이터 초기화
+        #region 초기화 및 데이터 설정
 
         /// <summary>
-        /// 제공된 우편 정보를 기반으로 UI를 갱신하고 버튼 이벤트를 연결합니다.
+        /// [설명]: 제공된 우편 정보를 기반으로 UI를 갱신하고 버튼 이벤트를 연결합니다.
         /// </summary>
         /// <param name="senderName">발신자 명칭</param>
         /// <param name="title">우편 제목</param>

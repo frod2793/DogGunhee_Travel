@@ -6,12 +6,12 @@ using UnityEngine.Serialization;
 namespace InGame.Lobby
 {
     /// <summary>
-    /// 캐릭터 스킨 선택 목록의 개별 항목을 관리하는 클래스입니다.
+    /// [설명]: 캐릭터 스킨 선택 목록의 개별 항목을 관리하는 클래스입니다.
     /// </summary>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(false, null, null, "CharactorSkinIndex")]
     public class CharacterSkinIndex : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [SerializeField, Tooltip("스킨 썸네일 이미지"), FormerlySerializedAs("thumbNail")]
         private Image m_thumbNail;
@@ -21,10 +21,17 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 2. 프로퍼티 (공개 필드 대체)
+        #region 공개 프로퍼티
 
-        public Image thumbNail => m_thumbNail;
-        public TMP_Text characterName => m_characterName;
+        /// <summary>
+        /// [설명]: 스킨 썸네일 이미지 참조
+        /// </summary>
+        public Image ThumbNail => m_thumbNail;
+
+        /// <summary>
+        /// [설명]: 스킨 이름 텍스트 참조
+        /// </summary>
+        public TMP_Text CharacterName => m_characterName;
 
         #endregion
     }

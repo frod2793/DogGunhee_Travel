@@ -5,35 +5,35 @@ using UnityEngine;
 namespace Lobby
 {
     /// <summary>
-    /// 옵션 팝업의 비즈니스 로직과 설정 데이터를 관리하는 ViewModel 클래스입니다.
-    /// <br/>사운드 볼륨 및 타겟 프레임 레이트 상태를 반응형으로 보유합니다.
+    /// [설명]: 옵션 팝업의 비즈니스 로직과 설정 데이터를 관리하는 ViewModel 클래스입니다.
+    /// 사운드 볼륨 및 타겟 프레임 레이트 상태를 반응형으로 보유합니다.
     /// </summary>
     public class OptionPopupViewModel : IDisposable
     {
-        #region 1. 필드 및 프로퍼티
+        #region 내부 필드 및 프로퍼티
 
         private readonly SettingsData m_settingsData;
         private readonly SoundManager m_soundManager;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
-        /// <summary> 효과음(SFX) 볼륨 (0.0 ~ 1.0) </summary>
+        /// <summary> [설명]: 효과음(SFX) 볼륨 (0.0 ~ 1.0) </summary>
         public ReactiveProperty<float> EffectSoundVolume { get; } = new ReactiveProperty<float>();
 
-        /// <summary> 배경음(BGM) 볼륨 (0.0 ~ 1.0) </summary>
+        /// <summary> [설명]: 배경음(BGM) 볼륨 (0.0 ~ 1.0) </summary>
         public ReactiveProperty<float> BgmSoundVolume { get; } = new ReactiveProperty<float>();
 
-        /// <summary> 목표 프레임 레이트 (FPS) </summary>
+        /// <summary> [설명]: 목표 프레임 레이트 (FPS) </summary>
         public ReactiveProperty<int> TargetFrameRate { get; } = new ReactiveProperty<int>();
 
-        /// <summary> 지원하는 프레임 레이트 목록 </summary>
+        /// <summary> [설명]: 지원하는 프레임 레이트 목록 </summary>
         public int[] FrameRateOptions { get; } = { 30, 60, 120 };
 
         #endregion
 
-        #region 2. 초기화 및 생성자
+        #region 생성자 및 초기화
 
         /// <summary>
-        /// OptionPopupViewModel을 생성하고 초기 설정을 수행합니다.
+        /// [설명]: OptionPopupViewModel을 생성하고 초기 설정을 수행합니다.
         /// </summary>
         /// <param name="settingsData">저장소 데이터</param>
         /// <param name="soundManager">사운드 제어 매니저</param>
@@ -46,7 +46,7 @@ namespace Lobby
         }
 
         /// <summary>
-        /// 설정 데이터를 불러오고 상태 변화에 따른 시스템 반영(사운드/프레임) 로직을 구동합니다.
+        /// [설명]: 설정 데이터를 불러오고 상태 변화에 따른 시스템 반영(사운드/프레임) 로직을 구동합니다.
         /// </summary>
         private void Initialize()
         {
@@ -94,10 +94,10 @@ namespace Lobby
 
         #endregion
 
-        #region 3. 비즈니스 로직
+        #region 비즈니스 로직
 
         /// <summary>
-        /// 현재 모든 설정값을 영구 저장소에 저장합니다.
+        /// [설명]: 현재 모든 설정값을 영구 저장소에 저장합니다.
         /// </summary>
         public void SaveSettings()
         {
@@ -112,7 +112,7 @@ namespace Lobby
         }
 
         /// <summary>
-        /// 유니티 엔진 설정에 목표 프레임 레이트를 반영합니다.
+        /// [설명]: 유니티 엔진 설정에 목표 프레임 레이트를 반영합니다.
         /// </summary>
         private void ApplyFrameRate(int frameRate)
         {
@@ -121,7 +121,7 @@ namespace Lobby
         }
 
         /// <summary>
-        /// 현재 FPS 수치를 기반으로 옵션 배열의 인덱스를 반환합니다.
+        /// [설명]: 현재 FPS 수치를 기반으로 옵션 배열의 인덱스를 반환합니다.
         /// </summary>
         public int GetFrameRateIndex()
         {
@@ -131,10 +131,10 @@ namespace Lobby
 
         #endregion
 
-        #region 4. 리소스 해제
+        #region 리소스 해제
 
         /// <summary>
-        /// 뷰모델 파생 시 모든 구독을 정리합니다.
+        /// [설명]: 뷰모델 파생 시 모든 구독을 정리합니다.
         /// </summary>
         public void Dispose()
         {

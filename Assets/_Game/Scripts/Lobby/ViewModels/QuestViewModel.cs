@@ -8,7 +8,7 @@ using InGame.Services;
 namespace InGame.Lobby.ViewModels
 {
     /// <summary>
-    /// 개별 퀘스트 요소의 상태를 나타내는 데이터 구조입니다.
+    /// [설명]: 개별 퀘스트 요소의 상태를 나타내는 데이터 구조입니다.
     /// </summary>
     public class QuestData
     {
@@ -21,46 +21,46 @@ namespace InGame.Lobby.ViewModels
     }
 
     /// <summary>
-    /// 로비의 퀘스트 시스템의 데이터 처리와 보상 획득 로직을 담당하는 ViewModel 클래스입니다.
-    /// <br/>서버 또는 로컬 데이터로부터 퀘스트 목록을 구성하고 상태 변화를 View에 전달합니다.
+    /// [설명]: 로비의 퀘스트 시스템의 데이터 처리와 보상 획득 로직을 담당하는 ViewModel 클래스입니다.
+    /// 서버 또는 로컬 데이터로부터 퀘스트 목록을 구성하고 상태 변화를 View에 전달합니다.
     /// </summary>
     public class QuestViewModel : IDisposable
     {
-        #region 1. 반응형 프로퍼티 (View가 구독)
+        #region 반응형 프로퍼티
 
-        /// <summary> 전체 퀘스트 목록 데이터 </summary>
+        /// <summary> [설명]: 전체 퀘스트 목록 데이터 </summary>
         public ReadOnlyReactiveProperty<List<QuestData>> Quests => m_quests;
 
         private readonly ReactiveProperty<List<QuestData>> m_quests =
             new ReactiveProperty<List<QuestData>>(new List<QuestData>());
 
-        /// <summary> 현재 상세 내용을 확인 중인 퀘스트 </summary>
+        /// <summary> [설명]: 현재 상세 내용을 확인 중인 퀘스트 </summary>
         public ReadOnlyReactiveProperty<QuestData> CurrentSelectedQuest => m_currentSelectedQuest;
 
         private readonly ReactiveProperty<QuestData> m_currentSelectedQuest = new ReactiveProperty<QuestData>();
 
         #endregion
 
-        #region 2. 이벤트 발행 (View가 리슨)
+        #region 이벤트 발행
 
-        /// <summary> 퀘스트 로드 또는 보상 수령 실패 시 안내 </summary>
+        /// <summary> [설명]: 퀘스트 로드 또는 보상 수령 실패 시 안내 </summary>
         public Observable<string> OnError => m_errorSubject;
 
         private readonly Subject<string> m_errorSubject = new Subject<string>();
 
-        /// <summary> 성공적으로 퀘스트 보상을 수령했을 때의 알림 </summary>
+        /// <summary> [설명]: 성공적으로 퀘스트 보상을 수령했을 때의 알림 </summary>
         public Observable<string> OnRewardClaimed => m_rewardClaimedSubject;
 
         private readonly Subject<string> m_rewardClaimedSubject = new Subject<string>();
 
         #endregion
 
-        #region 3. 내부 변수 및 생성자
+        #region 내부 변수 및 생성자
 
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary>
-        /// QuestViewModel의 기본 생성자입니다.
+        /// [설명]: QuestViewModel의 기본 생성자입니다.
         /// </summary>
         public QuestViewModel()
         {
@@ -69,10 +69,10 @@ namespace InGame.Lobby.ViewModels
 
         #endregion
 
-        #region 4. 비즈니스 로직 (Public)
+        #region 비즈니스 로직
 
         /// <summary>
-        /// 서버 또는 데이터 파일로부터 퀘스트 목록을 로드하여 상태를 갱신합니다.
+        /// [설명]: 서버 또는 데이터 파일로부터 퀘스트 목록을 로드하여 상태를 갱신합니다.
         /// </summary>
         public void LoadQuests()
         {
@@ -96,7 +96,7 @@ namespace InGame.Lobby.ViewModels
         }
 
         /// <summary>
-        /// 특정 퀘스트를 선택 처리하여 상세 정보와 연결합니다.
+        /// [설명]: 특정 퀘스트를 선택 처리하여 상세 정보와 연결합니다.
         /// </summary>
         public void SelectQuest(QuestData quest)
         {
@@ -104,7 +104,7 @@ namespace InGame.Lobby.ViewModels
         }
 
         /// <summary>
-        /// 현재 선택된 퀘스트가 완료 가능한 상태라면 보상을 지급하고 상태를 반영합니다.
+        /// [설명]: 현재 선택된 퀘스트가 완료 가능한 상태라면 보상을 지급하고 상태를 반영합니다.
         /// </summary>
         public void ClaimReward()
         {
@@ -143,10 +143,10 @@ namespace InGame.Lobby.ViewModels
 
         #endregion
 
-        #region 5. 리소스 해제 (IDisposable)
+        #region 리소스 해제
 
         /// <summary>
-        /// 뷰모델 파생 시 모든 반응형 데이터와 구독을 해제합니다.
+        /// [설명]: 뷰모델 파생 시 모든 반응형 데이터와 구독을 해제합니다.
         /// </summary>
         public void Dispose()
         {

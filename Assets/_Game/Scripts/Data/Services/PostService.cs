@@ -7,11 +7,15 @@ using LitJson;
 namespace InGame.Services
 {
     /// <summary>
-    /// 우편함(Post) 관련 기능을 담당하는 POCO 서비스입니다.
+    /// [설명]: 우편함(Post) 관련 기능을 담당하는 POCO 서비스입니다.
     /// </summary>
     public class PostService : BaseService, IPostService
     {
-        #region 내부 클래스
+        #region 내부 클래스 
+
+        /// <summary>
+        /// [설명]: 우편 정보를 담는 내부 클래스입니다.
+        /// </summary>
         public class PostInfo
         {
             public PostType PostType;
@@ -22,16 +26,22 @@ namespace InGame.Services
             public string Sender;
             public Dictionary<string, int> Items = new Dictionary<string, int>();
         }
+
         #endregion
 
-        #region 생성자
+        #region 초기화 
+
         public PostService(UniTaskCompletionSource<bool> backendInitialized) : base(backendInitialized)
         {
         }
+
         #endregion
 
-        #region 공개 메서드 (우편 기능)
+        #region 공개 메서드 
 
+        /// <summary>
+        /// [설명]: 지정된 타입의 우편 목록을 가져옵니다.
+        /// </summary>
         public async UniTask<List<PostInfo>> GetPostListAsync(PostType postType)
         {
             await m_backendInitialized.Task;
@@ -73,6 +83,9 @@ namespace InGame.Services
             return postList;
         }
 
+        /// <summary>
+        /// [설명]: 우편의 첨부 아이템을 수령합니다.
+        /// </summary>
         public async UniTask<bool> ReceivePostItemAsync(PostType postType, string postInDate)
         {
             await m_backendInitialized.Task;
@@ -89,6 +102,9 @@ namespace InGame.Services
             return true;
         }
 
+        /// <summary>
+        /// [설명]: 쿠폰 타입 메시지 목록을 로드합니다.
+        /// </summary>
         public async UniTask LoadMessageAsync()
         {
             await m_backendInitialized.Task;
@@ -106,8 +122,11 @@ namespace InGame.Services
 
         #endregion
 
-        #region 내부 헬퍼
+        #region 보조 로직 
 
+        /// <summary>
+        /// [설명]: 우편의 첨부 아이템 JSON을 파싱하여 PostInfo에 추가합니다.
+        /// </summary>
         private void ParseItems(JsonData postJson, PostInfo postInfo)
         {
             if (postJson["items"].IsArray)
@@ -137,6 +156,9 @@ namespace InGame.Services
             }
         }
 
+        /// <summary>
+        /// [설명]: Backend에서 제공하는 inDate 형식을 'yyyy-MM-dd' 형식으로 변환합니다.
+        /// </summary>
         private string ConvertToCustomDateFormat(string inDate)
         {
             if (DateTime.TryParse(inDate, out DateTime date))

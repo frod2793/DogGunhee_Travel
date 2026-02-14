@@ -4,100 +4,126 @@ using R3;
 namespace InGame.UI.ViewModels
 {
     /// <summary>
-    /// 확인/취소 팝업의 데이터와 상태를 관리하는 ViewModel입니다.
-    /// <br/> View(UI)는 이 클래스의 상태(ReadOnlyReactiveProperty)를 구독하여 화면을 갱신합니다.
+    /// [설명]: 시스템 확인(Confirm) 및 취소(Cancel) 팝업의 데이터 바인딩과 비즈니스 로직을 관리하는 ViewModel입니다.
+    /// View는 이 클래스의 ReactiveProperty 상태를 구독하여 화면을 갱신하며, 사용자의 선택 결과를 대리자(Action)를 통해 외부로 전달합니다.
     /// </summary>
     public class ConfirmPopupViewModel : IDisposable
     {
-        #region 1. 내부 상태 (Fields)
-        // 상태 관리를 위한 ReactiveProperty (쓰기 가능, 내부용)
+        #region 내부 필드
+
+        /// <summary> [설명]: 팝업의 현재 가시성(노출 여부) 상태를 관리하는 리액티브 속성 </summary>
         private readonly ReactiveProperty<bool> m_isVisible = new(false);
+
+        /// <summary> [설명]: 팝업 상단에 표시될 제목 문자열을 담는 리액티브 속성 </summary>
         private readonly ReactiveProperty<string> m_title = new(string.Empty);
+
+        /// <summary> [설명]: 팝업 중앙에 표시될 본문 메시지 문자열을 담는 리액티브 속성 </summary>
         private readonly ReactiveProperty<string> m_message = new(string.Empty);
 
-        // 콜백 액션 (팝업 결과 처리)
+        /// <summary> [설명]: 사용자가 확인 버튼을 눌렀을 때 실행될 외부 요청 로직 </summary>
         private Action m_onConfirmAction;
+
+        /// <summary> [설명]: 사용자가 취소 혹은 닫기 버튼을 눌렀을 때 실행될 외부 요청 로직 </summary>
         private Action m_onCancelAction;
+
         #endregion
 
-        #region 2. 공개 프로퍼티 (Properties)
-        // View 바인딩용 ReadOnly 프로퍼티 (읽기 전용, 외부용)
-        // ReactiveProperty는 ReadOnlyReactiveProperty로 암시적 변환되거나 상속 관계를 가질 수 있음 (R3 버전에 따라 상이할 수 있으나 일반적 패턴 유지)
+        #region 공개 프로퍼티
+
+        /// <summary> [설명]: View에서 구독 가능한 팝업 활성화 여부 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<bool> IsVisible => m_isVisible;
+
+        /// <summary> [설명]: View에서 구독 가능한 팝업 제목 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<string> Title => m_title;
+
+        /// <summary> [설명]: View에서 구독 가능한 팝업 메시지 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<string> Message => m_message;
+
         #endregion
 
-        #region 3. 초기화 및 정리 (Lifecycle)
+        #region 초기화 및 정리
+
         /// <summary>
-        /// ViewModel이 파괴될 때 호출됩니다. 리액티브 프로퍼티를 해제합니다.
+        /// [설명]: ViewModel이 소멸될 때 모든 리액티브 자원을 해제하여 메모리 누수를 방지합니다.
         /// </summary>
         public void Dispose()
         {
             m_isVisible.Dispose();
             m_title.Dispose();
             m_message.Dispose();
-            
-            // 참조 해제
+
+            // 상호 참조 해제
             m_onConfirmAction = null;
             m_onCancelAction = null;
         }
+
         #endregion
 
-        #region 4. 공개 메서드 (Public Logic)
+        #region 공개 인터페이스
+
         /// <summary>
-        /// 팝업을 표시하고 데이터를 설정합니다.
+        /// [설명]: 새로운 확인 팝업 요청 데이터를 주입하고 화면 노출 상태를 활성화합니다.
         /// </summary>
-        /// <param name="title">팝업 제목</param>
-        /// <param name="message">팝업 본문 메시지</param>
-        /// <param name="onConfirm">확인 버튼 클릭 시 실행할 액션</param>
-        /// <param name="onCancel">취소 버튼 클릭 시 실행할 액션 (기본값: null)</param>
+        /// <param name="title">UI에 표시할 제목</param>
+        /// <param name="message">UI에 표시할 상세 설명 메시지</param>
+        /// <param name="onConfirm">확인 선택 시 수행할 동작</param>
+        /// <param name="onCancel">취소 선택 시 수행할 동작 (생략 가능)</param>
         public void ShowPopup(string title, string message, Action onConfirm, Action onCancel = null)
         {
-            // 데이터 설정
+            // 데이터 할당 및 업데이트 알림
             m_title.Value = title;
             m_message.Value = message;
-            
-            // 콜백 연결
+
+            // 실행 대리자 캐싱
             m_onConfirmAction = onConfirm;
             m_onCancelAction = onCancel;
-            
-            // UI 표시 트리거
+
+            // 가시성 활성화
             m_isVisible.Value = true;
         }
 
         /// <summary>
-        /// 확인 버튼 로직을 실행합니다. (View에서 호출)
+        /// [설명]: 사용자가 '확인' 버튼을 클릭했음을 알리고 등록된 액션을 실행합니다. (View에서 호출)
         /// </summary>
         public void Confirm()
         {
-            m_onConfirmAction?.Invoke();
+            if (m_onConfirmAction != null)
+            {
+                m_onConfirmAction.Invoke();
+            }
+            
             ClosePopup();
         }
 
         /// <summary>
-        /// 취소 버튼 로직을 실행합니다. (View에서 호출)
+        /// [설명]: 사용자가 '취소' 버튼을 클릭했음을 알리고 등록된 액션을 실행합니다. (View에서 호출)
         /// </summary>
         public void Cancel()
         {
-            m_onCancelAction?.Invoke();
+            if (m_onCancelAction != null)
+            {
+                m_onCancelAction.Invoke();
+            }
+            
             ClosePopup();
         }
+
         #endregion
 
-        #region 5. 내부 로직 (Private Helpers)
+        #region 내부 비즈니스 로직
+
         /// <summary>
-        /// 팝업을 닫고 상태를 초기화합니다.
+        /// [설명]: 팝업의 가시성 상태를 비활성화하고 사용된 일회성 콜백 참조를 명시적으로 제거합니다.
         /// </summary>
         private void ClosePopup()
         {
             m_isVisible.Value = false;
-            
-            // 팝업이 닫힌 후 불필요한 참조가 남지 않도록 액션 초기화
-            // (재사용 시 ShowPopup에서 다시 할당됨)
+
+            // 중복 실행 및 메모리 누수 방지를 위한 초기화
             m_onConfirmAction = null;
             m_onCancelAction = null;
         }
+
         #endregion
     }
 }

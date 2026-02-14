@@ -3,39 +3,43 @@ using UnityEngine;
 namespace InGame.Player.Player_Base
 {
     /// <summary>
-    /// 플레이어를 부드럽게 추적하고 맵 경계 내에서 카메라의 이동 범위를 제한하는 로직 클래스입니다.
-    /// <br/> MonoBehaviour가 아닌 일반 클래스로 구성되어 있으며, PlayerController의 LateUpdate에서 호출되어야 합니다.
+    /// [설명]: 플레이어를 부드럽게 추적하고 맵 경계 내에서 카메라의 이동 범위를 제한하는 로직 클래스입니다.
+    /// MonoBehaviour가 아닌 일반 C# 클래스로 설계되어 생명주기 관리는 소유자(PlayerCameraAgent 등)가 담당합니다.
     /// </summary>
     public class PlayerCameraController
     {
-        #region 1. 설정 데이터 (Settings)
+        #region 내부 설정 데이터
 
-        // 카메라 이동의 부드러움 정도 (작을수록 빠름)
+        /// <summary> 카메라 이동의 부드러움 계수 (SmoothDamp용 시간값) </summary>
         private readonly float m_smoothTime;
 
         #endregion
 
-        #region 2. 내부 상태 및 캐시 (State & Cache)
+        #region 내부 상태 및 캐시
 
-        // 참조 컴포넌트
+        /// <summary> 제어 대상 메인 카메라 인스턴스 </summary>
         private readonly Camera m_mainCamera;
+
+        /// <summary> 카메라가 추적할 타겟의 트랜스폼 </summary>
         private Transform m_targetTransform;
+
+        /// <summary> 카메라 이동 가능 범위를 제한하는 맵 경계 렌더러 </summary>
         private readonly SpriteRenderer m_mapBoundary;
 
-        // SmoothDamp용 참조 속도 변수
+        /// <summary> SmoothDamp 연산에 사용되는 내부 참조 속도 </summary>
         private Vector3 m_currentVelocity = Vector3.zero;
 
         #endregion
 
-        #region 3. 생성자 (Constructor)
+        #region 초기화
 
         /// <summary>
-        /// 카메라 컨트롤러를 초기화합니다.
+        /// [설명]: 카메라 컨트롤러를 생성하고 필수 파라미터를 할당합니다.
         /// </summary>
-        /// <param name="mainCamera">제어할 메인 카메라</param>
-        /// <param name="target">추적할 타겟(플레이어)</param>
-        /// <param name="mapRange">맵 경계 스프라이트 (없으면 null)</param>
-        /// <param name="smoothTime">스무싱 시간 (기본값 0.1)</param>
+        /// <param name="mainCamera">제어할 카메라 객체</param>
+        /// <param name="target">추적할 타겟 트랜스폼</param>
+        /// <param name="mapRange">맵 경계를 나타내는 SpriteRenderer (없으면 null)</param>
+        /// <param name="smoothTime">스무싱 적용 시간 (기본값 0.1초)</param>
         public PlayerCameraController(Camera mainCamera, Transform target, SpriteRenderer mapRange, float smoothTime = 0.1f)
         {
             m_mainCamera = mainCamera;
@@ -46,61 +50,61 @@ namespace InGame.Player.Player_Base
 
         #endregion
 
-        #region 4. 공개 메서드 (Public Methods)
+        #region 공개 인터페이스
 
         /// <summary>
-        /// 카메라의 위치를 타겟 위치로 즉시 이동시킵니다. (텔레포트, 초기화 등)
+        /// [설명]: 카메라의 위치를 계산된 타겟 위치로 즉시 이동(순간이동)시킵니다.
         /// </summary>
         public void ResetPosition()
         {
-            if (m_mainCamera == null || m_targetTransform == null) return;
+            if (m_mainCamera == null || m_targetTransform == null)
+            {
+                return;
+            }
 
-            // 즉시 이동 시에는 속도 초기화
             m_currentVelocity = Vector3.zero;
             m_mainCamera.transform.position = CalculateClampedTargetPosition();
         }
 
         /// <summary>
-        /// 추적 대상을 런타임에 변경합니다.
+        /// [설명]: 런타임 중에 카메라가 추적할 대상을 변경하며, 필요 시 즉시 위치시킵니다.
         /// </summary>
-        /// <param name="newTarget">새로운 타겟 Transform</param>
-        /// <param name="snapToTarget">즉시 이동 여부 (true면 텔레포트)</param>
+        /// <param name="newTarget">새로운 추적 타겟</param>
+        /// <param name="snapToTarget">즉시 이동 여부</param>
         public void SetTarget(Transform newTarget, bool snapToTarget = false)
         {
             m_targetTransform = newTarget;
-            
+
             if (snapToTarget)
             {
                 ResetPosition();
             }
-            // else: 부드럽게 새 타겟으로 이동
         }
 
         /// <summary>
-        /// 매 프레임 후반부(LateUpdate)에 호출되어 카메라 이동 로직을 수행합니다.
-        /// <br/> 플레이어의 이동(Update)이 끝난 후 카메라가 따라가야 지터링(떨림)이 없습니다.
+        /// [설명]: 매 프레임 후반부(LateUpdate)에서 호출되어 카메라를 부드럽게 이동시킵니다.
         /// </summary>
         public void OnLateUpdate()
         {
-            if (m_mainCamera == null || m_targetTransform == null) return;
+            if (m_mainCamera == null || m_targetTransform == null)
+            {
+                return;
+            }
 
             FollowTargetSmoothly();
         }
 
         #endregion
 
-        #region 5. 내부 로직 (Internal Logic)
+        #region 내부 비즈니스 로직
 
         /// <summary>
-        /// 타겟을 부드럽게 따라갑니다.
+        /// [설명]: 타겟의 목표 위치를 향해 SmoothDamp 알고리즘을 사용하여 부드럽게 가속 및 감속 이동을 수행합니다.
         /// </summary>
         private void FollowTargetSmoothly()
         {
-            // 목표 위치 계산 (맵 경계 포함)
             Vector3 targetPos = CalculateClampedTargetPosition();
 
-            // SmoothDamp를 이용한 부드러운 이동
-            // transform.position을 직접 수정합니다.
             m_mainCamera.transform.position = Vector3.SmoothDamp(
                 m_mainCamera.transform.position,
                 targetPos,
@@ -110,39 +114,47 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 타겟의 현재 위치를 기반으로 맵 경계(Bounds)를 적용한 최종 카메라 좌표를 계산합니다.
+        /// [설명]: 타겟의 현재 좌표를 기반으로 맵 경계(Boundary)와 카메라 뷰 크기를 고려하여 유효한 최종 좌표를 산출합니다.
         /// </summary>
+        /// <returns>클램핑 처리가 완료된 카메라 목표 월드 좌표</returns>
         private Vector3 CalculateClampedTargetPosition()
         {
-            // 1. 타겟의 기본 위치 가져오기
             Vector3 targetPos = m_targetTransform.position;
-            
-            // 2. 카메라는 2D 게임에서 Z축을 유지해야 함
+
+            // Z축은 카메라 기본 설정값 유지
             targetPos.z = m_mainCamera.transform.position.z;
 
-            // 3. 맵 경계 클램핑 (Clamp)
+            // 맵 경계가 설정된 경우 화면 밖으로 나가지 않도록 제한
             if (m_mapBoundary != null)
             {
                 Bounds mapBounds = m_mapBoundary.bounds;
-                
-                // 카메라의 절반 크기(World Space 기준) 계산
+
                 float camHalfHeight = m_mainCamera.orthographicSize;
                 float camHalfWidth = camHalfHeight * m_mainCamera.aspect;
 
-                // 맵 밖으로 카메라가 나가지 않도록 좌표 제한
-                // Min = 맵 왼쪽/아래 끝 + 카메라 반폭/반높이
-                // Max = 맵 오른쪽/위 끝 - 카메라 반폭/반높이
                 float minX = mapBounds.min.x + camHalfWidth;
                 float maxX = mapBounds.max.x - camHalfWidth;
                 float minY = mapBounds.min.y + camHalfHeight;
                 float maxY = mapBounds.max.y - camHalfHeight;
 
-                // 맵이 카메라보다 작을 경우를 대비한 방어 코드 (Max가 Min보다 작아질 수 있음)
-                if (minX > maxX) targetPos.x = mapBounds.center.x; 
-                else targetPos.x = Mathf.Clamp(targetPos.x, minX, maxX);
+                // 맵 영역이 카메라 뷰보다 작을 경우 중앙에 고정
+                if (minX > maxX)
+                {
+                    targetPos.x = mapBounds.center.x;
+                }
+                else
+                {
+                    targetPos.x = Mathf.Clamp(targetPos.x, minX, maxX);
+                }
 
-                if (minY > maxY) targetPos.y = mapBounds.center.y;
-                else targetPos.y = Mathf.Clamp(targetPos.y, minY, maxY);
+                if (minY > maxY)
+                {
+                    targetPos.y = mapBounds.center.y;
+                }
+                else
+                {
+                    targetPos.y = Mathf.Clamp(targetPos.y, minY, maxY);
+                }
             }
 
             return targetPos;

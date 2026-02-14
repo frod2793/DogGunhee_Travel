@@ -6,15 +6,15 @@ using InGame.ObjectPool;
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 히어로 랜딩(Shield) 무기 사용 시 발생하는 충격파 효과를 관리하는 컴포넌트입니다.
-    /// <br/> 애니메이션 재생 타이밍에 맞춰 콜라이더를 활성화하고, 범위 내 적에게 데미지를 입힙니다.
+    /// [설명]: 히어로 랜딩(Shield) 무기 사용 시 발생하는 충격파 효과를 관리하는 컴포넌트입니다.
+    /// 애니메이션 재생 타이밍에 맞춰 콜라이더를 활성화하고, 범위 내 적에게 데미지를 입힙니다.
     /// </summary>
     [RequireComponent(typeof(Animator), typeof(Collider2D))]
     public class ShieldShockwave : MonoBehaviour
     {
-        #region 1. 내부 변수 및 컴포넌트 (Components & State)
+        #region 내부 변수 및 컴포넌트
 
-        [Header("1. 위치 설정")]
+        [Header("위치 설정")]
         [Tooltip("캐릭터 발밑 기준 충격파 생성 오프셋")]
         [SerializeField] private Vector3 m_spawnOffset = new Vector3(0, -0.5f, 0);
 
@@ -32,16 +32,16 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
 
         /// <summary>
-        /// 캐릭터 기준 생성 위치 오프셋
+        /// [설명]: 캐릭터 기준 생성 위치 오프셋
         /// </summary>
         public Vector3 SpawnOffset => m_spawnOffset;
 
         #endregion
 
-        #region 3. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -71,10 +71,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 4. 초기화 및 실행 (Init & Execution)
+        #region 초기화 및 실행
 
         /// <summary>
-        /// 충격파 효과를 초기화하고 애니메이션 시퀀스를 시작합니다.
+        /// [설명]: 충격파 효과를 초기화하고 애니메이션 시퀀스를 시작합니다.
         /// </summary>
         /// <param name="damage">공격력</param>
         /// <param name="stunTime">경직 시간</param>
@@ -104,10 +104,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 5. 비동기 연출 로직 (Async Logic)
+        #region 비동기 연출 로직
 
         /// <summary>
-        /// 애니메이션 재생 및 충돌체 활성화 주기를 제어하는 비동기 루틴입니다.
+        /// [설명]: 애니메이션 재생 및 충돌체 활성화 주기를 제어하는 비동기 루틴입니다.
         /// </summary>
         /// <param name="speedMultiplier">애니메이션 속도 배율</param>
         private async UniTaskVoid PlayEffectSequenceAsync(float speedMultiplier)

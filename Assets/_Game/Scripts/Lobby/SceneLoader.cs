@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -9,18 +10,43 @@ using UnityEngine.UI;
 namespace InGame
 {
     /// <summary>
-    /// 씬 전환과 로딩 연출을 총괄하는 싱글톤 클래스입니다.
-    /// <br/>UniTask를 활용한 비동기 로딩과 DOTween 페이드 효과를 제공합니다.
+    /// [설명]: 씬 전환과 로딩 연출을 총괄하는 싱글톤 클래스입니다.
+    /// 비동기 씬 로딩, 페이드 효과, 로딩 프로그레스바 및 애니메이션 제어를 담당합니다.
     /// </summary>
     public class SceneLoader : MonoBehaviour
     {
-        #region 1. 상수 및 정적 필드
+        #region 에디터 설정
+
+        [Header("<color=green>UI 참조</color>")]
+        [SerializeField, Tooltip("로딩 화면 페이드용 캔버스 그룹"), FormerlySerializedAs("sceneLoadferCanvasGroup")]
+        private CanvasGroup m_canvasGroup;
+
+        [SerializeField, Tooltip("로딩 진행률 슬라이더"), FormerlySerializedAs("progressbar")]
+        private Slider m_progressBar;
+
+        [Header("<color=green>연출 설정</color>")]
+        [SerializeField, Tooltip("로딩 아이콘/바 애니메이터")]
+        private Animator m_animator;
+
+        [Header("<color=green>씬 참조 목록</color>")]
+        [SerializeField, FormerlySerializedAs("sceneReferences")]
+        private SceneReference[] m_sceneReferences;
+
+        #endregion
+
+        #region 내부 필드
 
         private static readonly int k_AnimHashOnFinish = Animator.StringToHash("onFinish");
         private static SceneLoader s_instance;
 
+        private CancellationTokenSource m_cts;
+
+        #endregion
+
+        #region 싱글톤
+
         /// <summary>
-        /// SceneLoader의 전역 인스턴스입니다.
+        /// [설명]: SceneLoader의 전역 인스턴스입니다.
         /// </summary>
         public static SceneLoader Instance
         {
@@ -41,68 +67,7 @@ namespace InGame
 
         #endregion
 
-        #region 2. 에디터 설정 (Inspector)
-
-        [Header("<color=green>UI 참조</color>")]
-        [SerializeField, Tooltip("로딩 화면 페이드용 캔버스 그룹"), FormerlySerializedAs("sceneLoadferCanvasGroup")]
-        private CanvasGroup m_canvasGroup;
-
-        [SerializeField, Tooltip("로딩 진행률 슬라이더"), FormerlySerializedAs("progressbar")]
-        private Slider m_progressBar;
-
-        [Header("<color=green>연출 설정</color>")] [SerializeField, Tooltip("로딩 아이콘/바 애니메이터")]
-        private Animator m_animator;
-
-        [Header("<color=green>씬 참조 목록</color>")] [SerializeField, FormerlySerializedAs("sceneReferences")]
-        private SceneReference[] m_sceneReferences;
-
-        #endregion
-
-        #region 3. 내부 클래스 및 구조체
-
-        /// <summary>
-        /// 씬 이름과 에디터 에셋을 연결하는 참조 구조체입니다.
-        /// </summary>
-        [System.Serializable]
-        public class SceneReference
-        {
-            [FormerlySerializedAs("sceneName")] public string SceneName;
-
-#if UNITY_EDITOR
-            [SerializeField, FormerlySerializedAs("sceneAsset")]
-            private UnityEditor.SceneAsset m_sceneAsset;
-
-            public UnityEditor.SceneAsset SceneAsset
-            {
-                get => m_sceneAsset;
-                set
-                {
-                    m_sceneAsset = value;
-                    SceneName = m_sceneAsset != null ? m_sceneAsset.name : "";
-                }
-            }
-#endif
-        }
-
-        #endregion
-
-        #region 4. 초기화 및 생성
-
-        /// <summary>
-        /// SceneLoader를 동적으로 생성하거나 프리팹으로부터 인스턴스화합니다.
-        /// </summary>
-        public static SceneLoader Create(SceneLoader prefab = null)
-        {
-            var prefabToLoad = prefab != null ? prefab : Resources.Load<SceneLoader>("SceneLoader");
-            if (prefabToLoad == null)
-            {
-                LogManager.LogError("[SceneLoader] 프리팹을 찾을 수 없습니다. 기본 오브젝트를 생성합니다.",
-                    LogManager.LogCategory.SceneLoader);
-                return new GameObject("SceneLoader").AddComponent<SceneLoader>();
-            }
-
-            return Instantiate(prefabToLoad);
-        }
+        #region 유니티 생명주기
 
         private void Awake()
         {
@@ -118,8 +83,42 @@ namespace InGame
             InitializeUI();
         }
 
+        private void OnDestroy()
+        {
+            if (m_cts != null)
+            {
+                m_cts.Cancel();
+                m_cts.Dispose();
+            }
+
+            if (s_instance == this)
+            {
+                s_instance = null;
+            }
+        }
+
+        #endregion
+
+        #region 초기화
+
         /// <summary>
-        /// 로딩 UI의 초기 레이아웃 상태를 설정합니다.
+        /// [설명]: SceneLoader를 동적으로 생성하거나 프리팹으로부터 인스턴스화합니다.
+        /// </summary>
+        public static SceneLoader Create(SceneLoader prefab = null)
+        {
+            var prefabToLoad = prefab != null ? prefab : Resources.Load<SceneLoader>("SceneLoader");
+            if (prefabToLoad == null)
+            {
+                LogManager.LogError("[SceneLoader] 프리팹을 찾을 수 없습니다. 기본 오브젝트를 생성합니다.",
+                    LogManager.LogCategory.SceneLoader);
+                return new GameObject("SceneLoader").AddComponent<SceneLoader>();
+            }
+
+            return Instantiate(prefabToLoad);
+        }
+
+        /// <summary>
+        /// [설명]: 로딩 UI의 초기 레이아웃 상태를 설정합니다.
         /// </summary>
         private void InitializeUI()
         {
@@ -134,14 +133,13 @@ namespace InGame
 
         #endregion
 
-        #region 5. 공개 API (씬 이동)
+        #region 공개 API
 
         public UniTask LoadLobbySceneAsync() => LoadSceneAsync(SceneNames.Lobby);
         public UniTask LoadGameSceneAsync() => LoadSceneAsync(SceneNames.RunGame);
         public UniTask LoadVamSerLikeSceneAsync() => LoadSceneAsync(SceneNames.VamSerLike);
         public UniTask LoadIntroSceneAsync() => LoadSceneAsync(SceneNames.Intro);
 
-        // --- void 기반의 비동기 실행 (Forget 사용) ---
         public void LoadLobbyScene() => LoadLobbySceneAsync().Forget();
         public void LoadGameScene() => LoadGameSceneAsync().Forget();
         public void LoadVamSerLikeScene() => LoadVamSerLikeSceneAsync().Forget();
@@ -150,7 +148,7 @@ namespace InGame
         public void LoadScene(SceneReference sceneRef) => LoadSceneAsync(sceneRef).Forget();
 
         /// <summary>
-        /// SceneReference 객체를 사용하여 비동기로 씬을 로드합니다.
+        /// [설명]: SceneReference 객체를 사용하여 비동기로 씬을 로드합니다.
         /// </summary>
         public UniTask LoadSceneAsync(SceneReference sceneRef)
         {
@@ -164,7 +162,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 씬 이름을 문자열로 받아 비동기로 로드 절차를 시작합니다.
+        /// [설명]: 씬 이름을 문자열로 받아 비동기로 로드 절차를 시작합니다.
         /// </summary>
         public async UniTask LoadSceneAsync(string sceneName)
         {
@@ -180,42 +178,69 @@ namespace InGame
                 return;
             }
 
-            await ProcessSceneLoadAsync(sceneName);
+            // 이전 태스크 취소 후 새로 생성
+            if (m_cts != null)
+            {
+                m_cts.Cancel();
+                m_cts.Dispose();
+            }
+
+            m_cts = new CancellationTokenSource();
+
+            try
+            {
+                await ProcessSceneLoadAsync(sceneName, m_cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                LogManager.Log("[SceneLoader] 씬 로딩이 취소되었습니다.", LogManager.LogCategory.SceneLoader);
+            }
+            catch (Exception e)
+            {
+                LogManager.LogError($"[SceneLoader] 씬 로딩 중 에러 발생: {e.Message}", LogManager.LogCategory.SceneLoader);
+            }
         }
 
         #endregion
 
-        #region 6. 비동기 시퀀스 (Core Logic)
+        #region 내부 비즈니스 로직
 
         /// <summary>
-        /// 페이드 인 -> 씬 로드 -> 연출 대기 -> 페이드 아웃의 표준 로딩 시퀀스를 실행합니다.
+        /// [설명]: 페이드 인 -> 씬 로드 -> 연출 대기 -> 페이드 아웃의 표준 로딩 시퀀스를 실행합니다.
         /// </summary>
-        private async UniTask ProcessSceneLoadAsync(string sceneName)
+        private async UniTask ProcessSceneLoadAsync(string sceneName, CancellationToken ct)
         {
             PrepareLoading();
 
             LogManager.Log($"[SceneLoader] 씬 전환 시작: {sceneName}", LogManager.LogCategory.SceneLoader);
 
             // 1. 페이드 인 (화면 가리기)
-            await FadeAsync(true);
+            await FadeAsync(true, ct);
 
             // 2. 실제 비동기 씬 로드 및 진행 바 갱신
-            await LoadSceneInternalAsync(sceneName);
+            await LoadSceneInternalAsync(sceneName, ct);
 
             // 3. 로딩 완료 연출 대기
-            await WaitForFinishAnimationAsync();
+            await WaitForFinishAnimationAsync(ct);
 
             // 4. 페이드 아웃 (화면 보이기)
-            await FadeAsync(false);
+            await FadeAsync(false, ct);
 
             FinishLoading();
+            LogManager.Log($"[SceneLoader] 씬 전환 완료: {sceneName}", LogManager.LogCategory.SceneLoader);
         }
 
         /// <summary>
-        /// 로딩 시작 전 애니메이터와 UI 상태를 초기화합니다.
+        /// [설명]: 로딩 시작 전 애니메이터와 UI 상태를 초기화합니다.
         /// </summary>
         private void PrepareLoading()
         {
+            // 씬 전환 시 시간축이 멈춰있으면 애니메이션 등이 작동하지 않으므로 1.0으로 복구
+            if (Time.timeScale < 1f)
+            {
+                Time.timeScale = 1f;
+            }
+
             gameObject.SetActive(true);
 
             if (m_animator != null)
@@ -232,9 +257,9 @@ namespace InGame
         }
 
         /// <summary>
-        /// Unity AsyncOperation을 사용하여 씬을 로드하고 프로그레스바를 부드럽게 갱신합니다.
+        /// [설명]: Unity AsyncOperation을 사용하여 씬을 로드하고 프로그레스바를 부드럽게 갱신합니다.
         /// </summary>
-        private async UniTask LoadSceneInternalAsync(string sceneName)
+        private async UniTask LoadSceneInternalAsync(string sceneName, CancellationToken ct)
         {
             var op = SceneManager.LoadSceneAsync(sceneName);
             op.allowSceneActivation = false;
@@ -243,7 +268,9 @@ namespace InGame
 
             while (!op.isDone)
             {
-                await UniTask.Yield();
+                ct.ThrowIfCancellationRequested();
+
+                await UniTask.Yield(ct);
                 timer += Time.unscaledDeltaTime;
 
                 // 부드러운 로딩바 연출을 위한 가짜 진행률 계산
@@ -251,7 +278,7 @@ namespace InGame
                 {
                     if (m_progressBar != null)
                     {
-                        m_progressBar.value = Mathf.Lerp(m_progressBar.value, op.progress, timer);
+                        m_progressBar.value = Mathf.Lerp(m_progressBar.value, op.progress, timer * 2f);
                     }
 
                     if (m_progressBar != null && m_progressBar.value >= op.progress)
@@ -263,7 +290,7 @@ namespace InGame
                 {
                     if (m_progressBar != null)
                     {
-                        m_progressBar.value = Mathf.Lerp(m_progressBar.value, 1f, timer);
+                        m_progressBar.value = Mathf.Lerp(m_progressBar.value, 1f, timer * 2f);
                     }
 
                     if (m_progressBar == null || m_progressBar.value >= 0.99f)
@@ -273,39 +300,54 @@ namespace InGame
                 }
             }
 
-            await op;
+            await op.ToUniTask(cancellationToken: ct);
         }
 
         /// <summary>
-        /// 로딩이 끝난 후 마침 애니메이션이 완료될 때까지 대기합니다.
+        /// [설명]: 로딩이 끝난 후 마침 애니메이션이 완료될 때까지 대기합니다.
         /// </summary>
-        private async UniTask WaitForFinishAnimationAsync()
+        private async UniTask WaitForFinishAnimationAsync(CancellationToken ct)
         {
-            if (m_animator != null)
+            if (m_animator == null) return;
+
+            m_animator.SetTrigger(k_AnimHashOnFinish);
+
+            // 상태 전이 시작 시까지 대기
+            await UniTask.Yield(PlayerLoopTiming.Update, ct);
+
+            float startTime = Time.realtimeSinceStartup;
+
+            // 전이가 진행 중인 동안 대기 (타임아웃 3초)
+            while (m_animator.IsInTransition(0))
             {
-                m_animator.SetTrigger(k_AnimHashOnFinish);
-
-                // 상태 전이 완료 시까지 대기
-                await UniTask.Yield(PlayerLoopTiming.Update);
-                while (m_animator.IsInTransition(0))
+                if (Time.realtimeSinceStartup - startTime > 3f)
                 {
-                    await UniTask.Yield(PlayerLoopTiming.Update);
+                    LogManager.LogWarning("[SceneLoader] 전이 대기 시간 초과 (3초).", LogManager.LogCategory.SceneLoader);
+                    break;
                 }
 
-                // 애니메이션 클립 재생 시간만큼 대기
-                var stateInfo = m_animator.GetCurrentAnimatorStateInfo(0);
-                float delay = stateInfo.length;
-                if (stateInfo.speed > 0)
-                {
-                    delay /= stateInfo.speed;
-                }
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            }
 
-                await UniTask.Delay(TimeSpan.FromSeconds(delay), ignoreTimeScale: true);
+            // 애니메이션 클립 재생 시간만큼 대기
+            var stateInfo = m_animator.GetCurrentAnimatorStateInfo(0);
+            float delay = stateInfo.length;
+            if (stateInfo.speed > 0)
+            {
+                delay /= stateInfo.speed;
+            }
+
+            // 비정상적으로 긴 지연 방지
+            delay = Mathf.Min(delay, 2f);
+
+            if (delay > 0)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(delay), ignoreTimeScale: true, cancellationToken: ct);
             }
         }
 
         /// <summary>
-        /// 모든 로딩 절차가 완료된 후 상태를 정리합니다.
+        /// [설명]: 모든 로딩 절차가 완료된 후 상태를 정리합니다.
         /// </summary>
         private void FinishLoading()
         {
@@ -318,9 +360,9 @@ namespace InGame
         }
 
         /// <summary>
-        /// DOTween을 사용하여 화면 전체를 페이드 처리합니다.
+        /// [설명]: DOTween을 사용하여 화면 전체를 페이드 처리합니다.
         /// </summary>
-        private async UniTask FadeAsync(bool isFadeIn)
+        private async UniTask FadeAsync(bool isFadeIn, CancellationToken ct)
         {
             if (m_canvasGroup == null) return;
 
@@ -331,7 +373,7 @@ namespace InGame
 
             await m_canvasGroup.DOFade(endAlpha, duration)
                 .SetUpdate(true)
-                .ToUniTask();
+                .ToUniTask(cancellationToken: ct);
 
             if (!isFadeIn)
             {
@@ -339,12 +381,8 @@ namespace InGame
             }
         }
 
-        #endregion
-
-        #region 7. 유틸리티 로직
-
         /// <summary>
-        /// 제공된 씬 이름이 Build Settings에 포함되어 있는지 확인합니다.
+        /// [설명]: 제공된 씬 이름이 Build Settings에 포함되어 있는지 확인합니다.
         /// </summary>
         private bool IsSceneInBuild(string sceneName)
         {
@@ -365,7 +403,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 설정된 씬 참조 목록에서 프로젝트 내 실데이터를 찾습니다.
+        /// [설명]: 설정된 씬 참조 목록에서 프로젝트 내 실데이터를 찾습니다.
         /// </summary>
         public SceneReference FindSceneReference(string sceneName)
         {
@@ -373,13 +411,42 @@ namespace InGame
 
             foreach (var sceneRef in m_sceneReferences)
             {
-                if (sceneRef.SceneName == sceneName)
+                if (sceneRef != null && sceneRef.SceneName == sceneName)
                 {
                     return sceneRef;
                 }
             }
 
             return null;
+        }
+
+        #endregion
+
+        #region 내부 클래스 및 구조체
+
+        /// <summary>
+        /// [설명]: 씬 이름과 에디터 에셋을 연결하는 참조 구조체입니다.
+        /// </summary>
+        [System.Serializable]
+        public class SceneReference
+        {
+            [FormerlySerializedAs("sceneName")]
+            public string SceneName;
+
+#if UNITY_EDITOR
+            [SerializeField, FormerlySerializedAs("sceneAsset")]
+            private UnityEditor.SceneAsset m_sceneAsset;
+
+            public UnityEditor.SceneAsset SceneAsset
+            {
+                get => m_sceneAsset;
+                set
+                {
+                    m_sceneAsset = value;
+                    SceneName = m_sceneAsset != null ? m_sceneAsset.name : "";
+                }
+            }
+#endif
         }
 
         #endregion

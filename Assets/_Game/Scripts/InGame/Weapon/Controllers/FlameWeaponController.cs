@@ -4,18 +4,18 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Weapon.Logic;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 화면 내 무작위 위치에 불기둥(Flame Pillar)을 소환하여 광역 지속 피해(DoT)를 입히는 무기 컨트롤러입니다.
-    /// <br/> 일반적인 투사체와 달리 자체적인 비동기 루프를 통해 스폰 타이밍을 제어합니다.
+    /// [설명]: 화면 내 무작위 위치에 불기둥(Flame Pillar)을 소환하여 광역 지속 피해(DoT)를 입히는 무기 컨트롤러입니다.
+    /// 일반적인 투사체와 달리 자체적인 비동기 루프를 통해 스폰 타이밍을 제어합니다.
     /// </summary>
     public class FlameWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 변수 및 컴포넌트 (State & Components)
+        #region 내부 변수 및 컴포넌트
 
         // 프리팹 및 풀링 관련
         private FlamePillar m_flamePillarPrefab;
@@ -35,7 +35,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 초기화 및 해제 (Init & Dispose)
+        #region 초기화 및 해제
 
         /// <summary>
         /// 무기를 초기화하고 불기둥 풀을 생성하며 공격 루프를 시작합니다.
@@ -121,7 +121,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 공격 루프 (Attack Loop)
+        #region 공격 루프
 
         /// <summary>
         /// 기존 루프를 정리하고 새로운 비동기 공격 루프를 시작합니다.
@@ -191,9 +191,10 @@ namespace InGame.Weapon.Controllers
         {
             if (m_poolManager == null) return;
 
-            // 1. 풀에서 가져오기
+            // 1. 풀에서 가져오기 (암시적 형변환 대신 명시적 체크)
             FlamePillar pillar = m_poolManager.Get<FlamePillar>();
-            if (pillar == null) return;
+            // PoolManager가 T를 반환하므로 null check 필요
+            if (ReferenceEquals(pillar, null) || pillar == null) return;
 
             // 2. 위치 설정 (Z축 보정 포함)
             Vector3 spawnPos = GetRandomPositionInView();
@@ -211,14 +212,13 @@ namespace InGame.Weapon.Controllers
             pillar.Init(spawnPos, logic, m_poolManager);
         }
 
-        
-
         /// <summary>
         /// 카메라 뷰포트(0.1 ~ 0.9) 내의 랜덤한 월드 좌표를 반환합니다.
         /// </summary>
         private Vector3 GetRandomPositionInView()
         {
-            if (m_mainCamera == null)
+            // Null-check Camera wrapper
+            if (ReferenceEquals(m_mainCamera, null) || m_mainCamera == null)
             {
                 // 카메라가 없으면 플레이어 주변 랜덤 위치 반환
                 return m_ownerTransform != null 
@@ -239,7 +239,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 상속 구현 (Override Methods)
+        #region 상속 구현
 
         protected override void ExecuteAttack(Vector3 direction)
         {
@@ -249,7 +249,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 오브젝트 풀 델리게이트 (Pool Callbacks)
+        #region 오브젝트 풀 델리게이트
 
         private FlamePillar CreateFlamePillar()
         {

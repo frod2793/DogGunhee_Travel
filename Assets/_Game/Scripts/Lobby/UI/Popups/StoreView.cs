@@ -11,14 +11,15 @@ using InGame.UI.Elements;
 namespace InGame.UI.Popups
 {
     /// <summary>
-    /// 게임 내 상점 시스템을 총괄적으로 시각화하는 View 클래스입니다.
-    /// <br/>Addressable 시스템을 연동하여 런타임에 동적으로 아이템 프리팹을 로드하고 표시합니다.
+    /// [설명]: 게임 내 상점 시스템을 총괄적으로 시각화하는 View 클래스입니다.
+    /// Addressable 시스템을 연동하여 런타임에 동적으로 아이템 프리팹을 로드하고 표시합니다.
     /// </summary>
     public class StoreView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("<color=green>상점 메인 설정</color>")] [SerializeField, Tooltip("상점 팝업 패널 오브젝트")]
+        [Header("<color=green>상점 메인 설정</color>")]
+        [SerializeField, Tooltip("상점 팝업 패널 오브젝트")]
         private GameObject m_storePanel;
 
         [SerializeField, Tooltip("상점 아이템들이 배치될 리스트 부모 컨테이너")]
@@ -26,7 +27,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
+        #region 내부 변수
 
         private StoreViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
@@ -37,7 +38,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Start()
         {
@@ -56,10 +57,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 4. MVVM 데이터 바인딩
+        #region MVVM 데이터 바인딩
 
         /// <summary>
-        /// 상점 거래 로직을 담당하는 뷰모델을 생성합니다.
+        /// [설명]: 상점 거래 로직을 담당하는 뷰모델을 생성합니다.
         /// </summary>
         private void InitializeViewModel()
         {
@@ -67,11 +68,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 뷰모델의 상태 피드백을 구독하여 로그 또는 UI 이벤트를 처리합니다.
+        /// [설명]: 뷰모델의 상태 피드백을 구독하여 로그 또는 UI 이벤트를 처리합니다.
         /// </summary>
         private void BindViewModel()
         {
-            if (m_viewModel == null) return;
+            if (m_viewModel == null)
+            {
+                return;
+            }
 
             // 1. 구매 중 에러 발생 시 처리
             m_viewModel.OnError
@@ -90,14 +94,17 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 5. 상점 패널 제어 (Public)
+        #region 상점 패널 제어
 
         /// <summary>
-        /// 상점 패널을 활성화하고 최신 재화 상태를 뷰모델에 요청합니다.
+        /// [설명]: 상점 패널을 활성화하고 최신 재화 상태를 뷰모델에 요청합니다.
         /// </summary>
         public void OpenStorePanel()
         {
-            if (m_storePanel == null) return;
+            if (m_storePanel == null)
+            {
+                return;
+            }
 
             m_storePanel.SetActive(true);
             PopupManager.Instance.RegisterPopup(CloseStorePanel);
@@ -107,7 +114,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 상점 패널을 비활성화합니다.
+        /// [설명]: 상점 패널을 비활성화합니다.
         /// </summary>
         public void CloseStorePanel()
         {
@@ -119,10 +126,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 6. Addressable 아이템 관리 로직
+        #region Addressable 및 UI 빌드 로직
 
         /// <summary>
-        /// 'Store_Item' 라벨이 붙은 모든 Addressable 에셋을 비동기로 로드합니다.
+        /// [설명]: 'Store_Item' 라벨이 붙은 모든 Addressable 에셋을 비동기로 로드합니다.
         /// </summary>
         private void LoadAddressableStoreAssets()
         {
@@ -130,7 +137,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 에셋 로드가 완료되었을 때 호출되는 콜백입니다. 성공 시 인스턴스화를 시작합니다.
+        /// [설명]: 에셋 로드가 완료되었을 때 호출되는 콜백입니다. 성공 시 인스턴스화를 시작합니다.
         /// </summary>
         private void OnStoreItemsLoadedNotify(AsyncOperationHandle<IList<GameObject>> op)
         {
@@ -154,7 +161,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 로드된 프리팹 목록을 바탕으로 실제 UI 아이템들을 생성하고 이벤트를 연결합니다.
+        /// [설명]: 로드된 프리팹 목록을 바탕으로 실제 UI 아이템들을 생성하고 이벤트를 연결합니다.
         /// </summary>
         private void BuildStoreItemUI()
         {

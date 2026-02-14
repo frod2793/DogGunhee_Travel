@@ -6,12 +6,11 @@ using UnityEngine.UI;
 namespace InGame.UI.Settings
 {
     /// <summary>
-    /// 조이스틱의 크기, 타입, 위치 등 시각적 설정을 관리하고 저장하는 UI 클래스입니다.
-    /// <br/> ScriptableObject(SettingsData)와 연동하여 데이터를 로드/저장합니다.
+    /// [설명]: 조이스틱의 크기, 타입, 위치 등 시각적 설정을 관리하고 저장하는 UI 클래스입니다.
     /// </summary>
     public class JoystickSetter : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 내부 필드 
 
         [Header("데이터 참조")]
         [Tooltip("게임의 조이스틱 설정을 관리하는 ScriptableObject입니다.")]
@@ -34,21 +33,17 @@ namespace InGame.UI.Settings
         [Tooltip("실제 화면에 표시되는 조이스틱의 RectTransform")]
         [SerializeField] private RectTransform m_joystickTransform;
 
-        #endregion
-
-        #region 2. 내부 변수 및 상수
-
-        /// <summary>
-        /// 조이스틱의 기본 위치 값 (초기화용)
-        /// </summary>
-        private static readonly Vector2 k_DefaultJoystickPosition = new Vector2(262, 0);
-
         // R3 구독 관리자
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
+        /// <summary>
+        /// [설명]: 조이스틱의 기본 위치 값 (초기화용)
+        /// </summary>
+        private static readonly Vector2 k_DefaultJoystickPosition = new Vector2(262, 0);
+
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기 
 
         private void Awake()
         {
@@ -59,7 +54,7 @@ namespace InGame.UI.Settings
                 enabled = false;
                 return;
             }
-            
+
             BindUIEvents();
         }
 
@@ -77,10 +72,10 @@ namespace InGame.UI.Settings
 
         #endregion
 
-        #region 4. 초기화 및 이벤트 바인딩
+        #region 초기화 
 
         /// <summary>
-        /// UI 컴포넌트의 이벤트를 R3로 구독합니다.
+        /// [설명]: UI 컴포넌트의 이벤트를 R3로 구독합니다.
         /// </summary>
         private void BindUIEvents()
         {
@@ -119,10 +114,10 @@ namespace InGame.UI.Settings
 
         #endregion
 
-        #region 5. 설정 로드 및 저장 로직
+        #region 설정 관리 
 
         /// <summary>
-        /// ScriptableObject에서 설정을 불러와 UI와 조이스틱 오브젝트에 적용합니다.
+        /// [설명]: ScriptableObject에서 설정을 불러와 UI와 조이스틱 오브젝트에 적용합니다.
         /// </summary>
         private void LoadSettings()
         {
@@ -151,7 +146,7 @@ namespace InGame.UI.Settings
         }
 
         /// <summary>
-        /// 현재 UI 상태를 ScriptableObject에 저장하고 팝업을 닫습니다.
+        /// [설명]: 현재 UI 상태를 ScriptableObject에 저장하고 팝업을 닫습니다.
         /// </summary>
         private void SaveAndExit()
         {
@@ -175,17 +170,17 @@ namespace InGame.UI.Settings
 
             // 디스크에 저장
             m_settingsData.SaveSettings();
-            
+
             // 팝업 종료
             Destroy(gameObject);
         }
 
         #endregion
 
-        #region 6. 내부 이벤트 핸들러
+        #region 이벤트 핸들러 
 
         /// <summary>
-        /// 슬라이더 값 변경 시 실시간으로 조이스틱 크기를 조절합니다.
+        /// [설명]: 슬라이더 값 변경 시 실시간으로 조이스틱 크기를 조절합니다.
         /// </summary>
         private void OnJoystickSizeChanged(float value)
         {
@@ -196,16 +191,15 @@ namespace InGame.UI.Settings
         }
 
         /// <summary>
-        /// 드롭다운 값 변경 시 호출됩니다.
+        /// [설명]: 드롭다운 값 변경 시 호출됩니다.
         /// </summary>
         private void OnJoystickTypeChanged(int value)
         {
             // 필요 시 실시간 타입 변경 로직 추가 가능
-            // Debug.Log($"조이스틱 타입 변경됨: {value}");
         }
 
         /// <summary>
-        /// 조이스틱 위치를 초기값으로 되돌립니다.
+        /// [설명]: 조이스틱 위치를 초기값으로 되돌립니다.
         /// </summary>
         private void ResetJoystickPosition()
         {
@@ -217,7 +211,8 @@ namespace InGame.UI.Settings
 
         #endregion
 
-        #region 7. 에디터 검증 (Editor Only)
+        #region 에디터 검증 
+
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -226,6 +221,7 @@ namespace InGame.UI.Settings
             if (m_joystickTransform == null) Debug.LogWarning("[JoystickSetter] Joystick Transform 미할당", this);
         }
 #endif
+
         #endregion
     }
 }

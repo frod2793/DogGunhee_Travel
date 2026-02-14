@@ -12,14 +12,15 @@ using InGame.Lobby;
 namespace Lobby
 {
     /// <summary>
-    /// 로비의 메인 UI 요소들을 제어하고 ViewModel로부터 데이터를 전달받아 화면에 표시하는 View 클래스입니다.
-    /// <br/>각 서브 시스템(우편, 퀘스트, 상점 등)의 진입점 역할을 수행합니다.
+    /// [설명]: 로비의 메인 UI 요소들을 제어하고 ViewModel로부터 데이터를 전달받아 화면에 표시하는 View 클래스입니다.
+    /// 각 서브 시스템(우편, 퀘스트, 상점 등)의 진입점 역할을 수행합니다.
     /// </summary>
     public class LobbyUIViewManager : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정 (Inspector)
 
-        [Header("<color=green>플레이어 프로필</color>")] [SerializeField, Tooltip("플레이어 썸네일 이미지")]
+        [Header("<color=green>플레이어 프로필</color>")]
+        [SerializeField, Tooltip("플레이어 썸네일 이미지")]
         private Image m_playerProfileImage;
 
         [SerializeField, Tooltip("플레이어 닉네임 텍스트")]
@@ -28,9 +29,11 @@ namespace Lobby
         [SerializeField, Tooltip("플레이어 현재 레벨 텍스트")]
         private TMP_Text m_playerLevelText;
 
-        [SerializeField, Tooltip("경험치 진행 바")] private Slider m_playerLevelSlider;
+        [SerializeField, Tooltip("경험치 진행 바")]
+        private Slider m_playerLevelSlider;
 
-        [Header("<color=green>메인 컨트롤 UI</color>")] [SerializeField, Tooltip("게임 시작 버튼")]
+        [Header("<color=green>메인 컨트롤 UI</color>")]
+        [SerializeField, Tooltip("게임 시작 버튼")]
         private Button m_startBtn;
 
         [SerializeField, Tooltip("튜토리얼 시작 버튼")]
@@ -39,7 +42,8 @@ namespace Lobby
         [SerializeField, Tooltip("옵션 팝업 열기 버튼")]
         private Button m_optionBtn;
 
-        [Header("<color=green>게임 선택 팝업</color>")] [SerializeField, Tooltip("옵션 팝업 프리팹")]
+        [Header("<color=green>게임 선택 팝업</color>")]
+        [SerializeField, Tooltip("옵션 팝업 프리팹")]
         private OptionPopupView m_optionPopupPrefab;
 
         [SerializeField, Tooltip("게임 모드 선택 팝업 오브젝트")]
@@ -54,24 +58,30 @@ namespace Lobby
         [SerializeField, Tooltip("테스트용 게임 시작 버튼")]
         private Button m_gametestStartButton;
 
-        [Header("<color=green>서브 시스템 열기 버튼</color>")] [SerializeField, Tooltip("캐릭터 선택 관리자")]
+        [Header("<color=green>서브 시스템 열기 버튼</color>")]
+        [SerializeField, Tooltip("캐릭터 선택 관리자")]
         private CharacterSelectUIManager m_characterSelectUIManager;
 
         [SerializeField, Tooltip("캐릭터 선택창 열기 버튼")]
         private Button m_openCharacterSelectButton;
 
-        [SerializeField, Tooltip("우편 관리 화면")] private InGame.UI.Popups.PostView m_postManager;
+        [SerializeField, Tooltip("우편 관리 화면")]
+        private InGame.UI.Popups.PostView m_postManager;
 
-        [SerializeField, Tooltip("우편함 열기 버튼")] private Button m_openPostButton;
+        [SerializeField, Tooltip("우편함 열기 버튼")]
+        private Button m_openPostButton;
 
-        [SerializeField, Tooltip("퀘스트 관리 화면")] private InGame.UI.Popups.QuestInfoView m_questPanelManager;
+        [SerializeField, Tooltip("퀘스트 관리 화면")]
+        private InGame.UI.Popups.QuestInfoView m_questPanelManager;
 
         [SerializeField, Tooltip("퀘스트창 열기 버튼")]
         private Button m_openQuestPanelButton;
 
-        [SerializeField, Tooltip("상점 관리 화면")] private InGame.UI.Popups.StoreView m_storeManager;
+        [SerializeField, Tooltip("상점 관리 화면")]
+        private InGame.UI.Popups.StoreView m_storeManager;
 
-        [SerializeField, Tooltip("상점 열기 버튼")] private Button m_openStoreButton;
+        [SerializeField, Tooltip("상점 열기 버튼")]
+        private Button m_openStoreButton;
 
         [SerializeField, Tooltip("아이템 선택 관리 화면")]
         private InGame.UI.Popups.ItemSelectView m_itemSelectManager;
@@ -79,20 +89,39 @@ namespace Lobby
         [SerializeField, Tooltip("아이템 선택창 열기 버튼")]
         private Button m_openItemSelectButton;
 
-        [Header("<color=green>서브 시스템 닫기 버튼</color>")] [SerializeField]
+        [Header("<color=green>서브 시스템 닫기 버튼</color>")]
+        [SerializeField]
         private Button m_getPostRewardButton;
 
-        [SerializeField] private Button m_closePostButton;
-        [SerializeField] private Button m_getPostExpansionRewardButton;
-        [SerializeField] private Button m_closePostExpansionButton;
-        [SerializeField] private Button m_closeQuestPanelButton;
-        [SerializeField] private Button m_closeQuestExpansionButton;
-        [SerializeField] private Button m_closeStoreButton;
-        [SerializeField] private Button m_closeStoreExpendPopUp;
-        [SerializeField] private Button m_closeItemSelectButton;
-        [SerializeField] private Button m_closeItemSelectExpansionButton;
+        [SerializeField]
+        private Button m_closePostButton;
 
-        [Header("<color=green>재화 및 데이터</color>")] [SerializeField, Tooltip("보유 골드 텍스트")]
+        [SerializeField]
+        private Button m_getPostExpansionRewardButton;
+
+        [SerializeField]
+        private Button m_closePostExpansionButton;
+
+        [SerializeField]
+        private Button m_closeQuestPanelButton;
+
+        [SerializeField]
+        private Button m_closeQuestExpansionButton;
+
+        [SerializeField]
+        private Button m_closeStoreButton;
+
+        [SerializeField]
+        private Button m_closeStoreExpendPopUp;
+
+        [SerializeField]
+        private Button m_closeItemSelectButton;
+
+        [SerializeField]
+        private Button m_closeItemSelectExpansionButton;
+
+        [Header("<color=green>재화 및 데이터</color>")]
+        [SerializeField, Tooltip("보유 골드 텍스트")]
         private TMP_Text m_goldText;
 
         [SerializeField, Tooltip("보유 다이아 텍스트")]
@@ -101,17 +130,20 @@ namespace Lobby
         [SerializeField, Tooltip("플레이어 데이터 관리자")]
         private PlayerDataManager m_playerDataManager;
 
-        [Header("<color=green>배경 애니메이션</color>")] [SerializeField, Tooltip("배경 애니메이터")]
+        [Header("<color=green>배경 애니메이션</color>")]
+        [SerializeField, Tooltip("배경 애니메이터")]
         private Animator m_backgroundAnimator;
 
         [SerializeField, Tooltip("배경 애니메이션 재생 속도")]
         private float m_backgroundAnimationSpeed = 1.7f;
 
-        [Header("Debug")] [SerializeField] private bool m_isDebugMode;
+        [Header("Debug")]
+        [SerializeField]
+        private bool m_isDebugMode;
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
+        #region 내부 변수 및 상태
 
         private OptionPopupView m_currentOptionPopup;
         private float m_cachedAnimationSpeed = -1f;
@@ -122,7 +154,7 @@ namespace Lobby
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Awake()
         {
@@ -179,10 +211,10 @@ namespace Lobby
 
         #endregion
 
-        #region 4. MVVM 데이터 바인딩
+        #region MVVM 데이터 바인딩
 
         /// <summary>
-        /// ViewModel의 ReactiveProperty들을 구독하여 UI 요소와 동기화합니다.
+        /// [설명]: ViewModel의 ReactiveProperty들을 구독하여 UI 요소와 동기화합니다.
         /// </summary>
         private void BindViewModel()
         {
@@ -220,7 +252,7 @@ namespace Lobby
         }
 
         /// <summary>
-        /// 외부 로직에 의해 플레이어 데이터가 변경되었을 때 뷰모델을 갱신합니다.
+        /// [설명]: 외부 로직에 의해 플레이어 데이터가 변경되었을 때 뷰모델을 갱신합니다.
         /// </summary>
         public void RefreshPlayerData()
         {
@@ -229,10 +261,10 @@ namespace Lobby
 
         #endregion
 
-        #region 5. 초기화 및 이벤트 등록
+        #region 초기화 및 이벤트 등록
 
         /// <summary>
-        /// 모든 버튼 컴포넌트에 클릭 이벤트 핸들러를 등록합니다.
+        /// [설명]: 모든 버튼 컴포넌트에 클릭 이벤트 핸들러를 등록합니다.
         /// </summary>
         private void InitializeButtons()
         {
@@ -292,10 +324,10 @@ namespace Lobby
 
         #endregion
 
-        #region 6. 상태 제어 및 팝업 대행
+        #region 상태 제어 및 팝업 대행
 
         /// <summary>
-        /// 해당 게임 오브젝트를 활성화하고 PopupManager에 닫기 액션을 등록합니다.
+        /// [설명]: 해당 게임 오브젝트를 활성화하고 PopupManager에 닫기 액션을 등록합니다.
         /// </summary>
         private void OpenPopup(GameObject popup)
         {
@@ -306,7 +338,7 @@ namespace Lobby
         }
 
         /// <summary>
-        /// 옵션 팝업 버튼 클릭 시 새 옵션 UI 인스턴스를 생성하고 관리합니다.
+        /// [설명]: 옵션 팝업 버튼 클릭 시 새 옵션 UI 인스턴스를 생성하고 관리합니다.
         /// </summary>
         private void OnOptionButtonClicked()
         {
@@ -331,10 +363,10 @@ namespace Lobby
 
         #endregion
 
-        #region 7. 비주얼 조절 (애니메이션)
+        #region 비주얼 조절 (애니메이션)
 
         /// <summary>
-        /// 지정된 트리거 이름을 기반으로 배경 애니메이션을 재생합니다.
+        /// [설명]: 지정된 트리거 이름을 기반으로 배경 애니메이션을 재생합니다.
         /// </summary>
         public void PlayBackgroundAnimation(string triggerName)
         {
@@ -345,7 +377,7 @@ namespace Lobby
         }
 
         /// <summary>
-        /// 배경 애니메이션을 초기 상태로 되돌리고 정지합니다.
+        /// [설명]: 배경 애니메이션을 초기 상태로 되돌리고 정지합니다.
         /// </summary>
         public void StopBackgroundAnimation()
         {
@@ -360,12 +392,12 @@ namespace Lobby
     }
 
     /// <summary>
-    /// 버튼 컴포넌트 편의를 위한 확장 메서드 클래스입니다.
+    /// [설명]: 버튼 컴포넌트 편의를 위한 확장 메서드 클래스입니다.
     /// </summary>
     public static class ButtonExtensions
     {
         /// <summary>
-        /// 기존 리스너를 모두 제거하고 새로운 액션을 등록합니다.
+        /// [설명]: 기존 리스너를 모두 제거하고 새로운 액션을 등록합니다.
         /// </summary>
         public static void SetOnClick(this Button button, UnityEngine.Events.UnityAction action)
         {

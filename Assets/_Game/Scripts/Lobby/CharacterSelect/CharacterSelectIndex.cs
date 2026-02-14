@@ -6,12 +6,12 @@ using UnityEngine.Serialization;
 namespace InGame.Lobby
 {
     /// <summary>
-    /// 캐릭터 선택 목록의 개별 항목을 관리하는 클래스입니다.
+    /// [설명]: 캐릭터 선택 목록의 개별 항목을 관리하는 클래스입니다.
     /// </summary>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(false, null, null, "CharactorSelectIndex")]
     public class CharacterSelectIndex : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [SerializeField, Tooltip("캐릭터 선택 버튼"), FormerlySerializedAs("openCharacterSelectButton")]
         private Button m_openCharacterSelectButton;
@@ -24,11 +24,22 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 2. 프로퍼티 (공개 필드 대체)
+        #region 공개 프로퍼티
 
-        public Button openCharacterSelectButton => m_openCharacterSelectButton;
-        public Image thumbNail => m_thumbNail;
-        public TMP_Text characterName => m_characterName;
+        /// <summary>
+        /// [설명]: 캐릭터 선택 버튼 참조
+        /// </summary>
+        public Button OpenCharacterSelectButton => m_openCharacterSelectButton;
+
+        /// <summary>
+        /// [설명]: 캐릭터 썸네일 이미지 참조
+        /// </summary>
+        public Image ThumbNail => m_thumbNail;
+
+        /// <summary>
+        /// [설명]: 캐릭터 이름 텍스트 참조
+        /// </summary>
+        public TMP_Text CharacterName => m_characterName;
 
         #endregion
     }

@@ -6,32 +6,37 @@ using UnityEngine;
 namespace InGame.Data
 {
     /// <summary>
-    /// 플레이어 데이터의 로컬 저장/로드를 담당하는 Repository 클래스입니다.
-    /// EncryptionService를 사용하여 데이터를 암호화합니다.
+    /// [설명]: 플레이어 데이터의 로컬 저장/로드를 담당하는 Repository 클래스입니다.
     /// </summary>
     public class LocalPlayerDataRepository
     {
-        #region 상수
+        #region 상수 
+
         private const string k_EncryptedDataPath = "playerData.encrypted";
+
         #endregion
 
-        #region 내부 필드
+        #region 내부 필드 
+
         private readonly EncryptionService m_encryptionService;
         private readonly string m_savePath;
+
         #endregion
 
-        #region 생성자
+        #region 초기화 
+
         public LocalPlayerDataRepository(EncryptionService encryptionService)
         {
             m_encryptionService = encryptionService;
             m_savePath = Path.Combine(Application.persistentDataPath, k_EncryptedDataPath);
         }
+
         #endregion
 
-        #region 저장/로드 메서드
+        #region 저장/로드 메서드 
 
         /// <summary>
-        /// 플레이어 데이터를 암호화하여 로컬에 저장합니다.
+        /// [설명]: 플레이어 데이터를 암호화하여 로컬에 저장합니다.
         /// </summary>
         public void Save(PlayerData playerData)
         {
@@ -56,7 +61,7 @@ namespace InGame.Data
         }
 
         /// <summary>
-        /// 로컬에서 암호화된 플레이어 데이터를 로드하고 복호화합니다.
+        /// [설명]: 로컬에서 암호화된 플레이어 데이터를 로드하고 복호화합니다.
         /// </summary>
         public void Load(PlayerData targetPlayerData)
         {
@@ -88,7 +93,7 @@ namespace InGame.Data
         }
 
         /// <summary>
-        /// 로컬에 저장된 데이터가 존재하는지 확인합니다.
+        /// [설명]: 로컬에 저장된 데이터가 존재하는지 확인합니다.
         /// </summary>
         public bool Exists()
         {

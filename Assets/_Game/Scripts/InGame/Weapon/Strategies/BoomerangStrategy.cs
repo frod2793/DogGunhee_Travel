@@ -2,18 +2,18 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
-using InGame.Weapon.Controllers; // BoomerangProjectile 참조
+using InGame.Weapon.Controllers;
 using InGame.Weapon.Logic;
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 부메랑(Boomerang) 무기의 공격 전략입니다.
-    /// <br/> 비동기 루프를 통해 다수의 부메랑을 순차적으로 발사합니다.
+    /// [설명]: 부메랑(Boomerang) 무기의 공격 전략입니다.
+    /// 비동기 루프를 통해 다수의 부메랑을 순차적으로 발사합니다.
     /// </summary>
     public class BoomerangStrategy : IWeaponStrategy
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private BoomerangWeaponLogic m_logic;
         private WeaponPoolManager m_poolManager;
@@ -24,7 +24,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -60,7 +60,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 상세 로직 (Attack Logic)
+        #region 상세 로직
 
         private async UniTaskVoid FireBoomerangAsync(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
         {
@@ -113,7 +113,6 @@ namespace InGame.Weapon.Strategies
                     projectile.transform.position = m_firePoint.position;
                     projectile.transform.rotation = rotation;
 
-                    // [수정] 명명된 인수(onReturnComplete:) 제거 -> 순서대로 전달
                     projectile.Init(
                         m_firePoint,
                         m_logic.AttackPower,
@@ -130,7 +129,17 @@ namespace InGame.Weapon.Strategies
                 }
 
                 // 연사 딜레이
-                await UniTask.Delay(m_logic.BurstDelayMs, cancellationToken: owner.GetCancellationTokenOnDestroy());
+                // CancellationToken 처리는 owner가 파괴될 때 자동으로 취소되도록 함
+                if (owner != null)
+                {
+                    await UniTask.Delay(m_logic.BurstDelayMs, cancellationToken: owner.GetCancellationTokenOnDestroy());
+                }
+                else
+                {
+                     // owner가 사라졌으면 루프 중단
+                     m_isAttacking = false;
+                     return;
+                }
             }
 
             m_isAttacking = false;

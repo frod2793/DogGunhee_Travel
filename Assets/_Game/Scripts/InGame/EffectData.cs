@@ -5,12 +5,12 @@ using UnityEngine.Serialization;
 namespace InGame
 {
     /// <summary>
-    /// 이펙트 타입과 프리팹을 연결하는 데이터 클래스입니다.
+    /// [설명]: 이펙트 타입(Enum)과 이펙트 프리팹(GameObject)을 1:1로 매핑하는 데이터 클래스입니다.
     /// </summary>
     [System.Serializable]
     public class EffectMapping
     {
-        #region 1. 변수 및 프로퍼티
+        #region 내부 변수 및 프로퍼티
 
         [Tooltip("이펙트의 타입 (Enum)")]
         [FormerlySerializedAs("type")] // 기존 데이터 보존
@@ -27,12 +27,13 @@ namespace InGame
     }
 
     /// <summary>
-    /// 게임 내 모든 이펙트 정보를 관리하는 데이터 에셋(SO)입니다.
+    /// [설명]: 게임 내 모든 이펙트 정보를 관리하는 데이터 에셋(ScriptableObject)입니다.
+    /// EffectType에 해당하는 프리팹을 조회할 수 있는 리스트를 제공합니다.
     /// </summary>
     [CreateAssetMenu(fileName = "EffectData", menuName = "VamserLike/Effect Data", order = 0)]
     public class EffectData : ScriptableObject
     {
-        #region 1. 인스펙터 설정 (Inspector)
+        #region 에디터 설정
 
         [Header("데이터 설정")]
         [Tooltip("등록할 이펙트 리스트")]
@@ -41,10 +42,10 @@ namespace InGame
 
         #endregion
 
-        #region 2. 프로퍼티 (데이터 접근)
+        #region 공개 프로퍼티
 
         /// <summary>
-        /// 외부에서 접근 가능한 이펙트 리스트 (읽기 전용)
+        /// [설명]: 외부에서 접근 가능한 이펙트 리스트 (읽기 전용)
         /// </summary>
         public IReadOnlyList<EffectMapping> Effects => m_effects;
 

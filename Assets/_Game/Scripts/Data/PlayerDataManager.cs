@@ -9,15 +9,18 @@ using UnityEngine;
 namespace InGame
 {
     /// <summary>
-    /// 플레이어 데이터를 관리하고 서버와의 동기화를 담당하는 매니저 클래스입니다.
-    /// DontDestroyOnLoad로 씬 전환 시에도 유지됩니다.
+    /// [설명]: 플레이어 데이터를 관리하고 서버와의 동기화를 담당하는 매니저 클래스입니다.
     /// </summary>
     public class PlayerDataManager : MonoBehaviour
     {
-        #region 필드 및 프로퍼티
+        #region 내부 필드 
 
         [Header("데이터")]
         [SerializeField] private PlayerData m_scriptableobjPlayerData;
+
+        #endregion
+
+        #region 프로퍼티 
 
         public PlayerData PlayerData
         {
@@ -46,7 +49,7 @@ namespace InGame
 
         #endregion
 
-        #region 싱글톤
+        #region 싱글톤 
 
         private static PlayerDataManager s_instance;
         private static readonly object s_lockObject = new object();
@@ -77,14 +80,7 @@ namespace InGame
 
         #endregion
 
-        #region 내부 필드 (DI)
-
-        private EncryptionService m_encryptionService;
-        private LocalPlayerDataRepository m_localRepository;
-
-        #endregion
-
-        #region Unity 라이프사이클
+        #region 초기화 
 
         private void Awake()
         {
@@ -104,7 +100,7 @@ namespace InGame
 
         #endregion
 
-        #region 로컬 데이터 관리
+        #region 로컬 데이터 관리 
 
         public void SavePlayerData()
         {
@@ -124,7 +120,7 @@ namespace InGame
 
         #endregion
 
-        #region 서버 데이터 처리
+        #region 서버 데이터 처리 
 
         public async UniTask<bool> LoadDataFromServerAsync()
         {
@@ -196,7 +192,7 @@ namespace InGame
 
         #endregion
 
-        #region 내부 헬퍼
+        #region 보조 로직 
 
         private PlayerData ParseServerData(JsonData serverDataJson)
         {
@@ -242,6 +238,13 @@ namespace InGame
             LogManager.Log("서버 데이터가 더 최신이므로 사용합니다.", LogManager.LogCategory.PlayerDataManager);
             return serverData;
         }
+
+        #endregion
+
+        #region 내부 필드 (DI) 
+
+        private EncryptionService m_encryptionService;
+        private LocalPlayerDataRepository m_localRepository;
 
         #endregion
     }

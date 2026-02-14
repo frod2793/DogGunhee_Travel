@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 고양이 냥냥펀치(CatPunch)의 비즈니스 로직(타격 중복 방지 등)을 담당하는 클래스입니다.
+    /// [설명]: 고양이 냥냥펀치(CatPunch)의 비즈니스 로직(타격 중복 방지 등)을 담당하는 클래스입니다.
     /// </summary>
     public class CatPunchWeaponLogic
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private readonly float m_attackPower;
         private readonly float m_mobStunTime;
@@ -18,14 +17,14 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
 
         public float AttackPower => m_attackPower;
         public float MobStunTime => m_mobStunTime;
 
         #endregion
 
-        #region 3. 생성자 및 초기화 (Constructor & Init)
+        #region 생성자 및 초기화
 
         public CatPunchWeaponLogic(float attackPower, float mobStunTime)
         {
@@ -43,7 +42,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 4. 로직 메서드 (Logic Methods)
+        #region 로직 메서드
 
         /// <summary>
         /// 해당 대상이 이번 공격 프레임에서 이미 타격되었는지 확인하고 등록합니다.

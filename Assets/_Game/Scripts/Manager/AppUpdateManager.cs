@@ -7,23 +7,55 @@ using Google.Play.AppUpdate;
 using Google.Play.Common;
 #endif
 
-namespace InGame.Manager
+namespace InGame.Managers
 {
+    /// <summary>
+    /// [설명]: 구글 플레이 스토어를 통한 앱 강제 업데이트를 관리하는 클래스입니다.
+    /// 안드로이드 플랫폼에서 앱 시작 시 업데이트 가용성을 체크하고 즉시 업데이트를 유도합니다.
+    /// </summary>
     public class AppUpdateManager : MonoBehaviour
     {
-        public static AppUpdateManager Instance { get; private set; }
+        #region 싱글톤
+
+        private static AppUpdateManager s_instance;
+
+        public static AppUpdateManager Instance
+        {
+            get
+            {
+                if (s_instance == null)
+                {
+                    s_instance = FindFirstObjectByType<AppUpdateManager>();
+                }
+
+                return s_instance;
+            }
+        }
+
+        #endregion
+
+        #region 유니티 생명주기
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (s_instance != null && s_instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
+
+            s_instance = this;
             DontDestroyOnLoad(gameObject);
         }
 
+        #endregion
+
+        #region 업데이트 로직
+
+        /// <summary>
+        /// [설명]: 앱 업데이트가 필요한지 비동기로 체크합니다.
+        /// 안드로이드 플랫폼이 아니거나 에디터 환경인 경우 즉시 완료됩니다.
+        /// </summary>
         public async UniTask CheckForUpdateAsync()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -31,11 +63,11 @@ namespace InGame.Manager
             {
                 var appUpdateManager = new Google.Play.AppUpdate.AppUpdateManager();
 
-                // 1. 업데이트 정보 요청 (Operation을 받음)
+                // 1. 업데이트 정보 요청
                 PlayAsyncOperation<AppUpdateInfo, AppUpdateErrorCode> appUpdateInfoOperation = 
                     appUpdateManager.GetAppUpdateInfo();
 
-                // 2. 작업이 끝날 때까지 대기 (UniTask가 CustomYieldInstruction을 await 함)
+                // 2. 작업 완료 대기
                 await appUpdateInfoOperation;
 
                 if (!appUpdateInfoOperation.IsSuccessful)
@@ -47,29 +79,23 @@ namespace InGame.Manager
                 // 3. 결과 추출
                 AppUpdateInfo appUpdateInfo = appUpdateInfoOperation.GetResult();
 
-                // 4. 즉시 업데이트 옵션 생성 (수정된 부분: Enum 대신 Options 객체 사용)
+                // 4. 즉시 업데이트 옵션 생성
                 var updateOptions = AppUpdateOptions.ImmediateAppUpdateOptions();
 
-                // 업데이트가 가능하고, 해당 옵션이 허용된 경우
+                // 업데이트가 가능하고 해당 옵션이 허용된 경우
                 if (appUpdateInfo.UpdateAvailability == UpdateAvailability.UpdateAvailable &&
                     appUpdateInfo.IsUpdateTypeAllowed(updateOptions))
                 {
                     // 5. 업데이트 시작 요청
                     var startUpdateOperation = appUpdateManager.StartUpdate(appUpdateInfo, updateOptions);
 
-                    // 업데이트 작업 대기 (사용자가 업데이트를 취소하거나 실패할 때까지)
+                    // 업데이트 완료(또는 실패/취소)까지 대기
                     await startUpdateOperation;
 
                     // 6. 결과 확인
                     if (!startUpdateOperation.IsDone)
                     {
-                         // startUpdateOperation.Error 또는 startUpdateOperation.GetResult()로 상태 확인 가능
                         HandleUpdateFailure($"업데이트 시작 실패 또는 취소됨. Error: {startUpdateOperation.Error}");
-                    }
-                    else
-                    {
-                        // 즉시 업데이트가 성공하면 앱이 재시작되므로 이 코드는 보통 실행되지 않음
-                        // 하지만 Resume 상황 등을 고려해 처리 가능
                     }
                 }
             }
@@ -78,15 +104,22 @@ namespace InGame.Manager
                 HandleUpdateFailure($"업데이트 확인 중 예외 발생: {e.Message}");
             }
 #else
-            // 에디터나 다른 플랫폼에서는 통과
             await UniTask.CompletedTask;
 #endif
         }
 
+        #endregion
+
+        #region 내부 로직
+
+        /// <summary>
+        /// [설명]: 업데이트 프로세스 중 발생한 오류를 처리합니다.
+        /// </summary>
         private void HandleUpdateFailure(string message)
         {
             Debug.LogError($"[AppUpdateManager] {message}");
-      //      Application.Quit();
         }
+
+        #endregion
     }
 }

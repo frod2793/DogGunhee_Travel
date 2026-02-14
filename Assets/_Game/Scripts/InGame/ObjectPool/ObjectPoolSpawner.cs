@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Mob.MobBase;
 using InGame.Player.Player_Base;
 using InGame.vamsir;
@@ -15,20 +15,22 @@ using Random = UnityEngine.Random;
 namespace InGame.ObjectPool
 {
     /// <summary>
-    /// 게임 내 모든 동적 오브젝트(몬스터, 아이템, 이펙트 등)의 생성과 재사용을 관리하는 스포너입니다.
-    /// <br/> 실제 웨이브 진행 로직은 WaveSystem에 위임하고, 위치 계산은 SpawnPositionSolver를 사용합니다.
+    /// [설명]: 게임 내 모든 동적 오브젝트(몬스터, 아이템, 이펙트 등)의 생성과 재사용을 관리하는 스포너입니다.
+    /// 실제 웨이브 진행 로직은 WaveSystem에 위임하고, 위치 계산은 SpawnPositionSolver를 사용합니다.
     /// </summary>
     public class ObjectPoolSpawner : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("맵 및 위치 설정")] [SerializeField, Tooltip("몬스터 스폰 영역을 제한하는 맵 스프라이트")]
+        [Header("맵 및 위치 설정")]
+        [SerializeField, Tooltip("몬스터 스폰 영역을 제한하는 맵 스프라이트")]
         private SpriteRenderer m_mapRange;
 
         [SerializeField, Tooltip("스폰된 몬스터들이 배치될 부모 트랜스폼")]
         private Transform m_mobParent;
 
-        [Header("데이터 및 풀 설정")] [SerializeField, Tooltip("스테이지/웨이브 데이터베이스")]
+        [Header("데이터 및 풀 설정")]
+        [SerializeField, Tooltip("스테이지/웨이브 데이터베이스")]
         private StageDatabase m_stageDatabase;
 
         [SerializeField, Tooltip("풀 최대 사이즈 (초과 시 파괴)")]
@@ -37,69 +39,95 @@ namespace InGame.ObjectPool
         [SerializeField, Tooltip("일반 경험치 아이템")]
         private AssetReferenceGameObject m_expPrefabReference;
 
-        [SerializeField, Tooltip("코인 아이템")] private AssetReferenceGameObject m_coinPrefabReference;
+        [SerializeField, Tooltip("코인 아이템")]
+        private AssetReferenceGameObject m_coinPrefabReference;
 
         [SerializeField, Tooltip("코인 드랍 확률 (0~100)")]
         private float m_coinSpawnPercent = 25f;
 
         #endregion
 
-        #region 2. 내부 상태 및 시스템 (State & Systems)
+        #region 내부 상태 및 시스템
 
-        // 외부 참조
+        /// <summary> 플레이어 본체 참조 </summary>
         private PlayerBase m_player;
+
+        /// <summary> 메인 카메라 참조 </summary>
         private Camera m_mainCamera;
+
+        /// <summary> 월드 맵의 경계 데이터 </summary>
         private Bounds m_mapBounds;
+
+        /// <summary> 몬스터 통합 관리자 참조 </summary>
         private MobManager m_mobManager;
 
-        // POCO 시스템 (로직 위임)
+        /// <summary> 웨이브 시스템 비즈니스 로직 </summary>
         private WaveSystem m_waveSystem;
+
+        /// <summary> 스폰 위치 계산 알고리즘 </summary>
         private SpawnPositionSolver m_positionSolver;
 
-        // 오브젝트 풀 (Object Pools)
-        // 몬스터 풀: Key = MobKey (string)
+        /// <summary> 몬스터별 오브젝트 풀 데이터베이스 (Key: MobKey) </summary>
         private Dictionary<string, IObjectPool<MobBase>> m_mobPools = new Dictionary<string, IObjectPool<MobBase>>();
 
-        // 프리팹 매핑 캐시
+        /// <summary> 몬스터 프리팹 캐시 </summary>
         private Dictionary<string, GameObject> m_mobPrefabMap = new Dictionary<string, GameObject>();
 
-        private Dictionary<AssetReferenceGameObject, GameObject> m_loadedItemPrefabs =
-            new Dictionary<AssetReferenceGameObject, GameObject>();
+        /// <summary> 아이템 프리팹 캐시 </summary>
+        private Dictionary<AssetReferenceGameObject, GameObject> m_loadedItemPrefabs = new Dictionary<AssetReferenceGameObject, GameObject>();
 
-        // 비동기 작업 제어
+        /// <summary> 비동기 스폰 루틴 취소 토큰 </summary>
         private CancellationTokenSource m_spawnCts;
 
         #endregion
 
-        #region 3. 공개 프로퍼티 (Properties)
+        #region 공개 프로퍼티
 
-        /// <summary>경험치 아이템 풀 (외부 접근용)</summary>
+        /// <summary>
+        /// [설명]: 경험치 아이템 오브젝트 풀입니다.
+        /// </summary>
         public IObjectPool<EXP_Obj> ExpObjectPool { get; private set; }
 
-        /// <summary>코인 아이템 풀 (외부 접근용)</summary>
+        /// <summary>
+        /// [설명]: 코인 아이템 오브젝트 풀입니다.
+        /// </summary>
         public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
 
-        /// <summary>현재 활성화된 몬스터 수 (WaveSystem 위임)</summary>
+        /// <summary>
+        /// [설명]: 현재 월드에 활성화된 전체 몬스터 수입니다.
+        /// </summary>
         public int ActiveMobCount => m_waveSystem?.ActiveMobCount ?? 0;
 
-        /// <summary>현재 진행 중인 웨이브 ID</summary>
+        /// <summary>
+        /// [설명]: 현재 진행 중인 웨이브 번호입니다.
+        /// </summary>
         public int CurrentWave => m_waveSystem?.CurrentWaveId ?? 0;
 
-        /// <summary>현재 진행 중인 스테이지 ID</summary>
+        /// <summary>
+        /// [설명]: 현재 진행 중인 스테이지 번호입니다.
+        /// </summary>
         public int CurrentStage => m_waveSystem?.CurrentStageId ?? 0;
 
         #endregion
 
-        #region 4. 이벤트 (Events)
+        #region 이벤트
 
+        /// <summary> 웨이브 시작 시 발생하는 이벤트 </summary>
         public event Action<WaveData> OnWaveStarted;
+
+        /// <summary> 웨이브 목표 달성 시 발생하는 이벤트 </summary>
         public event Action<WaveData> OnWaveCompleted;
+
+        /// <summary> 스테이지 클리어 시 발생하는 이벤트 </summary>
         public event Action<int> OnStageCleared;
 
         #endregion
 
-        #region 5. 유니티 생명주기 (Lifecycle)
+        #region 유니티 생명주기
 
+        /// <summary>
+        /// [설명]: 기본적인 참조를 초기화합니다.
+        /// </summary>
         private void Start()
         {
             m_mainCamera = Camera.main;
@@ -108,16 +136,21 @@ namespace InGame.ObjectPool
             InitializeSystems();
         }
 
+        /// <summary>
+        /// [설명]: 활성화 시 시스템 이벤트를 구독합니다.
+        /// </summary>
         private void OnEnable()
         {
             SubscribeEvents();
         }
 
+        /// <summary>
+        /// [설명]: 비활성화 시 이벤트를 해제하고 진행 중인 스폰 루틴을 중단합니다.
+        /// </summary>
         private void OnDisable()
         {
             UnsubscribeEvents();
 
-            // 웨이브 일시정지 및 스폰 중단
             m_waveSystem?.Pause();
 
             if (m_spawnCts != null)
@@ -128,18 +161,28 @@ namespace InGame.ObjectPool
             }
         }
 
+        /// <summary>
+        /// [설명]: 오브젝트가 파괴될 때 모든 풀과 리소스를 해제합니다.
+        /// </summary>
         private void OnDestroy()
         {
             m_waveSystem?.Dispose();
 
-            // 모든 풀 정리 (메모리 해제)
-            foreach (var pool in m_mobPools.Values) pool.Clear();
+            foreach (var pool in m_mobPools.Values)
+            {
+                pool.Clear();
+            }
             ExpObjectPool?.Clear();
             CoinObjectPool?.Clear();
 
-            // Addressables 해제
-            foreach (var prefab in m_mobPrefabMap.Values) Addressables.Release(prefab);
-            foreach (var prefab in m_loadedItemPrefabs.Values) Addressables.Release(prefab);
+            foreach (var prefab in m_mobPrefabMap.Values)
+            {
+                Addressables.Release(prefab);
+            }
+            foreach (var prefab in m_loadedItemPrefabs.Values)
+            {
+                Addressables.Release(prefab);
+            }
 
             m_mobPrefabMap.Clear();
             m_loadedItemPrefabs.Clear();
@@ -147,45 +190,42 @@ namespace InGame.ObjectPool
 
         #endregion
 
-        #region 6. 초기화 및 설정 (Initialization)
+        #region 초기화
 
+        /// <summary>
+        /// [설명]: 맵의 경계 범위를 설정하고 초기화합니다.
+        /// </summary>
         private void InitializeMapBounds()
         {
-            // 1. m_mapRange 탐색
             if (m_mapRange == null)
             {
                 var mapObj = GameObject.FindGameObjectWithTag("Map");
-                if (mapObj != null) m_mapRange = mapObj.GetComponent<SpriteRenderer>();
+                if (mapObj != null)
+                {
+                    m_mapRange = mapObj.GetComponent<SpriteRenderer>();
+                }
             }
 
-            // 2. 경계값 계산
             if (m_mapRange != null)
             {
                 if (m_mapRange.sprite != null)
                 {
                     m_mapBounds = m_mapRange.bounds;
-                    Debug.Log($"[Spawner] SpriteRenderer Bounds 사용: {m_mapBounds}");
                 }
                 else
                 {
-                    // 스프라이트가 없어도 트랜스폼 위치를 중심으로 사용
                     m_mapBounds = new Bounds(m_mapRange.transform.position, new Vector3(100f, 100f, 10f));
-                    Debug.LogWarning($"[Spawner] 맵 스프라이트가 없어 {m_mapRange.name}의 위치를 기반으로 기본 범위 생성: {m_mapBounds}");
                 }
             }
             else if (GameManager.Instance != null && GameManager.Instance.MapBounds.size.sqrMagnitude > 1f)
             {
                 m_mapBounds = GameManager.Instance.MapBounds;
-                Debug.Log($"[Spawner] GameManager.MapBounds 사용: {m_mapBounds}");
             }
             else
             {
-                // 최후의 수단: 현재 위치 또는 원점 기준
                 m_mapBounds = new Bounds(transform.position, new Vector3(100f, 100f, 10f));
-                Debug.LogWarning($"[Spawner] 맵 정보를 전혀 찾을 수 없어 현재 위치 기준 기본 범위 생성: {m_mapBounds}");
             }
 
-            // [보정] Z축은 0으로 고정 (2D 평면 대응)
             Vector3 center = m_mapBounds.center;
             center.z = 0;
             m_mapBounds.center = center;
@@ -196,17 +236,18 @@ namespace InGame.ObjectPool
             }
         }
 
+        /// <summary>
+        /// [설명]: 스폰 시스템에 필요한 로직 클래스들을 개별적으로 초기화합니다.
+        /// </summary>
         private void InitializeSystems()
         {
-            // 위치 계산기 초기화
             m_positionSolver = new SpawnPositionSolver(
                 mapBounds: m_mapBounds,
-                minSpawnDistance: 4f, // 화면 끝에서 4유닛 정도 여유를 두고 스폰 (가시 영역 확실히 배제)
+                minSpawnDistance: 4f,
                 maxSpawnDistance: 12f,
                 maxAttempts: 50
             );
 
-            // 웨이브 시스템 초기화
             m_waveSystem = new WaveSystem();
             m_waveSystem.OnWaveStarted += HandleWaveStarted;
             m_waveSystem.OnWaveCompleted += HandleWaveCompleted;
@@ -214,23 +255,23 @@ namespace InGame.ObjectPool
         }
 
         /// <summary>
-        /// 스포너를 초기화하고 첫 웨이브를 시작합니다.
+        /// [설명]: 스포너의 의존성을 주입하고 실제 웨이브를 시작합니다.
         /// </summary>
         public async UniTask InitializeAndStartSpawning(PlayerBase player, MobManager mobManager, int startStageId = 1)
         {
             m_player = player;
             m_mobManager = mobManager;
-            if (m_player == null) return;
+            if (m_player == null)
+            {
+                return;
+            }
 
-            // 스폰 시작 전 맵 경계 및 시스템 확정 (Awake 시점보다 안전함)
             InitializeMapBounds();
             InitializeSystems();
 
-            // 1. 아이템 프리팹 로드 및 풀 생성
             await LoadItemPrefabsAsync();
             InitializeItemPools();
 
-            // 2. 스테이지 데이터 로드
             if (m_stageDatabase == null)
             {
                 Debug.LogError("[ObjectPoolSpawner] StageDatabase 미할당");
@@ -244,13 +285,14 @@ namespace InGame.ObjectPool
                 return;
             }
 
-            // 3. 웨이브 시작
             m_waveSystem.Start(stage);
         }
 
+        /// <summary>
+        /// [설명]: 경험치 및 코인 아이템을 위한 오브젝트 풀을 생성합니다.
+        /// </summary>
         private void InitializeItemPools()
         {
-            // 경험치 풀
             ExpObjectPool = new ObjectPool<EXP_Obj>(
                 createFunc: () => CreateItem<EXP_Obj>(m_expPrefabReference),
                 actionOnGet: OnGetItem,
@@ -260,7 +302,6 @@ namespace InGame.ObjectPool
                 maxSize: m_maxPoolSize
             );
 
-            // 코인 풀
             CoinObjectPool = new LinkedPool<Coin_Obj>(
                 createFunc: () => CreateItem<Coin_Obj>(m_coinPrefabReference),
                 actionOnGet: OnGetItem,
@@ -272,36 +313,36 @@ namespace InGame.ObjectPool
 
         #endregion
 
-        #region 7. 스폰 로직 (Spawning Logic)
+        #region 스폰 처리 로직
 
-        // --- 웨이브 몬스터 스폰 ---
-
+        /// <summary>
+        /// [설명]: 비동기 루프를 통해 주기적으로 몬스터를 스폰합니다.
+        /// </summary>
         private async UniTaskVoid SpawnWaveMobsAsync(WaveData wave)
         {
-            // 1. 필요한 몬스터 프리팹 미리 로드
             foreach (var mobInfo in wave.mobs)
             {
                 await EnsureMobPrefabLoaded(mobInfo.mobKey);
             }
 
-            // 스폰용 취소 토큰 생성
             m_spawnCts = new CancellationTokenSource();
             var token = CancellationTokenSource
                 .CreateLinkedTokenSource(m_spawnCts.Token, this.GetCancellationTokenOnDestroy()).Token;
 
             float timer = 0f;
 
-            // 2. 스폰 루프
             while (m_waveSystem.IsSpawningAllowed && m_waveSystem.CurrentWaveId == wave.waveId)
             {
-                if (token.IsCancellationRequested) break;
+                if (token.IsCancellationRequested)
+                {
+                    break;
+                }
 
                 timer += Time.deltaTime;
                 if (timer >= wave.spawnInterval)
                 {
                     timer = 0f;
 
-                    // 최대 수 제한 체크
                     if (m_waveSystem.CanSpawn(m_maxPoolSize))
                     {
                         string targetKey = GetRandomMobKey(wave.mobs);
@@ -313,12 +354,21 @@ namespace InGame.ObjectPool
             }
         }
 
+        /// <summary>
+        /// [설명]: 웨이브 설정 데이터에 따라 가중치 랜덤으로 스폰할 몬스터 키를 선택합니다.
+        /// </summary>
         private string GetRandomMobKey(List<MobSpawnData> mobs)
         {
-            if (mobs == null || mobs.Count == 0) return string.Empty;
+            if (mobs == null || mobs.Count == 0)
+            {
+                return string.Empty;
+            }
 
             int totalRate = 0;
-            foreach (var m in mobs) totalRate += m.spawnRate;
+            foreach (var m in mobs)
+            {
+                totalRate += m.spawnRate;
+            }
 
             int randomPoint = Random.Range(0, totalRate);
             int currentRate = 0;
@@ -326,42 +376,53 @@ namespace InGame.ObjectPool
             foreach (var m in mobs)
             {
                 currentRate += m.spawnRate;
-                if (randomPoint < currentRate) return m.mobKey;
+                if (randomPoint < currentRate)
+                {
+                    return m.mobKey;
+                }
             }
 
             return mobs[0].mobKey;
         }
 
-        // --- 아이템 스폰 ---
-
+        /// <summary>
+        /// [설명]: 사망 지점에 아이템(경험치, 코인)을 생성합니다.
+        /// </summary>
         private void SpawnItems(Vector3 position)
         {
-            // 경험치 생성 (필수)
             if (ExpObjectPool != null)
             {
                 var exp = ExpObjectPool.Get();
-                if (exp != null) exp.transform.position = position;
+                if (exp != null)
+                {
+                    exp.transform.position = position;
+                }
             }
 
-            // 코인 생성 (확률)
             if (Random.Range(0f, 100f) < m_coinSpawnPercent && CoinObjectPool != null)
             {
                 var coin = CoinObjectPool.Get();
-                if (coin != null) coin.transform.position = position;
+                if (coin != null)
+                {
+                    coin.transform.position = position;
+                }
             }
         }
 
         #endregion
 
-        #region 8. 오브젝트 풀 관리 (Pool Management)
+        #region 오브젝트 풀 관리
 
-        // --- 몬스터 풀 ---
-
+        /// <summary>
+        /// [설명]: 지정된 키에 해당하는 몬스터를 풀에서 가져와 월드에 배치합니다.
+        /// </summary>
         private void SpawnMob(string mobKey)
         {
-            if (string.IsNullOrEmpty(mobKey)) return;
+            if (string.IsNullOrEmpty(mobKey))
+            {
+                return;
+            }
 
-            // 풀이 없으면 생성
             if (!m_mobPools.TryGetValue(mobKey, out var pool))
             {
                 pool = new ObjectPool<MobBase>(
@@ -378,60 +439,73 @@ namespace InGame.ObjectPool
             pool.Get();
         }
 
+        /// <summary>
+        /// [설명]: 몬스터 프리팹을 인스턴스화하고 풀링 인터페이스를 주입합니다.
+        /// </summary>
         private MobBase CreateMobInstance(string mobKey)
         {
-            if (!m_mobPrefabMap.TryGetValue(mobKey, out var prefab)) return null;
+            if (!m_mobPrefabMap.TryGetValue(mobKey, out var prefab))
+            {
+                return null;
+            }
 
             var obj = Instantiate(prefab, m_mobParent).GetComponent<MobBase>();
-            if (obj == null) return null;
+            if (obj == null)
+            {
+                return null;
+            }
 
-            // IObjectPoolUser 인터페이스 주입
             if (obj is IObjectPoolUser poolUser)
             {
                 poolUser.ObjectPoolSpawner = this;
             }
 
-            obj.gameObject.name = mobKey; // 풀링 키로 이름 설정
+            obj.gameObject.name = mobKey;
             return obj;
         }
 
+        /// <summary>
+        /// [설명]: 풀에서 꺼낸 몬스터를 재배치하고 초기화합니다.
+        /// </summary>
         private void OnGetMob(MobBase mob)
         {
-            // [중요] 위치 계산 및 배치를 활성화(OnEnable) 전에 수행
-            // 그래야 MobLogic이 올바른 시작 위치를 캡처할 수 있음
-            Vector3 spawnPos =
-                m_positionSolver.CalculateSpawnPosition(m_mainCamera != null ? m_mainCamera : Camera.main);
+            Vector3 spawnPos = m_positionSolver.CalculateSpawnPosition(m_mainCamera != null ? m_mainCamera : Camera.main);
             mob.transform.position = spawnPos;
 
             mob.gameObject.SetActive(true);
 
-            // 상태 초기화
             mob.Init(m_mobManager);
             mob.SetTarget(m_player);
 
-            // 시스템 알림
             m_waveSystem?.OnMobSpawned();
         }
 
+        /// <summary>
+        /// [설명]: 몬스터가 죽었을 때 풀에 반납하며 아이템 드랍 처리를 수행합니다.
+        /// </summary>
         private void OnReleaseMob(MobBase mob)
         {
-            if (!mob.gameObject.activeSelf) return; // 이미 비활성화된 경우 스킵
+            if (!mob.gameObject.activeSelf)
+            {
+                return;
+            }
 
             mob.gameObject.SetActive(false);
 
-            // 시스템 알림
             m_waveSystem?.OnMobDied();
 
-            // 아이템 드랍
             SpawnItems(mob.transform.position);
         }
 
         /// <summary>
-        /// 몬스터를 풀에 반납합니다. (MobBase.OnDie에서 호출)
+        /// [설명]: 외부에서 호출하여 몬스터를 안전하게 풀로 반환합니다.
         /// </summary>
         public void ReturnMob(MobBase mob)
         {
-            if (mob == null) return;
+            if (mob == null)
+            {
+                return;
+            }
 
             string key = mob.gameObject.name;
             if (m_mobPools.TryGetValue(key, out var pool))
@@ -445,11 +519,14 @@ namespace InGame.ObjectPool
         }
 
         /// <summary>
-        /// 아이템을 적절한 풀에 반납합니다.
+        /// [설명]: 외부에서 호출하여 아이템을 안전하게 풀로 반환합니다.
         /// </summary>
         public void ReturnItem(DropItemBase item)
         {
-            if (item == null) return;
+            if (item == null)
+            {
+                return;
+            }
 
             if (item is EXP_Obj exp && ExpObjectPool != null)
             {
@@ -465,40 +542,64 @@ namespace InGame.ObjectPool
             }
         }
 
-        // --- 아이템 풀 핸들러 ---
-        private void OnGetItem<T>(T item) where T : MonoBehaviour => item.gameObject.SetActive(true);
-        private void OnReleaseItem<T>(T item) where T : MonoBehaviour => item.gameObject.SetActive(false);
+        private void OnGetItem<T>(T item) where T : MonoBehaviour
+        {
+            item.gameObject.SetActive(true);
+        }
+
+        private void OnReleaseItem<T>(T item) where T : MonoBehaviour
+        {
+            item.gameObject.SetActive(false);
+        }
 
         private void OnDestroyObject<T>(T obj) where T : MonoBehaviour
         {
-            if (obj != null) Destroy(obj.gameObject);
+            if (obj != null)
+            {
+                Destroy(obj.gameObject);
+            }
         }
 
         #endregion
 
-        #region 9. 이벤트 핸들러 (Events)
+        #region 이벤트 구독 핸들러
 
+        /// <summary>
+        /// [설명]: 전역 게임 상태 이벤트를 구독합니다.
+        /// </summary>
         private void SubscribeEvents()
         {
             GameManager.OnPlayerChanged += OnPlayerChanged;
-            if (GameManager.Instance.State == null) return;
+            if (GameManager.Instance.State == null)
+            {
+                return;
+            }
             GameManager.Instance.State.OnGamePause += OnPause;
             GameManager.Instance.State.OnGameResume += OnResume;
             GameManager.Instance.State.OnGameOver += OnGameOver;
         }
 
+        /// <summary>
+        /// [설명]: 시스템 파괴 시 등록된 이벤트를 모두 해제합니다.
+        /// </summary>
         private void UnsubscribeEvents()
         {
             GameManager.OnPlayerChanged -= OnPlayerChanged;
-            if (GameManager.Instance.State == null) return;
+            if (GameManager.Instance.State == null)
+            {
+                return;
+            }
             GameManager.Instance.State.OnGamePause -= OnPause;
             GameManager.Instance.State.OnGameResume -= OnResume;
             GameManager.Instance.State.OnGameOver -= OnGameOver;
         }
 
         private void OnPause() => m_waveSystem?.Pause();
+
         private void OnResume() => m_waveSystem?.Resume();
+
         private void OnGameOver() => m_waveSystem?.Stop();
+
         private void OnPlayerChanged(PlayerBase newPlayer) => m_player = newPlayer;
 
         private void HandleWaveStarted(WaveData wave)
@@ -508,15 +609,22 @@ namespace InGame.ObjectPool
         }
 
         private void HandleWaveCompleted(WaveData wave) => OnWaveCompleted?.Invoke(wave);
+
         private void HandleStageCleared(int stageId) => OnStageCleared?.Invoke(stageId);
 
         #endregion
 
-        #region 10. 리소스 로드 (Addressables Helper)
+        #region 어드레서블 리소스 로드
 
+        /// <summary>
+        /// [설명]: 필요한 몬스터 프리팹이 로드되어 있는지 확인하고 없으면 비동기로 로드합니다.
+        /// </summary>
         private async UniTask EnsureMobPrefabLoaded(string key)
         {
-            if (m_mobPrefabMap.ContainsKey(key)) return;
+            if (m_mobPrefabMap.ContainsKey(key))
+            {
+                return;
+            }
 
             try
             {
@@ -533,6 +641,9 @@ namespace InGame.ObjectPool
             }
         }
 
+        /// <summary>
+        /// [설명]: 아이템 프리팹들을 일괄적으로 사전 로드합니다.
+        /// </summary>
         private async UniTask LoadItemPrefabsAsync()
         {
             await UniTask.WhenAll(
@@ -541,10 +652,19 @@ namespace InGame.ObjectPool
             );
         }
 
+        /// <summary>
+        /// [설명]: 특정 아이템 프리팹을 어드레서블로 로드하고 캐시합니다.
+        /// </summary>
         private async UniTask LoadItemPrefab(AssetReferenceGameObject reference)
         {
-            if (reference == null || !reference.RuntimeKeyIsValid()) return;
-            if (m_loadedItemPrefabs.ContainsKey(reference)) return;
+            if (reference == null || !reference.RuntimeKeyIsValid())
+            {
+                return;
+            }
+            if (m_loadedItemPrefabs.ContainsKey(reference))
+            {
+                return;
+            }
 
             try
             {
@@ -561,9 +681,15 @@ namespace InGame.ObjectPool
             }
         }
 
+        /// <summary>
+        /// [설명]: 아이템 풀에서 사용할 실제 인스턴스를 생성합니다.
+        /// </summary>
         private T CreateItem<T>(AssetReferenceGameObject reference) where T : MonoBehaviour
         {
-            if (!m_loadedItemPrefabs.TryGetValue(reference, out var prefab)) return null;
+            if (!m_loadedItemPrefabs.TryGetValue(reference, out var prefab))
+            {
+                return null;
+            }
 
             var obj = Instantiate(prefab, m_mobParent).GetComponent<T>();
             if (obj is IObjectPoolUser poolUser)
@@ -578,7 +704,7 @@ namespace InGame.ObjectPool
     }
 
     /// <summary>
-    /// 오브젝트 풀링을 사용하는 객체가 스포너 참조를 갖기 위해 구현하는 인터페이스입니다.
+    /// [설명]: 오브젝트 풀링을 사용하는 객체가 스포너 참조를 주입받기 위해 구현하는 인터페이스입니다.
     /// </summary>
     public interface IObjectPoolUser
     {

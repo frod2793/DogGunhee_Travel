@@ -4,65 +4,72 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Cysharp.Threading.Tasks;
-using InGame.vamsir; // SkillData 네임스페이스 가정
+using InGame.vamsir;
 
 namespace InGame.UI.Views
 {
     /// <summary>
-    /// 레벨업 시 스킬 선택 팝업을 관리하는 View 클래스입니다.
-    /// <br/> 스킬 버튼 오브젝트 풀링 및 선택 애니메이션 재생을 담당합니다.
+    /// [설명]: 레벨업 시 발생하는 스킬 선택 이벤트를 시각화하고 관리하는 View 클래스입니다.
+    /// 랜덤하게 제시된 스킬 버튼들의 오브젝트 풀링을 관리하며, 선택 시의 시각적 피드백(애니메이션) 및 타이머 동기화 로직을 담당합니다.
     /// </summary>
     public class InGameSkillView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [Header("패널 및 컨테이너")]
-        [SerializeField, Tooltip("스킬 선택 팝업 최상위 패널")] 
+        [SerializeField, Tooltip("스킬 선택 화면을 구성하는 최상위 팝업 패널")]
         private GameObject m_skillSelectionPanel;
-        
-        [SerializeField, Tooltip("스킬 버튼이 생성될 부모 Transform")] 
+
+        [SerializeField, Tooltip("동적으로 생성된 스킬 버튼들을 정렬하여 담을 부모 컨테이너")]
         private GameObject m_skillButtonContainer;
 
         [Header("UI 컨트롤")]
-        [SerializeField, Tooltip("새로고침(리롤) 버튼")] 
+        [SerializeField, Tooltip("제시된 스킬 목록을 다시 굴리기(Reroll) 위한 새로고침 버튼")]
         private Button m_refreshButton;
-        
-        [SerializeField, Tooltip("스킬 선택 버튼 프리팹")] 
+
+        [SerializeField, Tooltip("스킬 버튼 항목으로 사용될 프리팹 참조")]
         private SelectSkillBtnPrefab m_skillSelectionButtonPrefab;
 
-        [Header("타이머 표시 (옵션)")]
-        [SerializeField, Tooltip("남은 시간 텍스트")] 
+        [Header("타이머 및 보조 UI")]
+        [SerializeField, Tooltip("스킬 선택 제한 시간을 숫자로 표시할 텍스트")]
         private TMP_Text m_countdownText;
-        
-        [SerializeField, Tooltip("남은 시간 슬라이더")] 
+
+        [SerializeField, Tooltip("남은 선택 시간을 시각적 게이지로 표시할 슬라이더")]
         private Slider m_countDownSlider;
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
-        // 외부 이벤트를 중계하기 위한 액션
+        #region 내부 필드
+
+        /// <summary> 새로고침 버튼 클릭 시 외부(Presenter/ViewModel)로 전달할 요청 콜백 </summary>
         private Action m_onRefreshRequested;
-        
-        // 버튼 재사용을 위한 오브젝트 풀
+
+        /// <summary> 버튼의 잦은 메모리 할당을 방지하기 위해 재사용되는 위젯 인스턴스 목록 </summary>
         private readonly List<SelectSkillBtnPrefab> m_skillButtonPool = new List<SelectSkillBtnPrefab>();
+
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
+
+        /// <summary>
+        /// [설명]: 뷰 파기 시 버튼 리스너를 명시적으로 해제하여 참조 누수를 방지합니다.
+        /// </summary>
         private void OnDestroy()
         {
-            // 리스너 해제 (메모리 누수 방지)
             if (m_refreshButton != null)
             {
                 m_refreshButton.onClick.RemoveAllListeners();
             }
         }
+
         #endregion
 
-        #region 4. 초기화 및 설정
+        #region 초기화
+
         /// <summary>
-        /// 뷰를 초기화하고 이벤트를 연결합니다.
+        /// [설명]: 뷰의 가동에 필요한 기초 데이터를 설정하고 하드웨어 상호작용(버튼)을 바인딩합니다.
         /// </summary>
-        /// <param name="onRefresh">새로고침 버튼 클릭 시 실행될 콜백</param>
+        /// <param name="onRefresh">새로고침이 발생했을 때 수행할 로직 대리자</param>
         public void Initialize(Action onRefresh)
         {
             m_onRefreshRequested = onRefresh;
@@ -70,110 +77,147 @@ namespace InGame.UI.Views
             if (m_refreshButton != null)
             {
                 m_refreshButton.onClick.RemoveAllListeners();
-                m_refreshButton.onClick.AddListener(() => m_onRefreshRequested?.Invoke());
+                m_refreshButton.onClick.AddListener(() =>
+                {
+                    if (m_onRefreshRequested != null)
+                    {
+                        m_onRefreshRequested.Invoke();
+                    }
+                });
             }
         }
+
         #endregion
 
-        #region 5. UI 제어 (Show/Hide/Update)
+        #region UI 상태 제어
+
         /// <summary>
-        /// 스킬 선택 창의 표시 여부를 설정합니다.
+        /// [설명]: 스킬 선택 패널의 활성 상태를 물리적으로 토글하고 부수적인 타이머 위젯들의 가시성을 동기화합니다.
         /// </summary>
+        /// <param name="active">표시 여부 플래그</param>
         public void Show(bool active)
         {
-            // 방어적 처리: 필수 패널이 없으면 경고
             if (m_skillSelectionPanel == null)
             {
-                Debug.LogWarning("[InGameSkillView] m_skillSelectionPanel이 할당되지 않았습니다.");
+                Debug.LogWarning("[InGameSkillView] m_skillSelectionPanel 참조가 누락되었습니다.");
                 return;
             }
-            
+
             m_skillSelectionPanel.SetActive(active);
 
-            // 팝업이 닫힐 때 타이머 UI도 비활성화 (필요 시)
+            // 팝업 가시성에 따른 타이머 연동
             if (!active)
             {
-                if (m_countdownText != null) m_countdownText.gameObject.SetActive(false);
-                if (m_countDownSlider != null) m_countDownSlider.gameObject.SetActive(false);
+                if (m_countdownText != null)
+                {
+                    m_countdownText.gameObject.SetActive(false);
+                }
+                
+                if (m_countDownSlider != null)
+                {
+                    m_countDownSlider.gameObject.SetActive(false);
+                }
             }
             else
             {
-                // 팝업이 열릴 때 타이머 UI 활성화 (UpdateTimer에서 매번 켜는 것보다 효율적)
-                if (m_countdownText != null) m_countdownText.gameObject.SetActive(true);
-                if (m_countDownSlider != null) m_countDownSlider.gameObject.SetActive(true);
+                if (m_countdownText != null)
+                {
+                    m_countdownText.gameObject.SetActive(true);
+                }
+                
+                if (m_countDownSlider != null)
+                {
+                    m_countDownSlider.gameObject.SetActive(true);
+                }
             }
         }
 
         /// <summary>
-        /// 남은 선택 시간을 UI에 표시합니다.
+        /// [설명]: 현재 진행 중인 스킬 선택 타이머 수치를 위젯에 실시간으로 투영합니다.
         /// </summary>
-        /// <param name="normalizedTime">0.0 ~ 1.0 정규화된 시간 (슬라이더용)</param>
-        /// <param name="secondsRemaining">남은 초 (텍스트용)</param>
+        /// <param name="normalizedTime">0~1 사이의 정규화된 시간 값 (슬라이더용)</param>
+        /// <param name="secondsRemaining">정수 형태의 남은 초 (텍스트용)</param>
         public void UpdateTimer(float normalizedTime, int secondsRemaining)
         {
-            if (m_countdownText != null) 
+            if (m_countdownText != null)
             {
                 m_countdownText.text = secondsRemaining.ToString();
             }
 
-            if (m_countDownSlider != null) 
+            if (m_countDownSlider != null)
             {
                 m_countDownSlider.value = normalizedTime;
             }
         }
+
         #endregion
 
-        #region 6. 스킬 선택 로직 (Pooling)
+        #region 스킬 선택 및 풀링
+
         /// <summary>
-        /// 선택 가능한 스킬 목록을 받아 버튼을 생성하거나 갱신합니다. (오브젝트 풀링 적용)
+        /// [설명]: 전달된 스킬 후보군 데이터를 기반으로 선택 버튼들을 갱신하거나 새로 생성(풀링)합니다.
         /// </summary>
-        /// <param name="choices">표시할 스킬 데이터 리스트</param>
-        /// <param name="onSelected">스킬 선택 시 실행될 콜백</param>
+        /// <param name="choices">제시할 스킬 데이터 리스트</param>
+        /// <param name="onSelected">최종 선택 시 호출될 콜백</param>
         public void RefreshSkillChoices(List<SkillData> choices, Action<SkillData> onSelected)
         {
-            if (m_skillButtonContainer == null || m_skillSelectionButtonPrefab == null) return;
-
-            // 1. 기존 버튼 모두 비활성화 (풀링 반환 효과)
-            foreach (var btn in m_skillButtonPool) 
+            if (m_skillButtonContainer == null || m_skillSelectionButtonPrefab == null)
             {
-                if (btn != null) btn.gameObject.SetActive(false);
+                return;
             }
 
-            // 2. 필요한 만큼 버튼 활성화 또는 생성
+            // 1. 기존에 노출되어 있던 모든 버튼을 숨겨 풀(Pool)로 반환 처리
+            for (int j = 0; j < m_skillButtonPool.Count; j++)
+            {
+                if (m_skillButtonPool[j] != null)
+                {
+                    m_skillButtonPool[j].gameObject.SetActive(false);
+                }
+            }
+
+            // 2. 새로운 데이터에 맞춰 버튼 활성화 및 바인딩
             for (int i = 0; i < choices.Count; i++)
             {
                 SelectSkillBtnPrefab btn;
 
-                // 풀에 여유가 있으면 재사용
                 if (i < m_skillButtonPool.Count)
                 {
                     btn = m_skillButtonPool[i];
                 }
-                // 없으면 새로 생성
                 else
                 {
                     btn = Instantiate(m_skillSelectionButtonPrefab, m_skillButtonContainer.transform);
                     m_skillButtonPool.Add(btn);
                 }
 
-                // 버튼 설정 및 활성화
                 if (btn != null)
                 {
                     btn.gameObject.SetActive(true);
-                    // 람다 캡처 주의: 버튼 내부에서 invoke 시점의 데이터가 보장되도록 Setup에 데이터 전달
-                    btn.Setup(choices[i], skill => onSelected?.Invoke(skill));
+                    
+                    // 클로저 캡처 주의: choices[i]의 참조를 전달하거나 로컬 변수 활용
+                    SkillData currentData = choices[i];
+                    btn.Setup(currentData, skill =>
+                    {
+                        if (onSelected != null)
+                        {
+                            onSelected.Invoke(skill);
+                        }
+                    });
                 }
             }
         }
 
         /// <summary>
-        /// 선택된 스킬 버튼의 애니메이션을 재생하고 대기합니다.
+        /// [설명]: 특정 스킬이 선택되었을 때 해당 버튼의 클릭 시각 연출 트윈을 명시적으로 실행하고 완료를 대기합니다.
         /// </summary>
+        /// <param name="skill">선택된 스킬 데이터</param>
         public async UniTask PlaySelectionAnimation(SkillData skill)
         {
-            foreach (var btn in m_skillButtonPool)
+            for (int i = 0; i < m_skillButtonPool.Count; i++)
             {
-                // 활성화된 버튼 중 선택된 스킬을 가진 버튼 찾기
+                var btn = m_skillButtonPool[i];
+                
+                // 현재 활성 상태이며 매칭되는 데이터를 가진 버튼 검색
                 if (btn != null && btn.gameObject.activeSelf && btn.GetCurrentSkillData() == skill)
                 {
                     await btn.PlaySelectionAnimation();
@@ -181,6 +225,7 @@ namespace InGame.UI.Views
                 }
             }
         }
+
         #endregion
     }
 }

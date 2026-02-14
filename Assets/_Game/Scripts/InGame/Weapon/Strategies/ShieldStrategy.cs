@@ -1,25 +1,26 @@
+using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
-using InGame.Weapon.Logic; // ShieldWeaponLogic 참조
-using System;
+using InGame.Weapon.Logic;
+using InGame.Managers;
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 방어막 및 충격파(Shield) 무기의 공격 전략을 담당하는 클래스입니다.
-    /// <br/> 비동기 루프를 사용하여 애니메이션과 이펙트 생성 타이밍을 제어합니다.
+    /// [설명]: 방어막 및 충격파(Shield) 무기의 공격 전략을 담당하는 클래스입니다.
+    /// 비동기 루프를 사용하여 애니메이션과 이펙트 생성 타이밍을 제어합니다.
     /// </summary>
     public class ShieldStrategy : IWeaponStrategy
     {
-        #region 1. 상수 및 해시 (Constants)
+        #region 상수 및 해시
 
         private static readonly int k_AnimHashAttack = Animator.StringToHash("Drop_shield");
 
         #endregion
 
-        #region 2. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
@@ -34,7 +35,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -79,90 +80,7 @@ namespace InGame.Weapon.Strategies
             else m_logic.UpdateStats(stats);
 
             // 뷰 인스턴스 지연 생성 (Lazy Init)
-            if (m_viewInstance == null && m_data.ModelPrefab != null)
-            {
-                m_viewInstance = UnityEngine.Object.Instantiate(m_data.ModelPrefab, owner);
-                m_viewInstance.transform.localPosition = Vector3.zero;
-                
-                // 수정: 자식 오브젝트에 애니메이터가 있을 수 있으므로 InChildren으로 변경
-                m_animator = m_viewInstance.GetComponentInChildren<Animator>();
-                
-                // 프리팹에서 비활성화되어 있을 수 있으므로 강제 활성화
-                if (m_animator != null)
-                {
-                    m_animator.enabled = true;
-                }
-
-                if (m_animator == null)
-                {
-                    LogManager.LogError($"[ShieldStrategy] Animator를 찾을 수 없습니다! Prefab: {m_viewInstance.name}");
-                }
-
-                // 뷰 컴포넌트 데이터 로직에 전달 (자식에 있을 수 있음)
-                var viewComponent = m_viewInstance.GetComponentInChildren<Controllers.ShieldWeaponView>();
-                
-                // 무기 인스턴스에 없으면 PoolManager에서 시도
-                if (viewComponent == null && m_poolManager != null)
-                {
-                    viewComponent = m_poolManager.GetComponent<Controllers.ShieldWeaponView>();
-                }
-
-                ShieldWeaponTuningData? tuningData = null;
-
-                if (viewComponent != null)
-                {
-                    tuningData = new ShieldWeaponTuningData
-                    {
-                        ImpactTriggerTime = viewComponent.ImpactTriggerTime,
-                        FollowThroughDelay = viewComponent.FollowThroughDelay,
-                        BoomerangSpeed = viewComponent.BoomerangSpeed,
-                        ReturnDelay = viewComponent.ReturnDelay,
-                        RotationsPerSecond = viewComponent.RotationsPerSecond,
-                        ShockwaveOffset = viewComponent.ShockwaveOffset
-                    };
-                }
-                else
-                {
-                    LogManager.LogWarning($"[ShieldStrategy] ShieldWeaponView 컴포넌트를 찾을 수 없습니다. Prefab: {m_viewInstance.name}");
-                }
-
-                m_logic.UpdateStats(stats, tuningData);
-            }
-            else
-            {
-                if (m_viewInstance != null)
-                {
-                    var viewComponent = m_viewInstance.GetComponentInChildren<Controllers.ShieldWeaponView>();
-                    
-                    // 무기 인스턴스에 없으면 PoolManager에서 시도
-                    if (viewComponent == null && m_poolManager != null)
-                    {
-                        viewComponent = m_poolManager.GetComponent<Controllers.ShieldWeaponView>();
-                    }
-
-                    if (viewComponent != null)
-                    {
-                         var tuningData = new ShieldWeaponTuningData
-                        {
-                            ImpactTriggerTime = viewComponent.ImpactTriggerTime,
-                            FollowThroughDelay = viewComponent.FollowThroughDelay,
-                            BoomerangSpeed = viewComponent.BoomerangSpeed,
-                            ReturnDelay = viewComponent.ReturnDelay,
-                            RotationsPerSecond = viewComponent.RotationsPerSecond,
-                            ShockwaveOffset = viewComponent.ShockwaveOffset
-                        };
-                        m_logic.UpdateStats(stats, tuningData);
-                    }
-                    else
-                    {
-                         m_logic.UpdateStats(stats);
-                    }
-                }
-                else
-                {
-                    m_logic.UpdateStats(stats);
-                }
-            }
+            InitializeView(owner, stats);
 
             m_owner = owner;
             PerformAttackAsync().Forget();
@@ -175,7 +93,71 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 4. 상세 공격 로직 (Attack Logic)
+        #region 상세 공격 로직
+
+        /// <summary>
+        /// 뷰 인스턴스를 생성하거나 초기화하고, 로직에 필요한 튜닝 데이터를 전달합니다.
+        /// </summary>
+        private void InitializeView(Transform owner, WeaponRuntimeStats stats)
+        {
+            if (m_viewInstance == null && m_data.ModelPrefab != null)
+            {
+                m_viewInstance = UnityEngine.Object.Instantiate(m_data.ModelPrefab, owner);
+                m_viewInstance.transform.localPosition = Vector3.zero;
+                
+                m_animator = m_viewInstance.GetComponentInChildren<Animator>();
+                
+                if (m_animator != null)
+                {
+                    m_animator.enabled = true;
+                }
+                else
+                {
+                    LogManager.LogError($"[ShieldStrategy] Animator를 찾을 수 없습니다! Prefab: {m_viewInstance.name}", LogManager.LogCategory.Weapon);
+                }
+
+                // 뷰 컴포넌트 데이터 로직에 전달
+                UpdateLogicWithViewData(stats);
+            }
+            else if (m_viewInstance != null)
+            {
+                UpdateLogicWithViewData(stats);
+            }
+        }
+
+        private void UpdateLogicWithViewData(WeaponRuntimeStats stats)
+        {
+            Controllers.ShieldWeaponView viewComponent = null;
+
+            if (m_viewInstance != null)
+            {
+                viewComponent = m_viewInstance.GetComponentInChildren<Controllers.ShieldWeaponView>();
+            }
+            
+            // 무기 인스턴스에 없으면 PoolManager에서 시도
+            if (viewComponent == null && m_poolManager != null)
+            {
+                viewComponent = m_poolManager.GetComponent<Controllers.ShieldWeaponView>();
+            }
+
+            if (viewComponent != null)
+            {
+                var tuningData = new ShieldWeaponTuningData
+                {
+                    ImpactTriggerTime = viewComponent.ImpactTriggerTime,
+                    FollowThroughDelay = viewComponent.FollowThroughDelay,
+                    BoomerangSpeed = viewComponent.BoomerangSpeed,
+                    ReturnDelay = viewComponent.ReturnDelay,
+                    RotationsPerSecond = viewComponent.RotationsPerSecond,
+                    ShockwaveOffset = viewComponent.ShockwaveOffset
+                };
+                m_logic.UpdateStats(stats, tuningData);
+            }
+            else
+            {
+                m_logic.UpdateStats(stats);
+            }
+        }
 
         /// <summary>
         /// 비동기 방식으로 애니메이션 재생 및 충격파/부메랑 스폰을 처리합니다.
@@ -188,16 +170,11 @@ namespace InGame.Weapon.Strategies
             try
             {
                 // 애니메이션 시각화
-                if (m_animator != null)
+                if (m_animator != null && m_viewInstance != null)
                 {
                     m_viewInstance.SetActive(true);
                     m_animator.speed = m_logic.AttackSpeed;
                     m_animator.SetTrigger(k_AnimHashAttack);
-                    // LogManager.Log($"[ShieldStrategy] Animation Triggered: Attack (Speed: {m_animator.speed})");
-                }
-                else
-                {
-                    // LogManager.LogError("[ShieldStrategy] Animator is null during attack!");
                 }
 
                 // 애니메이션 타격(내려찍기) 페이즈까지 대기
@@ -236,7 +213,6 @@ namespace InGame.Weapon.Strategies
             if (effect != null)
             {
                 // 위치 설정 (오프셋 반영)
-                // 로컬 좌표계 오프셋을 월드 좌표로 변환하여 적용
                 Vector3 offset = m_owner.TransformDirection(m_logic.ShockwaveOffset);
                 effect.transform.position = position + offset;
 
@@ -244,9 +220,6 @@ namespace InGame.Weapon.Strategies
             }
         }
 
-        /// <summary>
-        /// 진화 시 플레이어 주변으로 부메랑 투사체를 사출합니다.
-        /// </summary>
         private void LaunchBoomerangs(Transform owner)
         {
             if (m_poolManager == null) return;

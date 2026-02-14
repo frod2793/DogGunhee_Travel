@@ -1,11 +1,10 @@
-using System;
 using UnityEngine;
 using InGame.Weapon.Base;
 
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 히어로 랜딩(방패) 무기의 에디터 조정 데이터를 담는 구조체입니다.
+    /// [설명]: 히어로 랜딩(방패) 무기의 에디터 조정 데이터를 담는 구조체입니다.
     /// </summary>
     public struct ShieldWeaponTuningData
     {
@@ -18,17 +17,17 @@ namespace InGame.Weapon.Logic
     }
 
     /// <summary>
-    /// 히어로 랜딩 무기의 비즈니스 로직(타이밍 계산, 부메랑 궤적 등)을 담당하는 클래스입니다.
+    /// [설명]: 히어로 랜딩 무기의 비즈니스 로직(타이밍 계산, 부메랑 궤적 등)을 담당하는 클래스입니다.
     /// </summary>
     public class ShieldWeaponLogic
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponRuntimeStats m_runtimeStats;
 
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
 
         // 애니메이션 및 타이밍 설정
         public float ImpactTriggerTime { get; private set; } = 1.07f;
@@ -50,7 +49,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 3. 생성자 및 초기화 (Constructor & Init)
+        #region 생성자 및 초기화
 
         public ShieldWeaponLogic(WeaponRuntimeStats stats, ShieldWeaponTuningData? tuningData = null)
         {
@@ -83,7 +82,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 4. 로직 메서드 (Logic Methods)
+        #region 로직 메서드
 
         /// <summary>
         /// 인덱스에 따른 부메랑의 발사 방향과 초기 회전값을 계산합니다.

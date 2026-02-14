@@ -4,20 +4,20 @@ using UnityEngine.Serialization;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 진주(Pearl) 무기의 전투 판정(쿨타임) 및 트레일러 시각 효과를 설정하는 뷰 컴포넌트입니다.
-    /// <br/> WeaponPoolManager나 무기 프리팹에 부착되어 로직(Controller/Logic)에서 참조합니다.
+    /// [설명]: 진주(Pearl) 무기의 전투 판정(쿨타임) 및 트레일러 시각 효과를 설정하는 뷰 컴포넌트입니다.
+    /// WeaponPoolManager나 무기 프리팹에 부착되어 로직(Controller/Logic)에서 참조합니다.
     /// </summary>
     public class PearlWeaponView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("1. 전투 튜닝")]
+        [Header("전투 튜닝")]
         [Tooltip("동일한 몬스터에게 다시 데미지를 입히기까지의 최소 대기 시간(초)입니다.")]
         [FormerlySerializedAs("HitCooldown")]
         [Range(0.05f, 2.0f)] // 너무 짧으면 연산 부하, 너무 길면 성능 저하 방지
         [SerializeField] private float m_hitCooldown = 0.5f;
 
-        [Header("2. 트레일(꼬리) 설정")]
+        [Header("트레일(꼬리) 설정")]
         [Tooltip("트레일이 화면에 유지되는 시간(초)입니다.")]
         [FormerlySerializedAs("TrailTime")]
         [Range(0.1f, 2.0f)]
@@ -33,7 +33,7 @@ namespace InGame.Weapon.Controllers
         [Range(0.0f, 1.0f)]
         [SerializeField] private float m_trailEndWidth = 0.0f;
 
-        [Header("3. 트레일 색상")]
+        [Header("트레일 색상")]
         [Tooltip("기본 상태(Lv1)의 트레일 색상입니다.")]
         [FormerlySerializedAs("TrailColorLv1")]
         [SerializeField] private Color m_trailColorLv1 = new Color(1f, 1f, 1f, 0.5f);
@@ -44,7 +44,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 공개 프로퍼티 (Properties)
+        #region 공개 프로퍼티
 
         /// <summary>
         /// 동일 대상 타격 쿨타임 (초)

@@ -5,7 +5,7 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 범위 공격 효과를 정의하는 인터페이스입니다.
+    /// [설명]: 범위 공격 효과를 정의하는 인터페이스입니다.
     /// </summary>
     public interface IAreaAttackEffect
     {
@@ -16,20 +16,20 @@ namespace InGame.Weapon.Strategies
     }
 
     /// <summary>
-    /// 특정 위치에 범위 공격(Area of Effect)을 생성하는 범용 전략 클래스입니다.
+    /// [설명]: 특정 위치에 범위 공격(Area of Effect)을 생성하는 범용 전략 클래스입니다.
     /// </summary>
     /// <typeparam name="TEffect">IAreaAttackEffect를 구현하는 MonoBehaviour</typeparam>
     public class AreaAttackStrategy<TEffect> : IWeaponStrategy
         where TEffect : MonoBehaviour, IAreaAttackEffect
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {

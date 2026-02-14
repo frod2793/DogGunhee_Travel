@@ -8,7 +8,7 @@ using InGame.Services;
 namespace InGame.Lobby.ViewModels
 {
     /// <summary>
-    /// 아이템 선택 프로세스에 필요한 기초 데이터 구조입니다.
+    /// [설명]: 아이템 선택 프로세스에 필요한 기초 데이터 구조입니다.
     /// </summary>
     public class ItemSelectData
     {
@@ -19,20 +19,20 @@ namespace InGame.Lobby.ViewModels
     }
 
     /// <summary>
-    /// 인벤토리 및 장착 시스템의 비즈니스 로직을 처리하는 ViewModel 클래스입니다.
-    /// <br/>R3를 활용하여 아이템 목록과 현재 선택 상태를 리액티브하게 관리합니다.
+    /// [설명]: 인벤토리 및 장착 시스템의 비즈니스 로직을 처리하는 ViewModel 클래스입니다.
+    /// R3를 활용하여 아이템 목록과 현재 선택 상태를 리액티브하게 관리합니다.
     /// </summary>
     public class ItemSelectViewModel : IDisposable
     {
-        #region 1. 반응형 프로퍼티 (View가 구독)
+        #region 반응형 프로퍼티
 
-        /// <summary> 표시할 아이템 데이터 목록 </summary>
+        /// <summary> [설명]: 표시할 아이템 데이터 목록 </summary>
         public ReadOnlyReactiveProperty<List<ItemSelectData>> Items => m_items;
 
         private readonly ReactiveProperty<List<ItemSelectData>> m_items =
             new ReactiveProperty<List<ItemSelectData>>(new List<ItemSelectData>());
 
-        /// <summary> 현재 유저가 클릭한 아이템 데이터 </summary>
+        /// <summary> [설명]: 현재 유저가 클릭한 아이템 데이터 </summary>
         public ReadOnlyReactiveProperty<ItemSelectData> CurrentSelectedItem => m_currentSelectedItem;
 
         private readonly ReactiveProperty<ItemSelectData>
@@ -40,26 +40,26 @@ namespace InGame.Lobby.ViewModels
 
         #endregion
 
-        #region 2. 이벤트 발행 (View가 리슨)
+        #region 이벤트 발행
 
-        /// <summary> 시스템 에러 발생 시 알림 </summary>
+        /// <summary> [설명]: 시스템 에러 발생 시 알림 </summary>
         public Observable<string> OnError => m_errorSubject;
 
         private readonly Subject<string> m_errorSubject = new Subject<string>();
 
-        /// <summary> 아이템 장착 처리가 완료되었을 때 알림 </summary>
+        /// <summary> [설명]: 아이템 장착 처리가 완료되었을 때 알림 </summary>
         public Observable<string> OnItemEquipped => m_itemEquippedSubject;
 
         private readonly Subject<string> m_itemEquippedSubject = new Subject<string>();
 
         #endregion
 
-        #region 3. 내부 필드 및 생성자
+        #region 내부 필드
 
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary>
-        /// ItemSelectViewModel의 기본 생성자입니다.
+        /// [설명]: ItemSelectViewModel의 기본 생성자입니다.
         /// </summary>
         public ItemSelectViewModel()
         {
@@ -68,10 +68,10 @@ namespace InGame.Lobby.ViewModels
 
         #endregion
 
-        #region 4. 비즈니스 로직
+        #region 비즈니스 로직
 
         /// <summary>
-        /// 보유 중인 아이템 목록을 서비스 레이어(데이터 매니저)로부터 불러와 갱신합니다.
+        /// [설명]: 보유 중인 아이템 목록을 서비스 레이어(데이터 매니저)로부터 불러와 갱신합니다.
         /// </summary>
         public void LoadItems()
         {
@@ -94,7 +94,7 @@ namespace InGame.Lobby.ViewModels
         }
 
         /// <summary>
-        /// 특정 아이템을 현재 선택 중인 대상으로 지정합니다.
+        /// [설명]: 특정 아이템을 현재 선택 중인 대상으로 지정합니다.
         /// </summary>
         public void SelectItem(ItemSelectData item)
         {
@@ -102,7 +102,7 @@ namespace InGame.Lobby.ViewModels
         }
 
         /// <summary>
-        /// 현재 강조된 아이템을 실제로 플레이어 캐릭터에게 장착하거나 사용을 확정합니다.
+        /// [설명]: 현재 강조된 아이템을 실제로 플레이어 캐릭터에게 장착하거나 사용을 확정합니다.
         /// </summary>
         public void EquipItem()
         {
@@ -121,10 +121,10 @@ namespace InGame.Lobby.ViewModels
 
         #endregion
 
-        #region 5. 리소스 해제 (IDisposable)
+        #region 리소스 해제
 
         /// <summary>
-        /// 뷰모델 파생 시 모든 구독 정보를 정리하여 메모리 누수를 방지합니다.
+        /// [설명]: 뷰모델 파생 시 모든 구독 정보를 정리하여 메모리 누수를 방지합니다.
         /// </summary>
         public void Dispose()
         {

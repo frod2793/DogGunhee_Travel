@@ -3,20 +3,20 @@ using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Weapon.Base;
 using InGame.Weapon.Logic;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 히어로 랜딩(방패) 공격의 시각적 연출과 비동기 제어를 담당하는 컨트롤러입니다.
-    /// <br/> 충격파 생성, 부메랑 투사체 발사 등의 타이밍을 애니메이션과 동기화합니다.
-    /// <br/> 실제 데미지 계산 및 물리 로직은 ShieldWeaponLogic에 수행니다.
+    /// [설명]: 히어로 랜딩(방패) 공격의 시각적 연출과 비동기 제어를 담당하는 컨트롤러입니다.
+    /// 충격파 생성, 부메랑 투사체 발사 등의 타이밍을 애니메이션과 동기화합니다.
+    /// 실제 데미지 계산 및 물리 로직은 ShieldWeaponLogic에 수행합니다.
     /// </summary>
     public class ShieldWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 변수 및 컴포넌트 (Components & State)
+        #region 내부 변수 및 컴포넌트
 
         // 비주얼 오브젝트 (방패 모델)
         private GameObject m_shieldObj;
@@ -37,7 +37,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 초기화 및 해제 (Init & Dispose)
+        #region 초기화 및 해제
 
         public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
         {
@@ -73,8 +73,8 @@ namespace InGame.Weapon.Controllers
 
             // 2. 튜닝 데이터 및 로직(POCO) 초기화 (수정: Nullable을 사용하여 데이터 부재 시 기본값 보호)
             ShieldWeaponTuningData? tuningData = null;
-            ShieldWeaponView view = null;
-            if (m_shieldObj != null)
+            ShieldWeaponView view = null; 
+            if (m_shieldObj != null) 
             {
                 view = m_shieldObj.GetComponentInChildren<ShieldWeaponView>();
             }
@@ -85,7 +85,7 @@ namespace InGame.Weapon.Controllers
                 view = m_poolManager.GetComponent<ShieldWeaponView>();
             }
 
-            if (view != null)
+            if (view != null) 
             {
                 tuningData = new ShieldWeaponTuningData
                 {
@@ -186,8 +186,11 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 공격 실행 (Attack Execution)
+        #region 공격 실행
 
+        /// <summary>
+        /// [설명]: 공격을 실행합니다. 비동기로 애니메이션과 효과를 동기화합니다.
+        /// </summary>
         protected override void ExecuteAttack(Vector3 direction)
         {
             // 이전 공격 취소 및 새 토큰 생성
@@ -267,7 +270,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 투사체 및 효과 생성 (Spawning)
+        #region 투사체 및 효과 생성
 
         private void SpawnShockwaveEffect()
         {
@@ -326,7 +329,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 오브젝트 풀 델리게이트 (Pool Callbacks)
+        #region 오브젝트 풀 델리게이트
 
         // --- 부메랑 (Projectile) ---
         private ShieldProjectile CreateBoomerangProjectile()

@@ -12,15 +12,16 @@ using InGame.UI;
 namespace InGame.UI.Popups
 {
     /// <summary>
-    /// 아이템 선택 팝업의 시각적 요소를 관리하고 사용자 입력을 수신하는 View 클래스입니다.
-    /// <br/>ItemSelectViewModel과 연동하여 보유 아이템 목록을 표시하고 장착 기능을 수행합니다.
+    /// [설명]: 아이템 선택 팝업의 시각적 요소를 관리하고 사용자 입력을 수신하는 View 클래스입니다.
+    /// ItemSelectViewModel과 연동하여 보유 아이템 목록을 표시하고 장착 기능을 수행합니다.
     /// </summary>
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, null, "InGame.Lobby", "ItemSelectManager")]
     public class ItemSelectView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("<color=green>아이템 목록 설정</color>")] [SerializeField, Tooltip("아이템 선택 패널 부모 오브젝트")]
+        [Header("<color=green>아이템 목록 설정</color>")]
+        [SerializeField, Tooltip("아이템 선택 패널 부모 오브젝트")]
         private GameObject m_itemSelectPanel;
 
         [SerializeField, Tooltip("아이템 인덱스가 생성될 컨테이너")]
@@ -29,7 +30,8 @@ namespace InGame.UI.Popups
         [SerializeField, Tooltip("개별 아이템 표시용 프리팹")]
         private Item_Index m_itemSelectPrefab;
 
-        [Header("<color=green>아이템 상세 정보창</color>")] [SerializeField, Tooltip("아이템 상세 확장 패널")]
+        [Header("<color=green>아이템 상세 정보창</color>")]
+        [SerializeField, Tooltip("아이템 상세 확장 패널")]
         private GameObject m_itemSelectExtension;
 
         [SerializeField, Tooltip("아이템 이름 텍스트")]
@@ -41,11 +43,12 @@ namespace InGame.UI.Popups
         [SerializeField, Tooltip("아이템 상세 설명 텍스트")]
         private TMP_Text m_itemDescriptionText;
 
-        [SerializeField, Tooltip("장착 확정 버튼")] private Button m_itemSelectButton;
+        [SerializeField, Tooltip("장착 확정 버튼")]
+        private Button m_itemSelectButton;
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
+        #region 내부 변수
 
         private ItemSelectViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
@@ -54,7 +57,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Start()
         {
@@ -78,10 +81,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 4. MVVM 데이터 바인딩
+        #region MVVM 데이터 바인딩
 
         /// <summary>
-        /// 뷰모델을 생성하고 초기화합니다.
+        /// [설명]: 뷰모델을 생성하고 초기화합니다.
         /// </summary>
         private void InitializeViewModel()
         {
@@ -89,11 +92,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 뷰모델의 속성 변화를 구독하여 UI 요소를 업데이트합니다.
+        /// [설명]: 뷰모델의 속성 변화를 구독하여 UI 요소를 업데이트합니다.
         /// </summary>
         private void BindViewModel()
         {
-            if (m_viewModel == null) return;
+            if (m_viewModel == null)
+            {
+                return;
+            }
 
             // 1. 아이템 목록 동기화
             m_viewModel.Items
@@ -122,10 +128,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 5. UI 업데이트 로직
+        #region UI 업데이트 로직
 
         /// <summary>
-        /// 아이템 데이터 목록을 기반으로 UI 리스트를 동적으로 구성합니다.
+        /// [설명]: 아이템 데이터 목록을 기반으로 UI 리스트를 동적으로 구성합니다.
         /// </summary>
         private void UpdateItemList(List<ItemSelectData> items)
         {
@@ -140,7 +146,10 @@ namespace InGame.UI.Popups
 
             m_spawnedItems.Clear();
 
-            if (items == null) return;
+            if (items == null)
+            {
+                return;
+            }
 
             foreach (var itemData in items)
             {
@@ -174,11 +183,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 우측 상세 패널의 정보를 현재 선택된 아이템 정보로 갱신합니다.
+        /// [설명]: 우측 상세 패널의 정보를 현재 선택된 아이템 정보로 갱신합니다.
         /// </summary>
         private void UpdateDetailPanel(ItemSelectData itemData)
         {
-            if (itemData == null) return;
+            if (itemData == null)
+            {
+                return;
+            }
 
             if (m_itemNameText != null)
             {
@@ -195,10 +207,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 6. 패널 제어 로직 (Open/Close)
+        #region 패널 제어 로직
 
         /// <summary>
-        /// 메인 아이템 선택 패널을 활성화하고 팝업 스택에 등록합니다.
+        /// [설명]: 메인 아이템 선택 패널을 활성화하고 팝업 스택에 등록합니다.
         /// </summary>
         public void OpenItemSelectPanel()
         {
@@ -216,7 +228,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 메인 아이템 선택 패널을 비활성화합니다.
+        /// [설명]: 메인 아이템 선택 패널을 비활성화합니다.
         /// </summary>
         public void CloseItemSelectPanel()
         {
@@ -227,7 +239,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 아이템 상세 정보창을 열고 팝업 스택에 등록합니다.
+        /// [설명]: 아이템 상세 정보창을 열고 팝업 스택에 등록합니다.
         /// </summary>
         private void OpenItemExtensionPanel()
         {
@@ -239,7 +251,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 아이템 상세 정보창을 닫습니다.
+        /// [설명]: 아이템 상세 정보창을 닫습니다.
         /// </summary>
         private void CloseItemExtensionPanel()
         {

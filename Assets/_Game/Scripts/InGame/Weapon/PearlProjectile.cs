@@ -2,21 +2,20 @@ using UnityEngine;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
 using InGame.ObjectPool;
-using InGame.Weapon.Base;
 using InGame.Weapon.Logic;
 using InGame.Weapon.Controllers;
 
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 저렴한 진주(Pearl) 무기의 핵심 투사체 컴포넌트입니다.
-    /// <br/> 화면 외곽 바운스 처리, 자전 회전, 레벨별 비주얼(애니메이션/트레일) 효과를 처리합니다.
+    /// [설명]: 저렴한 진주(Pearl) 무기의 핵심 투사체 컴포넌트입니다.
+    /// 화면 외곽 바운스 처리, 자전 회전, 레벨별 비주얼(애니메이션/트레일) 효과를 처리합니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     [RequireComponent(typeof(TrailRenderer), typeof(Animator))]
     public class PearlProjectile : MonoBehaviour
     {
-        #region 1. 내부 변수 및 컴포넌트 (Components & State)
+        #region 내부 변수 및 컴포넌트
 
         // 로직 및 설정 데이터
         private PearlWeaponLogic m_logic;
@@ -39,16 +38,16 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
 
         /// <summary>
-        /// 현재 투사체의 이동 속력
+        /// [설명]: 현재 투사체의 이동 속력
         /// </summary>
         public float CurrentSpeed => m_velocity.magnitude;
 
         #endregion
 
-        #region 3. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -110,10 +109,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 4. 초기화 및 상태 관리 (Init & Control)
+        #region 초기화 및 상태 관리
 
         /// <summary>
-        /// 진주 투사체를 초기화하고 초기 이동 방향 및 속도를 설정합니다.
+        /// [설명]: 진주 투사체를 초기화하고 초기 이동 방향 및 속도를 설정합니다.
         /// </summary>
         public void Init(PearlWeaponLogic logic, PearlWeaponView view, Vector3 initialVelocity, WeaponPoolManager poolManager)
         {
@@ -130,7 +129,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 무기 레벨업이나 스탯 변경 시 투사체의 속력과 비주얼을 갱신합니다.
+        /// [설명]: 무기 레벨업이나 스탯 변경 시 투사체의 속력과 비주얼을 갱신합니다.
         /// </summary>
         public void UpdateState()
         {
@@ -144,10 +143,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 5. 충돌 처리 (Collision Logic)
+        #region 충돌 처리
 
         /// <summary>
-        /// 적과 충돌 시 데미지를 적용하고 개별 쿨타임을 관리합니다.
+        /// [설명]: 적과 충돌 시 데미지를 적용하고 개별 쿨타임을 관리합니다.
         /// </summary>
         private void ProcessCollision(Collider2D other)
         {
@@ -172,10 +171,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 6. 비주얼 및 연출 (Visuals)
+        #region 비주얼 및 연출
 
         /// <summary>
-        /// 현재 무기 상태(진화 여부)에 따라 애니메이션과 트레일 색상을 동기화합니다.
+        /// [설명]: 현재 무기 상태(진화 여부)에 따라 애니메이션과 트레일 색상을 동기화합니다.
         /// </summary>
         private void UpdateVisualsByLevel()
         {
@@ -197,7 +196,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 트레일 렌더러의 기본 속성 및 렌더링 순서를 설정합니다.
+        /// [설명]: 트레일 렌더러의 기본 속성 및 렌더링 순서를 설정합니다.
         /// </summary>
         private void SetupTrailBase()
         {
@@ -224,7 +223,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 트레일의 색상 그라디언트를 동적으로 설정합니다.
+        /// [설명]: 트레일의 색상 그라디언트를 동적으로 설정합니다.
         /// </summary>
         private void SetTrailColor(Color color)
         {
@@ -238,10 +237,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 7. 화면 경계 물리 (Screen Physics)
+        #region 화면 경계 물리
 
         /// <summary>
-        /// 메인 카메라의 화면 경계를 감지하여 투사체를 반사(Bounce)시킵니다.
+        /// [설명]: 메인 카메라의 화면 경계를 감지하여 투사체를 반사(Bounce)시킵니다.
         /// </summary>
         private void BounceOffScreenEdges()
         {

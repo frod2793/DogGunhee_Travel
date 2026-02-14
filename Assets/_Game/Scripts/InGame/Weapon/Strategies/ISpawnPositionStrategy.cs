@@ -3,8 +3,8 @@ using UnityEngine;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 무기나 소환수의 스폰 위치를 결정하는 전략 인터페이스입니다.
-    /// <br/> 전략 패턴을 통해 다양한 스폰 방식(플레이어 기준, 화면 랜덤, 특정 지점 등)을 캡슐화합니다.
+    /// [설명]: 무기나 소환수의 스폰 위치를 결정하는 전략 인터페이스입니다.
+    /// 전략 패턴을 통해 다양한 스폰 방식(플레이어 기준, 화면 랜덤, 특정 지점 등)을 캡슐화합니다.
     /// </summary>
     public interface ISpawnPositionStrategy
     {
@@ -17,11 +17,11 @@ namespace InGame.Weapon.Strategies
     }
 
     /// <summary>
-    /// 플레이어(소유자)의 현재 위치를 그대로 스폰 위치로 사용하는 기본 전략입니다.
+    /// [설명]: 플레이어(소유자)의 현재 위치를 그대로 스폰 위치로 사용하는 기본 전략입니다.
     /// </summary>
     public class PlayerPositionSpawnStrategy : ISpawnPositionStrategy
     {
-        #region 인터페이스 구현 (ISpawnPositionStrategy Implementation)
+        #region 인터페이스 구현
 
         public Vector3 GetSpawnPosition(Transform owner)
         {

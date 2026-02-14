@@ -8,17 +8,17 @@ using InGame.ObjectPool;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 부메랑 투사체(BoomerangProjectile) 클래스입니다.
-    /// <br/> 일정 거리를 날아갔다가 플레이어 위치로 다시 돌아오는 왕복 로직을 수행합니다.
-    /// <br/> TrailRenderer와 DOTween을 사용하여 시각적 연출을 처리합니다.
+    /// [설명]: 부메랑 투사체(BoomerangProjectile) 클래스입니다.
+    /// 일정 거리를 날아갔다가 플레이어 위치로 다시 돌아오는 왕복 로직을 수행합니다.
+    /// TrailRenderer와 DOTween을 사용하여 시각적 연출을 처리합니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
     [RequireComponent(typeof(TrailRenderer))]
     public class BoomerangProjectile : MonoBehaviour
     {
-        #region 1. 내부 변수 및 설정 (Internal State)
+        #region 내부 변수 및 설정
 
-        [Header("1. 시각 효과 설정")]
+        [Header("시각 효과 설정")]
         [Tooltip("트레일(잔상)의 유지 시간")]
         [SerializeField] private float m_trailTime = 0.2f;
 
@@ -28,7 +28,7 @@ namespace InGame.Weapon.Controllers
         [Tooltip("트레일의 기본 색상")]
         [SerializeField] private Color m_trailColor = new Color(1, 1, 1, 0.5f);
 
-        [Header("2. 이동 설정")]
+        [Header("이동 설정")]
         [Tooltip("날아갈 때(Outward)의 속도 배율")]
         [SerializeField] private float m_outwardSpeedMultiplier = 1.5f;
 
@@ -59,7 +59,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -94,10 +94,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 초기화 및 제어 (Init & Control)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 투사체를 초기화하고 발사 시퀀스를 시작합니다.
+        /// [설명]: 투사체를 초기화하고 발사 시퀀스를 시작합니다.
         /// </summary>
         /// <param name="player">돌아올 대상(플레이어)</param>
         /// <param name="damage">공격력</param>
@@ -139,7 +139,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 트레일 렌더러의 기본 속성을 설정합니다.
+        /// [설명]: 트레일 렌더러의 기본 속성을 설정합니다.
         /// </summary>
         private void SetupTrail()
         {
@@ -203,7 +203,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 투사체를 풀로 반환하고 콜백을 호출합니다.
+        /// [설명]: 투사체를 풀로 반환하고 콜백을 호출합니다.
         /// </summary>
         private void ReleaseToPool()
         {
@@ -224,7 +224,7 @@ namespace InGame.Weapon.Controllers
             {
                 m_poolManager.Release(this);
             }
-            else if (m_poolManager == null)
+            else if (m_poolManager == null) // 풀링 사용 안 하는 경우
             {
                 Destroy(gameObject);
             }
@@ -232,10 +232,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 이동 시퀀스 (Movement Sequence)
+        #region 이동 시퀀스
 
         /// <summary>
-        /// 부메랑의 왕복 이동(전진 -> 대기 -> 복귀) 시퀀스를 처리합니다.
+        /// [설명]: 부메랑의 왕복 이동(전진 -> 대기 -> 복귀) 시퀀스를 처리합니다.
         /// </summary>
         private async UniTaskVoid LaunchSequenceAsync()
         {
@@ -282,7 +282,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 플레이어 위치를 추적하며 돌아오는 로직입니다.
+        /// [설명]: 플레이어 위치를 추적하며 돌아오는 로직입니다.
         /// </summary>
         private async UniTask ReturnToPlayerAsync(System.Threading.CancellationToken token)
         {

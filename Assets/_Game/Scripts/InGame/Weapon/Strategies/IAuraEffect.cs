@@ -4,8 +4,8 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 오라(Aura) 타입 이펙트가 구현해야 할 인터페이스입니다.
-    /// <br/> 초기화, 실시간 스탯 갱신, 비활성화 로직을 포함합니다.
+    /// [설명]: 오라(Aura) 타입 이펙트가 구현해야 할 인터페이스입니다.
+    /// 초기화, 실시간 스탯 갱신, 비활성화 로직을 포함합니다.
     /// </summary>
     public interface IAuraEffect
     {

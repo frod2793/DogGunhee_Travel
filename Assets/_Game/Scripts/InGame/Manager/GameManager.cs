@@ -11,21 +11,18 @@ using Lobby;
 using InGame.Weapon;
 using InGame.Mob.Systems;
 
-namespace InGame.Manager
+namespace InGame.Managers
 {
     /// <summary>
-    /// 게임의 전체 흐름(시작, 정지, 종료)과 전역 상태(플레이어, 스포너, UI)를 총괄하는 중앙 관리자 클래스입니다.
-    /// <br/> 싱글톤으로 구현되어 있으며, 외부 시스템(Backend)과의 데이터 동기화도 담당합니다.
+    /// [설명]: 게임의 전체 흐름(시작, 정지, 종료)과 전역 상태(플레이어, 스포너, UI)를 총괄하는 중앙 관리자 클래스입니다.
+    /// 싱글톤으로 구현되어 있으며, 외부 시스템(Backend)과의 데이터 동기화도 담당합니다.
     /// </summary>
     public class GameManager : MonoBehaviour
     {
-        #region 1. 싱글톤 및 정적 이벤트
+        #region 싱글톤 및 이벤트
 
         private static GameManager s_instance;
 
-        /// <summary>
-        /// GameManager의 전역 싱글톤 인스턴스입니다.
-        /// </summary>
         public static GameManager Instance
         {
             get
@@ -34,48 +31,35 @@ namespace InGame.Manager
                 {
                     s_instance = FindFirstObjectByType<GameManager>();
                 }
+
                 return s_instance;
             }
         }
 
-        /// <summary>
-        /// 플레이어 캐릭터가 스폰되거나 변경될 때 발생하는 전역 이벤트입니다.
-        /// </summary>
+        /// <summary> 플레이어 캐릭터가 스폰되거나 변경될 때 발생하는 전역 이벤트 </summary>
         public static event Action<PlayerBase> OnPlayerChanged;
 
         #endregion
 
-        #region 2. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("에디터 설정")] 
-        [SerializeField, Tooltip("에디터에서 바로 시작할 때 사용할 캐릭터 인덱스")]
-        private int m_startCharacterIndex;
-        
-        [Tooltip("테스트용 무기 목록")] 
-        public List<SkillData> TestWeapons = new List<SkillData>();
+        [Header("에디터 설정")]
+        [SerializeField, Tooltip("에디터에서 바로 시작할 때 사용할 캐릭터 인덱스")] private int m_startCharacterIndex;
+        [SerializeField, Tooltip("테스트용 무기 목록")] private List<SkillData> m_testWeapons = new List<SkillData>();
 
-        [Header("데이터 참조")] 
-        [SerializeField, Tooltip("전체 스킬 데이터베이스")] 
-        private SkillDatabase m_skillDatabase;
-        
-        [SerializeField, Tooltip("게임 설정 데이터 (프레임 등)")] 
-        private SettingsData m_settingsData;
+        [Header("데이터 참조")]
+        [SerializeField, Tooltip("전체 스킬 데이터베이스")] private SkillDatabase m_skillDatabase;
+        [SerializeField, Tooltip("게임 설정 데이터 (프레임 등)")] private SettingsData m_settingsData;
 
-        [Header("인게임 참조")] 
-        [SerializeField, Tooltip("플레이어가 생성될 부모 컨테이너")] 
-        private GameObject m_playerContainer;
-        
-        [SerializeField, Tooltip("맵 경계를 정의하는 스프라이트")] 
-        private SpriteRenderer m_mapRange;
-        
-        [SerializeField, Tooltip("옵션 팝업 프리팹")] 
-        private OptionPopupView m_optionPopupPrefab;
+        [Header("인게임 참조")]
+        [SerializeField, Tooltip("플레이어가 생성될 부모 컨테이너")] private GameObject m_playerContainer;
+        [SerializeField, Tooltip("맵 경계를 정의하는 스프라이트")] private SpriteRenderer m_mapRange;
+        [SerializeField, Tooltip("옵션 팝업 프리팹")] private OptionPopupView m_optionPopupPrefab;
 
         #endregion
 
-        #region 3. 내부 상태 및 캐시
+        #region 내부 필드
 
-        // 하위 매니저 및 시스템 캐시
         private ObjectPoolSpawner m_objectPoolSpawner;
         private PlayerController m_playerController;
         private VariableJoystick m_variableJoystick;
@@ -87,46 +71,48 @@ namespace InGame.Manager
         private PlayerCameraAgent m_playerCameraAgent;
         private MobManager m_mobManager;
 
-        // 상수
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
 
         #endregion
 
-        #region 4. 공개 프로퍼티 (Accessors)
+        #region 공개 프로퍼티
 
-        /// <summary>현재 맵에 스폰된 플레이어 캐릭터입니다.</summary>
+        /// <summary> 현재 맵에 스폰된 플레이어 캐릭터 </summary>
         public PlayerBase SpawnedPlayer { get; private set; }
 
-        /// <summary>오브젝트 풀 및 몬스터 스폰 시스템입니다.</summary>
+        /// <summary> 오브젝트 풀 및 몬스터 스폰 시스템 </summary>
         public ObjectPoolSpawner ObjectPoolSpawner => m_objectPoolSpawner;
 
-        /// <summary>플레이어 입력 컨트롤러입니다.</summary>
+        /// <summary> 플레이어 입력 컨트롤러 </summary>
         public PlayerController PlayerController => m_playerController;
 
-        /// <summary>게임의 상태(시작, 정지, 종료) 관리자입니다.</summary>
+        /// <summary> 게임의 상태(시작, 정지, 종료) 관리자 </summary>
         public PlayStateManager State => m_state;
 
-        /// <summary>가상 조이스틱 참조입니다.</summary>
+        /// <summary> 가상 조이스틱 참조 </summary>
         public VariableJoystick Joystick => m_variableJoystick;
 
-        /// <summary>메인 카메라 참조입니다.</summary>
+        /// <summary> 메인 카메라 참조 </summary>
         public Camera MainCamera => m_mainCamera;
 
-        /// <summary>UI 매니저 참조입니다.</summary>
+        /// <summary> UI 매니저 참조 </summary>
         public UIManager UIManager => m_uiManager;
 
-        /// <summary>현재 맵의 이동 가능 경계입니다.</summary>
+        /// <summary> 현재 맵의 이동 가능 경계 </summary>
         public Bounds MapBounds => m_mapRange != null ? m_mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 100);
 
-        /// <summary>현재 활성화된 몬스터 수입니다.</summary>
+        /// <summary> 현재 활성화된 몬스터 수 </summary>
         public int ActiveMobCount => m_objectPoolSpawner != null ? m_objectPoolSpawner.ActiveMobCount : 0;
 
-        /// <summary>몬스터 타겟팅 및 탐색 관리자입니다.</summary>
+        /// <summary> 몬스터 타겟팅 및 탐색 관리자 </summary>
         public MobManager MobManager => m_mobManager;
+
+        /// <summary> 에디터 테스트용 무기 목록 </summary>
+        public List<SkillData> TestWeapons => m_testWeapons;
 
         #endregion
 
-        #region 5. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Awake()
         {
@@ -135,15 +121,14 @@ namespace InGame.Manager
                 Destroy(gameObject);
                 return;
             }
+
             s_instance = this;
 
-            // 상태 관리자 초기화 (POCO)
+            // 상태 관리자 및 시스템 초기화
             m_state = new PlayStateManager();
-            
-            // 타겟 관리자 초기화 (DI 방식 대비)
             m_mobManager = new MobManager();
 
-            // 모바일 환경 최적화
+            // 최적화 설정
             Application.targetFrameRate = 120;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
@@ -153,7 +138,6 @@ namespace InGame.Manager
 
         private void Start()
         {
-            // 설정 적용
             if (m_settingsData != null)
             {
                 m_settingsData.LoadSettings();
@@ -170,7 +154,6 @@ namespace InGame.Manager
 
         private void OnEnable()
         {
-            // 비동기 초기화 실행 (Fire-and-Forget)
             InitializeGameAsync().Forget();
         }
 
@@ -181,8 +164,11 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 6. 초기화 및 이벤트 연결
+        #region 초기화
 
+        /// <summary>
+        /// [설명]: 하위 매니저 및 필요한 컴포넌트들을 캐싱합니다.
+        /// </summary>
         private void CacheComponents()
         {
             m_objectPoolSpawner = FindFirstObjectByType<ObjectPoolSpawner>();
@@ -195,6 +181,9 @@ namespace InGame.Manager
             m_mainCamera = Camera.main;
         }
 
+        /// <summary>
+        /// [설명]: 게임 상태 변화에 따른 이벤트 구독을 수행합니다.
+        /// </summary>
         private void SubscribeEvents()
         {
             if (m_state != null)
@@ -206,6 +195,9 @@ namespace InGame.Manager
             }
         }
 
+        /// <summary>
+        /// [설명]: 등록된 이벤트 구독을 해제합니다.
+        /// </summary>
         private void UnsubscribeEvents()
         {
             if (m_state != null)
@@ -217,6 +209,9 @@ namespace InGame.Manager
             }
         }
 
+        /// <summary>
+        /// [설명]: 비동기 방식으로 플레이어 생성 및 초기 게임 설정을 수행합니다.
+        /// </summary>
         private async UniTaskVoid InitializeGameAsync()
         {
             await SpawnPlayerAndInitialWeaponsAsync();
@@ -229,13 +224,12 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 7. 게임 흐름 제어 (Game Flow)
+        #region 게임 흐름 제어
 
         private async void OnGameStart()
         {
             try
             {
-                // 1. 데이터 초기화
                 if (InventoryDataManager.Instance != null)
                 {
                     InventoryDataManager.Instance.ClearInGameSkills();
@@ -246,13 +240,10 @@ namespace InGame.Manager
                     PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt = 0;
                 }
 
-                // 2. BGM 재생
                 SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
 
-                // 3. 스포너 시작
                 if (SpawnedPlayer != null && m_objectPoolSpawner != null)
                 {
-                    // 기본 스테이지 1로 시작
                     await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer, m_mobManager, 1);
                 }
             }
@@ -279,30 +270,32 @@ namespace InGame.Manager
             SpawnedPlayer = null;
             OnPlayerChanged?.Invoke(null);
 
-            // 결과 저장 및 서버 업로드
             await SaveGameResult();
         }
 
         /// <summary>
-        /// 게임 결과를 저장하고 서버에 업로드합니다.
+        /// [설명]: 게임 결과를 저장하고 서버에 업로드합니다.
         /// </summary>
         public async UniTask SaveGameResult()
         {
             var dataManager = PlayerDataManager.Instance;
-            if (dataManager == null || dataManager.PlayerData == null) return;
+            if (dataManager == null || dataManager.PlayerData == null)
+            {
+                return;
+            }
 
             var playerData = dataManager.PlayerData;
 
-            // 획득 재화가 없으면 업로드 생략
-            if (playerData.ingameCoin <= 0) return;
+            if (playerData.ingameCoin <= 0)
+            {
+                return;
+            }
 
-            // 로컬 데이터 갱신
             playerData.currency1 += playerData.ingameCoin;
             playerData.ingameCoin = 0;
 
             await UniTask.SwitchToMainThread();
 
-            // 서버 업로드 파라미터 구성
             var param = new BackEnd.Param();
             param.Add("Money1", playerData.currency1);
 
@@ -318,16 +311,18 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 8. 플레이어 및 무기 관리 (Spawning)
+        #region 플레이어 및 무기 관리
 
         /// <summary>
-        /// 캐릭터와 무기를 리셋하고 다시 스폰합니다. (테스트/변경용)
+        /// [설명]: 캐릭터와 무기를 리셋하고 다시 생성합니다.
         /// </summary>
         public async UniTask ChangeCharacterAndWeapon_Spawn()
         {
-            if (m_playerContainer == null) return;
+            if (m_playerContainer == null)
+            {
+                return;
+            }
 
-            // 기존 캐릭터 제거 (Addressables Release)
             for (int i = m_playerContainer.transform.childCount - 1; i >= 0; i--)
             {
                 GameObject childObj = m_playerContainer.transform.GetChild(i).gameObject;
@@ -340,21 +335,29 @@ namespace InGame.Manager
             await SpawnPlayerAndInitialWeaponsAsync();
         }
 
+        /// <summary>
+        /// [설명]: Addressables를 사용하여 플레이어 캐릭터를 스폰하고 초기 무기를 장착합니다.
+        /// </summary>
         private async UniTask SpawnPlayerAndInitialWeaponsAsync()
         {
-            if (m_playerContainer == null) return;
+            if (m_playerContainer == null)
+            {
+                return;
+            }
 
             try
             {
-                // 1. 캐릭터 생성
                 int charIndex = PlayerDataManager.Instance != null ? PlayerDataManager.Instance.SelectCharacterIndex : 0;
                 string charKey = $"Player_Character_{charIndex}";
-                
+
                 GameObject charInstance = await Addressables
                     .InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform)
                     .ToUniTask();
 
-                if (charInstance == null) return;
+                if (charInstance == null)
+                {
+                    return;
+                }
 
                 charInstance.transform.localPosition = Vector3.zero;
                 SpawnedPlayer = charInstance.GetComponent<PlayerBase>();
@@ -365,7 +368,6 @@ namespace InGame.Manager
                     return;
                 }
 
-                // 2. 초기 무기 목록 구성
                 var initialWeapons = new List<SkillData>();
                 if (m_skillDatabase != null)
                 {
@@ -377,20 +379,17 @@ namespace InGame.Manager
                 }
 
 #if UNITY_EDITOR
-                initialWeapons.AddRange(TestWeapons.Where(w => w != null));
+                initialWeapons.AddRange(m_testWeapons.Where(w => w != null));
 #endif
-                // 3. 무기 장착 (중복 제거)
                 foreach (var weaponSkill in initialWeapons.Distinct())
                 {
                     await EquipNewWeapon(weaponSkill, false);
                 }
 
-                // 4. 컨트롤러 연결
                 if (m_playerController != null)
                 {
                     m_playerController.AssignCharacter(SpawnedPlayer, m_mobManager, m_playerCameraAgent, m_playerHUD);
                 }
-
 
                 OnPlayerChanged?.Invoke(SpawnedPlayer);
             }
@@ -402,21 +401,23 @@ namespace InGame.Manager
         }
 
         /// <summary>
-        /// 새로운 무기를 플레이어에게 장착시킵니다.
+        /// [설명]: 새로운 무기를 생성하여 플레이어에게 장착시킵니다.
         /// </summary>
         public async UniTask EquipNewWeapon(SkillData skillData, bool playEffect = true, int startLevel = 1, bool startEvolved = false)
         {
             await UniTask.Yield();
 
-            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon) return;
+            if (SpawnedPlayer == null || skillData.skillType != SkillType.Weapon)
+            {
+                return;
+            }
 
-            // WeaponFactory를 통한 컨트롤러 생성
             if (skillData.weaponData != null && WeaponFactory.IsRegistered(skillData.skillCode))
             {
                 var controller = WeaponFactory.CreateController(
-                    skillData.weaponData, 
+                    skillData.weaponData,
                     SpawnedPlayer.transform,
-                    m_weaponPoolManager, 
+                    m_weaponPoolManager,
                     () => m_playerController != null ? m_playerController.GetCalculatedAttackDirection() : Vector3.zero
                 );
 
@@ -424,25 +425,22 @@ namespace InGame.Manager
                 {
                     controller.SkillData = skillData;
 
-                    // 레벨 업 시뮬레이션
                     for (int i = 1; i < startLevel; i++)
                     {
                         controller.LevelUp();
                     }
 
-                    // 진화 상태 적용
                     if (startEvolved)
                     {
                         while (controller.CurrentLevel < controller.MaxLevel)
                         {
                             controller.LevelUp();
                         }
-                        controller.LevelUp(); // 진화
+                        controller.LevelUp();
                     }
 
                     SpawnedPlayer.AddController(controller);
 
-                    // 이펙트 재생
                     if (playEffect)
                     {
                         var renderer = SpawnedPlayer.GetComponent<SpriteRenderer>();
@@ -461,6 +459,9 @@ namespace InGame.Manager
             }
         }
 
+        /// <summary>
+        /// [설명]: 테스트 목적으로 장착된 무기를 제거합니다.
+        /// </summary>
         public void RemoveWeaponForTest(string skillCode)
         {
             if (SpawnedPlayer != null)
@@ -471,14 +472,17 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 9. UI 제어 (UI Control)
+        #region UI 제어
 
         /// <summary>
-        /// 메뉴 팝업 표시에 따른 게임 일시정지 상태를 제어합니다.
+        /// [설명]: 팝업 상태에 따른 게임 일시정지 상태를 제어합니다.
         /// </summary>
         public void SetMenuPopupState(bool isPause)
         {
-            if (m_state == null) return;
+            if (m_state == null)
+            {
+                return;
+            }
 
             if (isPause)
             {
@@ -491,7 +495,7 @@ namespace InGame.Manager
         }
 
         /// <summary>
-        /// 옵션 팝업을 생성합니다.
+        /// [설명]: 옵션 설정 팝업을 생성합니다.
         /// </summary>
         public void OpenOptionPopup()
         {
@@ -504,8 +508,9 @@ namespace InGame.Manager
 
         #endregion
 
-        #region 10. 데이터 접근자 (Data Accessors)
+        #region 데이터 접근자
 
+        /// <summary> [설명]: 현재 몬스터 처치 수를 반환합니다. </summary>
         public int GetMobKillCount()
         {
             if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
@@ -515,26 +520,31 @@ namespace InGame.Manager
             return 0;
         }
 
+        /// <summary> [설명]: 현재 진행 중인 웨이브 번호를 반환합니다. </summary>
         public int GetCurrentWave()
         {
             return m_objectPoolSpawner != null ? m_objectPoolSpawner.CurrentWave : 0;
         }
 
+        /// <summary> [설명]: 현재 스테이지 ID를 반환합니다. </summary>
         public int GetCurrentStageId()
         {
             return m_objectPoolSpawner != null ? m_objectPoolSpawner.CurrentStage : 0;
         }
 
+        /// <summary> [설명]: 현재 플레이어의 레벨을 반환합니다. </summary>
         public float GetPlayerLevel()
         {
             return SpawnedPlayer != null ? SpawnedPlayer.Level : 1f;
         }
 
+        /// <summary> [설명]: 현재 플레이어의 경험치 진행률(0~1)을 반환합니다. </summary>
         public float GetPlayerExpProgress()
         {
             return SpawnedPlayer != null ? SpawnedPlayer.GetExpProgress() : 0f;
         }
 
+        /// <summary> [설명]: 현재 인게임에서 획득한 코인 수를 반환합니다. </summary>
         public int GetCoinCount()
         {
             if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
@@ -544,6 +554,7 @@ namespace InGame.Manager
             return 0;
         }
 
+        /// <summary> [설명]: 플레이어의 위치 정보를 가진 Transform을 반환합니다. </summary>
         public Transform PlayerTransfrom()
         {
             return m_playerContainer != null ? m_playerContainer.transform : transform;

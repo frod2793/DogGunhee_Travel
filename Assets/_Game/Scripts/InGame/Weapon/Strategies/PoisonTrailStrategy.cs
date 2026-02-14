@@ -5,12 +5,12 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 독 구름(Poison Trail) 생성 전략입니다.
-    /// <br/> 플레이어를 따라다니는 Emitter 인스턴스를 생성하고 관리합니다.
+    /// [설명]: 독 구름(Poison Trail) 생성 전략입니다.
+    /// 플레이어를 따라다니는 Emitter 인스턴스를 생성하고 관리합니다.
     /// </summary>
     public class PoisonTrailStrategy : IWeaponStrategy
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private PoisonTrailEmitter m_emitterInstance;
         private WeaponDataSO m_data;
@@ -18,7 +18,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -63,7 +63,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 상세 로직 (Logic)
+        #region 상세 로직
 
         private void UpdateEmitterStats(WeaponRuntimeStats stats)
         {

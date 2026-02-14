@@ -1,7 +1,7 @@
 using UnityEngine;
 using R3; // Reactive Extensions
 using System;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
 using InGame.Weapon.Strategies;

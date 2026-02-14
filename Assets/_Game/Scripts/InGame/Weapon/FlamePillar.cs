@@ -11,21 +11,21 @@ using InGame.Weapon.Logic;
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 불기둥(Flame Pillar)의 시각적 연출과 물리 충돌을 담당하는 View 컴포넌트입니다.
-    /// <br/> 경고 이펙트 후 불기둥을 소환하며, Logic 데이터를 기반으로 데미지를 판정합니다.
+    /// [설명]: 불기둥(Flame Pillar)의 시각적 연출과 물리 충돌을 담당하는 View 컴포넌트입니다.
+    /// 경고 이펙트 후 불기둥을 소환하며, Logic 데이터를 기반으로 데미지를 판정합니다.
     /// </summary>
     public class FlamePillar : MonoBehaviour
     {
-        #region 1. 내부 변수 및 컴포넌트 (Components & State)
+        #region 내부 변수 및 컴포넌트
 
-        [Header("1. 애니메이션 설정")]
+        [Header("애니메이션 설정")]
         [Tooltip("공격 전 바닥에 표시될 경고 애니메이터")]
         [SerializeField] private Animator m_warningAnimator;
 
         [Tooltip("실제 불기둥 애니메이터 리스트 (랜덤 재생용)")]
         [SerializeField] private List<Animator> m_flameAnimators;
 
-        [Header("2. 조명(Light) 설정")]
+        [Header("조명(Light) 설정")]
         [Tooltip("불기둥과 함께 활성화될 2D 광원")]
         [SerializeField] private Light2D m_flameLight;
 
@@ -35,7 +35,7 @@ namespace InGame.Weapon
         [Tooltip("조명 최대 강도 (Falloff)")]
         [SerializeField] private float m_maxFalloffStrength = 0.5f;
 
-        [Header("3. 공격 판정 설정")]
+        [Header("공격 판정 설정")]
         [Tooltip("데미지 판정을 위한 트리거 콜라이더")]
         [SerializeField] private Collider2D m_damageCollider;
 
@@ -52,7 +52,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -88,10 +88,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 3. 초기화 및 제어 (Init & Control)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 불기둥을 지정된 위치에 초기화하고 공격 시퀀스를 시작합니다.
+        /// [설명]: 불기둥을 지정된 위치에 초기화하고 공격 시퀀스를 시작합니다.
         /// </summary>
         /// <param name="position">소환 위치</param>
         /// <param name="logic">데미지 로직 객체</param>
@@ -178,10 +178,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 4. 공격 시퀀스 (Attack Sequence)
+        #region 공격 시퀀스
 
         /// <summary>
-        /// 경고 -> 점화 -> 연소(데미지) -> 종료 순서로 진행되는 메인 시퀀스입니다.
+        /// [설명]: 경고 -> 점화 -> 연소(데미지) -> 종료 순서로 진행되는 메인 시퀀스입니다.
         /// </summary>
         private async UniTaskVoid AttackSequenceAsync()
         {
@@ -208,7 +208,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 바닥에 경고 표시를 재생하고 대기합니다.
+        /// [설명]: 바닥에 경고 표시를 재생하고 대기합니다.
         /// </summary>
         private async UniTask PlayWarningPhaseAsync(CancellationToken token)
         {
@@ -228,7 +228,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 불기둥 애니메이터 중 하나를 랜덤으로 선택하여 재생합니다.
+        /// [설명]: 불기둥 애니메이터 중 하나를 랜덤으로 선택하여 재생합니다.
         /// </summary>
         /// <returns>선택된 애니메이터와 애니메이션 길이</returns>
         private (Animator, float) SelectAndPlayFlameAnim()
@@ -259,7 +259,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 불기둥이 유지되는 동안 조명 효과와 충돌 검사를 수행합니다.
+        /// [설명]: 불기둥이 유지되는 동안 조명 효과와 충돌 검사를 수행합니다.
         /// </summary>
         private async UniTask PlayBurnPhaseAsync(Animator animator, float length, CancellationToken token)
         {
@@ -287,10 +287,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 5. 시각 효과 및 물리 판정 (Visuals & Physics)
+        #region 시각 효과 및 물리 판정
 
         /// <summary>
-        /// 불기둥의 타오름과 사라짐에 맞춰 조명 강도와 투명도를 조절합니다.
+        /// [설명]: 불기둥의 타오름과 사라짐에 맞춰 조명 강도와 투명도를 조절합니다.
         /// </summary>
         private void StartLightEffectSequence(Animator animator, float length)
         {
@@ -330,7 +330,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 애니메이션의 현재 스프라이트 모양을 조명 쿠키로 설정하여 그림자를 동기화합니다.
+        /// [설명]: 애니메이션의 현재 스프라이트 모양을 조명 쿠키로 설정하여 그림자를 동기화합니다.
         /// </summary>
         private void SyncLightCookie(Animator animator)
         {
@@ -343,7 +343,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 범위 내의 적을 감지하고 로직을 통해 데미지를 입힙니다.
+        /// [설명]: 범위 내의 적을 감지하고 로직을 통해 데미지를 입힙니다.
         /// </summary>
         private void CheckCollisions()
         {
@@ -367,7 +367,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 대상에게 직접 데미지와 지속 데미지(DoT)를 적용합니다.
+        /// [설명]: 대상에게 직접 데미지와 지속 데미지(DoT)를 적용합니다.
         /// </summary>
         private void ApplyDamage(MobBase mob)
         {
@@ -375,7 +375,7 @@ namespace InGame.Weapon
             mob.TakeDamage(m_logic.DirectDamage);
             mob.PlayDamageEffect(m_logic.HitFlashColor);
 
-            // [수정됨] 지속 데미지 예약 (명명된 인수 'onTick:' 제거)
+            // 지속 데미지 예약
             mob.ApplyDamageOverTime(
                 m_logic.DotDamage, 
                 m_logic.Duration, 
