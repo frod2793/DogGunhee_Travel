@@ -66,6 +66,7 @@ namespace InGame.Managers
         private Camera m_mainCamera;
         private UIManager m_uiManager;
         private PlayStateManager m_state;
+        private bool m_isCleared;
         private WeaponPoolManager m_weaponPoolManager;
         private PlayerHUD m_playerHUD;
         private PlayerCameraAgent m_playerCameraAgent;
@@ -86,8 +87,12 @@ namespace InGame.Managers
         /// <summary> 플레이어 입력 컨트롤러 </summary>
         public PlayerController PlayerController => m_playerController;
 
+        public PlayStateManager.GameState PlayState => m_state?.PlayState ?? PlayStateManager.GameState.Ready;
         /// <summary> 게임의 상태(시작, 정지, 종료) 관리자 </summary>
         public PlayStateManager State => m_state;
+
+        /// <summary> [설명]: 현재 게임이 클리어된 상태인지 여부입니다. </summary>
+        public bool IsCleared => m_isCleared;
 
         /// <summary> 가상 조이스틱 참조 </summary>
         public VariableJoystick Joystick => m_variableJoystick;
@@ -142,7 +147,11 @@ namespace InGame.Managers
             {
                 m_settingsData.LoadSettings();
                 Application.targetFrameRate = m_settingsData.TargetFrameRate;
+                if (m_objectPoolSpawner != null)
+            {
+                m_objectPoolSpawner.OnStageCleared += OnStageCleared;
             }
+        }
 
 #if UNITY_EDITOR
             if (Application.isPlaying && PlayerDataManager.Instance != null)
@@ -207,6 +216,11 @@ namespace InGame.Managers
                 m_state.OnGameResume -= OnResume;
                 m_state.OnGameOver -= OnGameOver;
             }
+
+            if (m_objectPoolSpawner != null)
+            {
+                m_objectPoolSpawner.OnStageCleared -= OnStageCleared;
+            }
         }
 
         /// <summary>
@@ -218,7 +232,7 @@ namespace InGame.Managers
 
             if (m_uiManager != null)
             {
-                m_uiManager.StartGameCountdown();
+                m_uiManager.StartGameCountdown().Forget();
             }
         }
 
@@ -263,14 +277,36 @@ namespace InGame.Managers
             Time.timeScale = 1f;
         }
 
+        private void OnStageCleared(int stageId)
+        {
+            LogManager.Log($"[GameManager] 스테이지 {stageId} 클리어!", LogManager.LogCategory.VamserLikeGameManager);
+            
+            m_isCleared = true;
+
+            if (m_state != null)
+            {
+                m_state.GameOver();
+            }
+        }
+
+        /// <summary>
+        /// [설명]: 테스트 목적으로 스테이지 클리어 상태를 강제로 발생시킵니다.
+        /// </summary>
+        public void ClearStageForTest()
+        {
+            LogManager.Log("[GameManager] 테스트 클리어 비즈니스 로직 실행", LogManager.LogCategory.VamserLikeGameManager);
+            OnStageCleared(0);
+        }
+
         private async void OnGameOver()
         {
             Time.timeScale = 0f;
 
+            await SaveGameResult();
+
+            // 게임 결과 저장 후 플레이어 참조 해제
             SpawnedPlayer = null;
             OnPlayerChanged?.Invoke(null);
-
-            await SaveGameResult();
         }
 
         /// <summary>

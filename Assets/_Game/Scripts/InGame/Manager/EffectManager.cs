@@ -216,7 +216,7 @@ namespace InGame.Managers
                 m_shakeDuration,
                 m_shakeStrength,
                 m_shakeVibrato
-            ).SetTarget(m_mainCameraTransform);
+            ).SetTarget(m_mainCameraTransform).SetUpdate(true);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace InGame.Managers
                         .Append(targetRenderer.DOColor(Color.white, 0.1f).SetEase(Ease.InQuad));
             }
 
-            sequence.SetTarget(targetRenderer.transform);
+            sequence.SetTarget(targetRenderer.transform).SetUpdate(true);
         }
 
         /// <summary>
@@ -260,7 +260,8 @@ namespace InGame.Managers
             DOTween.Sequence()
                 .Append(targetRenderer.DOColor(targetColor, 0.1f))
                 .Append(targetRenderer.DOColor(Color.white, 0.1f))
-                .SetTarget(targetRenderer.transform);
+                .SetTarget(targetRenderer.transform)
+                .SetUpdate(true);
         }
 
         /// <summary>
@@ -286,7 +287,8 @@ namespace InGame.Managers
 
             targetTransform.DOMove(targetPos, duration)
                            .SetEase(Ease.OutQuad)
-                           .SetTarget(targetTransform);
+                           .SetTarget(targetTransform)
+                           .SetUpdate(true);
         }
 
         #endregion

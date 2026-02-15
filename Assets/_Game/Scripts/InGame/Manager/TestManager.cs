@@ -42,6 +42,9 @@ namespace InGame.Managers
         [SerializeField, Tooltip("패널이 보여질 위치")] private Transform m_shownPosition;
         [SerializeField, Tooltip("애니메이션 지속 시간")] private float m_animationDuration = 0.3f;
 
+        [Header("UI 참조 - 게임 흐름")]
+        [SerializeField, Tooltip("스테이지 클리어 테스트 버튼")] private Button m_clearStageButton;
+
         [Header("데이터 참조")]
         [SerializeField, Tooltip("전체 스킬 데이터베이스")] private SkillDatabase m_skillDatabase;
 
@@ -211,6 +214,11 @@ namespace InGame.Managers
                 m_addWeaponButton.onClick.AddListener(OnAddWeaponClicked);
             }
 
+            if (m_clearStageButton != null)
+            {
+                m_clearStageButton.onClick.AddListener(OnClearStageClicked);
+            }
+
             if (m_toggleButton != null)
             {
                 m_toggleButton.onClick.AddListener(() => TogglePanelAsync().Forget());
@@ -251,6 +259,7 @@ namespace InGame.Managers
 
             await m_panelTransform.DOMove(targetPosition, m_animationDuration)
                 .SetEase(ease)
+                .SetUpdate(true)
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
 
             m_isAnimating = false;
@@ -397,6 +406,17 @@ namespace InGame.Managers
 
             m_gameManager.RemoveWeaponForTest(skillCode);
             RefreshOwnedWeaponList();
+        }
+
+        private void OnClearStageClicked()
+        {
+            if (m_gameManager != null)
+            {
+                m_gameManager.ClearStageForTest();
+                
+                // 테스트 패널 닫기 (시각적 확인을 위해)
+                TogglePanelAsync().Forget();
+            }
         }
 
         #endregion

@@ -220,7 +220,7 @@ namespace InGame.UI.Views
             if (m_canvasGroup != null)
             {
                 m_canvasGroup.blocksRaycasts = true;
-                m_canvasGroup.DOFade(1f, 0.2f).SetUpdate(true);
+                m_canvasGroup.DOFade(1f, 0.2f).SetUpdate(true).ToUniTask().Forget();
             }
 
             if (m_popupTransform != null)
@@ -241,7 +241,7 @@ namespace InGame.UI.Views
             if (m_canvasGroup != null)
             {
                 m_canvasGroup.blocksRaycasts = false;
-                m_canvasGroup.DOFade(0f, 0.2f).SetUpdate(true);
+                m_canvasGroup.DOFade(0f, 0.2f).SetUpdate(true).ToUniTask().Forget();
             }
 
             if (m_popupTransform != null)

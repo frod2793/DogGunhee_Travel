@@ -25,6 +25,7 @@ namespace InGame.Managers
         [SerializeField, Tooltip("인게임 HUD (체력, 경험치 등)")] private InGameHUDView m_hudView;
         [SerializeField, Tooltip("스킬 선택 팝업 View")] private InGameSkillView m_skillView;
         [SerializeField, Tooltip("게임 오버 팝업")] private GameOverPopup m_gameOverPopup;
+        [SerializeField, Tooltip("게임 클리어 팝업")] private GameClearPopupView m_gameClearPopup;
         [SerializeField, Tooltip("일시정지 메뉴 패널")] private GameObject m_menuPanel;
         [SerializeField, Tooltip("확인/취소 공용 팝업")] private ConfirmPopup m_confirmPopup;
 
@@ -56,6 +57,8 @@ namespace InGame.Managers
 
         private int m_pendingSkillSelections;
         private bool m_isSkillSelectionActive;
+
+        private GameClearPopupViewModel m_gameClearPopupViewModel;
 
         private static readonly Vector2 k_DefaultJoystickPosition = new Vector2(300, 300);
 
@@ -98,6 +101,7 @@ namespace InGame.Managers
 
             m_disposables.Dispose();
             m_viewModel?.Dispose();
+            m_gameClearPopupViewModel?.Dispose();
         }
 
         #endregion
@@ -127,6 +131,12 @@ namespace InGame.Managers
             if (m_confirmPopup != null)
             {
                 m_confirmPopup.Bind(m_viewModel.ConfirmPopupViewModel);
+            }
+
+            if (m_gameClearPopup != null)
+            {
+                m_gameClearPopupViewModel = new GameClearPopupViewModel();
+                m_gameClearPopup.Bind(m_gameClearPopupViewModel);
             }
 
             m_viewModel.UpdateIconLists();
@@ -254,6 +264,7 @@ namespace InGame.Managers
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
             GameManager.OnPlayerChanged += OnPlayerChanged;
+            
 
             SettingsData.OnSettingsChanged += ApplyJoystickSettings;
         }
@@ -273,6 +284,7 @@ namespace InGame.Managers
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
             GameManager.OnPlayerChanged -= OnPlayerChanged;
+
 
             SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
         }
@@ -312,15 +324,54 @@ namespace InGame.Managers
             ApplyJoystickSettings();
         }
 
+
         private void OnGameOver()
         {
-            if (m_gameOverPopup != null)
+            if (m_gameManager != null && m_gameManager.IsCleared)
             {
-                m_gameOverPopup.Show(
-                    m_viewModel.CoinCount.CurrentValue,
-                    m_viewModel.CurrentWave.CurrentValue,
-                    m_viewModel.KillCount.CurrentValue
-                );
+                if (m_gameClearPopup != null && m_gameClearPopupViewModel != null)
+                {
+                    // 별점 계산 (체력 80% 이상 별 3개, 40% 이상 별 2개, 그 외 1개)
+                    int stars = 1;
+                    if (m_gameManager != null && m_gameManager.SpawnedPlayer != null)
+                    {
+                        float currentHealth = m_gameManager.SpawnedPlayer.CurrentHealth;
+                        float maxHealth = m_gameManager.SpawnedPlayer.MaxHealth;
+                        float hpRatio = maxHealth > 0 ? (float)currentHealth / maxHealth : 0;
+                        
+                        if (hpRatio >= 0.8f) stars = 3;
+                        else if (hpRatio >= 0.4f) stars = 2;
+                    }
+                    else
+                    {
+                        // 플레이어 참조를 실패했을 경우에 대한 경고 로그 (정상적인 경우 100% 체력이면 3개여야 함)
+                        LogManager.LogWarning("[UIManager] 별점 계산 중 플레이어 객체를 찾을 수 없습니다. 기본 1개로 설정됩니다.", LogManager.LogCategory.UIManager);
+                    }
+
+                    m_gameClearPopupViewModel.Show(
+                        m_viewModel.CoinCount.CurrentValue,
+                        m_viewModel.CurrentWave.CurrentValue,
+                        m_viewModel.KillCount.CurrentValue,
+                        stars,
+                        RestartGame,
+                        ExitToLobby
+                    );
+                }
+                else
+                {
+                    LogManager.LogError("[UIManager] GameClearPopup 또는 ViewModel이 할당되지 않았습니다! (인스펙터 할당 확인 필요)", LogManager.LogCategory.UIManager);
+                }
+            }
+            else
+            {
+                if (m_gameOverPopup != null)
+                {
+                    m_gameOverPopup.Show(
+                        m_viewModel.CoinCount.CurrentValue,
+                        m_viewModel.CurrentWave.CurrentValue,
+                        m_viewModel.KillCount.CurrentValue
+                    );
+                }
             }
 
             if (m_joystickTransform != null)
