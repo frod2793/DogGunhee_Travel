@@ -79,6 +79,12 @@ namespace InGame.ObjectPool
         /// <summary> 비동기 스폰 루틴 취소 토큰 </summary>
         private CancellationTokenSource m_spawnCts;
 
+        /// <summary> 플레이어 데이터 DTO 참조 </summary>
+        private InGame.Data.PlayerDataDTO m_playerData;
+
+        /// <summary> 사운드 매니저 참조 </summary>
+        private InGame.Services.ISoundManager m_soundManager;
+
         #endregion
 
         #region 공개 프로퍼티
@@ -257,10 +263,12 @@ namespace InGame.ObjectPool
         /// <summary>
         /// [설명]: 스포너의 의존성을 주입하고 실제 웨이브를 시작합니다.
         /// </summary>
-        public async UniTask InitializeAndStartSpawning(PlayerBase player, MobManager mobManager, int startStageId = 1)
+        public async UniTask InitializeAndStartSpawning(PlayerBase player, MobManager mobManager, InGame.Data.PlayerDataDTO playerData, InGame.Services.ISoundManager soundManager, int startStageId = 1)
         {
             m_player = player;
             m_mobManager = mobManager;
+            m_playerData = playerData;
+            m_soundManager = soundManager;
             if (m_player == null)
             {
                 return;
@@ -474,7 +482,8 @@ namespace InGame.ObjectPool
 
             mob.gameObject.SetActive(true);
 
-            mob.Init(m_mobManager);
+
+            mob.Init(m_mobManager, m_playerData, m_soundManager);
             mob.SetTarget(m_player);
 
             m_waveSystem?.OnMobSpawned();

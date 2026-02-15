@@ -56,9 +56,7 @@ namespace Lobby
 
         private void Awake()
         {
-            InitializeViewModel();
             InitializeComponents();
-            BindViewModel();
         }
 
         private void OnDestroy()
@@ -74,10 +72,20 @@ namespace Lobby
         /// <summary>
         /// [설명]: 옵션 조절을 위한 뷰모델을 생성하고 사운드 매니저와 연동합니다.
         /// </summary>
-        private void InitializeViewModel()
+        /// <param name="soundManager">의존성 주입된 사운드 매니저</param>
+        public void Initialize(InGame.Services.ISoundManager soundManager)
         {
-            // SoundManager 싱글톤을 주입하여 결합도를 낮춤
-            m_viewModel = new OptionPopupViewModel(m_settingsData, SoundManager.Instance);
+            if (soundManager == null)
+            {
+                LogManager.LogError("[OptionPopupView] SoundManager가 주입되지 않았습니다.");
+                return;
+            }
+
+            // SoundManager 주입을 통해 ViewModel 초기화
+            m_viewModel = new OptionPopupViewModel(m_settingsData, soundManager);
+            
+            // ViewModel 바인딩
+            BindViewModel();
         }
 
         /// <summary>
@@ -164,7 +172,7 @@ namespace Lobby
                 .Subscribe(_ =>
                 {
                     m_viewModel.SaveSettings();
-                    Destroy(gameObject);
+                    InGame.UI.PopupManager.Instance.CloseTopPopup();
                 })
                 .AddTo(m_disposables);
 

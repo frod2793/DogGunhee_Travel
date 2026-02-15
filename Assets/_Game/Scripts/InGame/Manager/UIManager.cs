@@ -52,6 +52,7 @@ namespace InGame.Managers
         private InGameViewModel m_viewModel;
         private GameManager m_gameManager;
         private PlayerController m_playerController;
+        private InGame.Services.ISoundManager m_soundManager;
 
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
@@ -107,6 +108,14 @@ namespace InGame.Managers
         #endregion
 
         #region 초기화 및 바인딩
+
+        /// <summary>
+        /// [설명]: 사운드 매니저 등 외부 의존성을 주입합니다.
+        /// </summary>
+        public void Initialize(InGame.Services.ISoundManager soundManager)
+        {
+            m_soundManager = soundManager;
+        }
 
         /// <summary>
         /// [설명]: 하위 뷰들을 초기화하고 뷰모델과 연결합니다.
@@ -298,9 +307,9 @@ namespace InGame.Managers
 
             ApplyJoystickSettings();
 
-            if (SoundManager.Instance != null)
+            if (m_soundManager != null)
             {
-                SoundManager.Instance.LoadSoundSetting();
+                m_soundManager.LoadSoundSetting();
             }
 
             InitializeViews();
@@ -518,9 +527,9 @@ namespace InGame.Managers
                 }
             }
 
-            if (InventoryDataManager.Instance != null)
+            if (InventoryManager.Instance != null)
             {
-                InventoryDataManager.Instance.AddInGameSkill(selectedSkill);
+                InventoryManager.Instance.AddInGameSkill(selectedSkill);
             }
 
             m_viewModel.UpdateIconLists();

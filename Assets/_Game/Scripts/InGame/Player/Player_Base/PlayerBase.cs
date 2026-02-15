@@ -35,6 +35,11 @@ namespace InGame.Player.Player_Base
         /// <summary> 트리거 및 컬렉션 이벤트 충돌 처리기 </summary>
         private PlayerCollisionHandler m_collisionHandler;
 
+        /// <summary> 플레이어 데이터 비즈니스 로직 서비스 </summary>
+        private InGame.Services.PlayerDataService m_playerService;
+
+        private InGame.Services.ISoundManager m_soundManager;
+
         #endregion
 
         #region 이벤트
@@ -148,11 +153,18 @@ namespace InGame.Player.Player_Base
         /// </summary>
         /// <param name="weaponManager">무기 관리자 주입 (생략 시 기본 생성)</param>
         /// <param name="expSystem">경험치 시스템 주입 (생략 시 기본 생성)</param>
-        public void Init(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null)
+        public void Init(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null, InGame.Services.PlayerDataService playerService = null, InGame.Services.ISoundManager soundManager = null)
         {
             // 의존성 주입 또는 기본 객체 생성
             m_weaponManager = weaponManager ?? CreateDefaultWeaponManager();
+            if (soundManager != null)
+            {
+                m_weaponManager.SetSoundManager(soundManager);
+            }
+            
             m_expSystem = expSystem ?? new ExperienceSystem();
+            m_playerService = playerService;
+            m_soundManager = soundManager;
 
             // 내부 컴포넌트 및 데이터 로드
             InitializeComponents();
@@ -186,7 +198,7 @@ namespace InGame.Player.Player_Base
                 m_collisionHandler = gameObject.AddComponent<PlayerCollisionHandler>();
             }
 
-            m_collisionHandler.Init();
+            m_collisionHandler.Init(m_soundManager);
         }
 
         /// <summary>
@@ -237,7 +249,10 @@ namespace InGame.Player.Player_Base
             }
 
             SoundKeys deathSound = m_config ? m_config.DeathSoundKey : SoundKeys.PlayerDeth;
-            SoundManager.PlaySound(Sound.SFX, deathSound, false);
+            if (m_soundManager != null)
+            {
+                m_soundManager.Play(deathSound.ToString(), Sound.SFX, 1.0f, false);
+            }
         }
 
         /// <summary>
@@ -276,7 +291,10 @@ namespace InGame.Player.Player_Base
         protected virtual void PlayHitEffect()
         {
             SoundKeys hitSound = m_config ? m_config.HitSoundKey : SoundKeys.playerHit;
-            SoundManager.PlaySound(Sound.SFX, hitSound, false);
+            if (m_soundManager != null)
+            {
+                m_soundManager.Play(hitSound.ToString(), Sound.SFX, 1.0f, false);
+            }
         }
 
         /// <summary>
@@ -350,7 +368,10 @@ namespace InGame.Player.Player_Base
         private void HandleLevelUp(int level)
         {
             OnLevelUp?.Invoke(level);
-            SoundManager.PlaySound(Sound.SFX, SoundKeys.Levelup, false);
+            if (m_soundManager != null)
+            {
+                m_soundManager.Play(SoundKeys.Levelup.ToString(), Sound.SFX, 1.0f, false);
+            }
         }
 
         /// <summary>
@@ -358,9 +379,9 @@ namespace InGame.Player.Player_Base
         /// </summary>
         private void HandleCoinCollected(int coinValue)
         {
-            if (PlayerDataManager.Instance != null)
+            if (m_playerService != null)
             {
-                PlayerDataManager.Instance.PlayerData.ingameCoin += coinValue;
+                m_playerService.AddCurrency("ingameCoin", coinValue);
             }
         }
 

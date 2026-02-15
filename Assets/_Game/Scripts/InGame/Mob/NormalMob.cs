@@ -93,9 +93,9 @@ namespace InGame.Mob
         /// <summary>
         /// [설명]: 인게임 관리자로부터 전역 설정을 주입받고 위치를 동기화합니다.
         /// </summary>
-        public override void Init(MobManager mobManager)
+        public override void Init(MobManager mobManager, InGame.Data.PlayerDataDTO playerData = null, InGame.Services.ISoundManager soundManager = null)
         {
-            base.Init(mobManager);
+            base.Init(mobManager, playerData, soundManager);
 
             if (m_logic != null)
             {
@@ -243,7 +243,10 @@ namespace InGame.Mob
             // 3. 타격 사운드 (전역 쿨타임 체크)
             if (CanPlayHitSound())
             {
-                SoundManager.PlaySound(Sound.SFX, SoundKeys.Enemyhit);
+                if (m_soundManager != null)
+                {
+                    m_soundManager.Play(SoundKeys.Enemyhit.ToString(), Sound.SFX);
+                }
             }
         }
 
@@ -265,7 +268,10 @@ namespace InGame.Mob
                 return;
             }
 
-            SoundManager.PlaySound(Sound.SFX, SoundKeys.EnemyDeth);
+            if (m_soundManager != null)
+            {
+                m_soundManager.Play(SoundKeys.EnemyDeth.ToString(), Sound.SFX);
+            }
             base.OnDie();
         }
 

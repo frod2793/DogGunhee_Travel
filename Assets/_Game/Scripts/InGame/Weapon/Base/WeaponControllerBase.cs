@@ -30,6 +30,9 @@ namespace InGame.Weapon.Base
         /// <summary> 공격 방향을 결정하기 위한 외부 델리게이트 함수 </summary>
         protected System.Func<Vector3> m_getTargetDirection;
 
+        /// <summary> 사운드 매니저 참조 </summary>
+        protected InGame.Services.ISoundManager m_soundManager;
+
         #endregion
 
         #region 프로퍼티
@@ -77,6 +80,14 @@ namespace InGame.Weapon.Base
             m_getTargetDirection = getTargetDirection;
             
             m_currentCooldownTimer = 0f;
+        }
+
+        /// <summary>
+        /// [설명]: 외부에서 사운드 매니저를 주입합니다.
+        /// </summary>
+        public void SetSoundManager(InGame.Services.ISoundManager soundManager)
+        {
+            m_soundManager = soundManager;
         }
 
         #endregion

@@ -33,6 +33,8 @@ namespace InGame.Player.Player_Base
         /// <summary> 무적 시간 타이머 제어를 위한 비동기 토큰 </summary>
         private CancellationTokenSource m_hitCts;
 
+        private InGame.Services.ISoundManager m_soundManager;
+
         #endregion
 
         #region 이벤트
@@ -53,8 +55,12 @@ namespace InGame.Player.Player_Base
         /// <summary>
         /// [설명]: 충돌 핸들러의 내부 상태를 초기화합니다.
         /// </summary>
-        public void Init()
+        /// <summary>
+        /// [설명]: 충돌 핸들러의 내부 상태를 초기화합니다.
+        /// </summary>
+        public void Init(InGame.Services.ISoundManager soundManager)
         {
+            m_soundManager = soundManager;
             ResetState();
         }
 
@@ -182,9 +188,9 @@ namespace InGame.Player.Player_Base
             {
                 OnExpCollected?.Invoke(expObj.ExpValue);
 
-                if (SoundManager.Instance != null)
+                if (m_soundManager != null)
                 {
-                    SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
+                    m_soundManager.Play(SoundKeys.GetExp.ToString(), Sound.SFX, 1.0f, false);
                 }
 
                 if (expObj.ObjectPoolSpawner != null && expObj.ObjectPoolSpawner.ExpObjectPool != null)
@@ -207,9 +213,9 @@ namespace InGame.Player.Player_Base
             {
                 OnCoinCollected?.Invoke(coinObj.CoinValue);
 
-                if (SoundManager.Instance != null)
+                if (m_soundManager != null)
                 {
-                    SoundManager.PlaySound(Sound.SFX, SoundKeys.GetCoin, false);
+                    m_soundManager.Play(SoundKeys.GetCoin.ToString(), Sound.SFX, 1.0f, false);
                 }
 
                 if (coinObj.ObjectPoolSpawner != null && coinObj.ObjectPoolSpawner.CoinObjectPool != null)

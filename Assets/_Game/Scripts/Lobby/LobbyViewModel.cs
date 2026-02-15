@@ -31,7 +31,8 @@ namespace Lobby
 
         #region 내부 필드
 
-        private readonly PlayerDataManager m_playerDataManager;
+        private readonly InGame.Data.PlayerDataDTO m_playerData;
+        private readonly InGame.Services.PlayerDataService m_playerService;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         #endregion
@@ -39,12 +40,14 @@ namespace Lobby
         #region 생성자
 
         /// <summary>
-        /// [설명]: LobbyViewModel을 생성하고 초기 데이터를 동기화합니다.
+        /// [설명]: LobbyViewModel을 생성하고 DTO 데이터를 바인딩합니다.
         /// </summary>
-        /// <param name="playerDataManager">데이터를 제공할 플레이어 데이터 관리자</param>
-        public LobbyViewModel(PlayerDataManager playerDataManager)
+        /// <param name="playerData">플레이어 데이터 DTO</param>
+        /// <param name="playerService">데이터 조작을 담당하는 서비스</param>
+        public LobbyViewModel(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
         {
-            m_playerDataManager = playerDataManager;
+            m_playerData = playerData;
+            m_playerService = playerService;
 
             // 초기 데이터 로드 및 적용
             RefreshFromPlayerData();
@@ -55,26 +58,24 @@ namespace Lobby
         #region 데이터 동기화 및 갱신
 
         /// <summary>
-        /// [설명]: PlayerDataManager의 실제 데이터로부터 현재 뷰모델의 상태를 새로고침합니다.
+        /// [설명]: DTO의 실제 데이터로부터 현재 뷰모델의 상태를 새로고침합니다.
         /// </summary>
         public void RefreshFromPlayerData()
         {
-            if (m_playerDataManager == null || m_playerDataManager.PlayerData == null)
+            if (m_playerData == null)
             {
                 return;
             }
 
-            var data = m_playerDataManager.PlayerData;
-
             // 반응형 프로퍼티 값 갱신 (자동으로 UI에 반영됨)
-            Nickname.Value = data.nickname ?? string.Empty;
-            Level.Value = data.level;
+            Nickname.Value = m_playerData.Nickname ?? string.Empty;
+            Level.Value = m_playerData.Level;
 
             // UI 슬라이더는 0~1 범위를 사용하므로 비율로 변환 (예시로 100 기준)
-            Experience.Value = data.experience / 100f;
+            Experience.Value = m_playerData.Experience / 100f;
 
-            Gold.Value = data.currency1;
-            Diamond.Value = data.currency2;
+            Gold.Value = m_playerData.Currency1;
+            Diamond.Value = m_playerData.Currency2;
         }
 
         #endregion

@@ -47,6 +47,7 @@ namespace InGame.UI.Popups
         #region 내부 변수
 
         private PostViewModel m_viewModel;
+        private IPostService m_postService;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         // 성능 최적화를 위한 오브젝트 풀링 자료구조
@@ -57,13 +58,25 @@ namespace InGame.UI.Popups
 
         #region 유니티 생명주기
 
-        private void Start()
+        /// <summary>
+        /// [설명]: 외부로부터 의존성을 주입받아 초기화합니다.
+        /// </summary>
+        public void Initialize(IPostService postService)
         {
+            if (m_viewModel != null) return;
+            
+            m_postService = postService;
             InitializeViewModel();
             BindViewModel();
 
             // 진입 시 데이터 자동 갱신
             m_viewModel?.LoadPostsAsync().Forget();
+        }
+
+        private void Start()
+        {
+            // [참고]: LobbyUIViewManager에서 명시적 Initialize를 호출하는 것을 원칙으로 합니다.
+            // 직접 실행 등의 경우 Initialize가 호출되지 않았을 수 있습니다.
         }
 
         private void OnDestroy()
@@ -81,7 +94,7 @@ namespace InGame.UI.Popups
         /// </summary>
         private void InitializeViewModel()
         {
-            m_viewModel = new PostViewModel();
+            m_viewModel = new PostViewModel(m_postService);
         }
 
         /// <summary>
@@ -109,7 +122,8 @@ namespace InGame.UI.Popups
                 .Subscribe(rewardStr =>
                 {
                     LogManager.Log($"[PostView] 보상 수령 완료: {rewardStr}", LogManager.LogCategory.PostManager);
-                    ClosePostDetailPanel();
+                    // 직접 Close를 호출하지 않고 스택에서 Pop하여 닫기 수행 (상세창만 닫음)
+                    PopupManager.Instance.CloseTopPopup();
                 })
                 .AddTo(m_disposables);
         }

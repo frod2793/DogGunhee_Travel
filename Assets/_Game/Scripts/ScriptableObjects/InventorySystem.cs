@@ -99,9 +99,60 @@ namespace InGame.Lobby
             m_entryDict.Clear();
         }
 
+        /// <summary>
+        /// 아이템 판매를 처리하고 획득할 재화 정보를 반환합니다.
+        /// 실질적인 재화(Gold/Diamond) 가산은 반환값을 이용해 외부(ViewModel/Manager)에서 처리해야 합니다.
+        /// </summary>
+        /// <param name="itemCode">판매할 아이템 코드</param>
+        /// <param name="count">판매 수량</param>
+        /// <returns>
+        /// success: 판매 성공 여부
+        /// currencyType: 획득할 재화 타입 (currency1: 골드, currency2: 다이아)
+        /// totalAmount: 획득할 재화 총량
+        /// </returns>
+        public (bool success, string currencyType, int totalAmount) SellItem(int itemCode, int count)
+        {
+            if (count <= 0) return (false, null, 0);
+
+            if (m_entryDict.TryGetValue(itemCode, out var entry))
+            {
+                if (entry.count >= count)
+                {
+                    // 판매 가치 계산
+                    int pricePerUnit = entry.item.itemcoinCount;
+                    string currencyType = entry.item.itemcoinType;
+                    int totalAmount = pricePerUnit * count;
+
+                    // 아이템 차감
+                    entry.count -= count;
+
+                    // 로그 (시스템 내부 로깅)
+                    // LogManager 의존성이 없으므로 생략하거나, 필요한 경우 외부에서 로깅
+
+                    // 수량이 0이 되면 목록에서 제거하는 것이 깔끔하지만, 
+                    // 기존 TryUseItem 정책(0개 유지)과 일관성을 위해 일단 유지할 수도 있음.
+                    // 단, 판매의 경우 보통 슬롯을 비우기를 원하므로 여기서는 0이 되면 제거하는 로직을 추가 검토 가능.
+                    // 현재는 차감만 수행.
+
+                    return (true, currencyType, totalAmount);
+                }
+            }
+
+            return (false, null, 0);
+        }
+
         #endregion
 
         #region 공개 메서드 (조회)
+
+        /// <summary>
+        /// 현재 인벤토리의 모든 아이템 엔트리 목록을 반환합니다.
+        /// (UI 표시용)
+        /// </summary>
+        public List<InventoryDataSO.InventoryEntry> GetAllEntries()
+        {
+            return m_inventoryData != null ? m_inventoryData.inventory : new List<InventoryDataSO.InventoryEntry>();
+        }
 
         /// <summary>
         /// 특정 아이템의 보유 수량을 반환합니다.

@@ -73,9 +73,9 @@ namespace InGame.UI.Elements
             m_itemCode = code;
 
             // 데이터 관리자로부터 설정값 로드
-            if (InventoryDataManager.Instance != null)
+            if (InventoryManager.Instance != null)
             {
-                m_itemData = InventoryDataManager.Instance.GetItemByItemCode(m_itemCode);
+                m_itemData = InventoryManager.Instance.GetItemInfo(m_itemCode);
             }
 
             if (m_itemData == null)

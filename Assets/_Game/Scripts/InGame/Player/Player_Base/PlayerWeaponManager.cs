@@ -19,6 +19,9 @@ namespace InGame.Player.Player_Base
         /// <summary> 무기가 공격 시 조준할 방향 데이터를 제공하는 외부 함수 대리자 </summary>
         private Func<Vector3> m_targetProvider;
 
+        /// <summary> 사운드 매니저 참조 </summary>
+        private InGame.Services.ISoundManager m_soundManager;
+
         #endregion
 
         #region 공개 프로퍼티
@@ -47,6 +50,14 @@ namespace InGame.Player.Player_Base
             m_targetProvider = provider;
         }
 
+        /// <summary>
+        /// [설명]: 사운드 매니저를 설정합니다. 무기 추가 시 자동으로 주입됩니다.
+        /// </summary>
+        public void SetSoundManager(InGame.Services.ISoundManager soundManager)
+        {
+            m_soundManager = soundManager;
+        }
+
         #endregion
 
         #region 무기 장착 및 해제
@@ -72,6 +83,12 @@ namespace InGame.Player.Player_Base
             }
 
             m_controllers.Add(controller);
+
+            // 무기 컨트롤러에 사운드 매니저 주입
+            if (controller is WeaponControllerBase baseController && m_soundManager != null)
+            {
+                baseController.SetSoundManager(m_soundManager);
+            }
 
             // 장착과 동시에 초기 타겟 방향으로 공격 시도
             Vector3 initialTarget = m_targetProvider != null ? m_targetProvider.Invoke() : Vector3.zero;

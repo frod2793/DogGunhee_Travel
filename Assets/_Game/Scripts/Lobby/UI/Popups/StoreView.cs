@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
 using R3;
 using InGame.Lobby.ViewModels;
 using InGame.UI.Elements;
@@ -38,13 +36,25 @@ namespace InGame.UI.Popups
 
         #endregion
 
+        #region 초기화 및 바인딩 로직
+
+        /// <summary>
+        /// [설명]: 외부(LobbyUIViewManager 등)로부터 의존성을 주입받아 초기화합니다.
+        /// </summary>
+        public void Initialize(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
+        {
+            if (m_viewModel != null) return;
+
+            m_viewModel = new StoreViewModel(playerData, playerService);
+            BindViewModel();
+        }
+
+        #endregion
+
         #region 유니티 생명주기
 
         private void Start()
         {
-            InitializeViewModel();
-            BindViewModel();
-
             // 상점 에셋(아이템들) 비동기 로드 시작
             LoadAddressableStoreAssets();
         }
@@ -53,18 +63,6 @@ namespace InGame.UI.Popups
         {
             m_disposables.Dispose();
             m_viewModel?.Dispose();
-        }
-
-        #endregion
-
-        #region MVVM 데이터 바인딩
-
-        /// <summary>
-        /// [설명]: 상점 거래 로직을 담당하는 뷰모델을 생성합니다.
-        /// </summary>
-        private void InitializeViewModel()
-        {
-            m_viewModel = new StoreViewModel();
         }
 
         /// <summary>

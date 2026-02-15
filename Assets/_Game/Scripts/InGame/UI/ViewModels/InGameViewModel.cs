@@ -270,10 +270,10 @@ namespace InGame.UI.ViewModels
             m_weaponSprites.Value = weapons;
 
             // 2. 패시브/장신구 계열 추출
-            if (InventoryDataManager.Instance != null)
+            if (InventoryManager.Instance != null)
             {
                 var accessories = new List<Sprite>();
-                var acquired = InventoryDataManager.Instance.InGameAcquiredSkills;
+                var acquired = InventoryManager.Instance.InGameAcquiredSkills;
                 if (acquired != null)
                 {
                     foreach (var skill in acquired)
@@ -432,9 +432,9 @@ namespace InGame.UI.ViewModels
 
             // 2. 획득한 패시브(장신구) 코드 셋 구성
             var acquiredAccessoryCodes = new HashSet<string>();
-            if (InventoryDataManager.Instance != null && InventoryDataManager.Instance.InGameAcquiredSkills != null)
+            if (InventoryManager.Instance != null && InventoryManager.Instance.InGameAcquiredSkills != null)
             {
-                foreach (var s in InventoryDataManager.Instance.InGameAcquiredSkills)
+                foreach (var s in InventoryManager.Instance.InGameAcquiredSkills)
                 {
                     if (s.skillType == SkillType.Passive)
                     {

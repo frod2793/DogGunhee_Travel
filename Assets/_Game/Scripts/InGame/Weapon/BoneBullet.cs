@@ -60,6 +60,7 @@ namespace InGame.Weapon.Controllers
         
         // 관리 객체
         private WeaponPoolManager m_poolManager;
+        private InGame.Services.ISoundManager m_soundManager;
         private CancellationTokenSource m_lifetimeCts;
         private Tween m_moveTween;
         private Tween m_rotateTween;
@@ -104,8 +105,9 @@ namespace InGame.Weapon.Controllers
             m_lastPosition = m_transform.position;
             m_stoppedTime = 0f;
 
-            // 사운드 재생
-            SoundManager.PlaySound(Sound.SFX, SoundKeys.Throwbone);
+            m_isActive = true;
+            m_lastPosition = m_transform.position;
+            m_stoppedTime = 0f;
         }
 
         private void OnDisable()
@@ -155,13 +157,15 @@ namespace InGame.Weapon.Controllers
         /// <param name="speed">이동 속도</param>
         /// <param name="isEvolved">진화 여부(폭발 효과)</param>
         /// <param name="poolManager">오브젝트 풀 매니저</param>
-        public void Init(float damage, float stunTime, float speed, bool isEvolved, WeaponPoolManager poolManager)
+        /// <param name="soundManager">사운드 매니저 (DI)</param>
+        public void Init(float damage, float stunTime, float speed, bool isEvolved, WeaponPoolManager poolManager, InGame.Services.ISoundManager soundManager)
         {
             m_attackPower = damage;
             m_stunTime = stunTime;
             m_bulletSpeed = speed;
             m_isEvolved = isEvolved;
             m_poolManager = poolManager;
+            m_soundManager = soundManager;
         }
 
         /// <summary>
@@ -171,6 +175,12 @@ namespace InGame.Weapon.Controllers
         {
             // 방향 보정
             if (direction == Vector3.zero) direction = Random.insideUnitCircle.normalized;
+
+            // 사운드 재생 (투사체가 날아갈 때 재생)
+            if (m_soundManager != null)
+            {
+                m_soundManager.Play(SoundKeys.Throwbone.ToString(), Sound.SFX);
+            }
 
             ThrowAndTrackLifecycleAsync(direction).Forget();
         }

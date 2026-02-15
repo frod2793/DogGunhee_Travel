@@ -121,10 +121,18 @@ namespace InGame.Lobby.ViewModels
             }
 
             // 1. 보상 아이템 지급 (인벤토리 매니저 연동)
-            if (InventoryDataManager.Instance != null)
+            // 1. 보상 아이템 지급 (인벤토리 매니저 연동)
+            if (InventoryManager.Instance != null)
             {
-                InventoryDataManager.Instance.GetItemByItemCode(quest.RewardItemCode);
-                InventoryDataManager.Instance.SaveInventoryData();
+                // [변경] InventoryDataManager -> InventoryManager
+                // 기존 GetItemByItemCode는 아이템을 추가하는 부작용이 있었음.
+                // 변경된 로직에서는 명시적으로 아이템 정보를 조회하고 추가함.
+                var rewardItem = InventoryManager.Instance.GetItemInfo(quest.RewardItemCode);
+                if (rewardItem != null)
+                {
+                    InventoryManager.Instance.System.AddItem(rewardItem);
+                    InventoryManager.Instance.SaveInventory();
+                }
 
                 // 2. 내부 데이터 상태 완료 처리 (서버 연동 시 API 응답에 맞춰 처리)
                 quest.IsCompleted = true;

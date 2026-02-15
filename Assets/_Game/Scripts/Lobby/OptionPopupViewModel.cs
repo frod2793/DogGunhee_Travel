@@ -13,7 +13,7 @@ namespace Lobby
         #region 내부 필드 및 프로퍼티
 
         private readonly SettingsData m_settingsData;
-        private readonly SoundManager m_soundManager;
+        private readonly InGame.Services.ISoundManager m_soundManager;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary> [설명]: 효과음(SFX) 볼륨 (0.0 ~ 1.0) </summary>
@@ -37,7 +37,7 @@ namespace Lobby
         /// </summary>
         /// <param name="settingsData">저장소 데이터</param>
         /// <param name="soundManager">사운드 제어 매니저</param>
-        public OptionPopupViewModel(SettingsData settingsData, SoundManager soundManager)
+        public OptionPopupViewModel(SettingsData settingsData, InGame.Services.ISoundManager soundManager)
         {
             m_settingsData = settingsData;
             m_soundManager = soundManager;
@@ -60,23 +60,21 @@ namespace Lobby
             m_settingsData.LoadSettings();
 
             // 2. 상태 변경 이벤트 구독 (ReactiveProperty -> System)
-            var soundManager = (m_soundManager != null) ? m_soundManager : SoundManager.Instance;
-
             EffectSoundVolume.Subscribe(v =>
             {
                 m_settingsData.EffectSoundVolume = v;
-                if (soundManager != null)
+                if (m_soundManager != null)
                 {
-                    soundManager.SetVolume(Sound.SFX, v);
+                    m_soundManager.SetVolume(Sound.SFX, v);
                 }
             }).AddTo(m_disposables);
 
             BgmSoundVolume.Subscribe(v =>
             {
                 m_settingsData.BackgroundSoundVolume = v;
-                if (soundManager != null)
+                if (m_soundManager != null)
                 {
-                    soundManager.SetVolume(Sound.BGM, v);
+                    m_soundManager.SetVolume(Sound.BGM, v);
                 }
             }).AddTo(m_disposables);
 

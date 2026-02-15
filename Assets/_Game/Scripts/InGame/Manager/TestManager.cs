@@ -325,9 +325,9 @@ namespace InGame.Managers
 
             int charIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
 
-            if (PlayerDataManager.Instance != null)
+            if (m_gameManager.PlayerData != null)
             {
-                PlayerDataManager.Instance.SelectCharacterIndex = charIndexToSpawn;
+                m_gameManager.PlayerData.SelectCharacterIndex = charIndexToSpawn;
             }
 
             m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();

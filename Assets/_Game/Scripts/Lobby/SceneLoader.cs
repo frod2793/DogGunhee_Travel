@@ -135,26 +135,26 @@ namespace InGame
 
         #region 공개 API
 
-        public UniTask LoadLobbySceneAsync() => LoadSceneAsync(SceneNames.Lobby);
-        public UniTask LoadGameSceneAsync() => LoadSceneAsync(SceneNames.RunGame);
-        public UniTask LoadVamSerLikeSceneAsync() => LoadSceneAsync(SceneNames.VamSerLike);
-        public UniTask LoadIntroSceneAsync() => LoadSceneAsync(SceneNames.Intro);
+        public UniTask LoadLobbySceneAsync(object payload = null) => LoadSceneAsync(SceneNames.Lobby, payload);
+        public UniTask LoadGameSceneAsync(object payload = null) => LoadSceneAsync(SceneNames.RunGame, payload);
+        public UniTask LoadVamSerLikeSceneAsync(object payload = null) => LoadSceneAsync(SceneNames.VamSerLike, payload);
+        public UniTask LoadIntroSceneAsync(object payload = null) => LoadSceneAsync(SceneNames.Intro, payload);
 
-        public void LoadLobbyScene() => LoadLobbySceneAsync().Forget();
-        public void LoadGameScene() => LoadGameSceneAsync().Forget();
-        public void LoadVamSerLikeScene() => LoadVamSerLikeSceneAsync().Forget();
-        public void LoadIntroScene() => LoadIntroSceneAsync().Forget();
-        public void LoadScene(string sceneName) => LoadSceneAsync(sceneName).Forget();
-        public void LoadScene(SceneReference sceneRef) => LoadSceneAsync(sceneRef).Forget();
+        public void LoadLobbyScene(object payload = null) => LoadLobbySceneAsync(payload).Forget();
+        public void LoadGameScene(object payload = null) => LoadGameSceneAsync(payload).Forget();
+        public void LoadVamSerLikeScene(object payload = null) => LoadVamSerLikeSceneAsync(payload).Forget();
+        public void LoadIntroScene(object payload = null) => LoadIntroSceneAsync(payload).Forget();
+        public void LoadScene(string sceneName, object payload = null) => LoadSceneAsync(sceneName, payload).Forget();
+        public void LoadScene(SceneReference sceneRef, object payload = null) => LoadSceneAsync(sceneRef, payload).Forget();
 
         /// <summary>
         /// [설명]: SceneReference 객체를 사용하여 비동기로 씬을 로드합니다.
         /// </summary>
-        public UniTask LoadSceneAsync(SceneReference sceneRef)
+        public UniTask LoadSceneAsync(SceneReference sceneRef, object payload = null)
         {
             if (sceneRef != null && !string.IsNullOrEmpty(sceneRef.SceneName))
             {
-                return LoadSceneAsync(sceneRef.SceneName);
+                return LoadSceneAsync(sceneRef.SceneName, payload);
             }
 
             LogManager.LogError("[SceneLoader] SceneReference가 유효하지 않습니다.", LogManager.LogCategory.SceneLoader);
@@ -164,7 +164,7 @@ namespace InGame
         /// <summary>
         /// [설명]: 씬 이름을 문자열로 받아 비동기로 로드 절차를 시작합니다.
         /// </summary>
-        public async UniTask LoadSceneAsync(string sceneName)
+        public async UniTask LoadSceneAsync(string sceneName, object payload = null)
         {
             if (!IsSceneInBuild(sceneName))
             {
@@ -189,7 +189,7 @@ namespace InGame
 
             try
             {
-                await ProcessSceneLoadAsync(sceneName, m_cts.Token);
+                await ProcessSceneLoadAsync(sceneName, payload, m_cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -208,7 +208,7 @@ namespace InGame
         /// <summary>
         /// [설명]: 페이드 인 -> 씬 로드 -> 연출 대기 -> 페이드 아웃의 표준 로딩 시퀀스를 실행합니다.
         /// </summary>
-        private async UniTask ProcessSceneLoadAsync(string sceneName, CancellationToken ct)
+        private async UniTask ProcessSceneLoadAsync(string sceneName, object payload, CancellationToken ct)
         {
             PrepareLoading();
 
@@ -218,7 +218,7 @@ namespace InGame
             await FadeAsync(true, ct);
 
             // 2. 실제 비동기 씬 로드 및 진행 바 갱신
-            await LoadSceneInternalAsync(sceneName, ct);
+            await LoadSceneInternalAsync(sceneName, payload, ct);
 
             // 3. 로딩 완료 연출 대기
             await WaitForFinishAnimationAsync(ct);
@@ -259,7 +259,7 @@ namespace InGame
         /// <summary>
         /// [설명]: Unity AsyncOperation을 사용하여 씬을 로드하고 프로그레스바를 부드럽게 갱신합니다.
         /// </summary>
-        private async UniTask LoadSceneInternalAsync(string sceneName, CancellationToken ct)
+        private async UniTask LoadSceneInternalAsync(string sceneName, object payload, CancellationToken ct)
         {
             var op = SceneManager.LoadSceneAsync(sceneName);
             op.allowSceneActivation = false;
@@ -297,6 +297,16 @@ namespace InGame
                     {
                         op.allowSceneActivation = true;
                     }
+                }
+            }
+
+            // 씬 로드 완료 후 Initializer 찾기 및 초기화
+            var initializers = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+            foreach (var mono in initializers)
+            {
+                if (mono is Core.ISceneInitializer initializer)
+                {
+                    initializer.OnInitialize(payload);
                 }
             }
 

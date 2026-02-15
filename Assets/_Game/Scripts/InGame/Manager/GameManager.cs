@@ -10,14 +10,17 @@ using UnityEngine.AddressableAssets;
 using Lobby;
 using InGame.Weapon;
 using InGame.Mob.Systems;
+using InGame.Data;
+using InGame.Services;
+using InGame.Core;
 
 namespace InGame.Managers
 {
     /// <summary>
     /// [설명]: 게임의 전체 흐름(시작, 정지, 종료)과 전역 상태(플레이어, 스포너, UI)를 총괄하는 중앙 관리자 클래스입니다.
-    /// 싱글톤으로 구현되어 있으며, 외부 시스템(Backend)과의 데이터 동기화도 담당합니다.
+    /// 외부 시스템과 연동하는 PlayerDataDTO를 주입받아 초기화됩니다.
     /// </summary>
-    public class GameManager : MonoBehaviour
+    public class GameManager : MonoBehaviour, ISceneInitializer
     {
         #region 싱글톤 및 이벤트
 
@@ -72,11 +75,19 @@ namespace InGame.Managers
         private PlayerCameraAgent m_playerCameraAgent;
         private MobManager m_mobManager;
 
+        private PlayerDataDTO m_playerData;
+        private PlayerDataService m_playerService;
+        private IGameDataService m_gameDataService;
+        private ISoundManager m_soundManager;
+
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
 
         #endregion
 
         #region 공개 프로퍼티
+
+        /// <summary> [설명]: 주입받은 플레이어 데이터 DTO를 반환합니다. </summary>
+        public PlayerDataDTO PlayerData => m_playerData;
 
         /// <summary> 현재 맵에 스폰된 플레이어 캐릭터 </summary>
         public PlayerBase SpawnedPlayer { get; private set; }
@@ -141,6 +152,37 @@ namespace InGame.Managers
             SubscribeEvents();
         }
 
+        /// <summary>
+        /// [설명]: SceneLoader로부터 전달된 데이터를 사용하여 게임 매니저를 초기화합니다.
+        /// </summary>
+        public void OnInitialize(object payload)
+        {
+            if (payload is ScenePayloadDTO scenePayload)
+            {
+                m_playerData = scenePayload.PlayerData;
+                m_soundManager = scenePayload.SoundService;
+
+                if (scenePayload.ServerSession != null)
+                {
+                    m_gameDataService = scenePayload.ServerSession.GameData;
+                }
+
+                if (m_uiManager != null)
+                {
+                    m_uiManager.Initialize(m_soundManager);
+                }
+            }
+            else if (payload is PlayerDataDTO dto)
+            {
+                m_playerData = dto;
+            }
+
+            if (m_playerData != null)
+            {
+                m_playerService = new InGame.Services.PlayerDataService(m_playerData, new InGame.Services.EncryptionService(), new InGame.Data.LocalPlayerDataRepository(new InGame.Services.EncryptionService()));
+            }
+        }
+
         private void Start()
         {
             if (m_settingsData != null)
@@ -148,17 +190,30 @@ namespace InGame.Managers
                 m_settingsData.LoadSettings();
                 Application.targetFrameRate = m_settingsData.TargetFrameRate;
                 if (m_objectPoolSpawner != null)
-            {
-                m_objectPoolSpawner.OnStageCleared += OnStageCleared;
+                {
+                    m_objectPoolSpawner.OnStageCleared += OnStageCleared;
+                }
             }
-        }
 
-#if UNITY_EDITOR
-            if (Application.isPlaying && PlayerDataManager.Instance != null)
+            // 에디터 직접 실행 혹은 데이터가 없는 경우의 방어 로직
+            if (m_playerData == null)
             {
-                PlayerDataManager.Instance.SelectCharacterIndex = m_startCharacterIndex;
-            }
+                m_playerData = new PlayerDataDTO();
+                m_playerService = new InGame.Services.PlayerDataService(m_playerData, new InGame.Services.EncryptionService(), new InGame.Data.LocalPlayerDataRepository(new InGame.Services.EncryptionService()));
+#if UNITY_EDITOR
+                m_playerData.SelectCharacterIndex = m_startCharacterIndex;
 #endif
+            }
+
+            // 에디터 직접 실행이나 비정상적인 경로로 진입 시 SoundManager 방어 로직
+            if (m_soundManager == null)
+            {
+                m_soundManager = FindFirstObjectByType<SoundManager>();
+                if (m_uiManager != null && m_soundManager != null)
+                {
+                    m_uiManager.Initialize(m_soundManager);
+                }
+            }
         }
 
         private void OnEnable()
@@ -244,21 +299,29 @@ namespace InGame.Managers
         {
             try
             {
-                if (InventoryDataManager.Instance != null)
+                // [변경] InventoryDataManager -> InventoryManager
+                if (InventoryManager.Instance != null)
                 {
-                    InventoryDataManager.Instance.ClearInGameSkills();
+                    InventoryManager.Instance.ClearInGameSkills();
                 }
 
-                if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
+                if (m_playerData != null)
                 {
-                    PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt = 0;
+                    m_playerData.NowPlayMobKillCount = 0;
                 }
 
-                SoundManager.PlaySound(Sound.BGM, SoundKeys.InGame, true);
-
-                if (SpawnedPlayer != null && m_objectPoolSpawner != null)
+                // BGM 재생 로직 (DI 사용)
+                if (m_soundManager != null)
                 {
-                    await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer, m_mobManager, 1);
+                    m_soundManager.Play(SoundKeys.InGame.ToString(), Sound.BGM, loop: true);
+                }
+
+                if (SpawnedPlayer != null)
+                {
+                    if (m_objectPoolSpawner != null)
+                    {
+                        await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer, m_mobManager, m_playerData, m_soundManager, 1);
+                    }
                 }
             }
             catch (Exception e)
@@ -314,30 +377,27 @@ namespace InGame.Managers
         /// </summary>
         public async UniTask SaveGameResult()
         {
-            var dataManager = PlayerDataManager.Instance;
-            if (dataManager == null || dataManager.PlayerData == null)
+            if (m_playerData == null)
             {
                 return;
             }
 
-            var playerData = dataManager.PlayerData;
+            var playerData = m_playerData;
 
-            if (playerData.ingameCoin <= 0)
-            {
-                return;
-            }
-
-            playerData.currency1 += playerData.ingameCoin;
-            playerData.ingameCoin = 0;
+            playerData.Currency1 += playerData.IngameCoin;
+            playerData.IngameCoin = 0;
 
             await UniTask.SwitchToMainThread();
 
             var param = new BackEnd.Param();
-            param.Add("Money1", playerData.currency1);
+            param.Add("Money1", playerData.Currency1);
 
             try
             {
-                await ServerManager.Instance.UploadDataAsync("User_Data", param);
+                if (m_gameDataService != null)
+                {
+                    await m_gameDataService.UploadDataAsync("User_Data", param);
+                }
             }
             catch (Exception e)
             {
@@ -383,7 +443,7 @@ namespace InGame.Managers
 
             try
             {
-                int charIndex = PlayerDataManager.Instance != null ? PlayerDataManager.Instance.SelectCharacterIndex : 0;
+                int charIndex = m_playerData != null ? m_playerData.SelectCharacterIndex : 0;
                 string charKey = $"Player_Character_{charIndex}";
 
                 GameObject charInstance = await Addressables
@@ -403,6 +463,9 @@ namespace InGame.Managers
                     Addressables.ReleaseInstance(charInstance);
                     return;
                 }
+
+                // 플레이어 시스템 초기화 (DTO 서비스 및 사운드 매니저 주입)
+                SpawnedPlayer.Init(playerService: m_playerService, soundManager: m_soundManager);
 
                 var initialWeapons = new List<SkillData>();
                 if (m_skillDatabase != null)
@@ -538,7 +601,16 @@ namespace InGame.Managers
             if (m_optionPopupPrefab != null)
             {
                 var popup = Instantiate(m_optionPopupPrefab, transform);
-                popup.gameObject.SetActive(true);
+                popup.Initialize(m_soundManager);
+
+                // ESC 키 등으로 닫힐 수 있도록 PopupManager에 등록
+                InGame.UI.PopupManager.Instance.RegisterPopup(() =>
+                {
+                    if (popup != null)
+                    {
+                        Destroy(popup.gameObject);
+                    }
+                });
             }
         }
 
@@ -549,9 +621,9 @@ namespace InGame.Managers
         /// <summary> [설명]: 현재 몬스터 처치 수를 반환합니다. </summary>
         public int GetMobKillCount()
         {
-            if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
+            if (m_playerData != null)
             {
-                return PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt;
+                return m_playerData.NowPlayMobKillCount;
             }
             return 0;
         }
@@ -583,9 +655,9 @@ namespace InGame.Managers
         /// <summary> [설명]: 현재 인게임에서 획득한 코인 수를 반환합니다. </summary>
         public int GetCoinCount()
         {
-            if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
+            if (m_playerData != null)
             {
-                return PlayerDataManager.Instance.PlayerData.ingameCoin;
+                return m_playerData.IngameCoin;
             }
             return 0;
         }

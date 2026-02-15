@@ -93,7 +93,8 @@ namespace InGame.Weapon.Controllers
                 m_logic.Duration,    
                 m_logic.BoneSpeed,
                 m_logic.IsEvolved,
-                m_poolManager
+                m_poolManager,
+                m_soundManager
             );
 
             Vector3 finalDir = direction == Vector3.zero ? Vector3.up : direction;

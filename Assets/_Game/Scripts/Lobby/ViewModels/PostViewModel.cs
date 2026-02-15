@@ -52,13 +52,14 @@ namespace InGame.Lobby.ViewModels
         #region 내부 변수 및 생성자
 
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
+        private readonly IPostService m_postService;
 
         /// <summary>
         /// [설명]: PostViewModel의 기본 생성자입니다.
         /// </summary>
-        public PostViewModel()
+        public PostViewModel(IPostService postService)
         {
-            // 초기화가 필요한 경우 로직 기술
+            m_postService = postService;
         }
 
         #endregion
@@ -78,9 +79,11 @@ namespace InGame.Lobby.ViewModels
             m_loading.Value = true;
             try
             {
+                if (m_postService == null) return;
+
                 // 두 종류의 우편 목록을 요청
-                var adminPosts = await ServerManager.Instance.GetPostListAsync(BackEnd.PostType.Admin);
-                var couponPosts = await ServerManager.Instance.GetPostListAsync(BackEnd.PostType.Coupon);
+                var adminPosts = await m_postService.GetPostListAsync(BackEnd.PostType.Admin);
+                var couponPosts = await m_postService.GetPostListAsync(BackEnd.PostType.Coupon);
 
                 var allPosts = new List<PostService.PostInfo>(adminPosts.Count + couponPosts.Count);
                 allPosts.AddRange(adminPosts);
@@ -155,21 +158,29 @@ namespace InGame.Lobby.ViewModels
 
             try
             {
+                if (m_postService == null) return;
+
                 // 서버 연동: 실제 아이템 수령 처리
                 bool isSuccess =
-                    await ServerManager.Instance.ReceivePostItemAsync(postInfo.PostType, postInfo.PostInDate);
+                    await m_postService.ReceivePostItemAsync(postInfo.PostType, postInfo.PostInDate);
 
                 if (isSuccess)
                 {
                     // 1. 로컬 인벤토리 데이터 매니저 갱신
-                    if (InventoryDataManager.Instance != null)
+                    // 1. 로컬 인벤토리 데이터 매니저 갱신
+                    if (InventoryManager.Instance != null)
                     {
                         foreach (var item in postInfo.Items)
                         {
-                            InventoryDataManager.Instance.GetItemByName(item.Key, item.Value);
+                            // [변경] 이름으로 아이템 데이터 조회 후 추가
+                            var itemData = InventoryManager.Instance.ItemDatabase.GetItemDataByName(item.Key);
+                            if (itemData != null)
+                            {
+                                InventoryManager.Instance.System.AddItem(itemData, item.Value);
+                            }
                         }
 
-                        InventoryDataManager.Instance.SaveInventoryData();
+                        InventoryManager.Instance.SaveInventory();
                     }
 
                     // 2. 현재 목록에서 해당 우편 제거 (ReactiveProperty 반응 유도)

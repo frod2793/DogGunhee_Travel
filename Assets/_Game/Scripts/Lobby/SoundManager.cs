@@ -10,31 +10,6 @@ using InGame.Services;
 /// </summary>
 public class SoundManager : MonoBehaviour, ISoundManager
 {
-    #region 싱글톤
-
-    private static SoundManager s_instance;
-
-    /// <summary>
-    /// [설명]: SoundManager의 전역 접근 인스턴스입니다.
-    /// </summary>
-    public static SoundManager Instance
-    {
-        get
-        {
-            if (s_instance == null)
-            {
-                s_instance = FindFirstObjectByType<SoundManager>();
-                if (s_instance == null)
-                {
-                    LogManager.LogError("[SoundManager] 씬 내에서 SoundManager 인스턴스를 찾을 수 없습니다.");
-                }
-            }
-
-            return s_instance;
-        }
-    }
-
-    #endregion
 
     #region 상수 및 설정값
 
@@ -82,39 +57,13 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     #endregion
 
-    #region 공개 정적 메서드
-
-    /// <summary>
-    /// [설명]: 간단하게 클립 이름으로 사운드를 재생합니다.
-    /// </summary>
-    public static void PlaySound(Sound type, string clipName, bool loop = false, float pitch = 1.0f)
-    {
-        Instance.Play(clipName, type, pitch, loop);
-    }
-
-    /// <summary>
-    /// [설명]: SoundKeys 열거형을 사용하여 사운드를 재생합니다.
-    /// </summary>
-    public static void PlaySound(Sound type, SoundKeys clipKey, bool loop = false, float pitch = 1.0f)
-    {
-        Instance.Play(clipKey.ToString(), type, pitch, loop);
-    }
-
-    #endregion
+    // 정적 PlayFunc 메서드 제거됨
 
     #region 유니티 생명주기
 
     private void Awake()
     {
-        if (s_instance != null && s_instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        s_instance = this;
         DontDestroyOnLoad(gameObject);
-
         InitializeSystems();
     }
 

@@ -42,15 +42,17 @@ namespace InGame.Lobby.ViewModels
 
         #region 내부 필드 및 생성자
 
-        private readonly PlayerDataManager m_playerDataManager;
+        private readonly InGame.Data.PlayerDataDTO m_playerData;
+        private readonly InGame.Services.PlayerDataService m_playerService;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary>
-        /// [설명]: StoreViewModel 생성 시 플레이어 데이터를 로드하고 초기 재화 상태를 동기화합니다.
+        /// [설명]: StoreViewModel 생성 시 DTO와 서비스를 주입받습니다.
         /// </summary>
-        public StoreViewModel()
+        public StoreViewModel(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
         {
-            m_playerDataManager = PlayerDataManager.Instance;
+            m_playerData = playerData;
+            m_playerService = playerService;
             RefreshCurrency();
         }
 
@@ -59,14 +61,14 @@ namespace InGame.Lobby.ViewModels
         #region 비즈니스 로직
 
         /// <summary>
-        /// [설명]: PlayerDataManager로부터 최신 재화 정보를 읽어와 반응형 프로퍼티를 갱신합니다.
+        /// [설명]: 데이터 서비스로부터 최신 재화 정보를 읽어와 반응형 프로퍼티를 갱신합니다.
         /// </summary>
         public void RefreshCurrency()
         {
-            if (m_playerDataManager != null && m_playerDataManager.PlayerData != null)
+            if (m_playerData != null)
             {
-                m_gold.Value = m_playerDataManager.PlayerData.currency1;
-                m_diamond.Value = m_playerDataManager.PlayerData.currency2;
+                m_gold.Value = m_playerData.Currency1;
+                m_diamond.Value = m_playerData.Currency2;
             }
         }
 
@@ -76,14 +78,15 @@ namespace InGame.Lobby.ViewModels
         /// <param name="itemCode">구입할 아이템의 고유 코드</param>
         public void PurchaseItem(int itemCode)
         {
-            if (InventoryDataManager.Instance == null)
+            if (InventoryManager.Instance == null)
             {
                 LogManager.LogError("[StoreViewModel] 인벤토리 매니저가 누락되었습니다.", LogManager.LogCategory.StoreManager);
                 m_errorSubject.OnNext("상점 연동 오류가 발생했습니다.");
                 return;
             }
 
-            var itemData = InventoryDataManager.Instance.GetItemByItemCode(itemCode);
+            // [변경] InventoryDataManager -> InventoryManager 사용
+            var itemData = InventoryManager.Instance.GetItemInfo(itemCode);
             if (itemData == null)
             {
                 m_errorSubject.OnNext("이 아이템은 현재 판매 정보가 존재하지 않습니다.");
@@ -92,13 +95,14 @@ namespace InGame.Lobby.ViewModels
 
             // 1. 재화 검사 루틴
             bool isCurrencyEnough = false;
+            // [참고] 대소문자 주의: ItemDataSO의 itemcoinType 값 (Gold/Diamond)
             if (itemData.itemcoinType == "Gold")
             {
-                isCurrencyEnough = m_playerDataManager.PlayerData.currency1 >= itemData.itemcoinCount;
+                isCurrencyEnough = m_playerData.Currency1 >= itemData.itemcoinCount;
             }
             else if (itemData.itemcoinType == "Diamond")
             {
-                isCurrencyEnough = m_playerDataManager.PlayerData.currency2 >= itemData.itemcoinCount;
+                isCurrencyEnough = m_playerData.Currency2 >= itemData.itemcoinCount;
             }
 
             if (!isCurrencyEnough)
@@ -107,7 +111,7 @@ namespace InGame.Lobby.ViewModels
                 return;
             }
 
-            // 2. 실제 차감 및 지급 (서버 통신 필요 시 async로 확장)
+            // 2. 실제 차감 및 지급
             ExecuteTransactionInternal(itemData);
         }
 
@@ -123,18 +127,21 @@ namespace InGame.Lobby.ViewModels
             // 재화 차감
             if (itemData.itemcoinType == "Gold")
             {
-                m_playerDataManager.PlayerData.currency1 -= itemData.itemcoinCount;
+                m_playerService.SubtractCurrency("currency1", itemData.itemcoinCount);
             }
             else if (itemData.itemcoinType == "Diamond")
             {
-                m_playerDataManager.PlayerData.currency2 -= itemData.itemcoinCount;
+                m_playerService.SubtractCurrency("currency2", itemData.itemcoinCount);
             }
 
-            // 인벤토리에 아이템 추가 및 데이터 저장
-            InventoryDataManager.Instance.GetItemByItemCode(itemData.itemCode);
+            // 인벤토리에 아이템 추가
+            // [변경] 명시적으로 AddItem 호출
+            InventoryManager.Instance.System.AddItem(itemData);
 
-            m_playerDataManager.SavePlayerData();
-            InventoryDataManager.Instance.SaveInventoryData();
+            // 데이터 저장
+            m_playerService.SaveData();
+            // [변경] 새 매니저 저장 메서드 호출
+            InventoryManager.Instance.SaveInventory();
 
             // 상태 갱신 및 시각적 피드백
             RefreshCurrency();

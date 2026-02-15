@@ -57,7 +57,7 @@ namespace InGame.Services
                     var keyContainer = JsonUtility.FromJson<KeyContainer>(keyJson);
                     m_rsaPublicKey = keyContainer.publicKey;
                     m_rsaPrivateKey = keyContainer.privateKey;
-                    LogManager.Log("로컬 파일에서 RSA 키 쌍을 로드했습니다.", LogManager.LogCategory.PlayerDataManager);
+                    LogManager.Log("로컬 파일에서 RSA 키 쌍을 로드했습니다.", LogManager.LogCategory.PlayerDataService);
                 }
                 else
                 {
@@ -65,14 +65,14 @@ namespace InGame.Services
                     var keyContainer = new KeyContainer { publicKey = m_rsaPublicKey, privateKey = m_rsaPrivateKey };
                     string keyJson = JsonUtility.ToJson(keyContainer);
                     File.WriteAllText(keyPath, keyJson);
-                    LogManager.Log("새로운 RSA 키 쌍을 생성하고 로컬 파일에 저장했습니다.", LogManager.LogCategory.PlayerDataManager);
+                    LogManager.Log("새로운 RSA 키 쌍을 생성하고 로컬 파일에 저장했습니다.", LogManager.LogCategory.PlayerDataService);
                 }
             }
             catch (Exception ex)
             {
-                LogManager.LogError($"RSA 키 관리 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerDataManager);
+                LogManager.LogError($"RSA 키 관리 중 오류 발생: {ex.Message}", LogManager.LogCategory.PlayerDataService);
                 m_encryption.GenerateRsaKeys(out m_rsaPublicKey, out m_rsaPrivateKey);
-                LogManager.Log("RSA 키 오류로 인해 새로운 키 쌍을 생성했습니다.", LogManager.LogCategory.PlayerDataManager);
+                LogManager.Log("RSA 키 오류로 인해 새로운 키 쌍을 생성했습니다.", LogManager.LogCategory.PlayerDataService);
             }
         }
 

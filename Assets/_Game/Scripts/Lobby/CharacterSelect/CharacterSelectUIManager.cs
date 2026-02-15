@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using InGame.UI;
+using InGame.Data;
 using UnityEngine;
 using UnityEngine.Serialization;
-using InGame.UI;
 
 namespace InGame.Lobby
 {
@@ -53,6 +54,9 @@ namespace InGame.Lobby
         private List<CharacterSelectIndex> m_characterIndexItems = new List<CharacterSelectIndex>();
         private List<CharacterSkinIndex> m_skinIndexItems = new List<CharacterSkinIndex>();
 
+        private PlayerDataDTO m_playerData;
+        private InGame.Services.PlayerDataService m_playerService;
+
         #endregion
 
         #region 유니티 생명주기
@@ -68,17 +72,21 @@ namespace InGame.Lobby
 
         #endregion
 
-        #region 초기화 로직
-
+        #region 초기화 및 바인딩 로직
         /// <summary>
-        /// [설명]: 패널들의 초기 활성 상태를 설정합니다.
+        /// [설명]: 캐릭터 선택 관리자를 초기화합니다.
         /// </summary>
-        private void InitializePanels()
+        public void Initialize(PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
         {
-            SetGameObjectActive(m_characterSelectPanel, false);
-            SetGameObjectActive(m_characterExpendViewPanel, false);
-            SetGameObjectActive(m_characterListPanel, false);
+            m_playerData = playerData;
+            m_playerService = playerService;
+            
+            LoadCharacterData();
+            InitializeCharacterUI();
         }
+        #endregion
+
+        #region 내부 로직
 
         /// <summary>
         /// [설명]: 외부 저장소나 매니저로부터 캐릭터 및 스킨 데이터를 불러옵니다.
@@ -88,8 +96,8 @@ namespace InGame.Lobby
             LogManager.Log("[CharacterSelectUIManager] 캐릭터 데이터 로드 시작", LogManager.LogCategory.CharacterManager);
 
             // 기존에 선택되었던 인덱스 정보 복원
-            m_currentCharacterIndex = PlayerDataManager.Instance != null ? PlayerDataManager.Instance.SelectCharacterIndex : 0;
-            m_currentSkinIndex = PlayerPrefs.GetInt("SelectedSkinIndex", 0);
+            m_currentCharacterIndex = m_playerData != null ? m_playerData.SelectCharacterIndex : 0;
+            m_currentSkinIndex = m_playerData != null ? m_playerData.SelectSkinIndex : 0;
         }
 
         /// <summary>
@@ -244,9 +252,9 @@ namespace InGame.Lobby
         {
             m_currentCharacterIndex = characterIndex;
 
-            if (PlayerDataManager.Instance != null)
+            if (m_playerData != null)
             {
-                PlayerDataManager.Instance.SelectCharacterIndex = characterIndex;
+                m_playerData.SelectCharacterIndex = characterIndex;
             }
 
             UpdateSkinUI(characterIndex);
@@ -261,8 +269,15 @@ namespace InGame.Lobby
         {
             m_currentSkinIndex = skinIndex;
 
-            PlayerPrefs.SetInt("SelectedSkinIndex", skinIndex);
-            PlayerPrefs.Save();
+            if (m_playerData != null)
+            {
+                m_playerData.SelectSkinIndex = skinIndex;
+            }
+
+            if (m_playerService != null)
+            {
+                m_playerService.SaveData();
+            }
 
             LogManager.Log($"[CharacterSelectUIManager] 스킨 선택됨: {skinIndex}", LogManager.LogCategory.CharacterManager);
         }

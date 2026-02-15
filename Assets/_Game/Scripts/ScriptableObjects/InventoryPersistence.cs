@@ -17,16 +17,18 @@ namespace InGame.Lobby
 
         private readonly string m_localSavePath;
         private readonly EncryptionService m_encryptionService;
+        private readonly IGameDataService m_gameDataService;
         private const string k_EncryptedFileName = "inventoryData.encrypted";
 
         #endregion
 
         #region 생성자
 
-        public InventoryPersistence(EncryptionService encryptionService)
+        public InventoryPersistence(EncryptionService encryptionService, IGameDataService gameDataService)
         {
             m_localSavePath = Path.Combine(Application.persistentDataPath, k_EncryptedFileName);
             m_encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+            m_gameDataService = gameDataService;
         }
 
         #endregion
@@ -69,7 +71,10 @@ namespace InGame.Lobby
                 Param param = new Param();
                 param.Add("Inventory", jsonData);
 
-                await ServerManager.Instance.UploadDataAsync("Inventory_Data", param);
+                if (m_gameDataService != null)
+                {
+                    await m_gameDataService.UploadDataAsync("Inventory_Data", param);
+                }
                 LogManager.Log("[InventoryPersistence] 서버 업로드 완료", LogManager.LogCategory.InventoryManager);
             }
             catch (Exception e)
@@ -115,7 +120,8 @@ namespace InGame.Lobby
         {
             try
             {
-                var serverDataJson = await ServerManager.Instance.DownloadDataAsync("Inventory_Data");
+                if (m_gameDataService == null) return false;
+                var serverDataJson = await m_gameDataService.DownloadDataAsync("Inventory_Data");
                 if (serverDataJson == null || !serverDataJson.ContainsKey("Inventory")) return false;
 
                 string inventoryJsonString = serverDataJson["Inventory"].ToString();

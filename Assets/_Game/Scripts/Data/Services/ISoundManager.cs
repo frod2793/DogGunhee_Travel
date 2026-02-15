@@ -29,5 +29,10 @@ namespace InGame.Services
         /// [설명]: 모든 사운드를 정지하고 데이터를 정리합니다.
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// [설명]: 저장된 사운드 설정을 로드합니다.
+        /// </summary>
+        void LoadSoundSetting();
     }
 }

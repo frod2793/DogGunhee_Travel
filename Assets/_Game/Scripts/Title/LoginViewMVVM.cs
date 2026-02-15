@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using BackEnd;
+using InGame.Data;
 using InGame.Managers;
 
 namespace Title
@@ -16,6 +17,14 @@ namespace Title
     public class LoginViewMVVM : MonoBehaviour
     {
         #region 에디터 설정
+
+        [Header("서비스 및 데이터")]
+        [SerializeField, Tooltip("서버 통신 매니저 (DI)")]
+        private ServerManager m_serverManager;
+
+        [SerializeField, Tooltip("사운드 매니저 (DI)")]
+        private SoundManager m_soundManager;
+        [SerializeField] private InGame.Data.PlayerDataDTO m_playerData;
 
         [Header("UI 패널")]
         [SerializeField, Tooltip("[설명]: 회원가입 팝업 오브젝트")]
@@ -101,9 +110,9 @@ namespace Title
             m_cts = new System.Threading.CancellationTokenSource();
 
             // ViewModel 초기화 (의존성 주입)
-            if (ServerManager.Instance != null && ServerManager.Instance.Auth != null)
+            if (m_serverManager != null && m_serverManager.Auth != null)
             {
-                m_viewModel = new LoginViewModel(ServerManager.Instance.Auth);
+                m_viewModel = new LoginViewModel(m_serverManager.Auth);
             }
 
             BindViewModel();
@@ -125,11 +134,10 @@ namespace Title
                 await AppUpdateManager.Instance.CheckForUpdateAsync();
             }
 
-            SoundManager.PlaySound(Sound.BGM, SoundKeys.Intro, true);
-
-            if (SoundManager.Instance != null)
+            if (m_soundManager != null)
             {
-                SoundManager.Instance.LoadSoundSetting();
+                m_soundManager.Play(SoundKeys.Intro.ToString(), Sound.BGM, 1.0f, true);
+                m_soundManager.LoadSoundSetting();
             }
 
             if (m_versionText != null)
@@ -300,23 +308,17 @@ namespace Title
         /// </summary>
         private async UniTask ProcessLoginSuccessAsync()
         {
-            if (PlayerDataManager.Instance == null || PlayerDataManager.Instance.PlayerData == null)
+            // DTO 직접 생성 또는 서비스 활용
+            var playerDto = new PlayerDataDTO();
+            
+            ServerSessionDTO sessionDto = null;
+            if (m_serverManager != null)
             {
-                return;
+                playerDto.Initialize(m_serverManager.NickName, m_serverManager.Uuid);
+                sessionDto = m_serverManager.GetSession();
             }
 
-            bool dataExists = await PlayerDataManager.Instance.LoadDataFromServerAsync();
-            if (!dataExists)
-            {
-                if (ServerManager.Instance != null)
-                {
-                    PlayerDataManager.Instance.PlayerData.InitializePlayerData(
-                        ServerManager.Instance.NickName,
-                        ServerManager.Instance.Uuid);
-                    PlayerDataManager.Instance.SavePlayerData();
-                    await PlayerDataManager.Instance.UploadDataToServerAsync();
-                }
-            }
+            var payload = new ScenePayloadDTO(playerDto, sessionDto, m_soundManager);
 
             if (m_loginPopUp != null)
             {
@@ -337,7 +339,8 @@ namespace Title
 
             if (SceneLoader.Instance != null)
             {
-                SceneLoader.Instance.LoadScene("LobbyScene");
+                // DTO를 페이로드로 전달하며 비동기 씬 로드
+                await SceneLoader.Instance.LoadSceneAsync(SceneNames.Lobby, payload);
             }
         }
 

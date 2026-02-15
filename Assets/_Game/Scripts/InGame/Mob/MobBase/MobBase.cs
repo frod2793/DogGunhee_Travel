@@ -93,9 +93,19 @@ namespace InGame.Mob.MobBase
         protected MobManager m_mobManager;
 
         /// <summary>
-        /// [설명]: 경직/기절 타이머 트윈
+        /// [설명]: 몬스터 경직/기절 타이머 트윈
         /// </summary>
         private DG.Tweening.Tween m_stunTween;
+
+        /// <summary>
+        /// [설명]: 플레이어 데이터 DTO 참조 (킬 카운트 등 기록용)
+        /// </summary>
+        protected InGame.Data.PlayerDataDTO m_playerData;
+
+        /// <summary>
+        /// [설명]: 사운드 서비스 참조 (DI)
+        /// </summary>
+        protected InGame.Services.ISoundManager m_soundManager;
 
         #endregion
 
@@ -254,18 +264,26 @@ namespace InGame.Mob.MobBase
         #region 초기화 및 설정
 
         /// <summary>
-        /// [설명]: 몬스터의 의존성을 주입하고 초기화합니다.
+        /// [설명]: 몬스터 스폰 시 외부 시스템 참조를 주입받아 상태를 초기화합니다.
         /// </summary>
-        /// <param name="mobManager">몬스터 통합 관리자</param>
-        public virtual void Init(MobManager mobManager)
+        /// <param name="mobManager">전역 몬스터 관리자</param>
+        /// <param name="playerData">플레이어 데이터 (킬 카운트 등)</param>
+        /// <param name="soundManager">사운드 매니저 (DI)</param>
+        public virtual void Init(MobManager mobManager, InGame.Data.PlayerDataDTO playerData = null, InGame.Services.ISoundManager soundManager = null)
         {
             m_mobManager = mobManager;
+            m_playerData = playerData;
+            m_soundManager = soundManager;
 
-            // 이미 활성화된 상태라면 즉시 등록
-            if (isActiveAndEnabled && m_mobManager != null)
+            if (m_mobManager != null)
             {
                 m_mobManager.Register(this);
             }
+
+            // 상태 초기화
+            m_currentState = MobState.Idle; // 기본 상태
+            IsDead = false;
+            IsHit = false;
         }
 
         /// <summary>
@@ -349,9 +367,9 @@ namespace InGame.Mob.MobBase
             ResetDotToken(); // DoT 중지
 
             // 킬 카운트 증가
-            if (PlayerDataManager.Instance != null && PlayerDataManager.Instance.PlayerData != null)
+            if (m_playerData != null)
             {
-                PlayerDataManager.Instance.PlayerData.nowPlayMObkillCOunt++;
+                m_playerData.NowPlayMobKillCount++;
             }
 
             // 오브젝트 반환 또는 파괴

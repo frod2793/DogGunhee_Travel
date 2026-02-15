@@ -29,7 +29,7 @@ public static class LogManager
         PlayerBase,
         SceneLoader,
         InventoryManager,
-        PlayerDataManager,
+        PlayerDataService,
         VamserLikeUI,
         MobBase,
         Weapon,

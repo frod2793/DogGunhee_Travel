@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BackEnd;
 using Cysharp.Threading.Tasks;
+using InGame.Data;
 using InGame.Services;
 using LitJson;
 using UnityEngine;
@@ -39,27 +40,10 @@ namespace InGame
 
         #endregion
 
-        #region 싱글톤 
-
-        private static ServerManager m_instance;
-        public static ServerManager Instance
+        public ServerSessionDTO GetSession()
         {
-            get
-            {
-                if (m_instance == null)
-                {
-                    m_instance = FindFirstObjectByType<ServerManager>();
-                    if (m_instance == null)
-                    {
-                        var container = new GameObject("ServerManager");
-                        m_instance = container.AddComponent<ServerManager>();
-                    }
-                }
-                return m_instance;
-            }
+            return new ServerSessionDTO(Auth, GameData, Post);
         }
-
-        #endregion
 
         #region 내부 필드 
 
@@ -69,20 +53,7 @@ namespace InGame
         #endregion
 
         #region 유니티 생명주기 
-
-        private void Awake()
-        {
-            if (m_instance == null)
-            {
-                m_instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else if (m_instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-        }
+        
 
         private void Start()
         {
