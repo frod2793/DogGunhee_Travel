@@ -63,6 +63,9 @@ ExportedObj/
 .continue
 .gemini
 .idea/.idea.DogGunhee_Travel/.idea
+/ServerData/
+/unity_addressableasset/
+/bitsFriends.keystore.keystore/
 
 # Unity3D generated meta files
 *.pidb.meta
