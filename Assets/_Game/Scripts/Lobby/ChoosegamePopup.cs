@@ -6,12 +6,12 @@ using UnityEngine.Serialization;
 namespace InGame
 {
     /// <summary>
-    /// 게임 선택 팝업창을 관리하는 클래스입니다.
+    /// [설명]: 게임 선택 팝업창을 관리하는 클래스입니다.
     /// 다양한 게임 모드로 진입하거나 팝업을 닫는 기능을 담당합니다.
     /// </summary>
     public class ChoosegamePopup : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정 (Inspector)
 
         [SerializeField, Tooltip("게임 선택 버튼 리스트"), FormerlySerializedAs("CgameBtn")]
         private List<Button> m_gameButtons = new List<Button>();
@@ -24,7 +24,7 @@ namespace InGame
 
         #endregion
 
-        #region 2. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Start()
         {
@@ -33,10 +33,10 @@ namespace InGame
 
         #endregion
 
-        #region 3. 초기화 로직
+        #region 초기화 로직
 
         /// <summary>
-        /// 버튼 이벤트 리스너를 초기화합니다.
+        /// [설명]: 버튼 이벤트 리스너를 초기화합니다.
         /// </summary>
         private void InitializeButtons()
         {
@@ -58,10 +58,10 @@ namespace InGame
 
         #endregion
 
-        #region 4. 내부 로직
+        #region 내부 비즈니스 로직
 
         /// <summary>
-        /// 선택된 인덱스에 따라 각 게임 모드 진입 로직을 실행합니다.
+        /// [설명]: 선택된 인덱스에 따라 각 게임 모드 진입 로직을 실행합니다.
         /// </summary>
         /// <param name="funcNum">버튼 인덱스</param>
         private void OnGameButtonClicked(int funcNum)
@@ -90,7 +90,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 팝업을 닫습니다.
+        /// [설명]: 팝업을 닫습니다.
         /// </summary>
         private void OnExitButtonClicked()
         {
@@ -98,7 +98,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 뱀파 서바이버라이크 게임 씬으로 이동합니다.
+        /// [설명]: 뱀파 서바이버라이크 게임 씬으로 이동합니다.
         /// </summary>
         private void EnterVamsirlike()
         {
@@ -107,7 +107,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 땅따먹기 게임 모드로 진입합니다. (현재 미구현)
+        /// [설명]: 땅따먹기 게임 모드로 진입합니다. (현재 미구현)
         /// </summary>
         private void EnterGroundGame()
         {
@@ -120,7 +120,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 슈팅 게임 모드로 진입합니다. (현재 미구현)
+        /// [설명]: 슈팅 게임 모드로 진입합니다. (현재 미구현)
         /// </summary>
         private void EnterShootingGame()
         {

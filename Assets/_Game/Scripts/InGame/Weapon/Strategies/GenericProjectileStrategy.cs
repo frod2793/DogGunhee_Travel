@@ -5,7 +5,7 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 개별 투사체(Projectile)의 공통 초기화 인터페이스입니다.
+    /// [설명]: 개별 투사체(Projectile)의 공통 초기화 인터페이스입니다.
     /// </summary>
     public interface IProjectile
     {
@@ -13,20 +13,20 @@ namespace InGame.Weapon.Strategies
     }
 
     /// <summary>
-    /// 제네릭 타입의 투사체를 발사하는 범용 전략입니다.
+    /// [설명]: 제네릭 타입의 투사체를 발사하는 범용 전략입니다.
     /// </summary>
     /// <typeparam name="TProjectile">IProjectile을 구현한 MonoBehaviour</typeparam>
     public class GenericProjectileStrategy<TProjectile> : IWeaponStrategy
         where TProjectile : MonoBehaviour, IProjectile
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {

@@ -5,38 +5,13 @@ using UnityEngine.Serialization;
 using InGame.Services;
 
 /// <summary>
-/// 게임의 전체적인 오디오 시스템을 총괄하는 매니저 클래스입니다.
-/// <br/>AudioMixer와의 연동, SFX 오디오 소스 풀링, 볼륨 설정 저장 및 로드를 담당합니다.
+/// [설명]: 게임의 전체적인 오디오 시스템을 총괄하는 매니저 클래스입니다.
+/// AudioMixer와의 연동, SFX 오디오 소스 풀링, 볼륨 설정 저장 및 로드를 담당합니다.
 /// </summary>
 public class SoundManager : MonoBehaviour, ISoundManager
 {
-    #region 1. 싱글톤 패턴
 
-    private static SoundManager s_instance;
-
-    /// <summary>
-    /// SoundManager의 전역 접근 인스턴스입니다.
-    /// </summary>
-    public static SoundManager Instance
-    {
-        get
-        {
-            if (s_instance == null)
-            {
-                s_instance = FindFirstObjectByType<SoundManager>();
-                if (s_instance == null)
-                {
-                    LogManager.LogError("[SoundManager] 씬 내에서 SoundManager 인스턴스를 찾을 수 없습니다.");
-                }
-            }
-
-            return s_instance;
-        }
-    }
-
-    #endregion
-
-    #region 2. 상수 및 설정값
+    #region 상수 및 설정값
 
     private const string k_MasterVolumeParam = "Master_Volume_Exposed";
     private const string k_BgmVolumeParam = "BGM_Volume_Exposed";
@@ -46,15 +21,17 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     #endregion
 
-    #region 3. 에디터 설정 (Inspector)
+    #region 에디터 설정
 
-    [Header("<color=green>데이터 참조</color>")] [SerializeField, Tooltip("오디오 클립 데이터 ScriptableObject")]
+    [Header("<color=green>데이터 참조</color>")]
+    [SerializeField, Tooltip("오디오 클립 데이터 ScriptableObject")]
     private SoundData m_soundData;
 
     [SerializeField, Tooltip("사운드 설정을 저장하는 SettingsData")]
     private SettingsData m_settingsData;
 
-    [Header("<color=green>오디오 믹서 설정</color>")] [SerializeField, Tooltip("사운드 제어용 메인 믹서")]
+    [Header("<color=green>오디오 믹서 설정</color>")]
+    [SerializeField, Tooltip("사운드 제어용 메인 믹서")]
     private AudioMixer m_audioMixer;
 
     [SerializeField, Tooltip("BGM 출력을 담당하는 믹서 그룹")]
@@ -65,54 +42,28 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     #endregion
 
-    #region 4. 내부 변수 및 상태
+    #region 내부 필드 및 상태
 
     private AudioSource m_bgmSource;
     private readonly List<AudioSource> m_sfxPool = new List<AudioSource>();
     private readonly Dictionary<string, AudioClip> m_audioClips = new Dictionary<string, AudioClip>();
     private readonly Dictionary<AudioClip, float> m_soundTimers = new Dictionary<AudioClip, float>();
 
-    /// <summary> 현재 반영된 효과음 볼륨 </summary>
+    /// <summary> [설명]: 현재 반영된 효과음 볼륨 </summary>
     public float EffectSoundVolume { get; private set; } = 1.0f;
 
-    /// <summary> 현재 반영된 배경음 볼륨 </summary>
+    /// <summary> [설명]: 현재 반영된 배경음 볼륨 </summary>
     public float BgmSoundVolume { get; private set; } = 1.0f;
 
     #endregion
 
-    #region 5. 공개 정적 메서드 (상위 호환성)
+    // 정적 PlayFunc 메서드 제거됨
 
-    /// <summary>
-    /// 간단하게 클립 이름으로 사운드를 재생합니다.
-    /// </summary>
-    public static void PlaySound(Sound type, string clipName, bool loop = false, float pitch = 1.0f)
-    {
-        Instance.Play(clipName, type, pitch, loop);
-    }
-
-    /// <summary>
-    /// SoundKeys 열거형을 사용하여 사운드를 재생합니다.
-    /// </summary>
-    public static void PlaySound(Sound type, SoundKeys clipKey, bool loop = false, float pitch = 1.0f)
-    {
-        Instance.Play(clipKey.ToString(), type, pitch, loop);
-    }
-
-    #endregion
-
-    #region 6. 유니티 생명주기
+    #region 유니티 생명주기
 
     private void Awake()
     {
-        if (s_instance != null && s_instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        s_instance = this;
         DontDestroyOnLoad(gameObject);
-
         InitializeSystems();
     }
 
@@ -129,10 +80,10 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     #endregion
 
-    #region 7. 초기화 및 내부 생성 로직
+    #region 초기화
 
     /// <summary>
-    /// 믹서 소스 생성 및 클립 데이터 캐싱을 실행합니다.
+    /// [설명]: 믹서 소스 생성 및 클립 데이터 캐싱을 실행합니다.
     /// </summary>
     private void InitializeSystems()
     {
@@ -166,7 +117,7 @@ public class SoundManager : MonoBehaviour, ISoundManager
     }
 
     /// <summary>
-    /// SFX 오디오 소스 오브젝트를 생성하여 풀에 추가합니다.
+    /// [설명]: SFX 오디오 소스 오브젝트를 생성하여 풀에 추가합니다.
     /// </summary>
     private AudioSource CreateSfxSource()
     {
@@ -180,7 +131,7 @@ public class SoundManager : MonoBehaviour, ISoundManager
     }
 
     /// <summary>
-    /// 저장된 설정 데이터로부터 볼륨 정보를 불러와 시스템에 반영합니다.
+    /// [설명]: 저장된 설정 데이터로부터 볼륨 정보를 불러와 시스템에 반영합니다.
     /// </summary>
     public void LoadSoundSetting()
     {
@@ -194,10 +145,10 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     #endregion
 
-    #region 8. ISoundManager 인터페이스 구현
+    #region ISoundManager 구현
 
     /// <summary>
-    /// 타입(BGM/SFX)에 맞춰 사운드를 재생합니다.
+    /// [설명]: 타입(BGM/SFX)에 맞춰 사운드를 재생합니다.
     /// </summary>
     public void Play(string clipName, Sound type = Sound.SFX, float pitch = 1.0f, bool loop = false)
     {
@@ -218,7 +169,7 @@ public class SoundManager : MonoBehaviour, ISoundManager
     }
 
     /// <summary>
-    /// 지정된 월드 좌표에서 SFX를 재생합니다.
+    /// [설명]: 지정된 월드 좌표에서 SFX를 재생합니다.
     /// </summary>
     public void Play(string clipName, Vector3 position, float pitch = 1.0f)
     {
@@ -232,7 +183,7 @@ public class SoundManager : MonoBehaviour, ISoundManager
     }
 
     /// <summary>
-    /// 오디오 믹서를 통해 특정 타입의 볼륨(dB)을 조절합니다.
+    /// [설명]: 오디오 믹서를 통해 특정 타입의 볼륨(dB)을 조절합니다.
     /// </summary>
     public void SetVolume(Sound type, float volume)
     {
@@ -256,7 +207,7 @@ public class SoundManager : MonoBehaviour, ISoundManager
     }
 
     /// <summary>
-    /// 현재 재생 중인 모든 사운드를 정지하고 정리합니다.
+    /// [설명]: 현재 재생 중인 모든 사운드를 정지하고 정리합니다.
     /// </summary>
     public void Clear()
     {
@@ -278,7 +229,7 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     #endregion
 
-    #region 9. 내부 재생 구현
+    #region 내부 비즈니스 로직
 
     private void PlayBGMInternal(AudioClip clip, float pitch)
     {

@@ -10,69 +10,85 @@ using InGame.UI.ViewModels;
 namespace InGame.UI.Views
 {
     /// <summary>
-    /// 확인/취소 팝업의 View 클래스입니다.
-    /// <br/> ViewModel의 상태를 구독(R3)하여 UI를 갱신하고, 사용자 입력을 ViewModel로 전달합니다.
+    /// [설명]: 시스템 확인(Confirm) 및 취소(Cancel)를 위한 범용 팝업 뷰 클래스입니다.
+    /// MVVM 기반으로 설계되었으며, ConfirmPopupViewModel의 상태를 구독하여 UI를 갱신하고
+    /// 사용자 입력(클릭) 이벤트를 전달합니다.
     /// </summary>
     public class ConfirmPopup : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
-        [Header("텍스트 컴포넌트")] 
-        [SerializeField, Tooltip("팝업 제목 텍스트")] 
+        #region 에디터 설정
+
+        [Header("텍스트 컴포넌트")]
+        [SerializeField, Tooltip("팝업의 상단 제목을 표시하는 텍스트")]
         private TMP_Text m_titleText;
 
-        [SerializeField, Tooltip("팝업 본문 메시지 텍스트")] 
+        [SerializeField, Tooltip("플레이어에게 전달할 본문 메시지 텍스트")]
         private TMP_Text m_messageText;
 
-        [Header("버튼 컴포넌트")] 
-        [SerializeField, Tooltip("확인 버튼")] 
+        [Header("버튼 컴포넌트")]
+        [SerializeField, Tooltip("수락/진행 의사를 전달하는 확인 버튼")]
         private Button m_confirmButton;
 
-        [SerializeField, Tooltip("취소 버튼")] 
+        [SerializeField, Tooltip("거부/중단 의사를 전달하는 취소 버튼")]
         private Button m_cancelButton;
 
-        [Header("제어 및 연출")] 
-        [SerializeField, Tooltip("페이드 효과를 위한 캔버스 그룹")] 
+        [Header("제어 및 연출")]
+        [SerializeField, Tooltip("팝업 전체의 투명도 조절 및 레이캐스트 차단을 위한 캔버스 그룹")]
         private CanvasGroup m_canvasGroup;
 
-        [SerializeField, Tooltip("스케일 애니메이션 대상 트랜스폼")] 
+        [SerializeField, Tooltip("열기/닫기 시 스케일 애니메이션이 적용될 중심 트랜스폼")]
         private RectTransform m_popupTransform;
 
-        [SerializeField, Tooltip("팝업 최상위 오브젝트 (Active 제어용)")] 
-        private GameObject m_rootObject; 
+        [SerializeField, Tooltip("팝업 계층 구조의 최상위 게임 오브젝트")]
+        private GameObject m_rootObject;
+
         #endregion
 
-        #region 2. 내부 변수 및 상태
-        // ViewModel 참조
+        #region 내부 필드
+
+        /// <summary> 바인딩된 확인 팝업 비즈니스 로직 및 상태 보관소 </summary>
         private ConfirmPopupViewModel m_viewModel;
-        
-        // R3 구독 해제 관리자 (View 파괴 시 일괄 해제)
+
+        /// <summary> 뷰의 생명주기 동안 유지되는 R3 이벤트 구독 해제 관리자 </summary>
         private readonly CompositeDisposable m_viewDisposables = new CompositeDisposable();
+
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
+
+        /// <summary>
+        /// [설명]: 초기 기동 시 팝업을 투명/비활성 상태로 초기화하여 의도치 않은 노출을 방지합니다.
+        /// </summary>
         private void Awake()
         {
-            // 초기 상태 설정 (화면 깜빡임 방지)
             InitializeUI();
         }
 
+        /// <summary>
+        /// [설명]: 뷰가 파기될 때 모든 이벤트 스트림 구독을 정리하여 안정성을 확보합니다.
+        /// </summary>
         private void OnDestroy()
         {
-            // 메모리 누수 방지를 위한 구독 해제
             m_viewDisposables.Dispose();
         }
+
         #endregion
 
-        #region 4. 초기화 및 바인딩
+        #region 바인딩 및 초기화
+
         /// <summary>
-        /// ViewModel과 View를 연결합니다. 
-        /// <br/> 이전 바인딩을 초기화하고 새로운 ViewModel의 상태를 구독합니다.
+        /// [설명]: 외부에서 생성된 ViewModel을 주입받아 데이터 및 이벤트 스트림을 상호 바인딩합니다.
         /// </summary>
-        /// <param name="viewModel">연결할 팝업 ViewModel</param>
+        /// <param name="viewModel">팝업 제어 로직을 담고 있는 뷰모델 인스턴스</param>
         public void Bind(ConfirmPopupViewModel viewModel)
         {
+            if (viewModel == null)
+            {
+                return;
+            }
+
             m_viewModel = viewModel;
-            m_viewDisposables.Clear(); // 재사용 시 기존 구독 정리
+            m_viewDisposables.Clear(); // 재사용 상황 고려하여 기존 구독 클리어
 
             BindButtons();
             BindData();
@@ -80,7 +96,7 @@ namespace InGame.UI.Views
         }
 
         /// <summary>
-        /// 초기 UI 상태를 설정합니다. (투명화 및 비활성화)
+        /// [설명]: UI의 초기 시각적 상태(알파 0, 스케일 0)를 강제 설정합니다.
         /// </summary>
         private void InitializeUI()
         {
@@ -95,11 +111,20 @@ namespace InGame.UI.Views
                 m_popupTransform.localScale = Vector3.zero;
             }
 
-            // RootObject가 없으면 자기 자신을 비활성화
-            if (m_rootObject != null) m_rootObject.SetActive(false);
-            else gameObject.SetActive(false);
+            // 루트 객체 우선 종료, 없을 시 자신 종료
+            if (m_rootObject != null)
+            {
+                m_rootObject.SetActive(false);
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
         }
 
+        /// <summary>
+        /// [설명]: 버튼 클릭 이벤트를 뷰모델의 명령(Command)과 연결합니다.
+        /// </summary>
         private void BindButtons()
         {
             if (m_confirmButton != null)
@@ -117,50 +142,90 @@ namespace InGame.UI.Views
             }
         }
 
+        /// <summary>
+        /// [설명]: 뷰모델의 문자열 데이터(제목, 내용) 변화를 감지하여 텍스트 UI를 실시간으로 갱신합니다.
+        /// </summary>
         private void BindData()
         {
+            if (m_viewModel == null)
+            {
+                return;
+            }
+
             m_viewModel.Title
-                .Subscribe(title => m_titleText.SetSafeText(title)) // 확장 메서드 가정
+                .Subscribe(title =>
+                {
+                    if (m_titleText != null)
+                    {
+                        m_titleText.text = title;
+                    }
+                })
                 .AddTo(m_viewDisposables);
 
             m_viewModel.Message
-                .Subscribe(msg => m_messageText.SetSafeText(msg))
-                .AddTo(m_viewDisposables);
-        }
-
-        private void BindVisibility()
-        {
-            m_viewModel.IsVisible
-                .Subscribe(isVisible =>
+                .Subscribe(msg =>
                 {
-                    // 비동기 애니메이션 실행 (Fire-and-Forget)
-                    if (isVisible) OpenAnimation().Forget();
-                    else CloseAnimation().Forget();
+                    if (m_messageText != null)
+                    {
+                        m_messageText.text = msg;
+                    }
                 })
                 .AddTo(m_viewDisposables);
         }
+
+        /// <summary>
+        /// [설명]: 뷰모델의 노출 상태 변수를 구독하여 열기/닫기 애니메이션을 유도합니다.
+        /// </summary>
+        private void BindVisibility()
+        {
+            if (m_viewModel == null)
+            {
+                return;
+            }
+
+            m_viewModel.IsVisible
+                .Subscribe(isVisible =>
+                {
+                    if (isVisible)
+                    {
+                        OpenAnimation().Forget();
+                    }
+                    else
+                    {
+                        CloseAnimation().Forget();
+                    }
+                })
+                .AddTo(m_viewDisposables);
+        }
+
         #endregion
 
-        #region 5. UI 애니메이션 (DOTween)
+        #region UI 연출 (DOTween)
+
         /// <summary>
-        /// 팝업이 나타나는 애니메이션을 재생합니다.
-        /// <br/> UniTaskVoid: 이 메서드는 결과를 기다리지 않고 실행됩니다.
+        /// [설명]: 팝업이 부드럽게 커지며 나타나는 오픈 트윈 연출을 수행합니다.
+        /// 일시정지 상태에서도 동작하도록 설계되었습니다.
         /// </summary>
         private async UniTaskVoid OpenAnimation()
         {
-            if (m_rootObject != null) m_rootObject.SetActive(true);
-            else gameObject.SetActive(true);
+            if (m_rootObject != null)
+            {
+                m_rootObject.SetActive(true);
+            }
+            else
+            {
+                gameObject.SetActive(true);
+            }
 
             if (m_canvasGroup != null)
             {
                 m_canvasGroup.blocksRaycasts = true;
-                // SetUpdate(true): 게임이 일시정지(TimeScale=0) 상태에서도 팝업 애니메이션 작동
-                m_canvasGroup.DOFade(1f, 0.2f).SetUpdate(true);
+                m_canvasGroup.DOFade(1f, 0.2f).SetUpdate(true).ToUniTask().Forget();
             }
 
             if (m_popupTransform != null)
             {
-                // Ease.OutBack: 약간 커졌다가 원래 크기로 돌아오는 탄성 효과
+                // 약간의 반동(OutBack)을 활용한 팝업 효과
                 await m_popupTransform.DOScale(1f, 0.2f)
                     .SetEase(Ease.OutBack)
                     .SetUpdate(true)
@@ -169,28 +234,34 @@ namespace InGame.UI.Views
         }
 
         /// <summary>
-        /// 팝업이 사라지는 애니메이션을 재생하고 오브젝트를 비활성화합니다.
+        /// [설명]: 팝업이 작아지며 사라지는 클로즈 트윈 연출을 수행한 후 오브젝트를 비활성화합니다.
         /// </summary>
         private async UniTaskVoid CloseAnimation()
         {
             if (m_canvasGroup != null)
             {
                 m_canvasGroup.blocksRaycasts = false;
-                m_canvasGroup.DOFade(0f, 0.2f).SetUpdate(true);
+                m_canvasGroup.DOFade(0f, 0.2f).SetUpdate(true).ToUniTask().Forget();
             }
 
             if (m_popupTransform != null)
             {
-                // Ease.InBack: 작아지기 전에 살짝 커졌다가 사라지는 효과
                 await m_popupTransform.DOScale(0f, 0.2f)
                     .SetEase(Ease.InBack)
                     .SetUpdate(true)
                     .ToUniTask();
             }
 
-            if (m_rootObject != null) m_rootObject.SetActive(false);
-            else gameObject.SetActive(false);
+            if (m_rootObject != null)
+            {
+                m_rootObject.SetActive(false);
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
         }
+
         #endregion
     }
 }

@@ -11,14 +11,15 @@ using InGame.UI;
 namespace InGame.UI.Popups
 {
     /// <summary>
-    /// 로비의 퀘스트 시스템을 시각화하고 진행 상황을 보여주는 View 클래스입니다.
-    /// <br/>QuestViewModel과 연동하여 서버로부터 퀘스트 목록을 불러와 표시합니다.
+    /// [설명]: 로비의 퀘스트 시스템을 시각화하고 진행 상황을 보여주는 View 클래스입니다.
+    /// QuestViewModel과 연동하여 서버로부터 퀘스트 목록을 불러와 표시합니다.
     /// </summary>
     public class QuestInfoView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("<color=green>퀘스트 목록 설정</color>")] [SerializeField, Tooltip("퀘스트 패널 메인 오브젝트")]
+        [Header("<color=green>퀘스트 목록 설정</color>")]
+        [SerializeField, Tooltip("퀘스트 패널 메인 오브젝트")]
         private GameObject m_questPanel;
 
         [SerializeField, Tooltip("퀘스트 아이템들이 배치될 컨테이너")]
@@ -27,7 +28,8 @@ namespace InGame.UI.Popups
         [SerializeField, Tooltip("개별 퀘스트 항목 프리팹")]
         private Quest_Index m_questPrefab;
 
-        [Header("<color=green>상세 정보 확장 패널</color>")] [SerializeField, Tooltip("퀘스트 상세 설명 패널")]
+        [Header("<color=green>상세 정보 확장 패널</color>")]
+        [SerializeField, Tooltip("퀘스트 상세 설명 패널")]
         private GameObject m_questPanelExtension;
 
         [SerializeField, Tooltip("퀘스트 상세 내용 텍스트")]
@@ -38,7 +40,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
+        #region 내부 변수
 
         private QuestViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
@@ -48,7 +50,7 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Start()
         {
@@ -67,10 +69,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 4. MVVM 데이터 바인딩
+        #region MVVM 데이터 바인딩
 
         /// <summary>
-        /// 퀘스트 비즈니스 로직을 처리할 뷰모델을 생성합니다.
+        /// [설명]: 퀘스트 비즈니스 로직을 처리할 뷰모델을 생성합니다.
         /// </summary>
         private void InitializeViewModel()
         {
@@ -78,11 +80,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 뷰모델의 반응형 데이터를 구독하여 UI를 동기화합니다.
+        /// [설명]: 뷰모델의 반응형 데이터를 구독하여 UI를 동기화합니다.
         /// </summary>
         private void BindViewModel()
         {
-            if (m_viewModel == null) return;
+            if (m_viewModel == null)
+            {
+                return;
+            }
 
             // 1. 서버 퀘스트 리스트 데이터 갱신 알림 구독
             m_viewModel.Quests
@@ -102,10 +107,10 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 5. 리스트 화면 구성 로직
+        #region 리스트 화면 구성 로직
 
         /// <summary>
-        /// 퀘스트 데이터 리스트를 기반으로 UI 인스턴스들을 생성하거나 갱신합니다.
+        /// [설명]: 퀘스트 데이터 리스트를 기반으로 UI 인스턴스들을 생성하거나 갱신합니다.
         /// </summary>
         private void UpdateQuestList(List<QuestData> quests)
         {
@@ -120,7 +125,10 @@ namespace InGame.UI.Popups
 
             m_questItems.Clear();
 
-            if (quests == null) return;
+            if (quests == null)
+            {
+                return;
+            }
 
             foreach (var questData in quests)
             {
@@ -153,21 +161,24 @@ namespace InGame.UI.Popups
 
         #endregion
 
-        #region 6. 패널 제어 로직 (Open/Close)
+        #region 패널 제어 로직
 
         /// <summary>
-        /// 메인 퀘스트 목록 패널을 활성화하고 팝업 스택에 관리 동작을 등록합니다.
+        /// [설명]: 메인 퀘스트 목록 패널을 활성화하고 팝업 스택에 관리 동작을 등록합니다.
         /// </summary>
         public void OpenQuestPanel()
         {
-            if (m_questPanel == null) return;
+            if (m_questPanel == null)
+            {
+                return;
+            }
 
             m_questPanel.SetActive(true);
             PopupManager.Instance.RegisterPopup(CloseQuestPanel);
         }
 
         /// <summary>
-        /// 메인 퀘스트 패널을 비활성화합니다.
+        /// [설명]: 메인 퀘스트 패널을 비활성화합니다.
         /// </summary>
         private void CloseQuestPanel()
         {
@@ -178,11 +189,14 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 특정 퀘스트의 상세 정보를 보여주는 패널을 활성화합니다.
+        /// [설명]: 특정 퀘스트의 상세 정보를 보여주는 패널을 활성화합니다.
         /// </summary>
         private void OpenQuestPanelExtension(string message, string questName, string rewardItemName)
         {
-            if (m_questPanelExtension == null) return;
+            if (m_questPanelExtension == null)
+            {
+                return;
+            }
 
             m_questPanelExtension.SetActive(true);
 
@@ -193,7 +207,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 상세 정보 패널을 닫습니다.
+        /// [설명]: 상세 정보 패널을 닫습니다.
         /// </summary>
         private void CloseQuestPanelExtension()
         {
@@ -204,7 +218,7 @@ namespace InGame.UI.Popups
         }
 
         /// <summary>
-        /// 외부(버튼 등)에서 퀘스트 보상 수령을 시도할 때 호출됩니다.
+        /// [설명]: 외부(버튼 등)에서 퀘스트 보상 수령을 시도할 때 호출됩니다.
         /// </summary>
         public void OnClickRewardButton()
         {

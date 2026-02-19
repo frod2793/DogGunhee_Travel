@@ -11,12 +11,12 @@ using InGame.Weapon.Logic;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 고양이 펀치(Cat Punch) 근접 무기를 제어하는 컨트롤러입니다.
-    /// <br/> 애니메이션 재생에 맞춰 Sprite의 형상을 PolygonCollider2D로 실시간 변환하여 정밀한 타격 판정을 수행합니다.
+    /// [설명]: 고양이 펀치(Cat Punch) 근접 무기를 제어하는 컨트롤러입니다.
+    /// 애니메이션 재생에 맞춰 Sprite의 형상을 PolygonCollider2D로 실시간 변환하여 정밀한 타격 판정을 수행합니다.
     /// </summary>
     public class CatPunchWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 변수 및 컴포넌트 (Components & State)
+        #region 내부 변수 및 컴포넌트
 
         // 비주얼 및 물리 컴포넌트 (생성된 모델 내부)
         private GameObject m_weaponModelInstance;
@@ -46,13 +46,13 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 초기화 및 해제 (Init & Dispose)
+        #region 초기화 및 해제
 
         public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
         {
             base.Init(data, owner, poolManager, getTargetDirection);
 
-            // 1. 무기 모델 인스턴스화 (플레이어 하위가 아닌 루트에 생성하여 스케일 문제 방지)
+            // 1. 무기 모델 인스턴스화
             if (data.ModelPrefab != null)
             {
                 m_weaponModelInstance = UnityEngine.Object.Instantiate(data.ModelPrefab, null); // World Position 사용
@@ -139,7 +139,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 업데이트 루프 (Update Loop)
+        #region 업데이트 루프
 
         public override void OnLateUpdate()
         {
@@ -154,7 +154,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 공격 실행 로직 (Attack Execution)
+        #region 공격 실행 로직
 
         protected override void ExecuteAttack(Vector3 direction)
         {
@@ -164,7 +164,7 @@ namespace InGame.Weapon.Controllers
             CancelAttack();
             m_attackCts = new CancellationTokenSource();
 
-            // 비동기 공격 시작 (Fire and Forget)
+            // 비동기 공격 시작
             PerformAttackAsync(m_attackCts.Token).Forget();
         }
 
@@ -207,6 +207,7 @@ namespace InGame.Weapon.Controllers
 
                 // 3. 물리 판정 루프 (지속 시간 동안)
                 float elapsedTime = 0f;
+                // m_attackDuration은 초 단위
                 while (elapsedTime < m_attackDuration)
                 {
                     // 프레임별 물리 갱신 처리
@@ -234,7 +235,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 물리 및 충돌 처리 (Physics & Collision)
+        #region 물리 및 충돌 처리
 
         /// <summary>
         /// 매 프레임(FixedUpdate) 호출되어 위치 동기화, 회전, 콜라이더 갱신, 충돌 체크를 수행합니다.
@@ -274,7 +275,7 @@ namespace InGame.Weapon.Controllers
 
         /// <summary>
         /// SpriteRenderer의 현재 프레임 이미지를 기반으로 PolygonCollider2D의 형태를 재설정합니다.
-        /// <br/> 최적화를 위해 정점 개수를 다운샘플링합니다.
+        /// 최적화를 위해 정점 개수를 다운샘플링합니다.
         /// </summary>
         private void UpdateColliderShapeFromSprite()
         {

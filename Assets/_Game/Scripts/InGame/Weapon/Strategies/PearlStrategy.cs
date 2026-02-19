@@ -7,12 +7,12 @@ using InGame.Weapon.Controllers;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 진주(Pearl) 무기의 전략 클래스입니다.
-    /// <br/> 화면에 단 하나의 진주만 유지하며, 스탯 변경 시 이를 동기화합니다.
+    /// [설명]: 진주(Pearl) 무기의 전략 클래스입니다.
+    /// 화면에 단 하나의 진주만 유지하며, 스탯 변경 시 이를 동기화합니다.
     /// </summary>
     public class PearlStrategy : IWeaponStrategy
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private PearlWeaponLogic m_logic;
         private PearlWeaponView m_view;
@@ -23,7 +23,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -53,7 +53,8 @@ namespace InGame.Weapon.Strategies
                     },
                     actionOnRelease: p => 
                     {
-                        if (m_activePearl == p) m_activePearl = null;
+                        // 참조 해제 (동일 객체인 경우에만)
+                        if (ReferenceEquals(m_activePearl, p)) m_activePearl = null;
                         p.gameObject.SetActive(false);
                     },
                     actionOnDestroy: p => Object.Destroy(p.gameObject),

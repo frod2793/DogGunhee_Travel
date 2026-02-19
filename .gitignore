@@ -59,8 +59,10 @@ ExportedObj/
 /.utmp/
 
 /.plastic/
-/.agent/
+.agent/
 .continue
+.gemini
+.idea/.idea.DogGunhee_Travel/.idea
 
 # Unity3D generated meta files
 *.pidb.meta

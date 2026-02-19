@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="fdb42116-7d42-4931-a32c-ab5846798251" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/../../../../Art/Font/Galmuri7 SDF.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../Art/Font/Galmuri7 SDF.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../Scenes/VamSerLike_Test.unity" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../Scenes/VamSerLike_Test.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/NewSkillDatabase.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/NewSkillDatabase.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_BALLData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_BALLData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_BONEData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_BONEData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_BOOMERANGData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_BOOMERANGData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_FIREData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_FIREData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_FRIENDSData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_FRIENDSData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_INKData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_INKData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_LANDINGData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_LANDINGData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_PEARLData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_PEARLData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_PUNCHData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_PUNCHData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_SMELLData.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../ScriptableObjects/Weapons/WP_SMELLData.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../Data/LogManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Data/LogManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Manager/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../Manager/GameManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Manager/TestManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../Manager/TestManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Manager/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../Manager/UIManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ConfirmPopup.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ConfirmPopup.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../_Recovery.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../_Recovery/0.unity" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../_Recovery/0.unity.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../vHierarchy/vHierarchy Data.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../vHierarchy/vHierarchy Data.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../../ProjectSettings/GvhProjectSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../../ProjectSettings/GvhProjectSettings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../../ProjectSettings/Packages/com.unity.connect.share/Settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../../ProjectSettings/Packages/com.unity.connect.share/Settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../../../ProjectSettings/ShaderGraphSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../../../ProjectSettings/ShaderGraphSettings.asset" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../../../../.." />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/GameClearPopupView.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/GameOverPopup.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="39gZ95LJTyvWXMWd0PCTuhJWAlN" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "main",
+    "settings.editor.selected.configurable": "settings.sync",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="디폴트 작업">
+      <changelist id="fdb42116-7d42-4931-a32c-ab5846798251" name="변경" comment="" />
+      <created>1771119529746</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1771119529746</updated>
+      <workItem from="1771119529796" duration="41000" />
+      <workItem from="1771119577278" duration="5000" />
+      <workItem from="1771139707722" duration="12000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.OperationCanceledException" breakIfHandledByOtherCode="false" displayValue="System.OperationCanceledException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.Tasks.TaskCanceledException" breakIfHandledByOtherCode="false" displayValue="System.Threading.Tasks.TaskCanceledException" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="3" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

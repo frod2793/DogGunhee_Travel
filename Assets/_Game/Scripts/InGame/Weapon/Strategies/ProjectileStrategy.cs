@@ -5,21 +5,21 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 기본적인 투사체(Projectile)를 발사하는 공격 전략입니다.
-    /// <br/> 제네릭 타입(TProjectile)을 사용하여 구체적인 투사체를 풀링하고 관리합니다.
+    /// [설명]: 기본적인 투사체(Projectile)를 발사하는 공격 전략입니다.
+    /// 제네릭 타입(TProjectile)을 사용하여 구체적인 투사체를 풀링하고 관리합니다.
     /// </summary>
     /// <typeparam name="TProjectile">MonoBehaviour를 상속받고 IProjectile을 구현한 투사체 클래스</typeparam>
     public class ProjectileStrategy<TProjectile> : IWeaponStrategy
         where TProjectile : MonoBehaviour, IProjectile
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {

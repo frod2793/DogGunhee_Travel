@@ -5,27 +5,26 @@ using Cysharp.Threading.Tasks;
 namespace InGame.Mob.BehaviorTree
 {
     /// <summary>
-    /// 자식 노드들을 순차적으로 실행하며, 모든 자식이 성공(Success)해야만 최종적으로 Success를 반환하는 노드입니다.
-    /// <br/> (AND Logic: A를 하고, 성공하면 B를 하고, 성공하면 C를 한다...)
-    /// <br/> 중간에 하나라도 실패(Failure)하면 즉시 중단하고 Failure를 반환합니다.
+    /// [설명]: 자식 노드들을 순차적으로 실행하며, 모든 자식이 성공(Success)해야만 최종적으로 Success를 반환하는 노드입니다.
+    /// (AND Logic: A를 하고, 성공하면 B를 하고, 성공하면 C를 한다...)
+    /// 중간에 하나라도 실패(Failure)하면 즉시 중단하고 Failure를 반환합니다.
     /// </summary>
     public class Sequence : INode
     {
-        #region 1. 내부 변수 (Fields)
+        #region 내부 필드
 
-        // 실행할 자식 노드 리스트
+        /// <summary> 실행할 자식 노드 리스트 </summary>
         private readonly List<INode> m_children = new List<INode>();
 
         #endregion
 
-        #region 2. 자식 노드 관리 (Builder)
+        #region 자식 노드 관리
 
         /// <summary>
-        /// 자식 노드를 순서대로 추가합니다. 체이닝(Chaining)을 지원합니다.
+        /// [설명]: 자식 노드를 순서대로 추가합니다. 체이닝(Chaining)을 지원합니다.
         /// </summary>
         /// <param name="node">추가할 행동 트리 노드</param>
         /// <returns>Sequence 인스턴스 자신</returns>
-        /// <exception cref="ArgumentNullException">node가 null일 경우 발생</exception>
         public Sequence Add(INode node)
         {
             if (node == null)
@@ -39,14 +38,14 @@ namespace InGame.Mob.BehaviorTree
 
         #endregion
 
-        #region 3. 인터페이스 구현 (INode)
+        #region 인터페이스 구현
 
         /// <summary>
-        /// 자식들을 앞에서부터 순서대로 평가합니다.
-        /// <br/> - Failure: 즉시 중단하고 Failure 반환 (단락 평가)
-        /// <br/> - Running: 상태 유지를 위해 Running 반환
-        /// <br/> - Success: 다음 자식으로 진행
-        /// <br/> - 모든 자식이 Success라면 최종 Success 반환
+        /// [설명]: 자식들을 앞에서부터 순서대로 평가합니다.
+        /// - Failure: 즉시 중단하고 Failure 반환 (단락 평가)
+        /// - Running: 상태 유지를 위해 Running 반환
+        /// - Success: 다음 자식으로 진행
+        /// - 모든 자식이 Success라면 최종 Success 반환
         /// </summary>
         public async UniTask<NodeStatus> Evaluate()
         {
@@ -57,13 +56,19 @@ namespace InGame.Mob.BehaviorTree
                 switch (status)
                 {
                     case NodeStatus.Failure:
+                    {
                         return NodeStatus.Failure; // 하나라도 실패하면 전체 실패
-                    
+                    }
+
                     case NodeStatus.Running:
+                    {
                         return NodeStatus.Running; // 실행 중이면 대기
-                    
+                    }
+
                     case NodeStatus.Success:
+                    {
                         continue; // 성공하면 다음 단계(Next Step)로 진행
+                    }
                 }
             }
 

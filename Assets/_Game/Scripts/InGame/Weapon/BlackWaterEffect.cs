@@ -12,18 +12,18 @@ using InGame.Weapon.Strategies;
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 먹물(BlackWater) 무기의 지속 효과 영역을 관리하는 컴포넌트입니다.
-    /// <br/> 영역 내 적에게 지속적인 피해(DoT)와 슬로우(Slow) 상태이상을 부여합니다.
+    /// [설명]: 먹물(BlackWater) 무기의 지속 효과 영역을 관리하는 컴포넌트입니다.
+    /// 영역 내 적에게 지속적인 피해(DoT)와 슬로우(Slow) 상태이상을 부여합니다.
     /// </summary>
     public class BlackWaterEffect : MonoBehaviour, IAuraEffect
     {
-        #region 1. 내부 변수 및 컴포넌트 (Components & State)
+        #region 내부 변수 및 컴포넌트
 
         // 설정 데이터 (Inspector)
-        [Header("1. 감지 설정")]
+        [Header("감지 설정")]
         [SerializeField] private LayerMask m_targetLayer;
         
-        [Header("2. 컴포넌트 참조")]
+        [Header("컴포넌트 참조")]
         [SerializeField] private Animator m_animator;
         [SerializeField] private Collider2D m_collider2D;
 
@@ -45,7 +45,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -77,10 +77,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 3. 인터페이스 구현 (IAuraEffect Implementation)
+        #region 인터페이스 구현 (IAuraEffect)
 
         /// <summary>
-        /// 무기 스탯과 튜닝 데이터를 기반으로 효과를 초기화하고 활성화합니다.
+        /// [설명]: 무기 스탯과 튜닝 데이터를 기반으로 효과를 초기화하고 활성화합니다.
         /// </summary>
         public void Init(WeaponRuntimeStats stats, WeaponPoolManager poolManager)
         {
@@ -88,8 +88,7 @@ namespace InGame.Weapon
             BlackWaterTuningData? tuningData = null;
             if (poolManager != null)
             {
-                // PoolManager나 연관된 객체에서 View 컴포넌트 검색
-                // (BlackWaterView 클래스가 존재한다고 가정)
+                // PoolManager나 연관된 객체에서 View 컴포넌트 검색 (BlackWaterView 클래스 존재 가정)
                 var view = poolManager.GetComponent<Controllers.BlackWaterView>(); 
                 if (view != null)
                 {
@@ -112,7 +111,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 런타임 중 스탯 변경(레벨업 등) 시 호출됩니다.
+        /// [설명]: 런타임 중 스탯 변경(레벨업 등) 시 호출됩니다.
         /// </summary>
         public void UpdateStats(WeaponRuntimeStats stats)
         {
@@ -123,7 +122,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 효과를 비활성화하고 정리합니다.
+        /// [설명]: 효과를 비활성화하고 정리합니다.
         /// </summary>
         public void Deactivate()
         {
@@ -133,9 +132,12 @@ namespace InGame.Weapon
 
         private void Cleanup()
         {
-            m_cts?.Cancel();
-            m_cts?.Dispose();
-            m_cts = null;
+            if (m_cts != null)
+            {
+                m_cts.Cancel();
+                m_cts.Dispose();
+                m_cts = null;
+            }
 
             transform.DOKill();
 
@@ -147,15 +149,19 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 4. 상세 효과 로직 (Effect Logic)
+        #region 상세 효과 로직
 
         /// <summary>
-        /// 이펙트 활성화 연출(등장) 및 데미지 루프를 시작합니다.
+        /// [설명]: 이펙트 활성화 연출(등장) 및 데미지 루프를 시작합니다.
         /// </summary>
         private void ActivateEffect()
         {
             // 이전 작업 취소
-            m_cts?.Cancel();
+            if (m_cts != null)
+            {
+                m_cts.Cancel();
+                m_cts.Dispose();
+            }
             m_cts = new CancellationTokenSource();
 
             // 비주얼 및 콜라이더 설정
@@ -171,7 +177,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 일정 주기(Tick)마다 영역 내 적에게 데미지를 입히는 비동기 루프입니다.
+        /// [설명]: 일정 주기(Tick)마다 영역 내 적에게 데미지를 입히는 비동기 루프입니다.
         /// </summary>
         private async UniTaskVoid TickDamageLoopAsync(CancellationToken token)
         {
@@ -198,7 +204,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 진화 상태에 따라 애니메이션과 비주얼을 동기화합니다.
+        /// [설명]: 진화 상태에 따라 애니메이션과 비주얼을 동기화합니다.
         /// </summary>
         private void SyncWeaponVisuals()
         {
@@ -230,7 +236,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 물리 충돌 검사를 수행하고, 감지된 적에게 데미지와 슬로우를 적용합니다.
+        /// [설명]: 물리 충돌 검사를 수행하고, 감지된 적에게 데미지와 슬로우를 적용합니다.
         /// </summary>
         private void ProcessTickDamage()
         {

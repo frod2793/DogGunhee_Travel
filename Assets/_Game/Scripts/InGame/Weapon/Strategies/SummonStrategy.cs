@@ -3,17 +3,17 @@ using InGame.ObjectPool;
 using InGame.Weapon.Base;
 using InGame.Weapon.Logic;
 using InGame.Weapon.Controllers;
-using System.Linq;
+using System.Linq; // ToList() 사용
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 친구(FriendCharacter)를 소환하는 전략 클래스입니다.
-    /// <br/> 뷰포트 내 랜덤 위치에 소환수를 배치합니다.
+    /// [설명]: 친구(FriendCharacter)를 소환하는 전략 클래스입니다.
+    /// 뷰포트 내 랜덤 위치에 소환수를 배치합니다.
     /// </summary>
     public class SummonStrategy : IWeaponStrategy
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private readonly WeaponFriendsLogic m_logic;
         private WeaponPoolManager m_poolManager;
@@ -21,7 +21,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 생성자 (Constructor)
+        #region 생성자
 
         public SummonStrategy()
         {
@@ -33,7 +33,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -55,6 +55,7 @@ namespace InGame.Weapon.Strategies
                 Vector3 spawnPos = m_logic.CalculateSpawnPosition(owner, m_camera);
 
                 if (m_poolManager == null) continue;
+                
                 var friend = m_poolManager.Get<FriendCharacter>();
                 if (friend != null)
                 {

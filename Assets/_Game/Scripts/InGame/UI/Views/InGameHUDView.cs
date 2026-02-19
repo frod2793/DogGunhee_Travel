@@ -9,167 +9,226 @@ using InGame.UI.ViewModels;
 namespace InGame.UI.Views
 {
     /// <summary>
-    /// 인게임 HUD(상단 정보, 플레이어 상태, 인벤토리)를 전담하는 View 클래스입니다.
-    /// <br/> ViewModel의 데이터를 구독하여 UI를 갱신하고, DOTween을 사용한 연출을 담당합니다.
+    /// [설명]: 게임 플레이 중 화면에 항상 노출되는 HUD(상단 정보 바, 경험치, 코인, 인벤토리 아이콘 등)를 관리하는 View 클래스입니다.
+    /// InGameViewModel의 실시간 데이터를 구독하여 시각적으로 동기화하며, 레벨업이나 웨이브 전환 등 주요 시점에 DOTween 연출을 수행합니다.
     /// </summary>
     public class InGameHUDView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
-        [Header("1. 플레이어 상태 (상단/중앙)")] 
-        [SerializeField, Tooltip("플레이어 레벨 텍스트 (상단)")]
+        [Header("1. 플레이어 상태 (상단/중앙)")]
+        [SerializeField, Tooltip("플레이어의 현재 레벨을 숫자로 표시하는 상단 텍스트")]
         private TMP_Text m_playerLevelText;
 
-        [SerializeField, Tooltip("플레이어 경험치 슬라이더 (상단)")] 
+        [SerializeField, Tooltip("현재 레벨 내에서의 경험치 진행 비율을 나타내는 상단 슬라이더")]
         private Slider m_playerLevelSlider;
-        
-        [SerializeField, Tooltip("인게임 캐릭터 하단 레벨 텍스트")] 
+
+        [SerializeField, Tooltip("인게임 캐릭터 발치 또는 머리 위에 위치하여 즉각적으로 확인 가능한 레벨 텍스트")]
         private TMP_Text m_playerLevelText_InGame;
-        
-        [SerializeField, Tooltip("추가 경험치 슬라이더 (옵션)")] 
+
+        [SerializeField, Tooltip("필요시 추가로 배치할 수 있는 경험치 보조 슬라이더")]
         private Slider m_expSlider;
 
-        [Header("2. 게임 정보 (HUD)")] 
-        [SerializeField, Tooltip("웨이브 정보 텍스트 (중앙 알림용)")]
+        [Header("2. 게임 흐름 정보")]
+        [SerializeField, Tooltip("새로운 웨이브가 시작될 때 중앙에 페이드인/아웃으로 노출될 알림용 텍스트")]
         private TMP_Text m_mobWaveText;
 
-        [SerializeField, Tooltip("획득 코인 표시 텍스트")] 
+        [SerializeField, Tooltip("이번 판에서 지금까지 획득한 누적 코인 수량을 표시하는 텍스트")]
         private TMP_Text m_coinText;
-        
-        [SerializeField, Tooltip("처치 수 표시 텍스트")] 
+
+        [SerializeField, Tooltip("이번 판에서 지금까지 처치한 누적 몬스터 수량을 표시하는 텍스트")]
         private TMP_Text m_mobCountText;
 
-        [Header("3. 인벤토리 아이콘")] 
-        [SerializeField, Tooltip("무기 아이콘 UI 리스트")]
+        [Header("3. 인벤토리 및 장비 슬롯")]
+        [SerializeField, Tooltip("획득한 무기들의 대표 아이콘을 순서대로 정렬하여 보여줄 이미지 슬롯 리스트")]
         private List<Image> m_weaponUIList = new List<Image>();
 
-        [SerializeField, Tooltip("장신구 아이콘 UI 리스트")] 
+        [SerializeField, Tooltip("획득한 장신구/악세서리들의 대표 아이콘을 보여줄 이미지 슬롯 리스트")]
         private List<Image> m_accessoryUIList = new List<Image>();
 
         #endregion
 
-        #region 2. 내부 변수 및 상태 관리
-        // ViewModel 참조
+        #region 내부 필드
+
+        /// <summary> 인게임의 모든 핵심 상태 데이터를 보유하고 있는 뷰모델 참조 </summary>
         private InGameViewModel m_viewModel;
-        
-        // R3 구독 관리자
+
+        /// <summary> 뷰 생명주기에 종속된 R3 이벤트 구독 해제 티켓 모음 </summary>
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
-        
-        // DOTween 참조 (중복 실행 방지용)
+
+        /// <summary> 경험치 바의 부드러운 증감을 담당하는 트윈 핸들 </summary>
         private Tween m_expTween;
+
+        /// <summary> 웨이브 알림의 등장-대기-퇴장을 제어하는 시퀀스 핸들 </summary>
         private Sequence m_waveSequence;
+
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
+
+        /// <summary>
+        /// [설명]: 객체 파기 시 모든 활성 이벤트 스트림과 애니메이션(Tween) 리소스를 즉시 해제하여 메모리 예외를 방지합니다.
+        /// </summary>
         private void OnDestroy()
         {
-            // 1. 리액티브 구독 해제
+            // 리액티브 구독 일괄 해제
             m_disposables.Dispose();
-            
-            // 2. 실행 중인 트윈/시퀀스 종료 (메모리 누수 및 에러 방지)
-            if (m_expTween != null && m_expTween.IsActive()) m_expTween.Kill();
-            if (m_waveSequence != null && m_waveSequence.IsActive()) m_waveSequence.Kill();
+
+            // 유니티 엔진 객체 존재 여부 확인 후 트윈 강제 제거
+            if (m_expTween != null && m_expTween.IsActive())
+            {
+                m_expTween.Kill();
+            }
+
+            if (m_waveSequence != null && m_waveSequence.IsActive())
+            {
+                m_waveSequence.Kill();
+            }
         }
+
         #endregion
 
-        #region 4. 초기화 및 바인딩
+        #region 데이터 바인딩
+
         /// <summary>
-        /// ViewModel과 View를 연결합니다. 기존 구독을 정리하고 새로운 데이터 흐름을 연결합니다.
+        /// [설명]: 인게임 뷰모델의 속성들과 HUD의 개별 UI 요소들을 일대일 매칭하여 실시간 동기화 채널을 구축합니다.
         /// </summary>
+        /// <param name="viewModel">전달받은 인게임 통합 뷰모델</param>
         public void Bind(InGameViewModel viewModel)
         {
+            if (viewModel == null)
+            {
+                return;
+            }
+
             m_viewModel = viewModel;
-            m_disposables.Clear();
+            m_disposables.Clear(); // 재활용 시 기존 구독 이력 초기화
 
             BindPlayerStatus();
             BindGameInfo();
             BindInventory();
         }
 
+        /// <summary>
+        /// [설명]: 플레이어의 레벨, 경험치, 레벨업 신호 스트림을 바인딩합니다.
+        /// </summary>
         private void BindPlayerStatus()
         {
-            // 레벨 표시
+            if (m_viewModel == null)
+            {
+                return;
+            }
+
+            // 실시간 레벨 갱신
             m_viewModel.PlayerLevel
                 .Subscribe(level => UpdateLevelText(level))
                 .AddTo(m_disposables);
 
-            // 경험치 바 (애니메이션 포함)
+            // 실시간 경험치 게이지 갱신 (트리거 발생 시 애니메이션 유도)
             m_viewModel.ExpProgress
                 .Subscribe(progress => UpdateExpUI(progress))
                 .AddTo(m_disposables);
 
-            // 레벨업 효과
+            // 레벨업 시각 연출 트리거
             m_viewModel.OnLevelUp
                 .Subscribe(_ => PlayLevelUpEffect())
                 .AddTo(m_disposables);
         }
 
+        /// <summary>
+        /// [설명]: 웨이브 진행 상황, 코인, 킬 카운트 등 게임 전역 정보 스트림을 바인딩합니다.
+        /// </summary>
         private void BindGameInfo()
         {
-            // 웨이브 시작 알림
+            if (m_viewModel == null)
+            {
+                return;
+            }
+
+            // 웨이브 시작 정보 알림 (스테이지 ID와 조합)
             m_viewModel.OnWaveStarted
                 .CombineLatest(m_viewModel.CurrentStageId, (waveData, stage) => (waveData, stage))
                 .Subscribe(data => ShowWaveInfo($"Stage {data.stage} - {data.waveData.waveName}"))
                 .AddTo(m_disposables);
 
-            // 웨이브 종료 알림
+            // 웨이브 완료 정보 알림
             m_viewModel.OnWaveCompleted
                 .CombineLatest(m_viewModel.CurrentStageId, (waveData, stage) => (waveData, stage))
                 .Subscribe(data => ShowWaveInfo($"Stage {data.stage} - {data.waveData.waveName} 클리어"))
                 .AddTo(m_disposables);
 
-            // 재화 및 킬 수
+            // 재화 획득 텍스트 동기화
             m_viewModel.CoinCount
-                .Subscribe(coin => 
+                .Subscribe(coin =>
                 {
-                    if (m_coinText != null) m_coinText.SetSafeText("{0}", coin);
+                    if (m_coinText != null)
+                    {
+                        m_coinText.text = coin.ToString();
+                    }
                 })
                 .AddTo(m_disposables);
 
+            // 몬스터 처치 수 텍스트 동기화
             m_viewModel.KillCount
-                .Subscribe(kills => 
+                .Subscribe(kills =>
                 {
-                    if (m_mobCountText != null) m_mobCountText.SetSafeText("{0}", kills);
+                    if (m_mobCountText != null)
+                    {
+                        m_mobCountText.text = kills.ToString();
+                    }
                 })
                 .AddTo(m_disposables);
         }
 
+        /// <summary>
+        /// [설명]: 현재 장착 중인 무기와 아이템 스프라이트 리스트를 인벤토리 슬롯과 동기화합니다.
+        /// </summary>
         private void BindInventory()
         {
-            // 무기 슬롯 갱신
+            if (m_viewModel == null)
+            {
+                return;
+            }
+
             m_viewModel.WeaponSprites
                 .Subscribe(sprites => RefreshIcons(m_weaponUIList, sprites))
                 .AddTo(m_disposables);
 
-            // 장신구 슬롯 갱신
             m_viewModel.AccessorySprites
                 .Subscribe(sprites => RefreshIcons(m_accessoryUIList, sprites))
                 .AddTo(m_disposables);
         }
+
         #endregion
 
-        #region 5. UI 업데이트 및 연출 로직
+        #region 시각 업데이트 및 애니메이션
 
         /// <summary>
-        /// 플레이어 레벨 텍스트를 갱신합니다.
+        /// [설명]: 인게임 상단 및 캐릭터 근처의 레벨 표시 텍스트를 최신값으로 업데이트합니다.
         /// </summary>
         private void UpdateLevelText(int level)
         {
             if (m_playerLevelText != null)
-                m_playerLevelText.SetSafeText("Lv. {0}", level);
-            
+            {
+                m_playerLevelText.text = $"Lv. {level}";
+            }
+
             if (m_playerLevelText_InGame != null)
-                m_playerLevelText_InGame.SetSafeText("Lv. {0}", level);
+            {
+                m_playerLevelText_InGame.text = $"Lv. {level}";
+            }
         }
 
         /// <summary>
-        /// 경험치 슬라이더를 부드럽게 갱신합니다.
+        /// [설명]: 경험치 슬라이더의 Value를 부드럽게 채우는 트윈 애니메이션을 실행합니다.
         /// </summary>
         private void UpdateExpUI(float progress)
         {
-            // 기존 트윈 제거 (중복 실행 방지)
+            // 연속적인 변화 대응을 위해 진행 중인 트윈은 즉시 킬
             if (m_expTween != null && m_expTween.IsActive())
+            {
                 m_expTween.Kill();
+            }
 
             if (m_playerLevelSlider != null)
             {
@@ -178,24 +237,25 @@ namespace InGame.UI.Views
 
             if (m_expSlider != null)
             {
-                // 보조 슬라이더도 동일하게 처리 (별도 트윈 변수가 없다면 즉시 적용하거나 별도 관리 필요)
-                // 여기서는 DOValue를 사용하되 메인 트윈 변수에 할당하지 않고 Fire-and-Forget 방식으로 처리
                 m_expSlider.DOValue(progress, 0.2f).SetEase(Ease.OutQuad);
             }
         }
 
         /// <summary>
-        /// 웨이브 정보를 화면 중앙에 페이드 효과와 함께 표시합니다.
+        /// [설명]: 화면 중앙에 웨이브 메시지를 서서히 띄운 후 일정 시간 뒤에 사라지게 하는 시퀀스 로직입니다.
         /// </summary>
         private void ShowWaveInfo(string message)
         {
-            if (m_mobWaveText == null) return;
+            if (m_mobWaveText == null)
+            {
+                return;
+            }
 
-            // 기존 연출 즉시 종료
             if (m_waveSequence != null && m_waveSequence.IsActive())
+            {
                 m_waveSequence.Kill();
+            }
 
-            // 1. 텍스트 설정 및 초기화
             m_mobWaveText.text = message;
             m_mobWaveText.gameObject.SetActive(true);
 
@@ -203,29 +263,37 @@ namespace InGame.UI.Views
             color.a = 0f;
             m_mobWaveText.color = color;
 
-            // 2. 시퀀스 구성 (FadeIn -> Wait -> FadeOut)
+            // 시퀀스 구성: 나타남(0.5s) -> 유지(2s) -> 사라짐(1s)
             m_waveSequence = DOTween.Sequence()
                 .Append(m_mobWaveText.DOFade(1f, 0.5f))
                 .AppendInterval(2.0f)
                 .Append(m_mobWaveText.DOFade(0f, 1.0f))
-                .OnComplete(() => 
+                .OnComplete(() =>
                 {
-                    if (m_mobWaveText != null) m_mobWaveText.gameObject.SetActive(false);
+                    if (m_mobWaveText != null)
+                    {
+                        m_mobWaveText.gameObject.SetActive(false);
+                    }
                 })
-                .SetUpdate(true); // 게임 일시정지 시에도 UI 알림이 보여야 한다면 true
+                .SetUpdate(true);
         }
 
         /// <summary>
-        /// 인벤토리 아이콘 리스트를 갱신합니다.
+        /// [설명]: 사전에 정의된 아이콘 슬롯(배열)에 획득한 데이터가 있는 만큼 스프라이트를 채우고 나머지는 비활성화합니다.
         /// </summary>
         private void RefreshIcons(List<Image> slots, IReadOnlyList<Sprite> sprites)
         {
-            if (slots == null) return;
+            if (slots == null || sprites == null)
+            {
+                return;
+            }
 
             for (int i = 0; i < slots.Count; i++)
             {
-                // 슬롯 UI 존재 여부 확인 (Unity Object Check)
-                if (slots[i] == null) continue;
+                if (slots[i] == null)
+                {
+                    continue;
+                }
 
                 if (i < sprites.Count && sprites[i] != null)
                 {
@@ -240,14 +308,13 @@ namespace InGame.UI.Views
         }
 
         /// <summary>
-        /// 레벨업 시 텍스트 강조 연출을 재생합니다.
+        /// [설명]: 레벨업 시 해당 텍스트를 위아래로 튕겨 강조하는 펌핑 시각 효과를 수동 재생합니다.
         /// </summary>
         private void PlayLevelUpEffect()
         {
             if (m_playerLevelText != null)
             {
-                // 기존 스케일 트윈이 있다면 제거 (DOTween은 동일 타겟 트윈을 자동 관리하기도 하지만 명시적이 안전)
-                m_playerLevelText.transform.DOKill(); 
+                m_playerLevelText.transform.DOKill();
                 m_playerLevelText.transform.DOScale(Vector3.one * 1.2f, 0.15f).SetLoops(2, LoopType.Yoyo);
             }
         }

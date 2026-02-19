@@ -4,7 +4,7 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 진주(Pearl) 무기의 튜닝 데이터 구조체입니다.
+    /// [설명]: 진주(Pearl) 무기의 튜닝 데이터 구조체입니다.
     /// </summary>
     public struct PearlTuningData
     {
@@ -12,17 +12,17 @@ namespace InGame.Weapon.Logic
     }
 
     /// <summary>
-    /// 진주 무기의 비즈니스 로직(쿨타임, 스탯 연동)을 담당하는 클래스입니다.
+    /// [설명]: 진주 무기의 비즈니스 로직(쿨타임, 스탯 연동)을 담당하는 클래스입니다.
     /// </summary>
     public class PearlWeaponLogic
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private readonly WeaponRuntimeStats m_stats;
 
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
 
         public float AttackPower => m_stats.CurrentAttackPower;
         public float AttackSpeed => (m_stats.CurrentAttackSpeed > 0) ? m_stats.CurrentAttackSpeed : 1f;
@@ -31,7 +31,7 @@ namespace InGame.Weapon.Logic
         
         #endregion
 
-        #region 3. 생성자 및 초기화 (Constructor & Init)
+        #region 생성자 및 초기화
 
         public PearlWeaponLogic(WeaponRuntimeStats stats )
         {

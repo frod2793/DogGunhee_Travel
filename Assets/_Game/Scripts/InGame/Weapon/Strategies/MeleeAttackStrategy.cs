@@ -4,25 +4,25 @@ using System.Collections.Generic;
 using System.Threading;
 using InGame.Mob.MobBase;
 using InGame.Weapon.Base;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.ObjectPool;
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 근접 공격(Melee) 전략입니다.
-    /// <br/> 애니메이션 재생, 콜라이더 판정 활성화, 조이스틱 방향 추적을 수행합니다.
+    /// [설명]: 근접 공격(Melee) 전략입니다.
+    /// 애니메이션 재생, 콜라이더 판정 활성화, 조이스틱 방향 추적을 수행합니다.
     /// </summary>
     public class MeleeAttackStrategy : IWeaponStrategy
     {
-        #region 1. 상수 및 해시 (Constants)
+        #region 상수 및 해시
 
         private static readonly int k_AnimTriggerStab = Animator.StringToHash("Stab");
         private static readonly int k_AnimTriggerSlash = Animator.StringToHash("Slash");
 
         #endregion
 
-        #region 2. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
@@ -44,7 +44,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -83,7 +83,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 4. 상세 로직 (Logic)
+        #region 상세 로직
 
         private void SpawnMeleeInstance(Transform owner)
         {
@@ -147,7 +147,7 @@ namespace InGame.Weapon.Strategies
             }
             catch (System.OperationCanceledException)
             {
-                // 공격 취소
+                // 공격 취소됨 - 정상 흐름
             }
             finally
             {
@@ -196,6 +196,8 @@ namespace InGame.Weapon.Strategies
             for (int i = 0; i < hitCount; i++)
             {
                 var target = m_hitResults[i];
+                if (target == null) continue;
+
                 int id = target.gameObject.GetInstanceID();
 
                 // 중복 타격 방지

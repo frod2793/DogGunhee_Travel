@@ -6,12 +6,12 @@ using UnityEngine.Serialization;
 namespace InGame
 {
     /// <summary>
-    /// 단순 안내 메시지나 알림창 표시를 관리하는 클래스입니다.
-    /// <br/>텍스트와 배경의 투명도를 이용한 애니메이션 효과를 담당합니다.
+    /// [설명]: 단순 안내 메시지나 알림창 표시를 관리하는 클래스입니다.
+    /// 텍스트와 배경의 투명도를 이용한 애니메이션 효과를 담당합니다.
     /// </summary>
     public class MessageManager : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정 
 
         [SerializeField, Tooltip("메시지를 표시할 캔버스 오브젝트"), FormerlySerializedAs("messageCanvas")]
         private Canvas m_messageCanvas;
@@ -24,16 +24,16 @@ namespace InGame
 
         #endregion
 
-        #region 2. 내부 변수
+        #region 내부 변수
 
         private Coroutine m_fadeCoroutine;
 
         #endregion
 
-        #region 3. 공개 메서드
+        #region 공개 메서드
 
         /// <summary>
-        /// 구상 중인 내용이거나 빈 항목인 경우 안내 메시지를 출력합니다.
+        /// [설명]: 구상 중인 내용이거나 빈 항목인 경우 안내 메시지를 출력합니다.
         /// </summary>
         public void OnEmptyGameMessage()
         {
@@ -46,7 +46,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 로비 씬으로 되돌아가는 기능을 수행합니다.
+        /// [설명]: 로비 씬으로 되돌아가는 기능을 수행합니다.
         /// </summary>
         public void Func_Continue()
         {
@@ -58,10 +58,10 @@ namespace InGame
 
         #endregion
 
-        #region 4. 메시지 연출 로직
+        #region 메시지 연출 로직
 
         /// <summary>
-        /// 메시지 창을 활성화하고 페이드 아웃 연출을 시작합니다.
+        /// [설명]: 메시지 창을 활성화하고 페이드 아웃 연출을 시작합니다.
         /// </summary>
         private void ShowMessage()
         {
@@ -86,7 +86,7 @@ namespace InGame
         }
 
         /// <summary>
-        /// 시간이 지남에 따라 배경과 텍스트의 투명도를 낮추어 사라지게 합니다.
+        /// [설명]: 시간이 지남에 따라 배경과 텍스트의 투명도를 낮추어 사라지게 합니다.
         /// </summary>
         private IEnumerator FadeOutCoroutine()
         {

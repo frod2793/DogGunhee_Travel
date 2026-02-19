@@ -2,17 +2,23 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
-using InGame.Manager;
+using InGame.Managers;
 
 namespace InGame.Editor
 {
     [CustomEditor(typeof(GameManager))]
     public class GameManagerEditor : UnityEditor.Editor
     {
+        #region 내부 필드 
+
         private SkillDatabase m_skillDatabase;
         private List<SkillData> m_weaponSkills;
         private string[] m_weaponNames;
         private int m_selectedWeaponIndex = 0;
+
+        #endregion
+
+        #region 유니티 에디터 생명주기 
 
         private void OnEnable()
         {
@@ -58,8 +64,12 @@ namespace InGame.Editor
             }
         }
 
+        #endregion
+
+        #region 보조 로직 
+
         /// <summary>
-        /// 프로젝트에서 SkillDatabase 에셋을 찾아 무기 목록을 로드합니다.
+        /// [설명]: 프로젝트에서 SkillDatabase 에셋을 찾아 무기 스킬 목록을 로드합니다.
         /// </summary>
         private void FindSkillDatabase()
         {
@@ -76,7 +86,7 @@ namespace InGame.Editor
                 m_weaponSkills = m_skillDatabase.allSkills
                     .Where(skill => skill.skillType == SkillType.Weapon && !string.IsNullOrEmpty(skill.skillName))
                     .ToList();
-                
+
                 m_weaponNames = m_weaponSkills.Select(skill => skill.skillName).ToArray();
             }
             else
@@ -86,7 +96,7 @@ namespace InGame.Editor
         }
 
         /// <summary>
-        /// 선택된 무기를 GameManager의 테스트 리스트에 추가합니다.
+        /// [설명]: 선택된 무기를 GameManager의 테스트 리스트에 추가합니다.
         /// </summary>
         private void AddTestWeapon(GameManager gameManager)
         {
@@ -109,7 +119,7 @@ namespace InGame.Editor
         }
 
         /// <summary>
-        /// GameManager의 테스트 무기 리스트를 초기화합니다.
+        /// [설명]: GameManager의 테스트 무기 리스트를 초기화합니다.
         /// </summary>
         private void ClearTestWeapons(GameManager gameManager)
         {
@@ -120,5 +130,7 @@ namespace InGame.Editor
                 Debug.Log("[GameManagerEditor] 테스트 무기 리스트가 초기화되었습니다.");
             }
         }
+
+        #endregion
     }
 }

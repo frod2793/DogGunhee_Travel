@@ -4,12 +4,12 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 플레이어(Owner) 주위를 공전하는 투사체 컨트롤러입니다.
-    /// <br/> 공놀이(Ball) 무기 등에서 사용되며, 물리 충돌 처리는 BallDamageDealer에게 위임합니다.
+    /// [설명]: 플레이어(Owner) 주위를 공전하는 투사체 컨트롤러입니다.
+    /// 공놀이(Ball) 무기 등에서 사용되며, 물리 충돌 처리는 BallDamageDealer에게 위임합니다.
     /// </summary>
     public class OrbitProjectile : MonoBehaviour
     {
-        #region 1. 내부 변수 및 상태 (Internal State)
+        #region 내부 변수 및 상태
 
         // 소유자 및 위치 정보
         private Transform m_owner;
@@ -29,7 +29,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -65,10 +65,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 초기화 및 제어 (Init & Control)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 투사체를 초기화하고 궤도 회전을 시작합니다.
+        /// [설명]: 투사체를 초기화하고 궤도 회전을 시작합니다.
         /// </summary>
         /// <param name="owner">공전의 중심이 되는 트랜스폼</param>
         /// <param name="radius">공전 반경</param>
@@ -108,7 +108,7 @@ namespace InGame.Weapon.Controllers
         }
 
         /// <summary>
-        /// 현재 각도(Theta)와 반경(R)을 기반으로 투사체의 월드 좌표를 계산합니다.
+        /// [설명]: 현재 각도(Theta)와 반경(R)을 기반으로 투사체의 월드 좌표를 계산합니다.
         /// </summary>
         private void UpdateTransform()
         {

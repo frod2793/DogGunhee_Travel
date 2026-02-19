@@ -6,17 +6,17 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
-using InGame.Manager;
+using InGame.Managers;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 화면 내 무작위 위치에 친구 캐릭터(FriendCharacter)를 소환하여 적을 공격하는 무기 컨트롤러입니다.
-    /// <br/> 투사체가 아닌 독립적인 캐릭터를 소환하며, 별도의 비동기 루프로 소환 주기를 관리합니다.
+    /// [설명]: 화면 내 무작위 위치에 친구 캐릭터(FriendCharacter)를 소환하여 적을 공격하는 무기 컨트롤러입니다.
+    /// 투사체가 아닌 독립적인 캐릭터를 소환하며, 별도의 비동기 루프로 소환 주기를 관리합니다.
     /// </summary>
     public class FriendsWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 변수 및 컴포넌트 (State & Components)
+        #region 내부 변수 및 컴포넌트
 
         // 프리팹 및 풀링
         private FriendCharacter m_friendCharacterPrefab;
@@ -32,7 +32,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 초기화 및 해제 (Init & Dispose)
+        #region 초기화 및 해제
 
         /// <summary>
         /// 무기를 초기화하고 친구 소환 풀을 생성하며 소환 루프를 시작합니다.
@@ -93,7 +93,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 공격 루프 (Attack Loop)
+        #region 공격 루프
 
         private void StartAttackLoop()
         {
@@ -155,11 +155,11 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 소환 로직 (Spawning Logic)
+        #region 소환 로직
 
         /// <summary>
         /// 설정된 수만큼 친구 캐릭터를 랜덤한 위치에 소환합니다.
-        /// <br/> 가능한 경우 서로 다른 종류의 친구가 나오도록 섞습니다.
+        /// 가능한 경우 서로 다른 종류의 친구가 나오도록 섞습니다.
         /// </summary>
         private void SpawnFriends()
         {
@@ -226,6 +226,7 @@ namespace InGame.Weapon.Controllers
                 return m_ownerTransform != null ? m_ownerTransform.position : Vector3.zero;
             }
 
+            // 0.1 ~ 0.9 범위로 가장자리 제외
             float randomX = UnityEngine.Random.Range(0.1f, 0.9f);
             float randomY = UnityEngine.Random.Range(0.1f, 0.9f);
             
@@ -242,7 +243,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 상속 구현 (Override Methods)
+        #region 상속 구현
 
         protected override void ExecuteAttack(Vector3 direction)
         {
@@ -252,7 +253,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 6. 오브젝트 풀 델리게이트 (Pool Callbacks)
+        #region 오브젝트 풀 델리게이트
 
         private FriendCharacter CreateFriendCharacter()
         {

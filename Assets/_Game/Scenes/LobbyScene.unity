@@ -1154,44 +1154,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8795a3abfa04c4bcca4c7392af49c74e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_playerProfileImage: {fileID: 2083833966}
-  m_playerNameText: {fileID: 0}
-  m_playerLevelText: {fileID: 0}
-  m_playerLevelSlider: {fileID: 0}
-  m_startBtn: {fileID: 623481682}
-  m_tutorialBtn: {fileID: 0}
-  m_optionBtn: {fileID: 1785994343}
+  m_playerProfileView: {fileID: 1762148062}
+  m_currencyView: {fileID: 1762148061}
+  m_mainMenuView: {fileID: 1762148063}
+  m_backgroundView: {fileID: 1762148060}
   m_optionPopupPrefab: {fileID: 4094199759714701803, guid: 5a7f1c748981f41a9a1663df2eed2eab, type: 3}
-  m_gameSelectPopUp: {fileID: 297852345}
-  m_closeGameSelectPopUpBtn: {fileID: 1793167909}
-  m_gameStartButton: {fileID: 1785914719}
-  m_gametestStartButton: {fileID: 869423704}
-  m_characterSelectUIManager: {fileID: 617242525}
-  m_openCharacterSelectButton: {fileID: 845655990}
   m_postManager: {fileID: 378748809}
-  m_openPostButton: {fileID: 142006359}
-  m_getPostRewardButton: {fileID: 0}
-  m_closePostButton: {fileID: 2060208934}
-  m_getPostExpansionRewardButton: {fileID: 825264045}
-  m_closePostExpansionButton: {fileID: 1903731116}
   m_questPanelManager: {fileID: 1515052229}
-  m_openQuestPanelButton: {fileID: 803496075}
-  m_closeQuestPanelButton: {fileID: 860760911}
-  m_closeQuestExpansionButton: {fileID: 916068383}
-  m_goldText: {fileID: 1907996060}
-  m_diaText: {fileID: 424256521}
   m_storeManager: {fileID: 1359785979}
-  m_openStoreButton: {fileID: 8499905}
-  m_closeStoreButton: {fileID: 747007923}
-  m_closeStoreExpendPopUp: {fileID: 2137160010}
-  m_itemSelectManager: {fileID: 1458571409}
-  m_openItemSelectButton: {fileID: 1040933211}
-  m_closeItemSelectButton: {fileID: 1925497325}
-  m_closeItemSelectExpansionButton: {fileID: 2030477381}
-  m_playerDataManager: {fileID: 0}
-  m_isDebugMode: 0
-  m_backgroundAnimator: {fileID: 1064257346}
-  m_backgroundAnimationSpeed: 1.7
+  m_inventoryManager: {fileID: 1458571409}
+  m_characterSelectManager: {fileID: 617242525}
 --- !u!1 &81575512
 GameObject:
   m_ObjectHideFlags: 0
@@ -2817,7 +2789,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 41053529}
   m_HandleRect: {fileID: 41053528}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -4291,7 +4263,7 @@ GameObject:
   - component: {fileID: 445725992}
   - component: {fileID: 445725991}
   m_Layer: 5
-  m_Name: Item_select_Panel
+  m_Name: InventoryView_Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4789,7 +4761,7 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 726657442}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.000000059604645, y: 0}
+  m_AnchorMin: {x: 0.00000017881393, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
@@ -5507,13 +5479,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6013a316e26c1084cab2eba43ea1b75d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterSelectPanel: {fileID: 2145640046}
-  characterExpendViewPanel: {fileID: 1561755448}
-  characterListPanel: {fileID: 1500499384}
-  characterSelectIndexPrefab: {fileID: 7849912561285950377, guid: 88c51965dbe994453af63584c9c40dc5, type: 3}
-  characterSelectIndexParent: {fileID: 1541536644}
-  characterSkinIndexPrefab: {fileID: 2267837030110110317, guid: 194573e79eefa49f0b3ff5f34eb75b92, type: 3}
-  characterSkinIndexParent: {fileID: 1349498868}
+  m_characterSelectPanel: {fileID: 2145640046}
+  m_characterExpendViewPanel: {fileID: 1561755448}
+  m_characterListPanel: {fileID: 1500499384}
+  m_characterSelectIndexPrefab: {fileID: 7849912561285950377, guid: 88c51965dbe994453af63584c9c40dc5, type: 3}
+  m_characterSelectIndexParent: {fileID: 1541536644}
+  m_characterSkinIndexPrefab: {fileID: 2267837030110110317, guid: 194573e79eefa49f0b3ff5f34eb75b92, type: 3}
+  m_characterSkinIndexParent: {fileID: 1349498868}
 --- !u!1 &623481678
 GameObject:
   m_ObjectHideFlags: 0
@@ -6052,7 +6024,7 @@ Transform:
   m_GameObject: {fileID: 642763486}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 680.23474, y: 335.78897, z: -91.41837}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6070,9 +6042,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ee64d7f27010f144b7710d29dd42388, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  messageCanvas: {fileID: 1297377767}
-  message_BG: {fileID: 323068378}
-  message_Text: {fileID: 2028128970}
+  m_messageCanvas: {fileID: 1297377767}
+  m_messageBackground: {fileID: 323068378}
+  m_messageText: {fileID: 2028128970}
 --- !u!1 &651901277
 GameObject:
   m_ObjectHideFlags: 0
@@ -6676,7 +6648,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44
+  m_fontSize: 45.8
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -9877,7 +9849,7 @@ GameObject:
   - component: {fileID: 1064257347}
   - component: {fileID: 1064257346}
   m_Layer: 5
-  m_Name: GameStart_background
+  m_Name: background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10767,7 +10739,7 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 634134872}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.00000017881393, y: 0}
+  m_AnchorMin: {x: 0.000000059604645, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
@@ -12368,6 +12340,7 @@ Transform:
   - {fileID: 1359785978}
   - {fileID: 1515052228}
   - {fileID: 1458571408}
+  - {fileID: 1762148059}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1334258322
@@ -12564,7 +12537,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2073653044}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -13241,8 +13214,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc8af2a8800055c48b0c58ce40ae348f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_storePanel: {fileID: 0}
-  m_storeItemListContainer: {fileID: 0}
+  m_storePanel: {fileID: 29859437}
+  m_storeItemListContainer: {fileID: 386628118}
 --- !u!1 &1371059978
 GameObject:
   m_ObjectHideFlags: 0
@@ -13824,7 +13797,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1139721323}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.9999998
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -14251,7 +14224,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000061035156, y: 0}
+  m_AnchoredPosition: {x: 0.00012207031, y: 0}
   m_SizeDelta: {x: 424.75, y: 181}
   m_Pivot: {x: 1, y: 1}
 --- !u!1 &1457257528
@@ -14340,7 +14313,7 @@ GameObject:
   - component: {fileID: 1458571408}
   - component: {fileID: 1458571409}
   m_Layer: 0
-  m_Name: '[ - Item select Manager - ]'
+  m_Name: '[ - InventoryView Manager - ]'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14373,14 +14346,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f5bf82a00b62421d98e6fc6860edfe8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_itemSelectPanel: {fileID: 0}
-  m_itemSelectContainer: {fileID: 0}
-  m_itemSelectPrefab: {fileID: 8973482675496506079, guid: f97405356d95048daa59d0e370435a6a, type: 3}
-  m_itemSelectExtension: {fileID: 0}
+  m_inventoryPanel: {fileID: 445725989}
+  m_inventoryContainer: {fileID: 1066578065}
+  m_inventoryItemPrefab: {fileID: 0}
+  m_inventoryExtension: {fileID: 1566457679}
   m_itemNameText: {fileID: 0}
-  m_itemImage: {fileID: 0}
-  m_itemDescriptionText: {fileID: 0}
-  m_itemSelectButton: {fileID: 0}
+  m_itemImage: {fileID: 1457257530}
+  m_itemDescriptionText: {fileID: 741458181}
+  m_equipButton: {fileID: 0}
+  m_sellButton: {fileID: 0}
+  m_itemPriceText: {fileID: 0}
 --- !u!1 &1464394602
 GameObject:
   m_ObjectHideFlags: 0
@@ -14394,7 +14369,7 @@ GameObject:
   - component: {fileID: 1464394605}
   - component: {fileID: 1464394604}
   m_Layer: 5
-  m_Name: Button
+  m_Name: getPostRewardButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14586,7 +14561,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 17.45
+  m_fontSize: 17.85
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -14834,11 +14809,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7a430c7138f944598c3e50b0356313b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_questPanel: {fileID: 0}
-  m_questContainer: {fileID: 0}
+  m_questPanel: {fileID: 1110550279}
+  m_questContainer: {fileID: 1710073596}
   m_questPrefab: {fileID: 4884317437775229061, guid: c16eb1c2c10c746189cf73af69b707f7, type: 3}
-  m_questPanelExtension: {fileID: 0}
-  m_questPanelExtensionText: {fileID: 0}
+  m_questPanelExtension: {fileID: 465830104}
+  m_questPanelExtensionText: {fileID: 1785840214}
   m_rewardItemNameText: {fileID: 0}
 --- !u!1 &1529698876
 GameObject:
@@ -16565,6 +16540,118 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1760134045}
   m_CullTransparentMesh: 1
+--- !u!1 &1762148058
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1762148059}
+  - component: {fileID: 1762148062}
+  - component: {fileID: 1762148061}
+  - component: {fileID: 1762148060}
+  - component: {fileID: 1762148063}
+  m_Layer: 0
+  m_Name: '[ - VIews - ]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1762148059
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762148058}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1323311151}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1762148060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762148058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 480de51e04bf79d4da6a2d742945575f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Lobby.UI.Elements.LobbyBackgroundView
+  m_backgroundAnimator: {fileID: 1064257346}
+  m_animationSpeed: 1.7
+--- !u!114 &1762148061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762148058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d53610592205ba4bae7f15dfbb26bdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Lobby.UI.Elements.LobbyCurrencyView
+  m_goldText: {fileID: 1907996060}
+  m_diaText: {fileID: 424256521}
+--- !u!114 &1762148062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762148058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95a3d803d30967b498f27138a7b79815, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Lobby.UI.Elements.LobbyPlayerProfileView
+  m_playerProfileImage: {fileID: 2083833966}
+  m_playerNameText: {fileID: 0}
+  m_playerLevelText: {fileID: 0}
+  m_playerLevelSlider: {fileID: 0}
+--- !u!114 &1762148063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762148058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 668ee4e4da5a8da41aa950a3ac1cbfd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Lobby.UI.Elements.LobbyMainMenuView
+  m_startBtn: {fileID: 623481682}
+  m_tutorialBtn: {fileID: 0}
+  m_optionBtn: {fileID: 1785994343}
+  m_gameSelectPopUp: {fileID: 297852345}
+  m_closeGameSelectPopUpBtn: {fileID: 1793167909}
+  m_gameStartButton: {fileID: 1785914719}
+  m_gametestStartButton: {fileID: 869423704}
+  m_openPostButton: {fileID: 1737326715}
+  m_openQuestPanelButton: {fileID: 803496075}
+  m_openStoreButton: {fileID: 8499905}
+  m_openInventoryButton: {fileID: 1040933211}
+  m_getPostRewardButton: {fileID: 1464394604}
+  m_closePostButton: {fileID: 2060208934}
+  m_getPostExpansionRewardButton: {fileID: 825264045}
+  m_closePostExpansionButton: {fileID: 1903731116}
+  m_closeQuestPanelButton: {fileID: 860760911}
+  m_closeQuestExpansionButton: {fileID: 916068383}
+  m_closeStoreButton: {fileID: 747007923}
+  m_closeStoreExpendPopUp: {fileID: 2137160010}
+  m_closeInventoryButton: {fileID: 1925497325}
+  m_closeInventoryExpansionButton: {fileID: 2030477381}
 --- !u!1 &1765612370
 GameObject:
   m_ObjectHideFlags: 0
@@ -20086,7 +20173,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 508714302}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.99999994
+  m_Size: 0.9999998
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

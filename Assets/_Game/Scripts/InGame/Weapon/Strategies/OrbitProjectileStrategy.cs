@@ -1,19 +1,19 @@
 using UnityEngine;
 using System.Collections.Generic;
 using InGame.Weapon.Base;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.ObjectPool;
 using InGame.Weapon.Controllers;
 
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 플레이어 주위를 공전하는 투사체(Orbit Ball)를 관리하는 전략입니다.
-    /// <br/> 무기 레벨(투사체 개수)에 따라 실시간으로 공 개수를 동기화합니다.
+    /// [설명]: 플레이어 주위를 공전하는 투사체(Orbit Ball)를 관리하는 전략입니다.
+    /// 무기 레벨(투사체 개수)에 따라 실시간으로 공 개수를 동기화합니다.
     /// </summary>
     public class OrbitProjectileStrategy : IWeaponStrategy
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
@@ -24,7 +24,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {
@@ -72,7 +72,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 상세 로직 (Logic)
+        #region 상세 로직
 
         private void SyncBallCount(WeaponRuntimeStats stats, Transform owner)
         {

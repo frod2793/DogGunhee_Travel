@@ -7,12 +7,12 @@ using InGame.Weapon.Logic;
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 화면 내에서 계속 튕기며 적을 공격하는 '진주(Pearl)' 무기를 제어하는 컨트롤러입니다.
-    /// <br/> 투사체는 화면에 단 하나만 유지되며(Single Instance), 지속적으로 상태를 갱신합니다.
+    /// [설명]: 화면 내에서 계속 튕기며 적을 공격하는 '진주(Pearl)' 무기를 제어하는 컨트롤러입니다.
+    /// 투사체는 화면에 단 하나만 유지되며(Single Instance), 지속적으로 상태를 갱신합니다.
     /// </summary>
     public class JinjooWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 변수 및 상태 (Internal State)
+        #region 내부 변수 및 상태
 
         // 프리팹 및 뷰 데이터
         private PearlProjectile m_pearlPrefab;
@@ -27,10 +27,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 초기화 및 해제 (Initialization)
+        #region 초기화 및 해제
 
         /// <summary>
-        /// 무기를 초기화하고 진주 투사체 및 전용 오브젝트 풀을 설정합니다.
+        /// [설명]: 무기를 초기화하고 진주 투사체 및 전용 오브젝트 풀을 설정합니다.
         /// </summary>
         public override void Init(WeaponDataSO data, Transform ownerTransform,
             WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
@@ -87,7 +87,7 @@ namespace InGame.Weapon.Controllers
 
         /// <summary>
         /// 진주 투사체 전용 오브젝트 풀을 등록합니다.
-        /// <br/> 단일 개체만 사용하므로 MaxSize를 1로 설정합니다.
+        /// 단일 개체만 사용하므로 MaxSize를 1로 설정합니다.
         /// </summary>
         private void RegisterPool()
         {
@@ -103,9 +103,6 @@ namespace InGame.Weapon.Controllers
             );
         }
 
-        /// <summary>
-        /// 무기 해제 시 호출됩니다.
-        /// </summary>
         public override void Dispose()
         {
             // 전역 풀 매니저를 사용하므로 여기서 개별 풀을 파괴하지 않습니다.
@@ -114,10 +111,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 업데이트 루프 (Update Loop)
+        #region 업데이트 루프
 
         /// <summary>
-        /// 매 프레임 호출되어 로직 상태를 갱신하고 활성 진주의 업데이트를 수행합니다.
+        /// [설명]: 매 프레임 호출되어 로직 상태를 갱신하고 활성 진주의 업데이트를 수행합니다.
         /// </summary>
         public override void OnUpdate(float deltaTime)
         {
@@ -143,10 +140,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 공격 실행 (Attack Execution)
+        #region 공격 실행
 
         /// <summary>
-        /// 공격 명령을 수행합니다. 진주는 화면에 하나만 유지되므로 중복 생성을 막습니다.
+        /// [설명]: 공격 명령을 수행합니다. 진주는 화면에 하나만 유지되므로 중복 생성을 막습니다.
         /// </summary>
         protected override void ExecuteAttack(Vector3 direction)
         {
@@ -189,7 +186,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 오브젝트 풀 델리게이트 (Pool Callbacks)
+        #region 오브젝트 풀 델리게이트
 
         private PearlProjectile CreatePearlProjectile()
         {

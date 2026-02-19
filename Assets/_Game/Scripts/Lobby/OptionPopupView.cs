@@ -9,12 +9,12 @@ using UnityEngine.Serialization;
 namespace Lobby
 {
     /// <summary>
-    /// 게임 설정 옵션 팝업의 시각적 요소와 사용자 입력을 담당하는 View 클래스입니다.
-    /// <br/>MVVM 패턴을 사용하여 실제 비즈니스 로직(OptionPopupViewModel)과 데이터를 동기화합니다.
+    /// [설명]: 게임 설정 옵션 팝업의 시각적 요소와 사용자 입력을 담당하는 View 클래스입니다.
+    /// MVVM 패턴을 사용하여 실제 비즈니스 로직(OptionPopupViewModel)과 데이터를 동기화합니다.
     /// </summary>
     public class OptionPopupView : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [Header("<color=green>참조 데이터 및 프리팹</color>")]
         [SerializeField, Tooltip("게임 설정 저장 및 관리 ScriptableObject"), FormerlySerializedAs("settingsData")]
@@ -44,7 +44,7 @@ namespace Lobby
 
         #endregion
 
-        #region 2. 내부 변수 및 상태
+        #region 내부 변수 및 상태
 
         private OptionPopupViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
@@ -52,13 +52,11 @@ namespace Lobby
 
         #endregion
 
-        #region 3. 유니티 생명주기
+        #region 유니티 생명주기
 
         private void Awake()
         {
-            InitializeViewModel();
             InitializeComponents();
-            BindViewModel();
         }
 
         private void OnDestroy()
@@ -69,19 +67,29 @@ namespace Lobby
 
         #endregion
 
-        #region 4. 초기화 및 바인딩 로직
+        #region 초기화 및 바인딩 로직
 
         /// <summary>
-        /// 옵션 조절을 위한 뷰모델을 생성하고 사운드 매니저와 연동합니다.
+        /// [설명]: 옵션 조절을 위한 뷰모델을 생성하고 사운드 매니저와 연동합니다.
         /// </summary>
-        private void InitializeViewModel()
+        /// <param name="soundManager">의존성 주입된 사운드 매니저</param>
+        public void Initialize(InGame.Services.ISoundManager soundManager)
         {
-            // SoundManager 싱글톤을 주입하여 결합도를 낮춤
-            m_viewModel = new OptionPopupViewModel(m_settingsData, SoundManager.Instance);
+            if (soundManager == null)
+            {
+                LogManager.LogError("[OptionPopupView] SoundManager가 주입되지 않았습니다.");
+                return;
+            }
+
+            // SoundManager 주입을 통해 ViewModel 초기화
+            m_viewModel = new OptionPopupViewModel(m_settingsData, soundManager);
+            
+            // ViewModel 바인딩
+            BindViewModel();
         }
 
         /// <summary>
-        /// 필요한 컴포넌트를 캐싱하고 UI 컨트롤의 기본값을 설정합니다.
+        /// [설명]: 필요한 컴포넌트를 캐싱하고 UI 컨트롤의 기본값을 설정합니다.
         /// </summary>
         private void InitializeComponents()
         {
@@ -97,11 +105,14 @@ namespace Lobby
         }
 
         /// <summary>
-        /// ViewModel과 UI 요소 간의 양방향 데이터 동기화를 수행합니다.
+        /// [설명]: ViewModel과 UI 요소 간의 양방향 데이터 동기화를 수행합니다.
         /// </summary>
         private void BindViewModel()
         {
-            if (m_viewModel == null) return;
+            if (m_viewModel == null)
+            {
+                return;
+            }
 
             #region ViewModel -> View (상태 동기화)
 
@@ -161,7 +172,7 @@ namespace Lobby
                 .Subscribe(_ =>
                 {
                     m_viewModel.SaveSettings();
-                    Destroy(gameObject);
+                    InGame.UI.PopupManager.Instance.CloseTopPopup();
                 })
                 .AddTo(m_disposables);
 
@@ -175,10 +186,10 @@ namespace Lobby
 
         #endregion
 
-        #region 5. UI 기능 메서드
+        #region UI 기능 메서드
 
         /// <summary>
-        /// 인게임에서 사용되는 조이스틱 크기 및 감도 설정 창을 화면에 생성합니다.
+        /// [설명]: 인게임에서 사용되는 조이스틱 크기 및 감도 설정 창을 화면에 생성합니다.
         /// </summary>
         private void OpenJoystickSettings()
         {

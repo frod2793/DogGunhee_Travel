@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using InGame.Mob.MobBase;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Weapon.Base;
 
 namespace InGame.Weapon.Controllers
 {
     /// <summary>
-    /// 플레이어의 이동 경로를 따라 독가스(Smell) 궤적을 남기는 무기 컨트롤러입니다.
-    /// <br/> 원형 버퍼(Circular Buffer)를 사용하여 일정 시간 동안 유지되는 궤적 포인트와 충돌체를 관리합니다.
+    /// [설명]: 플레이어의 이동 경로를 따라 독가스(Smell) 궤적을 남기는 무기 컨트롤러입니다.
+    /// 원형 버퍼(Circular Buffer)를 사용하여 일정 시간 동안 유지되는 궤적 포인트와 충돌체를 관리합니다.
     /// </summary>
     public class SmellWeaponController : WeaponControllerBase
     {
-        #region 1. 내부 자료구조 (Data Structures)
+        #region 내부 자료구조
 
         /// <summary>
         /// 궤적의 한 지점을 나타내는 구조체입니다.
@@ -28,7 +28,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 2. 내부 변수 및 컴포넌트 (State & Components)
+        #region 내부 변수 및 컴포넌트
 
         // 설정 변수 (Init 시 설정됨)
         private int m_maxTrailPoints;
@@ -62,10 +62,10 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 3. 초기화 및 해제 (Init & Dispose)
+        #region 초기화 및 해제
 
         /// <summary>
-        /// 무기를 초기화하고 궤적 관리 시스템을 설정합니다.
+        /// [설명]: 무기를 초기화하고 궤적 관리 시스템을 설정합니다.
         /// </summary>
         public override void Init(WeaponDataSO data, Transform ownerTransform,
             InGame.ObjectPool.WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
@@ -178,7 +178,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 4. 업데이트 루프 (Update Loop)
+        #region 업데이트 루프
 
         public override void OnUpdate(float deltaTime)
         {
@@ -251,7 +251,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 5. 공격 및 데미지 로직 (Attack & Damage)
+        #region 공격 및 데미지 로직
 
         protected override void ExecuteAttack(Vector3 direction)
         {
@@ -261,7 +261,7 @@ namespace InGame.Weapon.Controllers
 
         /// <summary>
         /// 콜라이더 트리거와 충돌한 적에게 데미지를 입힙니다.
-        /// <br/> SmellWeaponView의 OnTriggerStay2D 이벤트에서 호출됩니다.
+        /// SmellWeaponView의 OnTriggerStay2D 이벤트에서 호출됩니다.
         /// </summary>
         /// <param name="other">충돌한 객체의 Collider2D</param>
         public void ProcessTriggerDamage(Collider2D other)
@@ -287,7 +287,7 @@ namespace InGame.Weapon.Controllers
 
         #endregion
 
-        #region 6. 비주얼 및 물리 유틸리티 (Visuals & Physics)
+        #region 비주얼 및 물리 유틸리티
 
         /// <summary>
         /// 지정된 위치에 독구름 파티클을 랜덤하게 방출합니다.

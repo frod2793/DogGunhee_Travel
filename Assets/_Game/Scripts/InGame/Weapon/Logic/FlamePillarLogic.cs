@@ -5,18 +5,18 @@ using UnityEngine;
 namespace InGame.Weapon.Logic
 {
     /// <summary>
-    /// 불기둥(Flame Pillar)의 비즈니스 로직(데미지 계산, 중복 피격 관리)을 담당하는 클래스입니다.
+    /// [설명]: 불기둥(Flame Pillar)의 비즈니스 로직(데미지 계산, 중복 피격 관리)을 담당하는 클래스입니다.
     /// </summary>
     public class FlamePillarLogic
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
         
         // 피격된 몹 관리
         private readonly HashSet<MobBase> m_hitMobs = new HashSet<MobBase>();
         
         #endregion
 
-        #region 2. 프로퍼티 (Properties)
+        #region 프로퍼티
         
         public float DirectDamage { get; private set; }
         public float DotDamage { get; private set; }
@@ -26,7 +26,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 3. 생성자 및 초기화 (Constructor & Init)
+        #region 생성자 및 초기화
 
         public FlamePillarLogic(float directDamage, float dotDamage, float duration, int tickCount, Color hitFlashColor)
         {
@@ -47,7 +47,7 @@ namespace InGame.Weapon.Logic
 
         #endregion
 
-        #region 4. 로직 메서드 (Logic Methods)
+        #region 로직 메서드
 
         /// <summary>
         /// 특정 몹이 이미 피격되었는지 확인하고, 아직이라면 등록합니다.

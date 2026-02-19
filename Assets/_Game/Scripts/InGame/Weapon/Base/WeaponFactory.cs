@@ -1,36 +1,34 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using InGame.ObjectPool; // WeaponPoolManager 참조
-using InGame.Weapon.Base; // IWeaponController 참조
-using InGame.Weapon.Controllers; // 구체적인 무기 컨트롤러 참조 (BoneWeaponController 등)
+using InGame.ObjectPool; 
+using InGame.Weapon.Base; 
+using InGame.Weapon.Controllers; 
 
-// 전략 패턴 및 코어 네임스페이스 (코드에 포함된 참조 유지)
+// 전략 패턴 및 코어 네임스페이스
 using InGame.Weapon.Core;
 using InGame.Weapon.Strategies;
 
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 무기 컨트롤러(IWeaponController)를 생성하는 정적 팩토리 클래스입니다.
-    /// <br/> SkillCode(String)를 키(Key)로 사용하여 적절한 무기 인스턴스를 반환합니다.
+    /// [설명]: 무기 컨트롤러(IWeaponController)를 생성하는 정적 팩토리 클래스입니다.
+    /// SkillCode(String)를 키(Key)로 사용하여 적절한 무기 인스턴스를 반환하며, 런타임 초기화 시 기본 무기들을 등록합니다.
     /// </summary>
     public static class WeaponFactory
     {
-        #region 1. 내부 상태 (Internal State)
+        #region 내부 상태
 
-        /// <summary>
-        /// 스킬 코드와 생성 함수(Delegate)를 매핑하는 딕셔너리
-        /// </summary>
+        /// <summary> 스킬 코드와 생성 함수(Delegate)를 매핑하는 딕셔너리 </summary>
         private static readonly Dictionary<string, Func<IWeaponController>> s_factoryMap 
             = new Dictionary<string, Func<IWeaponController>>();
 
         #endregion
 
-        #region 2. 초기화 및 등록 (Initialization & Registration)
+        #region 초기화 및 등록
 
         /// <summary>
-        /// 게임 구동 시(씬 로드 전) 기본 무기들을 팩토리에 등록합니다.
+        /// [설명]: 게임 구동 시(씬 로드 전) 기본 무기들을 팩토리에 등록합니다.
         /// </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterDefaultWeapons()
@@ -61,7 +59,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 새로운 무기 컨트롤러 생성 로직을 동적으로 등록합니다.
+        /// [설명]: 새로운 무기 컨트롤러 생성 로직을 동적으로 등록합니다.
         /// </summary>
         /// <param name="skillCode">고유 스킬 코드 (XML/Data Key)</param>
         /// <param name="creator">생성 델리게이트 (람다)</param>
@@ -88,7 +86,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 등록된 모든 팩토리 정보를 초기화합니다. (테스트 또는 리셋 용도)
+        /// [설명]: 등록된 모든 팩토리 정보를 초기화합니다. (테스트 또는 리셋 용도)
         /// </summary>
         public static void ClearRegistrations()
         {
@@ -97,10 +95,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 3. 생성 로직 (Creation Logic)
+        #region 생성 로직
 
         /// <summary>
-        /// SkillCode를 기반으로 무기 컨트롤러를 생성하고 초기화(Init)하여 반환합니다.
+        /// [설명]: SkillCode를 기반으로 무기 컨트롤러를 생성하고 초기화(Init)하여 반환합니다.
         /// </summary>
         /// <param name="data">무기 설정 데이터 (ScriptableObject)</param>
         /// <param name="ownerTransform">무기 소유자(플레이어) Transform</param>
@@ -153,7 +151,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 해당 스킬 코드의 무기가 팩토리에 등록되어 있는지 확인합니다.
+        /// [설명]: 해당 스킬 코드의 무기가 팩토리에 등록되어 있는지 확인합니다.
         /// </summary>
         public static bool IsRegistered(string skillCode)
         {

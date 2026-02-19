@@ -1,21 +1,21 @@
 using UnityEngine;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
-using InGame.Manager;
+using InGame.Managers;
 
 namespace InGame.Weapon
 {
     /// <summary>
-    /// 향기로운 발냄새(Smell) 무기의 독구름 흔적을 생성하고 관리하는 컴포넌트입니다.
-    /// <br/> 원형 버퍼(Circular Buffer)를 사용하여 일정 시간 동안 유지되는 궤적 포인트와 충돌체를 관리합니다.
+    /// [설명]: 향기로운 발냄새(Smell) 무기의 독구름 흔적을 생성하고 관리하는 컴포넌트입니다.
+    /// 원형 버퍼(Circular Buffer)를 사용하여 일정 시간 동안 유지되는 궤적 포인트와 충돌체를 관리합니다.
     /// </summary>
     [RequireComponent(typeof(ParticleSystem), typeof(EdgeCollider2D))]
     public class PoisonTrailEmitter : MonoBehaviour
     {
-        #region 1. 내부 자료구조 (Data Structures)
+        #region 내부 자료구조
 
         /// <summary>
-        /// 궤적의 한 지점을 나타내는 구조체입니다.
+        /// [설명]: 궤적의 한 지점을 나타내는 구조체입니다.
         /// </summary>
         private struct TrailPoint
         {
@@ -25,9 +25,9 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 2. 설정 데이터 (Inspector)
+        #region 설정 데이터
 
-        [Header("1. 기본 흔적 설정")]
+        [Header("기본 흔적 설정")]
         [Tooltip("최대 유지 가능한 궤적 포인트 개수")]
         [SerializeField] private int m_maxTrailPoints = 50;
 
@@ -40,7 +40,7 @@ namespace InGame.Weapon
         [Tooltip("흔적의 지속 시간 (초)")]
         [SerializeField] private float m_trailLifetime = 5f;
 
-        [Header("2. 시각 효과(파티클) 설정")]
+        [Header("시각 효과(파티클) 설정")]
         [Tooltip("포인트당 방출할 파티클 개수")]
         [SerializeField] [Range(1, 10)] private int m_cloudDensity = 3; 
 
@@ -52,7 +52,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 3. 내부 상태 및 변수 (Internal State)
+        #region 내부 상태 및 변수
 
         // 컴포넌트 및 트랜스폼 참조
         private ParticleSystem m_particleSystem;
@@ -78,7 +78,7 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 4. Unity 라이프사이클 (Lifecycle)
+        #region Unity 라이프사이클
 
         private void Awake()
         {
@@ -170,10 +170,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 5. 초기화 및 제어 (Init & Control)
+        #region 초기화 및 제어
 
         /// <summary>
-        /// 무기 정보를 기반으로 이미터의 초기 스탯을 설정합니다.
+        /// [설명]: 무기 정보를 기반으로 이미터의 초기 스탯을 설정합니다.
         /// </summary>
         public void Init(float damage, float stunTime, float coolTime)
         {
@@ -183,7 +183,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 레벨업 등 스탯이 변경되었을 때 런타임 수치를 갱신합니다.
+        /// [설명]: 레벨업 등 스탯이 변경되었을 때 런타임 수치를 갱신합니다.
         /// </summary>
         public void UpdateStats(float damage, float stunTime, float coolTime)
         {
@@ -193,7 +193,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 궤적 데이터 구조 및 초기 물리 설정을 수행합니다.
+        /// [설명]: 궤적 데이터 구조 및 초기 물리 설정을 수행합니다.
         /// </summary>
         private void InitTrailData()
         {
@@ -214,7 +214,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 현재 관리 중인 모든 궤적 데이터와 상태를 리셋합니다.
+        /// [설명]: 현재 관리 중인 모든 궤적 데이터와 상태를 리셋합니다.
         /// </summary>
         private void ResetTrailState()
         {
@@ -237,10 +237,10 @@ namespace InGame.Weapon
 
         #endregion
 
-        #region 6. 연출 및 물리 로직 (Visuals & Physics)
+        #region 연출 및 물리 로직
 
         /// <summary>
-        /// 특정 위치에 독구름 파티클을 뭉쳐서 방출합니다.
+        /// [설명]: 특정 위치에 독구름 파티클을 뭉쳐서 방출합니다.
         /// </summary>
         private void EmitPoisonCloud(Vector3 centerPos)
         {
@@ -261,7 +261,7 @@ namespace InGame.Weapon
         }
 
         /// <summary>
-        /// 저장된 궤적 포인트들을 이어 EdgeCollider2D의 정점을 실시간으로 갱신합니다.
+        /// [설명]: 저장된 궤적 포인트들을 이어 EdgeCollider2D의 정점을 실시간으로 갱신합니다.
         /// </summary>
         /// <param name="currentPlayerPos">플레이어의 현재 위치 (궤적의 끝점)</param>
         private void UpdateColliderShape(Vector3 currentPlayerPos)

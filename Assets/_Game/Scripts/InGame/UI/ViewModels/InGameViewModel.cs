@@ -5,62 +5,101 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
-using InGame.Manager;
+using InGame.Managers;
 using InGame.Player.Player_Base;
 using InGame.Lobby;
 
 namespace InGame.UI.ViewModels
 {
     /// <summary>
-    /// 인게임 UI 전반의 상태(HUD, 팝업, 웨이브 정보)를 관리하는 ViewModel입니다.
-    /// <br/> GameManager(데이터 원본)와 View(UI 표현) 사이의 중개자 역할을 수행합니다.
+    /// [설명]: 인게임 UI 전반(HUD, 경험치, 코인, 웨이브 정보, 스킬 선택 등)의 상태와 비즈니스 로직을 총괄하는 핵심 ViewModel입니다.
+    /// GameManager를 비롯한 하위 도메인 시스템으로부터 데이터를 공급받아 가공한 뒤, ReadOnlyReactiveProperty를 통해 View에 최신 상태를 투영합니다.
     /// </summary>
     public class InGameViewModel : IDisposable
     {
-        #region 1. 프로퍼티 및 상태 (Properties & Fields)
+        #region 공개 프로퍼티 (View 바인딩용)
 
-        // 1. 게임 진행 정보
+        #region 게임 진행 정보
+
+        /// <summary> [설명]: 현재 진행 중인 웨이브 번호 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<int> CurrentWave => m_currentWave;
+
+        /// <summary> [설명]: 현재 스테이지의 고유 ID (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<int> CurrentStageId => m_currentStageId;
+
+        /// <summary> [설명]: 이번 플레이 세션에서 획득한 실시간 코인 수 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<int> CoinCount => m_coinCount;
+
+        /// <summary> [설명]: 이번 플레이 세션에서 처치한 실시간 몬스터 수 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<int> KillCount => m_killCount;
 
-        // 2. 플레이어 상태
+        #endregion
+
+        #region 플레이어 상태
+
+        /// <summary> [설명]: 플레이어의 현재 레벨 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<int> PlayerLevel => m_playerLevel;
+
+        /// <summary> [설명]: 현재 레벨 내의 경험치 충전 비율 (0~1, 읽기 전용) </summary>
         public ReadOnlyReactiveProperty<float> ExpProgress => m_expProgress;
+
+        /// <summary> [설명]: 현재 장착 중인 무기들의 아이콘 목록 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<IReadOnlyList<Sprite>> WeaponSprites => m_weaponSprites;
+
+        /// <summary> [설명]: 현재 장착 중인 장신구들의 아이콘 목록 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<IReadOnlyList<Sprite>> AccessorySprites => m_accessorySprites;
 
-        // 3. 이벤트 스트림
+        #endregion
+
+        #region 이벤트 스트림
+
+        /// <summary> [설명]: 플레이어 레벨업 발생 시 수치를 전달하는 이벤트 스트림 </summary>
         public Observable<int> OnLevelUp => m_onLevelUpSubject;
+
+        /// <summary> [설명]: 새로운 웨이브가 물리적으로 시작되었을 때 발생하는 이벤트 스트림 </summary>
         public Observable<WaveData> OnWaveStarted => m_onWaveStartedSubject;
+
+        /// <summary> [설명]: 현재 웨이브의 모든 조건을 달성하고 완료되었을 때 발생하는 이벤트 스트림 </summary>
         public Observable<WaveData> OnWaveCompleted => m_onWaveCompletedSubject;
 
-        // 4. 스킬 선택 관련
+        #endregion
+
+        #region 스킬 선택 인터페이스
+
+        /// <summary> [설명]: 레벨업 시 무작위로 추첨된 선택 가능한 스킬 리스트 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<IReadOnlyList<SkillData>> SkillChoices => m_skillChoices;
+
+        /// <summary> [설명]: 스킬 선택 팝업의 남은 제한 시간 (초 단위, 읽기 전용) </summary>
         public ReadOnlyReactiveProperty<float> SelectionTimer => m_selectionTimer;
+
+        /// <summary> [설명]: 현재 스킬 선택 화면이 활성화되어야 하는지 여부 (읽기 전용) </summary>
         public ReadOnlyReactiveProperty<bool> IsSkillSelectionActive => m_isSkillSelectionActive;
+
+        /// <summary> [설명]: 제한 시간 종료 등으로 인해 시스템이 스킬을 자동 선택했을 때 발생하는 이벤트 스트림 </summary>
         public Observable<SkillData> OnAutoSelectSkill => m_onAutoSelectSkillSubject;
 
-        // 5. 하위 ViewModel
+        #endregion
+
+        #region 하위 뷰모델 참조
+
+        /// <summary> [설명]: 확인 팝업 제어를 위한 전용 뷰모델 인스턴스 </summary>
         public ConfirmPopupViewModel ConfirmPopupViewModel { get; } = new ConfirmPopupViewModel();
 
+        #endregion
 
-        // --- Private Mutable Fields (내부 상태 관리용) ---
+        #endregion
 
-        // 게임 데이터
+        #region 내부 상태 필드
+
+        // 리액티브 상태 변수
         private readonly ReactiveProperty<int> m_currentWave = new(0);
         private readonly ReactiveProperty<int> m_currentStageId = new(0);
         private readonly ReactiveProperty<int> m_coinCount = new(0);
         private readonly ReactiveProperty<int> m_killCount = new(0);
         private readonly ReactiveProperty<int> m_playerLevel = new(1);
         private readonly ReactiveProperty<float> m_expProgress = new(0f);
-
-        // 인벤토리 아이콘
         private readonly ReactiveProperty<IReadOnlyList<Sprite>> m_weaponSprites = new(new List<Sprite>());
         private readonly ReactiveProperty<IReadOnlyList<Sprite>> m_accessorySprites = new(new List<Sprite>());
-
-        // 스킬 선택 상태
         private readonly ReactiveProperty<IReadOnlyList<SkillData>> m_skillChoices = new(new List<SkillData>());
         private readonly ReactiveProperty<float> m_selectionTimer = new(0f);
         private readonly ReactiveProperty<bool> m_isSkillSelectionActive = new(false);
@@ -71,7 +110,7 @@ namespace InGame.UI.ViewModels
         private readonly Subject<WaveData> m_onWaveStartedSubject = new();
         private readonly Subject<WaveData> m_onWaveCompletedSubject = new();
 
-        // 시스템 및 리소스
+        // 관리 및 데이터 리소스
         private readonly SkillDatabase m_skillDatabase;
         private readonly CompositeDisposable m_disposables = new();
         private CancellationTokenSource m_timerCts;
@@ -79,8 +118,11 @@ namespace InGame.UI.ViewModels
 
         #endregion
 
-        #region 2. 초기화 및 생명주기 (Init & Lifecycle)
+        #region 초기화 및 생명주기
 
+        /// <summary>
+        /// [설명]: 외부 데이터베이스를 주입받아 초기 구독 환경을 구성하고 업데이트 루프를 가동합니다.
+        /// </summary>
         public InGameViewModel(SkillDatabase skillDatabase)
         {
             m_skillDatabase = skillDatabase;
@@ -89,43 +131,54 @@ namespace InGame.UI.ViewModels
             StartUpdateLoop();
         }
 
+        /// <summary>
+        /// [설명]: 시스템 외부 이벤트(GameManager 등)와의 연결 고리를 설정하고 초기 데이터를 로드합니다.
+        /// </summary>
         private void InitializeSubscriptions()
         {
-            // 1. 플레이어 변경 감지 (재시작, 캐릭터 교체 등)
+            // 플레이어 실시간 교체 대응
             GameManager.OnPlayerChanged += HandlePlayerChanged;
 
-            // 2. 초기 데이터 로드
+            // 현시점 기준 모든 데이터 즉시 동기화
             RefreshAllData();
 
-            // 3. 웨이브 이벤트 구독 시도
+            // 웨이브 매니저 이벤트 기동 시도
             SubscribeWaveEvents();
         }
 
+        /// <summary>
+        /// [설명]: 리액티브 속성이 아닌 일반 멤버 변수값들의 변화를 감지하기 위해 폴링 루프를 시작합니다.
+        /// </summary>
         private void StartUpdateLoop()
         {
-            // GameManager의 데이터(코인, 킬 수 등)는 ReactiveProperty가 아니므로 
-            // 일정 간격(약 50fps)으로 폴링하여 ViewModel 상태를 동기화합니다.
+            // 주기적으로 GameManager 데이터를 확인하여 ViewModel에 반영
             Observable.Interval(TimeSpan.FromSeconds(0.02))
                 .Subscribe(_ => PollGameData())
                 .AddTo(m_disposables);
         }
 
+        /// <summary>
+        /// [설명]: ViewModel 소멸 시 모든 이벤트 핸들러 해제, 비동기 작업 중단, 리액티브 자원 반납을 일괄 처리합니다.
+        /// </summary>
         public void Dispose()
         {
-            // 1. C# 네이티브 이벤트 해제
+            // 1. 순수 C# 이벤트 정적 해제
             GameManager.OnPlayerChanged -= HandlePlayerChanged;
             PlayerBase.OnExpChanged -= HandleExpChanged;
             PlayerBase.OnLevelUp -= HandleLevelUp;
             UnsubscribeWaveEvents();
 
-            // 2. 비동기 작업 취소
-            m_timerCts?.Cancel();
-            m_timerCts?.Dispose();
+            // 2. 비동기 타이머 로직 강제 중단
+            if (m_timerCts != null)
+            {
+                m_timerCts.Cancel();
+                m_timerCts.Dispose();
+            }
 
-            // 3. R3 리소스 해제
+            // 3. R3 구독 목록 파기
             m_disposables.Dispose();
-            
-            // 4. ReactiveProperty 해제
+
+            // 4. 모든 상태 프로퍼티 메모리 해제
             m_currentWave.Dispose();
             m_currentStageId.Dispose();
             m_coinCount.Dispose();
@@ -134,51 +187,55 @@ namespace InGame.UI.ViewModels
             m_expProgress.Dispose();
             m_weaponSprites.Dispose();
             m_accessorySprites.Dispose();
-            
             m_skillChoices.Dispose();
             m_selectionTimer.Dispose();
             m_isSkillSelectionActive.Dispose();
-            
-            // 5. Subject 해제
+
+            // 5. 모든 이벤트 스트림 파기
             m_onLevelUpSubject.Dispose();
             m_onAutoSelectSkillSubject.Dispose();
             m_onWaveStartedSubject.Dispose();
             m_onWaveCompletedSubject.Dispose();
 
-            // 6. 하위 VM 정리
+            // 6. 독립 뷰모델 자원 해제
             ConfirmPopupViewModel.Dispose();
         }
 
         #endregion
 
-        #region 3. 게임 데이터 동기화 (Polling & Events)
+        #region 데이터 폴링 및 상세 갱신
 
         /// <summary>
-        /// GameManager에서 최신 게임 상태를 가져와 ReactiveProperty에 반영합니다.
+        /// [설명]: GameManager의 실시간 수치(코인, 킬, 웨이브)를 확인하여 리액티브 속성을 갱신합니다.
         /// </summary>
         private void PollGameData()
         {
             var gm = GameManager.Instance;
-            if (gm == null) return;
+            if (gm == null)
+            {
+                return;
+            }
 
-            // 값 변경 시에만 알림이 가도록 ReactiveProperty가 내부적으로 처리함
             m_currentWave.Value = gm.GetCurrentWave();
             m_currentStageId.Value = gm.GetCurrentStageId();
             m_coinCount.Value = gm.GetCoinCount();
             m_killCount.Value = gm.GetMobKillCount();
 
-            // 웨이브 시스템이 늦게 초기화될 경우를 대비한 지연 구독
+            // 웨이브 관리 시스템 로드 시점 조율
             if (!m_isWaveSubscribed)
             {
                 SubscribeWaveEvents();
             }
         }
 
+        /// <summary>
+        /// [설명]: 플레이어의 현재 레벨, 경험치, 장착 아이콘 등 모든 가시 데이터를 강제 새로고침합니다.
+        /// </summary>
         private void RefreshAllData()
         {
             PollGameData();
             UpdateIconLists();
-            
+
             var gm = GameManager.Instance;
             if (gm != null)
             {
@@ -187,31 +244,44 @@ namespace InGame.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// [설명]: 플레이어 인벤토리의 무기와 장신구 리스트를 순회하여 UI용 썸네일 스프라이트 목록을 생성합니다.
+        /// </summary>
         public void UpdateIconLists()
         {
             var gm = GameManager.Instance;
-            if (gm == null || gm.SpawnedPlayer == null) return;
-
-            // 1. 무기 아이콘 갱신
-            var weapons = new List<Sprite>();
-            foreach (var w in gm.SpawnedPlayer.Weapons)
+            if (gm == null || gm.SpawnedPlayer == null)
             {
-                if (w != null && w.Thumbnail != null)
+                return;
+            }
+
+            // 1. 무기 계열 추출
+            var weapons = new List<Sprite>();
+            if (gm.SpawnedPlayer.Weapons != null)
+            {
+                foreach (var w in gm.SpawnedPlayer.Weapons)
                 {
-                    weapons.Add(w.Thumbnail);
+                    if (w != null && w.Thumbnail != null)
+                    {
+                        weapons.Add(w.Thumbnail);
+                    }
                 }
             }
             m_weaponSprites.Value = weapons;
 
-            // 2. 장신구(패시브) 아이콘 갱신
-            if (InventoryDataManager.Instance != null)
+            // 2. 패시브/장신구 계열 추출
+            if (InventoryManager.Instance != null)
             {
                 var accessories = new List<Sprite>();
-                foreach (var skill in InventoryDataManager.Instance.InGameAcquiredSkills)
+                var acquired = InventoryManager.Instance.InGameAcquiredSkills;
+                if (acquired != null)
                 {
-                    if (skill.skillType == SkillType.Passive && skill.skillIcon != null)
+                    foreach (var skill in acquired)
                     {
-                        accessories.Add(skill.skillIcon);
+                        if (skill.skillType == SkillType.Passive && skill.skillIcon != null)
+                        {
+                            accessories.Add(skill.skillIcon);
+                        }
                     }
                 }
                 m_accessorySprites.Value = accessories;
@@ -220,8 +290,11 @@ namespace InGame.UI.ViewModels
 
         #endregion
 
-        #region 4. 이벤트 핸들러 (Event Handlers)
+        #region 이벤트 연동 핸들러
 
+        /// <summary>
+        /// [설명]: 웨이브 스폰 시스템의 물리적 시작/종료 이벤트를 ViewModel 서브젝트와 연결합니다.
+        /// </summary>
         private void SubscribeWaveEvents()
         {
             var gm = GameManager.Instance;
@@ -233,6 +306,9 @@ namespace InGame.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// [설명]: 시스템 연결 파기 시 웨이브 이벤트 구독을 명시적으로 취소합니다.
+        /// </summary>
         private void UnsubscribeWaveEvents()
         {
             var gm = GameManager.Instance;
@@ -244,31 +320,40 @@ namespace InGame.UI.ViewModels
             m_isWaveSubscribed = false;
         }
 
+        /// <summary> [설명]: 웨이브 시작 이벤트 핸들러 </summary>
         private void HandleWaveStartedEvent(WaveData wave) => m_onWaveStartedSubject.OnNext(wave);
+
+        /// <summary> [설명]: 웨이브 완료 이벤트 핸들러 </summary>
         private void HandleWaveCompletedEvent(WaveData wave) => m_onWaveCompletedSubject.OnNext(wave);
 
-        // --- 플레이어 이벤트 ---
+        /// <summary>
+        /// [설명]: 게임 도중 플레이어 객체가 재성공 등으로 교체될 때 새로운 객체로부터 경험치/레벨업 이벤트를 재등록합니다.
+        /// </summary>
         private void HandlePlayerChanged(PlayerBase player)
         {
-            if (player == null) return;
-
-            // 기존 이벤트 핸들러 제거 (중복 구독 방지)
+            // 기존 전역 정적 이벤트 핸들러 정리
             PlayerBase.OnExpChanged -= HandleExpChanged;
             PlayerBase.OnLevelUp -= HandleLevelUp;
 
-            // 새 핸들러 등록
+            if (player == null)
+            {
+                return;
+            }
+
+            // 새로운 인스턴스 전용 핸들러 등록
             PlayerBase.OnExpChanged += HandleExpChanged;
             PlayerBase.OnLevelUp += HandleLevelUp;
-            
-            // 아이콘 등 데이터 즉시 갱신
+
             RefreshAllData();
         }
 
+        /// <summary> [설명]: 경험치 변경 이벤트 핸들러 </summary>
         private void HandleExpChanged(float currentExp, float maxExp)
         {
             m_expProgress.Value = (maxExp > 0) ? currentExp / maxExp : 0f;
         }
 
+        /// <summary> [설명]: 레벨업 이벤트 핸들러 </summary>
         private void HandleLevelUp(float level)
         {
             int intLevel = (int)level;
@@ -278,42 +363,64 @@ namespace InGame.UI.ViewModels
 
         #endregion
 
-        #region 5. 스킬 선택 로직 (Skill Selection)
+        #region 스킬 선택 핵심 로직
 
+        /// <summary>
+        /// [설명]: 스킬 선택 시퀀스를 시작합니다. 후보군을 추첨하고 시간 제한 타이머를 가동합니다.
+        /// </summary>
         public void StartSkillSelection()
         {
-            if (m_skillDatabase == null) return;
+            if (m_skillDatabase == null)
+            {
+                return;
+            }
 
             GenerateSkillChoices();
             m_isSkillSelectionActive.Value = true;
 
-            // 6초 카운트다운 시작
+            // 기본 6초 카운트다운 가시화 루틴 기동
             StartSelectionTimer(6.0f).Forget();
         }
 
+        /// <summary>
+        /// [설명]: 스킬 선택이 완료(혹은 취소)되었을 때 모든 타이머 루틴을 중단하고 선택 패널을 비활성화합니다.
+        /// </summary>
         public void EndSkillSelection()
         {
-            m_timerCts?.Cancel();
+            if (m_timerCts != null)
+            {
+                m_timerCts.Cancel();
+            }
+            
             m_isSkillSelectionActive.Value = false;
         }
 
         /// <summary>
-        /// 현재 표시된 스킬 목록을 무작위로 다시 생성합니다. (리롤)
+        /// [설명]: 현재 제시된 선택지가 마음에 들지 않을 때 리롤을 요청하여 목록을 재구성합니다.
         /// </summary>
         public void RefreshSkillChoices()
         {
-            if (!m_isSkillSelectionActive.Value) return;
+            if (!m_isSkillSelectionActive.Value)
+            {
+                return;
+            }
+            
             GenerateSkillChoices();
         }
 
+        /// <summary>
+        /// [설명]: 무기 보유 상태 및 패시브 획득 정보를 대조하여 획득 가능한 최적의 스킬 후보 3개를 무작위 추첨합니다.
+        /// </summary>
         private void GenerateSkillChoices()
         {
             var gm = GameManager.Instance;
-            if (gm == null) return;
+            if (gm == null)
+            {
+                return;
+            }
 
-         
+            // 1. 현재 보유 중인 무기 맵 구성
             Dictionary<string, Weapon.Base.IWeaponController> ownedWeapons;
-    
             if (gm.SpawnedPlayer != null && gm.SpawnedPlayer.Weapons != null)
             {
                 ownedWeapons = gm.SpawnedPlayer.Weapons.ToDictionary(w => w.SkillCode);
@@ -322,11 +429,12 @@ namespace InGame.UI.ViewModels
             {
                 ownedWeapons = new Dictionary<string, Weapon.Base.IWeaponController>();
             }
-            
+
+            // 2. 획득한 패시브(장신구) 코드 셋 구성
             var acquiredAccessoryCodes = new HashSet<string>();
-            if (InventoryDataManager.Instance != null)
+            if (InventoryManager.Instance != null && InventoryManager.Instance.InGameAcquiredSkills != null)
             {
-                foreach (var s in InventoryDataManager.Instance.InGameAcquiredSkills)
+                foreach (var s in InventoryManager.Instance.InGameAcquiredSkills)
                 {
                     if (s.skillType == SkillType.Passive)
                     {
@@ -335,13 +443,13 @@ namespace InGame.UI.ViewModels
                 }
             }
 
-            // 2. 등장 가능한 스킬 필터링
+            // 3. 전체 DB 중 등장 가능 조건(레벨 여유 등)을 충족하는 목록 필터링
             var availableSkills = new List<SkillData>();
             foreach (var skill in m_skillDatabase.allSkills)
             {
                 if (skill.skillType == SkillType.Weapon)
                 {
-                    // 무기: 미보유 or (보유 중 & 레벨업 가능 & 미진화 상태)
+                    // 무기: 미보유 상태이거나, 보유 중이나 아직 성장 가능성이 있는 경우
                     if (ownedWeapons.TryGetValue(skill.skillCode, out var weapon))
                     {
                         if (weapon.CurrentLevel < weapon.MaxLevel ||
@@ -355,10 +463,9 @@ namespace InGame.UI.ViewModels
                         availableSkills.Add(skill);
                     }
                 }
-                else // Passive
+                else // Passive (Accessory) 계열
                 {
-                    // 패시브: 미보유 상태일 때만 등장 (중복 획득 불가 가정)
-                    // TODO: 패시브 레벨업 기획이 있다면 로직 수정 필요
+                    // 패시브: 중복 획득 불가 조건에 따라 미보유 시에만 등장
                     if (!acquiredAccessoryCodes.Contains(skill.skillCode))
                     {
                         availableSkills.Add(skill);
@@ -366,11 +473,10 @@ namespace InGame.UI.ViewModels
                 }
             }
 
-            // 3. 랜덤 선택 (최대 3개)
+            // 4. 필터링된 목록에서 최종 3개 무작위 선택
             var choices = new List<SkillData>();
             int selectCount = Mathf.Min(3, availableSkills.Count);
 
-            // 안전장치: 선택 가능한 스킬이 없으면 빈 리스트 반환
             if (selectCount == 0)
             {
                 m_skillChoices.Value = choices;
@@ -389,10 +495,18 @@ namespace InGame.UI.ViewModels
             m_skillChoices.Value = choices;
         }
 
+        /// <summary>
+        /// [설명]: 스킬 선택 시간 제한을 수동으로 계산하여 UI에 전달하고, 시간 만료 시 자동 선택 로직을 트리거합니다.
+        /// </summary>
         private async UniTaskVoid StartSelectionTimer(float duration)
         {
-            // 기존 타이머 취소
-            m_timerCts?.Cancel();
+            // 병렬 실행 방지를 위한 토큰 갱신
+            if (m_timerCts != null)
+            {
+                m_timerCts.Cancel();
+                m_timerCts.Dispose();
+            }
+            
             m_timerCts = new CancellationTokenSource();
             var token = m_timerCts.Token;
 
@@ -403,24 +517,24 @@ namespace InGame.UI.ViewModels
             {
                 while (timer > 0f)
                 {
-                    // TimeScale이 0이어도(일시정지) 타이머가 흘러가야 한다면 ignoreTimeScale: true
+                    // 일시정지 상태 차단 방지 및 Update 루틴 대기
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    
-                    // UI 표시용 타이머 갱신 (unscaledDeltaTime 사용)
+
+                    // 스케일되지 않은 실제 시간 기준으로 차감 (UI 전용)
                     timer -= Time.unscaledDeltaTime;
                     m_selectionTimer.Value = Mathf.Max(0f, timer);
                 }
 
-                // 시간 종료 시 자동 선택 처리
+                // 자연 만료 시 첫 번째 후보군 강제 자동 선택 처리
                 if (!token.IsCancellationRequested && m_skillChoices.Value.Count > 0)
                 {
-                    var randomSkill = m_skillChoices.Value[UnityEngine.Random.Range(0, m_skillChoices.Value.Count)];
-                    m_onAutoSelectSkillSubject.OnNext(randomSkill);
+                    int randomIndex = UnityEngine.Random.Range(0, m_skillChoices.Value.Count);
+                    m_onAutoSelectSkillSubject.OnNext(m_skillChoices.Value[randomIndex]);
                 }
             }
             catch (OperationCanceledException)
             {
-                // 타이머 취소됨 (스킬 선택 완료 등)
+                // 선택 완료로 인한 의도된 중단
             }
         }
 

@@ -8,57 +8,70 @@ using UnityEngine;
 namespace InGame.Player.Player_Base
 {
     /// <summary>
-    /// 플레이어의 물리적 충돌 이벤트를 처리하는 컴포넌트입니다.
-    /// <br/> 몬스터 피격(데미지 및 무적 시간 관리)과 아이템(경험치, 코인) 습득을 담당합니다.
+    /// [설명]: 플레이어의 물리적 충돌 이벤트를 감지하고 처리하는 컴포넌트입니다.
+    /// 몬스터에 의한 피격(데미지 판정 및 무적 시간 부여)과 필드 아이템(경험치 소환수, 코인 등) 습득 로직을 담당합니다.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class PlayerCollisionHandler : MonoBehaviour
     {
-        #region 1. 에디터 설정 (Inspector)
+        #region 에디터 설정
 
         [Header("충돌 설정")]
-        [SerializeField, Tooltip("피격 후 무적 시간 (초)")] 
+        [SerializeField, Tooltip("피격 후 다시 데미지를 입을 때까지의 무적 시간 (초)")]
         private float m_invincibilityDuration = 0.5f;
 
         #endregion
 
-        #region 2. 내부 상태 및 캐시
+        #region 내부 필드
 
+        /// <summary> 현재 피격 후 무적 상태인지 여부 </summary>
+        private bool m_isHit = false;
 
-        // 상태 플래그
-        private bool m_isHit = false;          // 현재 피격(무적) 상태인지
-        private bool m_isColliderActive = true; // 충돌 처리 활성화 여부
-        
-        // 비동기 제어
+        /// <summary> 시스템적으로 충돌 판정을 수행할지 여부 </summary>
+        private bool m_isColliderActive = true;
+
+        /// <summary> 무적 시간 타이머 제어를 위한 비동기 토큰 </summary>
         private CancellationTokenSource m_hitCts;
+
+        private InGame.Services.ISoundManager m_soundManager;
 
         #endregion
 
-        #region 3. 이벤트 (Events)
+        #region 이벤트
 
-        /// <summary>데미지를 입었을 때 발생 (데미지 양 전달)</summary>
+        /// <summary> [설명]: 적에게 데미지를 입었을 때 발생하며, 입은 원시 데미지 양을 전달합니다. </summary>
         public event Action<float> OnDamageReceived;
 
-        /// <summary>경험치 아이템 습득 시 발생 (경험치 양 전달)</summary>
+        /// <summary> [설명]: 경험치 보석을 습득했을 때 발생하며, 획득한 경험치 값을 전달합니다. </summary>
         public event Action<float> OnExpCollected;
 
-        /// <summary>코인 아이템 습득 시 발생 (코인 양 전달)</summary>
+        /// <summary> [설명]: 코인을 습득했을 때 발생하며, 획득한 코인 가치를 전달합니다. </summary>
         public event Action<int> OnCoinCollected;
 
         #endregion
 
-        #region 4. 초기화 및 제어
+        #region 초기화
 
-        public void Init()
+        /// <summary>
+        /// [설명]: 충돌 핸들러의 내부 상태를 초기화합니다.
+        /// </summary>
+        /// <summary>
+        /// [설명]: 충돌 핸들러의 내부 상태를 초기화합니다.
+        /// </summary>
+        public void Init(InGame.Services.ISoundManager soundManager)
         {
+            m_soundManager = soundManager;
             ResetState();
         }
 
+        /// <summary>
+        /// [설명]: 모든 가변 상태(무적 여부, 비동기 토큰 등)를 기본값으로 되돌립니다.
+        /// </summary>
         public void ResetState()
         {
             m_isHit = false;
             m_isColliderActive = true;
-            
+
             if (m_hitCts != null)
             {
                 m_hitCts.Cancel();
@@ -68,16 +81,19 @@ namespace InGame.Player.Player_Base
         }
 
         /// <summary>
-        /// 충돌 판정 가동 여부를 설정합니다. (연출 중 무적 처리 등)
+        /// [설명]: 런타임 중에 충돌 판정 가동 여부를 동적으로 설정합니다.
         /// </summary>
+        /// <param name="active">활성화 여부</param>
         public void SetColliderActive(bool active)
         {
             m_isColliderActive = active;
         }
 
+        /// <summary>
+        /// [설명]: 비활성화 시 진행 중인 무적 시간 타이머를 취소합니다.
+        /// </summary>
         private void OnDisable()
         {
-            // 비활성화 시 비동기 작업 취소
             if (m_hitCts != null)
             {
                 m_hitCts.Cancel();
@@ -88,12 +104,17 @@ namespace InGame.Player.Player_Base
 
         #endregion
 
-        #region 5. Unity 물리 이벤트 (Physics Events)
+        #region 유니티 물리 이벤트
 
-        // 아이템 습득 (Trigger)
+        /// <summary>
+        /// [설명]: 트리거 충돌을 통해 아이템(경험치, 코인) 습득 여부를 확인합니다.
+        /// </summary>
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!m_isColliderActive) return;
+            if (!m_isColliderActive)
+            {
+                return;
+            }
 
             if (other.CompareTag("Exp"))
             {
@@ -105,10 +126,15 @@ namespace InGame.Player.Player_Base
             }
         }
 
-        // 몬스터 충돌 (Collision - 진입)
+        /// <summary>
+        /// [설명]: 일반 물리 충돌을 통해 몬스터와 닿았을 때 피격 처리를 시작합니다.
+        /// </summary>
         private void OnCollisionEnter2D(Collision2D other)
         {
-            if (!m_isColliderActive) return;
+            if (!m_isColliderActive)
+            {
+                return;
+            }
 
             if (other.gameObject.CompareTag("Mob"))
             {
@@ -116,12 +142,16 @@ namespace InGame.Player.Player_Base
             }
         }
 
-        // 몬스터 충돌 (Collision - 유지)
+        /// <summary>
+        /// [설명]: 몬스터와 지속적으로 접촉 중일 때 무적 상태가 해제되면 즉시 다시 데미지를 입힙니다.
+        /// </summary>
         private void OnCollisionStay2D(Collision2D other)
         {
-            if (!m_isColliderActive) return;
+            if (!m_isColliderActive)
+            {
+                return;
+            }
 
-            // 무적 시간이 끝났는데도 계속 몬스터와 닿아있다면 다시 데미지 처리
             if (!m_isHit && other.gameObject.CompareTag("Mob"))
             {
                 HandleMobCollision(other.gameObject);
@@ -130,55 +160,52 @@ namespace InGame.Player.Player_Base
 
         #endregion
 
-        #region 6. 충돌 처리 로직 (Logic)
+        #region 충돌 처리 비즈니스 로직
 
         /// <summary>
-        /// 몬스터와 충돌했을 때의 로직입니다. 데미지를 입히고 무적 시간을 부여합니다.
+        /// [설명]: 몬스터와의 충돌이 유효할 경우 데미지 이벤트를 알리고 무적 타이머를 작동시킵니다.
         /// </summary>
         private void HandleMobCollision(GameObject mobObject)
         {
-            // 이미 피격 상태(무적)라면 무시
-            if (m_isHit) return;
+            if (m_isHit)
+            {
+                return;
+            }
 
             if (mobObject.TryGetComponent(out MobBase mob))
             {
-                // 데미지 이벤트 발생
                 OnDamageReceived?.Invoke(mob.AttackDamage);
-                
-                // 무적 시간 시작
                 StartInvincibilityAsync(m_invincibilityDuration).Forget();
             }
         }
 
         /// <summary>
-        /// 경험치 아이템 충돌 처리
+        /// [설명]: 수집한 경험치 아이템의 가치를 계산하여 시스템에 반영하고 풀로 반납합니다.
         /// </summary>
         private void HandleExpCollision(GameObject expObject)
         {
             if (expObject.TryGetComponent(out EXP_Obj expObj))
             {
                 OnExpCollected?.Invoke(expObj.ExpValue);
-                
-                // 사운드 재생
-                if (SoundManager.Instance != null)
+
+                if (m_soundManager != null)
                 {
-                    SoundManager.PlaySound(Sound.SFX, SoundKeys.GetExp, false);
+                    m_soundManager.Play(SoundKeys.GetExp.ToString(), Sound.SFX, 1.0f, false);
                 }
 
-                // 풀 반환
                 if (expObj.ObjectPoolSpawner != null && expObj.ObjectPoolSpawner.ExpObjectPool != null)
                 {
                     expObj.ObjectPoolSpawner.ExpObjectPool.Release(expObj);
                 }
                 else
                 {
-                    expObject.SetActive(false); // 예외 처리
+                    expObject.SetActive(false);
                 }
             }
         }
 
         /// <summary>
-        /// 코인 아이템 충돌 처리
+        /// [설명]: 수집한 코인 아이템의 가치를 합산하고 사운드를 재생하며 풀로 반납합니다.
         /// </summary>
         private void HandleCoinCollision(GameObject coinObject)
         {
@@ -186,40 +213,36 @@ namespace InGame.Player.Player_Base
             {
                 OnCoinCollected?.Invoke(coinObj.CoinValue);
 
-                // 사운드 재생
-                if (SoundManager.Instance != null)
+                if (m_soundManager != null)
                 {
-                    SoundManager.PlaySound(Sound.SFX, SoundKeys.GetCoin, false);
+                    m_soundManager.Play(SoundKeys.GetCoin.ToString(), Sound.SFX, 1.0f, false);
                 }
 
-                // 풀 반환
                 if (coinObj.ObjectPoolSpawner != null && coinObj.ObjectPoolSpawner.CoinObjectPool != null)
                 {
                     coinObj.ObjectPoolSpawner.CoinObjectPool.Release(coinObj);
                 }
                 else
                 {
-                    coinObject.SetActive(false); // 예외 처리
+                    coinObject.SetActive(false);
                 }
             }
         }
 
         /// <summary>
-        /// 피격 후 지정된 시간 동안 무적 상태를 유지합니다.
+        /// [설명]: 피격 직후 지정된 시간 동안 무적 상태를 유지하게 하는 비동기 루틴입니다.
         /// </summary>
         private async UniTaskVoid StartInvincibilityAsync(float duration)
         {
             m_isHit = true;
-            
-            // 기존 토큰 정리 후 재생성
+
             if (m_hitCts != null)
             {
                 m_hitCts.Cancel();
                 m_hitCts.Dispose();
             }
             m_hitCts = new CancellationTokenSource();
-            
-            // 파괴 시 토큰과 결합하여 안전성 확보
+
             var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(m_hitCts.Token, this.GetCancellationTokenOnDestroy()).Token;
 
             try
@@ -228,12 +251,10 @@ namespace InGame.Player.Player_Base
             }
             catch (OperationCanceledException)
             {
-                // 취소됨 (오브젝트 파괴 등)
+                // 타이머 중단
             }
             finally
             {
-                // 시간이 지나거나 취소되어도 무적 상태 해제 (다음 충돌을 위해)
-                // 단, 오브젝트가 파괴된 경우에는 의미 없음
                 m_isHit = false;
             }
         }

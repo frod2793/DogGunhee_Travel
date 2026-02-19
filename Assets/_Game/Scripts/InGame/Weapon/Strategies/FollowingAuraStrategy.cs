@@ -5,14 +5,14 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 플레이어 주변을 따라다니는 오라(Aura) 형태의 무기 전략입니다.
-    /// <br/> 초기 생성 후 매 프레임 위치를 동기화하고 스탯을 갱신합니다.
+    /// [설명]: 플레이어 주변을 따라다니는 오라(Aura) 형태의 무기 전략입니다.
+    /// 초기 생성 후 매 프레임 위치를 동기화하고 스탯을 갱신합니다.
     /// </summary>
     /// <typeparam name="TEffect">IAuraEffect를 구현하는 MonoBehaviour</typeparam>
     public class FollowingAuraStrategy<TEffect> : IWeaponStrategy
         where TEffect : MonoBehaviour, IAuraEffect
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private TEffect m_activeAura;
         private WeaponPoolManager m_poolManager;
@@ -20,7 +20,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 인터페이스 구현 (IWeaponStrategy Implementation)
+        #region 인터페이스 구현
 
         public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
         {

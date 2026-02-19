@@ -3,12 +3,12 @@ using UnityEngine;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 카메라 뷰포트(Viewport) 영역 내의 랜덤한 월드 좌표를 계산하는 전략 클래스입니다.
-    /// <br/> 화면 밖이나 특정 영역 내에 소환해야 할 때 사용됩니다.
+    /// [설명]: 카메라 뷰포트(Viewport) 영역 내의 랜덤한 월드 좌표를 계산하는 전략 클래스입니다.
+    /// 화면 밖이나 특정 영역 내에 소환해야 할 때 사용됩니다.
     /// </summary>
     public class ViewportSpawnStrategy : ISpawnPositionStrategy
     {
-        #region 1. 내부 변수 (Internal State)
+        #region 내부 변수
 
         private readonly float m_minViewportX;
         private readonly float m_maxViewportX;
@@ -18,7 +18,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 2. 생성자 (Constructor)
+        #region 생성자
 
         /// <summary>
         /// 뷰포트 범위(0.0 ~ 1.0)와 카메라 거리(Z)를 설정하여 생성합니다.
@@ -39,7 +39,7 @@ namespace InGame.Weapon.Strategies
 
         #endregion
 
-        #region 3. 인터페이스 구현 (ISpawnPositionStrategy Implementation)
+        #region 인터페이스 구현
 
         /// <summary>
         /// 설정된 뷰포트 범위 내에서 무작위 월드 좌표를 계산하여 반환합니다.
@@ -50,6 +50,7 @@ namespace InGame.Weapon.Strategies
             Camera camera = Camera.main;
             if (camera == null)
             {
+                // 카메라가 없으면 (0,0,0)에 안전하게 반환
                 return Vector3.zero;
             }
 

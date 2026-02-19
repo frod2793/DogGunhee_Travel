@@ -5,8 +5,8 @@ using InGame.Weapon.Base;
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
-    /// 무기의 공격 동작을 정의하는 핵심 전략 인터페이스입니다.
-    /// <br/> 전략 패턴(Strategy Pattern)을 사용하여 무기별 고유 동작(근접, 투사체, 오라 등)을 캡슐화합니다.
+    /// [설명]: 무기의 공격 동작을 정의하는 핵심 전략 인터페이스입니다.
+    /// 전략 패턴(Strategy Pattern)을 사용하여 무기별 고유 동작(근접, 투사체, 오라 등)을 캡슐화합니다.
     /// </summary>
     public interface IWeaponStrategy
     {
