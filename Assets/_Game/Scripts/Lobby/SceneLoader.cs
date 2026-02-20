@@ -300,14 +300,21 @@ namespace InGame
                 }
             }
 
-            // 씬 로드 완료 후 Initializer 찾기 및 초기화
+            // 씬 로드 완료 후 Initializer 찾기 및 초기화 대기
             var initializers = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+            var initTasks = new System.Collections.Generic.List<UniTask>();
+
             foreach (var mono in initializers)
             {
                 if (mono is Core.ISceneInitializer initializer)
                 {
-                    initializer.OnInitialize(payload);
+                    initTasks.Add(initializer.OnInitialize(payload));
                 }
+            }
+
+            if (initTasks.Count > 0)
+            {
+                await UniTask.WhenAll(initTasks).AttachExternalCancellation(ct);
             }
 
             await op.ToUniTask(cancellationToken: ct);

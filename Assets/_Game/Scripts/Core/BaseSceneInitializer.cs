@@ -1,4 +1,5 @@
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace InGame.Core
 {
@@ -13,7 +14,7 @@ namespace InGame.Core
         /// [설명]: 씬 로드 직후 호출되며, 전달받은 데이터를 주입받습니다.
         /// </summary>
         /// <param name="payload">이전 씬으로부터 전달된 데이터 DTO</param>
-        void OnInitialize(object payload);
+        UniTask OnInitialize(object payload);
     }
     #endregion
 
@@ -23,7 +24,7 @@ namespace InGame.Core
     /// </summary>
     public abstract class BaseSceneInitializer : MonoBehaviour, ISceneInitializer
     {
-        public abstract void OnInitialize(object payload);
+        public abstract UniTask OnInitialize(object payload);
 
         protected virtual void Awake()
         {

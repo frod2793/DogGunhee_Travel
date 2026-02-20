@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Xml;
 using UnityEngine;
 
 namespace InGame
@@ -38,6 +37,8 @@ namespace InGame
         [Tooltip("웨이브 내 총 몬스터 스폰 수 (duration이 0일 때 사용)")]
         public int count;
 
+        [Tooltip("보스 웨이브 여부")] public bool isBossWave;
+
         [Tooltip("해당 웨이브에서 등장하는 몬스터 목록")] public List<MobSpawnData> mobs = new List<MobSpawnData>();
     }
 
@@ -57,7 +58,7 @@ namespace InGame
     #endregion
 
     /// <summary>
-    /// XML로부터 스테이지 정보를 로드하고 관리하는 데이터베이스 클래스입니다.
+    /// 리모트(구글 시트/JSON)로부터 스테이지 정보를 로드하고 관리하는 데이터베이스 클래스입니다.
     /// ScriptableObject를 통해 에디터 및 런타임에서 데이터를 제공합니다.
     /// </summary>
     [CreateAssetMenu(fileName = "StageDatabase", menuName = "Game/Stage/StageDatabase")]
@@ -65,11 +66,11 @@ namespace InGame
     {
         #region 필드 설정
 
-        [Header("스테이지 데이터")] [Tooltip("로드된 스테이지 목록입니다.")] [SerializeField]
-        private List<StageData> m_stages = new List<StageData>();
+        [Header("스테이지 데이터")] 
+        [Tooltip("로드된 스테이지 목록입니다.")] 
+        [SerializeField] private List<StageData> m_stages = new List<StageData>();
 
-        [Header("리소스 설정")] [Tooltip("스테이지 데이터 XML 파일의 상대 경로 (Resources 폴더 기준)")] [SerializeField]
-        private string m_xmlPath = "Data/StageData";
+        private const string k_DataType = "Stage";
 
         #endregion
 
@@ -84,8 +85,8 @@ namespace InGame
 
         private void OnEnable()
         {
-            // 에디터나 런타임에서 활성화될 때 자동 로드
-            LoadDataFromXML();
+            // 초기화 시 로컬 캐시에서 로드
+            LoadFromLocalCache();
         }
 
         #endregion
@@ -93,65 +94,62 @@ namespace InGame
         #region 데이터 로드 로직
 
         /// <summary>
-        /// 지정된 경로의 XML 파일을 파싱하여 스테이지 데이터를 메모리에 로드합니다.
+        /// [설명]: 로컬 캐시에서 데이터를 로드합니다.
         /// </summary>
-        [ContextMenu("Load From XML")]
-        public void LoadDataFromXML()
+        public void LoadFromLocalCache()
         {
-            TextAsset xmlFile = Resources.Load<TextAsset>(m_xmlPath);
-            if (xmlFile == null)
+            string jsonData = GetCachedJson();
+            if (!string.IsNullOrEmpty(jsonData))
             {
-                Debug.LogWarning($"[StageDatabase] XML 파일을 찾을 수 없습니다: {m_xmlPath}");
-                return;
+                LoadDataFromJSON(jsonData);
             }
+        }
+
+        /// <summary>
+        /// [설명]: JSON 데이터를 기반으로 스테이지 목록을 구축합니다.
+        /// </summary>
+        public void LoadDataFromJSON(string jsonData)
+        {
+            if (string.IsNullOrEmpty(jsonData)) return;
 
             try
             {
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(xmlFile.text);
+                var wrapper = JsonUtility.FromJson<InGame.Data.SheetDataWrapper<InGame.Data.StageDataDTO>>(jsonData);
+                if (wrapper == null || wrapper.data == null) return;
 
                 m_stages.Clear();
 
-                XmlNodeList stageNodes = xmlDoc.SelectNodes("Stages/Stage");
-                if (stageNodes == null) return;
-
-                foreach (XmlNode stageNode in stageNodes)
+                foreach (var stageDto in wrapper.data)
                 {
                     StageData stage = new StageData
                     {
-                        stageId = int.Parse(stageNode.Attributes["id"].Value),
-                        stageName = stageNode.Attributes["name"].Value
+                        stageId = stageDto.id,
+                        stageName = stageDto.name
                     };
 
-                    XmlNodeList waveNodes = stageNode.SelectNodes("Wave");
-                    if (waveNodes != null)
+                    if (stageDto.Waves != null)
                     {
-                        foreach (XmlNode waveNode in waveNodes)
+                        foreach (var waveDto in stageDto.Waves)
                         {
                             WaveData wave = new WaveData
                             {
-                                waveId = int.Parse(waveNode.Attributes["id"].Value),
-                                waveName = waveNode.Attributes["name"]?.Value ??
-                                           $"Wave {waveNode.Attributes["id"].Value}",
-                                duration = float.Parse(waveNode.Attributes["duration"].Value),
-                                spawnInterval = float.Parse(waveNode.Attributes["spawnInterval"].Value),
-                                waitDuration = waveNode.Attributes["wait"] != null
-                                    ? float.Parse(waveNode.Attributes["wait"].Value)
-                                    : 3.0f,
-                                count = waveNode.Attributes["count"] != null
-                                    ? int.Parse(waveNode.Attributes["count"].Value)
-                                    : 0
+                                waveId = waveDto.id,
+                                waveName = string.IsNullOrEmpty(waveDto.name) ? $"Wave {waveDto.id}" : waveDto.name,
+                                duration = waveDto.duration,
+                                spawnInterval = waveDto.spawnInterval,
+                                waitDuration = waveDto.wait > 0 ? waveDto.wait : 3.0f,
+                                count = waveDto.count,
+                                isBossWave = waveDto.isBossWave
                             };
 
-                            XmlNodeList mobNodes = waveNode.SelectNodes("Mob");
-                            if (mobNodes != null)
+                            if (waveDto.Mobs != null)
                             {
-                                foreach (XmlNode mobNode in mobNodes)
+                                foreach (var mobDto in waveDto.Mobs)
                                 {
                                     wave.mobs.Add(new MobSpawnData
                                     {
-                                        mobKey = mobNode.Attributes["key"].Value,
-                                        spawnRate = int.Parse(mobNode.Attributes["rate"].Value)
+                                        mobKey = mobDto.key,
+                                        spawnRate = mobDto.rate
                                     });
                                 }
                             }
@@ -163,13 +161,22 @@ namespace InGame
                     m_stages.Add(stage);
                 }
 
-                LogManager.Log($"[StageDatabase] {m_stages.Count}개의 스테이지 데이터를 성공적으로 로드했습니다.",
-                    LogManager.LogCategory.ObjectPoolSpawner);
+                Debug.Log($"<color=white>[StageDatabase]</color> JSON 데이터 로드 완료 (스테이지 총 <b>{m_stages.Count}</b>개)");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[StageDatabase] XML 파싱 중 오류 발생: {ex.Message}");
+                Debug.LogError($"[StageDatabase] JSON 파싱 중 오류 발생: {ex.Message}");
             }
+        }
+
+        private string GetCachedJson()
+        {
+            string path = System.IO.Path.Combine(Application.persistentDataPath, "DataCache", $"{k_DataType}.json");
+            if (System.IO.File.Exists(path))
+            {
+                return System.IO.File.ReadAllText(path);
+            }
+            return string.Empty;
         }
 
         #endregion

@@ -96,7 +96,7 @@ namespace Lobby
         /// <summary>
         /// [설명]: SceneLoader로부터 전달받은 데이터를 주입받습니다.
         /// </summary>
-        public void OnInitialize(object payload)
+        public UniTask OnInitialize(object payload)
         {
             if (payload is InGame.Data.ScenePayloadDTO scenePayload)
             {
@@ -114,6 +114,8 @@ namespace Lobby
             {
                 m_playerService = new InGame.Services.PlayerDataService(m_playerData, new InGame.Services.EncryptionService(), new InGame.Data.LocalPlayerDataRepository(new InGame.Services.EncryptionService()));
             }
+
+            return UniTask.CompletedTask;
         }
 
         /// <summary>

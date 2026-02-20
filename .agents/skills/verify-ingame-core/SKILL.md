@@ -88,9 +88,26 @@ grep "?." Assets/_Game/Scripts/InGame/**/*.cs | grep -v "Assets/_Game/Scripts/In
 
 **검사:**
 1. `GameManager.OnInitialize`에서 `m_uiManager.Initialize(m_soundManager)` 호출 확인.
-2. `ObjectPoolSpawner.Init` 또는 유사 메서드를 통해 `ISoundManager`가 전달되는지 확인.
+2. `GameManager.OpenOptionPopup`에서 `popup.Initialize(m_soundManager)` 호출 확인.
+3. `ObjectPoolSpawner.Init` 또는 유사 메서드를 통해 `ISoundManager`가 전달되는지 확인.
 
 **권장:** 하위 개체(몬스터, 발사체 등)가 생성될 때 주입받은 사운드 서비스를 사용하여 사운드를 재생하도록 구현 권장.
+
+### Step 5: 리모트 데이터 동기화 확인
+
+`GameManager.InitializeGameAsync`에서 인게임 진입 직후 리모트 데이터 동기화를 수행하는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/InGame/Manager/GameManager.cs`
+
+**검사:**
+
+```bash
+grep "RemoteDataUpdateManager.Instance.UpdateAllRemoteDataAsync" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
+```
+
+**PASS:** `InitializeGameAsync` 내에서 `await` 호출 확인됨
+**FAIL:** 동기화 로직 누락
+**수정:** `InitializeGameAsync` 최상단에 동기화 코드 추가
 
 ## Output Format
 
@@ -101,6 +118,7 @@ grep "?." Assets/_Game/Scripts/InGame/**/*.cs | grep -v "Assets/_Game/Scripts/In
 | 싱글톤 의존성 | PASS | 초기화 단계에서만 사용됨 |
 | 데이터 바인딩 | PASS | ViewModel 구독 확인됨 |
 | Null 안전성 | PASS | `?.` 사용 발견되지 않음 |
+| 리모트 데이터 동기화 | PASS | GameManager 초기화 내 포함됨 |
 
 ## Exceptions
 

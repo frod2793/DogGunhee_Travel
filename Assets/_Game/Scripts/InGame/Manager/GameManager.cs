@@ -155,7 +155,7 @@ namespace InGame.Managers
         /// <summary>
         /// [설명]: SceneLoader로부터 전달된 데이터를 사용하여 게임 매니저를 초기화합니다.
         /// </summary>
-        public void OnInitialize(object payload)
+        public async UniTask OnInitialize(object payload)
         {
             if (payload is ScenePayloadDTO scenePayload)
             {
@@ -179,8 +179,15 @@ namespace InGame.Managers
 
             if (m_playerData != null)
             {
-                m_playerService = new InGame.Services.PlayerDataService(m_playerData, new InGame.Services.EncryptionService(), new InGame.Data.LocalPlayerDataRepository(new InGame.Services.EncryptionService()));
+                m_playerService = new InGame.Services.PlayerDataService(
+                    m_playerData, 
+                    new InGame.Services.EncryptionService(), 
+                    new InGame.Data.LocalPlayerDataRepository(new InGame.Services.EncryptionService())
+                );
             }
+
+            // [추가] 씬 전체 초기화 대기 (리모트 데이터 동기화 포함)
+            await InitializeGameAsync();
         }
 
         private void Start()
@@ -245,6 +252,10 @@ namespace InGame.Managers
             m_mainCamera = Camera.main;
         }
 
+        #endregion
+
+        #region 초기화 로직
+
         /// <summary>
         /// [설명]: 게임 상태 변화에 따른 이벤트 구독을 수행합니다.
         /// </summary>
@@ -281,8 +292,15 @@ namespace InGame.Managers
         /// <summary>
         /// [설명]: 비동기 방식으로 플레이어 생성 및 초기 게임 설정을 수행합니다.
         /// </summary>
-        private async UniTaskVoid InitializeGameAsync()
+        private async UniTask InitializeGameAsync()
         {
+            // [추가] 인게임 진입 직후 가장 먼저 리모트 데이터(구글 시트) 동기화 대기
+            if (InGame.Data.Managers.RemoteDataUpdateManager.Instance != null)
+            {
+                var stageDatabase = Resources.Load<StageDatabase>("Data/StageDatabase");
+                await InGame.Data.Managers.RemoteDataUpdateManager.Instance.UpdateAllRemoteDataAsync(m_skillDatabase, stageDatabase, this.GetCancellationTokenOnDestroy());
+            }
+
             await SpawnPlayerAndInitialWeaponsAsync();
 
             if (m_uiManager != null)

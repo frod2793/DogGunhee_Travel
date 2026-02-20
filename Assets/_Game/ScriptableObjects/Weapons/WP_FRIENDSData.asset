@@ -21,9 +21,9 @@ MonoBehaviour:
   m_baseAttackPower: 30
   m_baseCoolTime: 4
   m_baseAttackSpeed: 1
-  m_baseAttackRange: 3
+  m_baseAttackRange: 5
   m_baseDuration: 0
-  m_baseProjectileCount: 4
+  m_baseProjectileCount: 1
   m_baseStunDuration: 0.2
   m_projectilePrefab: {fileID: 432755205661050745, guid: ef2895a6296aad04f8774815b8ca70a5, type: 3}
   m_modelPrefab: {fileID: 0}

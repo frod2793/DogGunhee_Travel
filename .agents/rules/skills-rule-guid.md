@@ -10,7 +10,7 @@ trigger: always_on
 | `manage-skills` | 세션 변경사항을 분석하고, 검증 스킬을 생성/업데이트하며, skills-rule-guid.md를 관리합니다 |
 | `verify-lobby-navigation` | 로비 UI의 팝업 관리 및 뒤로가기 로직 검증 |
 | `verify-inventory-system` | 인벤토리 데이터 구조 및 환전 로직 검증 |
-| `verify-ingame-core` | 인게임 핵심 시스템 및 UI 데이터 바인딩 검증 |
+| `verify-login-flow` | 타이틀 씬의 로그인 흐름(MVVM) 및 어드레서블 로딩 검증 |
+| `verify-remote-data` | 구글 시트(GAS) 기반 리모트 데이터 동기화 시스템의 정합성을 검증합니다. |
 | `verify-data-persistence` | 데이터 DTO, 서비스 의존성 및 암호화 저장소 검증 |
 | `verify-sound-system` | 사운드 구현 패턴 및 DI 주입 정합성 검증 (추천 방식) |
-| `verify-login-flow` | 타이틀 씬의 로그인 흐름(MVVM) 및 어드레서블 로딩 검증 |

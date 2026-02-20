@@ -34,6 +34,7 @@ description: 로비 UI의 팝업 관리 및 뒤로가기(ESC) 로직을 검증�
 | `Assets/_Game/Scripts/Lobby/UI/Popups/PostView.cs` | 우편함 팝업 뷰 |
 | `Assets/_Game/Scripts/Lobby/UI/Popups/QuestInfoView.cs` | 퀘스트 정보 팝업 뷰 |
 | `Assets/_Game/Scripts/Lobby/UI/Popups/StoreView.cs` | 상점 팝업 뷰 |
+| `Assets/_Game/Scripts/Lobby/OptionPopupView.cs` | 옵션 팝업 뷰 (PopupManager 연동) |
 | `Assets/_Game/Scripts/Data/DTOs/ScenePayloadDTO.cs` | 씬 전환 통합 페이로드 DTO |
 
 ## Workflow
@@ -66,9 +67,9 @@ grep -r "Input.GetKeyDown(KeyCode.Escape)" Assets/_Game/Scripts/Lobby
 grep -r "PopupManager.Instance.RegisterPopup" Assets/_Game/Scripts/Lobby/UI/Popups
 ```
 
-**PASS:** 각 팝업 스크립트 파일 내에서 `RegisterPopup` 호출이 확인됨
-**FAIL:** 특정 팝업 스크립트에서 호출이 누락됨
-**수정:** `Open` 또는 `Active` 관련 메서드 내에 `RegisterPopup(CloseMethod)` 추가
+**PASS:** 각 팝업 스크립트 파일 내에서 `RegisterPopup` 호출이 확인됨 (또는 팝업을 생성하는 매니저(`GameManager`, `LobbyNavigator`)에서 호출됨)
+**FAIL:** 특정 팝업 스크립트에서 호출이 누락되어 ESC 키로 닫히지 않음
+**수정:** `Open` 관련 메서드 내에 `RegisterPopup(CloseMethod)` 추가 또는 생성 주체에서 등록 수행
 
 ### Step 3: 코어 아키텍처 인터페이스 주입 검사
 
@@ -126,7 +127,7 @@ grep "payload is InGame.Data.ScenePayloadDTO scenePayload" Assets/_Game/Scripts/
 | 검사 항목 | 상태 | 파일/상세 |
 |-----------|------|-----------|
 | 개별 ESC 입력 | PASS | 발견되지 않음 |
-| 팝업 등록 | PASS | InventoryView, PostView 등 확인됨 |
+| 팝업 등록 | PASS | InventoryView, OptionPopupView 등 확인됨 |
 
 ## Exceptions
 

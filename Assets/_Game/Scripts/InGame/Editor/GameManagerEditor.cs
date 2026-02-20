@@ -79,8 +79,8 @@ namespace InGame.Editor
                 string path = AssetDatabase.GUIDToAssetPath(guids[0]);
                 m_skillDatabase = AssetDatabase.LoadAssetAtPath<SkillDatabase>(path);
 
-                // XML 데이터가 최신 상태가 아닐 수 있으므로 로드합니다.
-                m_skillDatabase.LoadDataFromXML();
+                // 로컬 캐시(JSON) 데이터가 최신 상태가 아닐 수 있으므로 로드합니다.
+                m_skillDatabase.LoadFromLocalCache();
 
                 // 무기 스킬만 필터링하여 목록을 만듭니다.
                 m_weaponSkills = m_skillDatabase.allSkills

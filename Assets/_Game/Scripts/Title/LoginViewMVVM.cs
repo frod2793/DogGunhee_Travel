@@ -140,6 +140,8 @@ namespace Title
                 m_soundManager.LoadSoundSetting();
             }
 
+            // 리모트 데이터(구글 시트) 업데이트 체크 로직은 인게임 진입(GameManager) 쪽으로 이전되었습니다.
+
             if (m_versionText != null)
             {
                 m_versionText.text = $"Ver. {Application.version}";

@@ -17,140 +17,111 @@ MonoBehaviour:
     skillName: "\uCD5C\uC560 \uBF08\uB2E4\uADC0"
     skillType: 1
     upgradeItemCode: PS_COLLAR
-    flavorText: "\uAC1C\uAC74\uD76C\uAC00 \uAC00\uC7A5 \uC88B\uC544\uD558\uB294 \uBF08\uB2E4\uADC0
-      \uC785\uB2C8\uB2E4. \uC9D1 \uC55E \uB9C8\uB2F9\uC5D0 \uBB3B\uC5B4\uB194\uC11C
-      \uD759\uC774 \uC794\uB729 \uBB3B\uC5B4\uC788\uC2B5\uB2C8\uB2E4."
+    flavorText: 
     skillDescription: "\uC801\uC5D0\uAC8C \uBF08\uB2E4\uADC0\uB97C \uB0A0\uB824 \uD53C\uD574\uB97C
       \uC785\uD799\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
-      \uBB34\uAE30\uD06C\uAE30, \uBC1C\uC0AC\uCCB4 \uC218"
-    weaponAddressableKey: Prefab_Weapon_Bone
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 2224731433925603804, guid: 207a2ee7412807b4e9abbc1a9c73d990, type: 3}
     weaponData: {fileID: 11400000, guid: 3d670bc900d21f647bb9f4a5e621a615, type: 2}
   - skillCode: WP_PUNCH
     skillName: "\uB0E5\uB0E5 \uD380\uCE58"
     skillType: 1
     upgradeItemCode: PS_FEATHER
-    flavorText: "\uBED1\uCEA3\uC740 \uC5B8\uC81C\uB098 \uD654\uB9CC \uB0B4\uACE0
-      \uC788\uC2B5\uB2C8\uB2E4. \uBB34\uC2DC\uBB34\uC2DC\uD55C \uC190\uBC14\uB2E5\uC5D0
-      \uB9DE\uAE30 \uC804\uC5D0 \uD654\uB97C \uC7A0\uC7AC\uC6CC\uC57C\uACA0\uB124\uC694."
+    flavorText: 
     skillDescription: "\uAC00\uAE4C\uC6B4 \uC801\uC5D0\uAC8C \uD380\uCE58\uB97C \uB0A0\uB824
       \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
-      \uBB34\uAE30\uD06C\uAE30"
-    weaponAddressableKey: Prefab_Weapon_Punch
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 3009277269837625556, guid: 506a9031ede2f2a4db0c808868d273d2, type: 3}
     weaponData: {fileID: 11400000, guid: a287ec1fd21c70b4490ad81987a3f9e6, type: 2}
   - skillCode: WP_PEARL
     skillName: "\uC2F8\uAD6C\uB824 \uC9C4\uC8FC"
     skillType: 1
     upgradeItemCode: PS_NET
-    flavorText: "\uBC14\uC218\uB77D\uC758 \uC785 \uC548\uC5D0\uC11C \uB098\uC628
-      \uC9C4\uC8FC\uC785\uB2C8\uB2E4. \uBC14\uC9C0\uB77D \uC548\uC5D0\uC11C \uC9C4\uC8FC\uAC00
-      \uC65C \uB098\uC624\uB0D0\uB9CC\uC740.. \uAC8C\uC784\uC774\uC796\uC544\uC694?"
+    flavorText: 
     skillDescription: "\uD654\uBA74\uC744 \uB3CC\uC544 \uB2E4\uB2C8\uB294 \uC9C4\uC8FC\uB97C
       \uB358\uC838 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
-      \uBB34\uAE30\uD06C\uAE30, \uBC1C\uC0AC\uCCB4 \uC218"
-    weaponAddressableKey: Prefab_Weapon_Pearl
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 6740408996126291302, guid: 6aca8ef29b9e55544a96bea78f11bac8, type: 3}
     weaponData: {fileID: 11400000, guid: bd78ed65519a03448a5d727b9974ca5b, type: 2}
   - skillCode: WP_LANDING
     skillName: "\uD788\uC5B4\uB85C \uB79C\uB529"
     skillType: 1
     upgradeItemCode: PS_SHIELD
-    flavorText: "\uBC29\uCFE4\uB9E8\uC774 \uD568\uAED8\uD558\uB294 \uBC29\uD328\uC785\uB2C8\uB2E4.
-      \uC18C\uBB38\uC73C\uB860 \uC798 \uB54C\uB3C4 \uBC29\uD328\uB97C \uAEF4\uC548\uACE0
-      \uC794\uB2E4\uACE0\uD558\uB124\uC694."
+    flavorText: 
     skillDescription: "\uC77C\uC815\uC2DC\uAC04 \uD6C4 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C
       \uC6D0\uD615\uC73C\uB85C \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30"
-    weaponAddressableKey: Prefab_Weapon_Landing
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: -4121394399873266726, guid: 243e9e726d90b7d4382f4e8ba0e8109e, type: 3}
     weaponData: {fileID: 11400000, guid: 97b1848101b569847b64d8cc68e2f43b, type: 2}
   - skillCode: WP_FRIENDS
     skillName: "\uB0B4 \uCE5C\uAD6C\uB4E4!"
     skillType: 1
     upgradeItemCode: PS_PROTEIN
-    flavorText: "\uCE5C\uAD6C\uB4E4\uACFC \uD568\uAED8\uB77C\uBA74 \uC6B0\uB9B0 \uB450\uB824\uC6B4\uAC83\uC774
-      \uC5C6\uC2B5\uB2C8\uB2E4! \uC138\uC0C1\uC5D0\uC11C \uAC00\uC7A5 \uBBFF\uC74C\uC9C1\uD55C
-      \uCE5C\uAD6C\uB4E4\uACFC \uD568\uAED8 \uACE0\uB09C\uC744 \uD5E4\uCCD0\uB098\uAC11\uC2DC\uB2E4!"
+    flavorText: 
     skillDescription: "\uCE5C\uAD6C\uB4E4\uC744 \uBD88\uB7EC \uD558\uB298\uC5D0\uC11C
       \uB5A8\uC5B4\uC9D1\uB2C8\uB2E4. \uB79C\uB364\uD55C \uC704\uCE58\uC5D0 \uD53C\uD574\uB97C
       \uC90D\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
-      \uBC1C\uC0AC\uCCB4 \uC218"
-    weaponAddressableKey: Prefab_WeaPhon_Friends
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 0}
     weaponData: {fileID: 11400000, guid: 7be80992cb8ec064c8c2e586560305ee, type: 2}
   - skillCode: WP_BOOMERANG
     skillName: "\uB2E4X\uC18C \uBD80\uB9E4\uB791"
     skillType: 1
     upgradeItemCode: PS_VACCINE
-    flavorText: "\uBC14\uB2E5\uC5D0 \uBC84\uB824\uC838\uC788\uB358 \uBD80\uB9E4\uB791\uC785\uB2C8\uB2E4.
-      \uBB54\uAC00 \uC5B4\uB514\uC11C \uC0C0\uB294\uC9C0 \uC54C \uAC83 \uAC19\uC9C0\uB9CC
-      \uB208\uAC10\uC544\uC90D\uC2DC\uB2E4."
+    flavorText: 
     skillDescription: "\uBD80\uB9E4\uB791\uC744 \uB358\uC838 \uC8FC\uBCC0\uC744 \uB9F4\uB3CC\uBA70
       \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784\uAC10\uC18C, \uACF5\uACA9\uC18D\uB3C4,
-      \uBB34\uAE30\uD06C\uAE30, \uBC1C\uC0AC\uCCB4 \uC218"
-    weaponAddressableKey: Prefab_Weapon_Boomerang
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 4760295921362943085, guid: 777dbb04d7fb1c5468cf7c701f567369, type: 3}
     weaponData: {fileID: 11400000, guid: 22709bcd67a9bf048a1df3ea99d78a49, type: 2}
   - skillCode: WP_FIRE
     skillName: "\uC2E0\uBE44\uD55C \uBD88\uAF43"
     skillType: 1
     upgradeItemCode: 
-    flavorText: "\uD0C0\uC624\uB974\uB294 \uBD88\uAF43\uC785\uB2C8\uB2E4. \uCC29\uD55C
-      \uB9C8\uC74C\uC528\uB97C \uAC00\uC9C4 \uCE5C\uAD6C\uB4E4\uC740 \uB4E4 \uC218
-      \uC788\uC9C0\uB9CC, \uB098\uC05C \uB9C8\uC74C\uC744 \uAC00\uC84C\uB2E4\uBA74
-      \uBD88\uD0C0\uAC8C \uB429\uB2C8\uB2E4."
+    flavorText: 
     skillDescription: "\uBD88\uAF43\uC774 \uD37C\uC838 \uB79C\uB364\uD55C \uC704\uCE58\uC5D0
       \uC9C0\uC18D\uC801\uC778 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uCFE8\uD0C0\uC784 \uAC10\uC18C, \uBB34\uAE30\uD06C\uAE30,
-      \uBC1C\uC0AC\uCCB4 \uC218"
-    weaponAddressableKey: Prefab_WeaPhon_Flame
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 3676400890599414552, guid: 09fa1cd37638e134dad11b77f082bf6e, type: 3}
     weaponData: {fileID: 11400000, guid: 60a6abe97709a3547b2d99e8af6bafc7, type: 2}
   - skillCode: WP_BALL
     skillName: "\uACF5\uB180\uC774"
     skillType: 1
     upgradeItemCode: PS_TREASURE
-    flavorText: "\uB2E4\uB978 \uC9D1 \uCE5C\uAD6C\uB4E4\uACFC \uD568\uAED8 \uC815\uC6D0\uC5D0\uC11C
-      \uD568\uAED8\uB180\uB358 \uACF5\uB4E4\uC785\uB2C8\uB2E4. \uADF8 \uCE5C\uAD6C\uB4E4\uC740
-      \uC774\uC81C \uC624\uC9C0\uC54A\uC544 \uCD94\uC5B5\uC73C\uB85C \uAC04\uC9C1\uD569\uB2C8\uB2E4."
+    flavorText: 
     skillDescription: "\uD654\uBA74\uC744 \uD295\uAE30\uB294 \uACF5\uC744 \uC18C\uD658\uD558\uC5EC
       \uC801\uC744 \uACF5\uACA9\uD569\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30, \uACF5\uACA9\uC18D\uB3C4,
-      \uCFE8\uD0C0\uC784 \uAC10\uC18C"
-    weaponAddressableKey: Prefab_Weapon_BallPlay
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: -3334053677006557033, guid: 416e69384c17cd448945cd31377de2b8, type: 3}
     weaponData: {fileID: 11400000, guid: 2225193fdf9ff0f4bada47f6ba2e5534, type: 2}
   - skillCode: WP_INK
     skillName: "\uCD08\uAC15\uB825 \uBA39\uBB3C"
     skillType: 1
     upgradeItemCode: 
-    flavorText: "\uBA39\uBB3C\uC5D0 \uC2DC\uC57C\uAC00 \uAC00\uB824\uC9C4 \uC801\uB4E4\uC744
-      \uC0B0\uC131\uC744 \uB760\uB294 \uD2B9\uBCC4\uD55C \uB3C5\uACFC \uD568\uAED8\uBFCC\uB824
-      \uC801\uB4E4\uC744 \uB3C4\uB9DD\uCE58\uAC8C \uD569\uB2C8\uB2E4."
+    flavorText: 
     skillDescription: "\uC801\uB4E4\uC5D0\uAC8C \uBA39\uBB3C\uC744 \uBFCC\uB824 \uD53C\uD574\uB97C
       \uC8FC\uACE0 \uC774\uB3D9\uC744 \uBC29\uD574\uD569\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30"
-    weaponAddressableKey: Prefab_Weapon_Ink
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: -1350821935868348345, guid: 163c076bc228fae4e851891d42875a85, type: 3}
     weaponData: {fileID: 11400000, guid: 8a903bf4adc68e6448e2e4b27cef3661, type: 2}
   - skillCode: WP_SMELL
     skillName: "\uD5A5\uAE0B\uD55C \uAF2C\uC21C\uB0B4"
     skillType: 1
     upgradeItemCode: 
-    flavorText: "\uAC15\uC544\uC9C0\uC758 \uAF2C\uC21C\uB0B4\uC5D4 \uADF9\uD55C\uC758
-      \uC911\uB3C5\uC131\uACFC \uADC0\uC5EC\uC6C0\uC774 \uB290\uAEF4\uC9D1\uB2C8\uB2E4.
-      \uB108\uBB34 \uADC0\uC5EC\uC6CC\uC11C \uC790\uC9C0\uB7EC\uC9C0\uB294 \uC790\uB4E4\uC744
-      \uBA87\uBC88 \uBCF8 \uAC83 \uAC19\uAD70\uC694."
+    flavorText: 
     skillDescription: "\uC8FC\uBCC0\uC5D0 \uB0C4\uC0C8\uB97C \uD37C\uB728\uB824 \uC9C0\uC18D\uC801\uC778
       \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
-    stats: "\uACF5\uACA9\uB825, \uBB34\uAE30\uD06C\uAE30"
-    weaponAddressableKey: Prefab_Weapon_Smell
+    stats: 
+    weaponAddressableKey: 
     skillIcon: {fileID: 2554428047566971384, guid: 75dfeecb9ae2c1147bcf600cb08cdba2, type: 3}
     weaponData: {fileID: 11400000, guid: da952313feaec0140b03e8fa8e451171, type: 2}
   - skillCode: PS_COLLAR

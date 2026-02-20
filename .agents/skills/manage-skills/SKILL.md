@@ -36,6 +36,7 @@ argument-hint: "[선택사항: 특정 스킬 이름 또는 집중할 영역]"
 | `verify-data-persistence` | DTO/Service 기반 데이터 지속성 및 암호화 검증 | `Assets/_Game/Scripts/Data/DTOs/*.cs`, `Assets/_Game/Scripts/Data/Services/PlayerDataService.cs`, `Assets/_Game/Scripts/Data/ServerManager.cs` |
 | `verify-sound-system` | 사운드 구현 패턴 및 DI 주입 정합성 검증 (추천 방식) | `Assets/_Game/Scripts/**/*.cs` |
 | `verify-login-flow` | 타이틀 씬의 로그인 흐름 및 어드레서블 로딩 검증 | `Assets/_Game/Scripts/Title/*.cs`, `Assets/_Game/Scripts/Manager/AppUpdateManager.cs` |
+| `verify-remote-data` | 구글 시트(GAS) 기반 리모트 데이터 동기화 시스템의 정합성을 검증합니다. | `Assets/_Game/Scripts/Data/Services/RemoteDataService.cs`, `Assets/_Game/Scripts/Data/Managers/RemoteDataUpdateManager.cs`, `Assets/_Game/Scripts/ScriptableObjects/SkillDatabase.cs`, `Assets/_Game/Scripts/ScriptableObjects/StageDatabase.cs` |
 
 <!-- 스킬이 추가되면 아래 형식으로 등록:
 | 스킬 | 설명 | 커버 파일 패턴 |
@@ -87,7 +88,7 @@ git diff main...HEAD --name-only 2>/dev/null
 
 등록된 스킬이 0개인 경우, Step 4 (CREATE vs UPDATE 결정)로 바로 이동합니다. 모든 변경 파일이 "UNCOVERED"로 처리됩니다.
 
-등록된 스킬이 1개 이상인 경우, 각 스킬의 `.claude/skills/verify-<name>/SKILL.md`를 읽고 다음에서 추가 파일 경로 패턴을 추출합니다:
+등록된 스킬이 1개 이상인 경우, 각 스킬의 `.agents/skills/verify-<name>/SKILL.md`를 읽고 다음에서 추가 파일 경로 패턴을 추출합니다:
 
 1. **Related Files** 섹션 — 테이블을 파싱하여 파일 경로 및 glob 패턴 추출
 2. **Workflow** 섹션 — grep/glob/read 명령어에서 파일 경로 추출
