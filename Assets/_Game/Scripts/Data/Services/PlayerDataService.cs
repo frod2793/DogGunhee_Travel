@@ -75,6 +75,10 @@ namespace InGame.Services
                 case "Currency2":
                     m_data.Currency2 += amount;
                     break;
+                case "ingameCoin":
+                case "IngameCoin":
+                    m_data.IngameCoin += amount;
+                    break;
             }
 
             // 변경 시 즉시 저장
@@ -97,6 +101,10 @@ namespace InGame.Services
                 case "currency2":
                 case "Currency2":
                     m_data.Currency2 = Mathf.Max(0, m_data.Currency2 - amount);
+                    break;
+                case "ingameCoin":
+                case "IngameCoin":
+                    m_data.IngameCoin = Mathf.Max(0, m_data.IngameCoin - amount);
                     break;
             }
 

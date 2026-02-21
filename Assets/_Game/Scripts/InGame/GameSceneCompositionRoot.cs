@@ -88,11 +88,13 @@ namespace InGame
                 cameraAgent.Initialize(m_gameManager.MainCamera);
             }
 
-            var testManager = FindFirstObjectByType<TestManager>();
+#if UNITY_EDITOR
+            var testManager = FindFirstObjectByType<InGame.Managers.TestManager>();
             if (testManager != null)
             {
                 testManager.Initialize(playerContext, combatContext, gameState);
             }
+#endif
 
             if (m_playerController != null)
             {

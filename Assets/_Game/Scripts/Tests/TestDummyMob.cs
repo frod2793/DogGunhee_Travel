@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using InGame.Core.Interfaces;
 using UnityEngine;
 using InGame.Mob.MobBase;
@@ -74,3 +75,4 @@ namespace Tests
         #endregion
     }
 }
+#endif

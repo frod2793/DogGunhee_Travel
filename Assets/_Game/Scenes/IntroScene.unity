@@ -3654,7 +3654,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3415c6a09157e04499e90ca13c84c9dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tests.AutoLoginTester
-  m_autoStartOnLoad: 1
+  m_autoStartOnLoad: 0
   m_actionDelay: 0.5
   m_testId: test_user_001
   m_testPw: password123!

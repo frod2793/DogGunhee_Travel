@@ -19,8 +19,8 @@ MonoBehaviour:
     \uC801\uC744 \uACF5\uACA9\uD569\uB2C8\uB2E4."
   m_baseAttackPower: 12
   m_baseCoolTime: 2
-  m_baseAttackSpeed: 15
-  m_baseAttackRange: 2
+  m_baseAttackSpeed: 3
+  m_baseAttackRange: 1
   m_baseDuration: 0
   m_baseProjectileCount: 2
   m_baseStunDuration: 3

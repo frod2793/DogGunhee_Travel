@@ -31,7 +31,7 @@ namespace Title
         [SerializeField, Tooltip("앱 업데이트 매니저 (DI)")]
         private AppUpdateManager m_appUpdateManager;
 
-        [SerializeField] private InGame.Data.PlayerDataDTO m_playerData;
+        [SerializeField] private PlayerDataDTO m_playerData;
 
         [Header("UI 패널")]
         [SerializeField, Tooltip("[설명]: 회원가입 팝업 오브젝트")]

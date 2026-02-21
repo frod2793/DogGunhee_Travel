@@ -17727,6 +17727,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 247027810227443547, guid: ef1146b8214c9e6439d81ec9aa684187, type: 3}
+      propertyPath: m_itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 787b4e8058485ab4db7556097e31520a, type: 2}
+    - target: {fileID: 247027810227443547, guid: ef1146b8214c9e6439d81ec9aa684187, type: 3}
+      propertyPath: m_inventoryData
+      value: 
+      objectReference: {fileID: 11400000, guid: 9b5c91b61c7a6ec4484a85517973e8b9, type: 2}
     - target: {fileID: 5630031804339980843, guid: ef1146b8214c9e6439d81ec9aa684187, type: 3}
       propertyPath: m_Name
       value: '[- Core Managers -]'

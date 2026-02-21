@@ -233,10 +233,48 @@ namespace InGame.Managers
                 LogManager.LogWarning($"[GameManager] PlayerController 캐싱 재시도 결과: {(m_playerController != null ? "성공" : "실패")}", LogManager.LogCategory.System);
             }
 
-            // [추가] 씬 전체 초기화 대기 (리모트 데이터 동기화 포함)
-            LogManager.Log($"[GameManager] InitializeAsync 완료 (TimeScale: {Time.timeScale})", LogManager.LogCategory.System);
-            m_isInitialized = true;
+            // 1. 리모트 데이터 동기화 및 플레이어 스폰 대기
+            LogManager.Log($"[GameManager] 씬 전체 초기화 및 리모트 동기화 대기 시작 (TimeScale: {Time.timeScale})", LogManager.LogCategory.System);
             await InitializeGameAsync();
+            
+            // 2. 씬 초기화(InitializeAsync)는 여기서 반환하여 SceneLoader의 페이드 아웃 대기를 해제하고,
+            // 백그라운드에서 페이드 아웃 완료를 기다린 후 카운트다운을 시작합니다.
+            WaitAndStartCountdownAsync().Forget();
+
+            LogManager.Log($"[GameManager] InitializeAsync 완료", LogManager.LogCategory.System);
+            m_isInitialized = true;
+        }
+
+        private async UniTaskVoid WaitAndStartCountdownAsync()
+        {
+            // 2.5. 백그라운드에서 플레이어를 스폰합니다. (SceneLoader 닫힘 지연 방지)
+            try
+            {
+                await SpawnPlayerAndInitialWeaponsAsync();
+                LogManager.Log("[GameManager] 플레이어 및 초기 무기 스폰 완료", LogManager.LogCategory.System);
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[GameManager] 플레이어 스폰 중 치명적 오류 발생: {ex.Message}", LogManager.LogCategory.System);
+            }
+
+            // 3. 페이드 아웃 연출이 끝날 때까지 대기
+            if (m_sceneLoader != null)
+            {
+                await m_sceneLoader.WaitUntilFadedOutAsync();
+            }
+
+            // 4. 화면이 밝아진 후 카운트다운 시작
+            if (m_uiManager != null)
+            {
+                LogManager.Log("[GameManager] 카운트다운 시작 명령 전달", LogManager.LogCategory.System);
+                m_uiManager.StartGameCountdown().Forget();
+            }
+            else
+            {
+                LogManager.LogWarning("[GameManager] UIManager를 찾을 수 없어 카운트다운을 생략하고 즉시 시작을 시도합니다.", LogManager.LogCategory.System);
+                m_state.StartGame();
+            }
         }
 
         private void Start()
@@ -362,26 +400,7 @@ namespace InGame.Managers
                 LogManager.LogError($"[GameManager] 리모트 데이터 동기화 중 오류 발생: {ex.Message}. 로컬 데이터로 진행을 시도합니다.", LogManager.LogCategory.System);
             }
 
-            try
-            {
-                await SpawnPlayerAndInitialWeaponsAsync();
-                LogManager.Log("[GameManager] 플레이어 및 초기 무기 스폰 완료", LogManager.LogCategory.System);
-            }
-            catch (Exception ex)
-            {
-                LogManager.LogError($"[GameManager] 플레이어 스폰 중 치명적 오류 발생: {ex.Message}", LogManager.LogCategory.System);
-            }
-
-            if (m_uiManager != null)
-            {
-                LogManager.Log("[GameManager] 카운트다운 시작 명령 전달", LogManager.LogCategory.System);
-                m_uiManager.StartGameCountdown().Forget();
-            }
-            else
-            {
-                LogManager.LogWarning("[GameManager] UIManager를 찾을 수 없어 카운트다운을 생략하고 즉시 시작을 시도합니다.", LogManager.LogCategory.System);
-                m_state.StartGame();
-            }
+            // [수정] 플레이어 스폰 대기는 백그라운드(WaitAndStartCountdownAsync)로 이동했습니다.
         }
 
         #endregion

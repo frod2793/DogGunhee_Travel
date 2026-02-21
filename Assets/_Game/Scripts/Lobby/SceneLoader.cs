@@ -28,6 +28,8 @@ namespace InGame
         [SerializeField, Tooltip("로딩 아이콘/바 애니메이터")]
         private Animator m_animator;
 
+        private bool m_isFadedOut = true; // [추가]: 페이드 아웃 완료 여부 플래그
+
         [Header("<color=green>씬 참조 목록</color>")]
         [SerializeField, FormerlySerializedAs("sceneReferences")]
         private SceneReference[] m_sceneReferences;
@@ -131,6 +133,14 @@ namespace InGame
             gameObject.SetActive(false);
         }
 
+        /// <summary>
+        /// [설명]: 씬 전환 후, 페이드 아웃 연출이 완전히 끝날 때까지 대기합니다.
+        /// </summary>
+        public async UniTask WaitUntilFadedOutAsync()
+        {
+            await UniTask.WaitUntil(() => m_isFadedOut);
+        }
+
         #endregion
 
         #region 공개 API
@@ -210,6 +220,7 @@ namespace InGame
         /// </summary>
         private async UniTask ProcessSceneLoadAsync(string sceneName, object payload, CancellationToken ct)
         {
+            m_isFadedOut = false; // [수정]: 페이드 아웃 상태 리셋
             PrepareLoading();
 
             LogManager.Log($"[SceneLoader] 씬 전환 시작: {sceneName}", LogManager.LogCategory.SceneLoader);
@@ -227,6 +238,7 @@ namespace InGame
             await FadeAsync(false, ct);
 
             FinishLoading();
+            m_isFadedOut = true; // [수정]: 페이드 아웃 완료 표시
             LogManager.Log($"[SceneLoader] 씬 전환 완료: {sceneName}", LogManager.LogCategory.SceneLoader);
         }
 

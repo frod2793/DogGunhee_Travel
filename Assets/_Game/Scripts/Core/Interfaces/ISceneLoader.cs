@@ -17,5 +17,6 @@ namespace InGame
         void LoadVamSerLikeScene(object payload = null);
         void LoadIntroScene(object payload = null);
         void LoadScene(string sceneName, object payload = null);
+        UniTask WaitUntilFadedOutAsync();
     }
 }

@@ -1,4 +1,5 @@
-﻿using InGame.Core.Interfaces;
+﻿#if UNITY_EDITOR
+using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -531,3 +532,4 @@ namespace InGame.Managers
         #endregion
     }
 }
+#endif

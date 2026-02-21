@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -130,3 +131,4 @@ namespace InGame.Test
         #endregion
     }
 }
+#endif
