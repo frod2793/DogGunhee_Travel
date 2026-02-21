@@ -12,6 +12,8 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using InGame.Player.Player_Base;
 using InGame.Test;
+using Tests;
+using InGame.ObjectPool;
 
 namespace InGame.Managers
 {
@@ -46,11 +48,15 @@ namespace InGame.Managers
 
         [Header("UI 참조 - 게임 흐름")]
         [SerializeField, Tooltip("스테이지 클리어 테스트 버튼")] private Button m_clearStageButton;
+        [Header("UI 참조 - 경제")]
+        [SerializeField, Tooltip("코인 추가 수량 입력")] private TMP_InputField m_addCoinInput;
+        [SerializeField, Tooltip("코인 추가 버튼")] private Button m_addCoinButton;
 
         [Header("UI 참조 - 몬스터")]
         [SerializeField, Tooltip("스폰할 몬스터 선택 드롭다운")] private TMP_Dropdown m_mobDropdown;
         [SerializeField, Tooltip("몬스터 스폰 버튼")] private Button m_spawnMobButton;
         [SerializeField, Tooltip("모든 몬스터 제거 버튼")] private Button m_killAllMobsButton;
+        [SerializeField, Tooltip("테스트 모드 토글 버튼")] private Button m_toggleTestModeButton;
 
         [Header("UI 참조 - 시스템")]
         [SerializeField, Tooltip("맵 경계 시각화 토글")] private Toggle m_showMapBoundsToggle;
@@ -67,6 +73,8 @@ namespace InGame.Managers
         private ICombatContext m_combatCtx;
         private IGameStateService m_gameState;
         private MapBoundsVisualizer m_boundsVisualizer;
+        private GameManager m_gameManager; // Added for reflection access
+        private InGameAutoTester m_autoTester; // Added for test mode toggle
         
         private List<SkillData> m_allWeaponSkills;
         private List<string> m_availableMobKeys = new List<string>();
@@ -107,6 +115,9 @@ namespace InGame.Managers
                 gameObject.SetActive(false);
                 return;
             }
+
+            // GameManager 참조 저장 (reflection 사용을 위해)
+            m_gameManager = m_gameState as GameManager;
 
             InitializeUI();
             
@@ -277,6 +288,11 @@ namespace InGame.Managers
                 m_clearStageButton.onClick.AddListener(OnClearStageClicked);
             }
 
+            if (m_addCoinButton != null)
+            {
+                m_addCoinButton.onClick.AddListener(OnAddCoinClicked);
+            }
+
             if (m_spawnMobButton != null)
             {
                 m_spawnMobButton.onClick.AddListener(OnSpawnMobClicked);
@@ -285,6 +301,11 @@ namespace InGame.Managers
             if (m_killAllMobsButton != null)
             {
                 m_killAllMobsButton.onClick.AddListener(OnKillAllMobsClicked);
+            }
+
+            if (m_toggleTestModeButton != null)
+            {
+                m_toggleTestModeButton.onClick.AddListener(OnToggleTestModeClicked);
             }
 
             if (m_showMapBoundsToggle != null)
@@ -406,7 +427,7 @@ namespace InGame.Managers
             int charIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
 
             // GameManager에 대한 직접 의존성 최소화를 위해 캐스팅 사용 (테스트용)
-            if (m_gameState is GameManager gm)
+            if (m_gameState != null && m_gameState is GameManager gm)
             {
                 if (gm.PlayerData != null)
                 {
@@ -477,17 +498,61 @@ namespace InGame.Managers
 
         private void OnKillAllMobsClicked()
         {
-            if (m_combatCtx == null) return;
+            if (m_gameManager == null) return;
 
-            if (m_combatCtx.ObjectPoolSpawner != null)
+            var spawnerField = m_gameManager.GetType().GetField("m_objectPoolSpawner", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var spawner = spawnerField?.GetValue(m_gameManager) as ObjectPoolSpawner;
+            if (spawner != null)
             {
-                m_combatCtx.ObjectPoolSpawner.ReturnAllMobsForTest();
+                spawner.ReturnAllMobsForTest();
+                LogManager.Log("[TestManager] 모든 몬스터를 제거했습니다.", LogManager.LogCategory.System);
+            }
+        }
+
+        private void OnToggleTestModeClicked()
+        {
+            if (m_autoTester == null)
+            {
+                m_autoTester = FindFirstObjectByType<InGameAutoTester>();
+            }
+
+            if (m_autoTester != null)
+            {
+                var field = m_autoTester.GetType().GetField("m_isTestMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                bool current = (bool)field.GetValue(m_autoTester);
+                m_autoTester.ToggleTestMode(!current).Forget();
+
+                // 버튼 텍스트나 색상 변경은 시각적 피드백을 위해 필요할 수 있음
+                var text = m_toggleTestModeButton.GetComponentInChildren<TMP_Text>();
+                if (text != null) text.text = !current ? "Test Mode: ON" : "Test Mode: OFF";
+            }
+        }
+
+        private void OnAddCoinClicked()
+        {
+            if (m_autoTester == null)
+            {
+                m_autoTester = FindFirstObjectByType<InGameAutoTester>();
+            }
+
+            int amount = 1000;
+            if (m_addCoinInput != null && !string.IsNullOrEmpty(m_addCoinInput.text))
+            {
+                if (int.TryParse(m_addCoinInput.text, out int parsed))
+                {
+                    amount = parsed;
+                }
+            }
+
+            if (m_autoTester != null)
+            {
+                m_autoTester.AddPlayerCoin(amount);
             }
         }
 
         private async UniTaskVoid EquipWeaponAsync(SkillData skill, int level, bool evolved)
         {
-            if (m_gameState is GameManager gm)
+            if (m_gameState != null && m_gameState is GameManager gm)
             {
                 await gm.EquipNewWeapon(skill, true, level, evolved);
                 RefreshOwnedWeaponList();
@@ -511,7 +576,7 @@ namespace InGame.Managers
 
         private void OnRemoveWeaponClicked(string skillCode)
         {
-            if (m_gameState is GameManager gm)
+            if (m_gameState != null && m_gameState is GameManager gm)
             {
                 gm.RemoveWeaponForTest(skillCode);
                 RefreshOwnedWeaponList();

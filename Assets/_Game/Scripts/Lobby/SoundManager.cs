@@ -56,14 +56,12 @@ public class SoundManager : MonoBehaviour, ISoundManager
     public float BgmSoundVolume { get; private set; } = 1.0f;
 
     #endregion
-
-    // 정적 PlayFunc 메서드 제거됨
+    
 
     #region 유니티 생명주기
 
     private void Awake()
     {
-        // [수정]: 루트 오브젝트가 아닌 경우 부모에서 분리 후 DontDestroyOnLoad 적용
         if (transform.parent != null)
         {
             transform.SetParent(null);

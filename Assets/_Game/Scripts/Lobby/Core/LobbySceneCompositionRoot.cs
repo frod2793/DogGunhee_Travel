@@ -62,7 +62,7 @@ namespace Lobby
         /// [설명]: 씬 전환 시 SceneLoader에서 호출되어 초기 페이로드를 전달합니다.
         /// </summary>
         /// <param name="payload">이전 씬에서 넘어온 통합 상태 데이터 (ScenePayloadDTO 등)</param>
-        public UniTask OnInitialize(object payload)
+        public async UniTask OnInitialize(object payload)
         {
             LogManager.Log("[LobbySceneCompositionRoot] 로비 씬 초기화 시작", LogManager.LogCategory.System);
 
@@ -98,9 +98,24 @@ namespace Lobby
             // 3. 서비스 생성
             var encryptService = new EncryptionService();
             var localRepo = new LocalPlayerDataRepository(encryptService);
-            var playerService = new PlayerDataService(playerData, encryptService, localRepo);
+            var playerService = new PlayerDataService(playerData, encryptService, localRepo, serverSession?.GameData);
 
-            // 4. 인벤토리 컨텍스트 초기화 (전역 로직 이관)
+            // 4. 서버 데이터 동기화 (LoadFromServerAsync)
+            // [수정]: 페이드인/아웃 로직과 맞물려, 서버 세션이 유효하다면 항상 서버에서 최신 정보를 가져옵니다.
+            // (인게임에서 합산된 재화 수치 등을 정확히 반영하기 위함)
+            bool isFirstLogin = (payload is ScenePayloadDTO p) && p.IsFirstLogin;
+
+            if (serverSession?.GameData != null)
+            {
+                LogManager.Log($"[LobbySceneCompositionRoot] 서버로부터 최신 플레이어 데이터 동기화 시작... (FirstLogin: {isFirstLogin})", LogManager.LogCategory.PlayerDataService);
+                await playerService.LoadFromServerAsync();
+            }
+            else
+            {
+                LogManager.Log($"[LobbySceneCompositionRoot] 로비 진입 (FirstLogin: {isFirstLogin}): 서버 세션이 없어 로컬 데이터를 기반으로 초기화합니다.", LogManager.LogCategory.PlayerDataService);
+            }
+
+            // 5. 인벤토리 컨텍스트 초기화 (전역 로직 이관)
             if (m_inventoryManager != null && serverSession?.GameData != null)
             {
                 m_inventoryManager.Init(serverSession.GameData);
@@ -134,8 +149,6 @@ namespace Lobby
             {
                 LogManager.LogError("[LobbySceneCompositionRoot] LobbyUIViewManager를 찾을 수 없습니다.");
             }
-
-            return UniTask.CompletedTask;
         }
 
         #endregion
@@ -152,7 +165,7 @@ namespace Lobby
             // --- 독립 프리팹: SceneLoader ---
             if (m_sceneLoader == null)
             {
-                m_sceneLoader = FindFirstObjectByType<SceneLoader>();
+                m_sceneLoader = FindAnyObjectByType<SceneLoader>(FindObjectsInactive.Include);
             }
             if (m_sceneLoader == null && m_sceneLoaderPrefab != null)
             {

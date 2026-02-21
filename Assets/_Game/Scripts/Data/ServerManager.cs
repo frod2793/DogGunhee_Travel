@@ -52,8 +52,16 @@ namespace InGame
 
         #endregion
 
-        #region 유니티 생명주기 
-        
+        #region 유니티 생명주기
+
+        private void Awake()
+        {
+            if (transform.parent != null)
+            {
+                transform.SetParent(null);
+            }
+            DontDestroyOnLoad(gameObject);
+        }
 
         private void Start()
         {

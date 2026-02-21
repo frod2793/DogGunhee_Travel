@@ -20,6 +20,8 @@ namespace InGame
         [SerializeField] private GameManager m_gameManager;
         [SerializeField] private UIManager m_uiManager;
         [SerializeField] private PlayerController m_playerController;
+        [SerializeField, Tooltip("씬 로더 참조 (에디터 실행 폴백용)")] 
+        private SceneLoader m_sceneLoader;
 
         #endregion
 
@@ -56,7 +58,11 @@ namespace InGame
                 inventoryContext = scenePayload.InventoryContext;
             }
 
-            // 3. 씬 로더 폴백 (에디터 독립 실행 시 자동 탐색)
+            // 3. 씬 로더 폴백 (Payload에 없을 경우 인스펙터 참조 사용)
+            if (sceneLoader == null)
+            {
+                sceneLoader = m_sceneLoader;
+            }
 
             // [추가]: 인스펙터에도 미할당 시 자동 탐색 (비활성 객체 포함)
             if (sceneLoader == null)
@@ -119,18 +125,8 @@ namespace InGame
 
         private void Start()
         {
-            // [수정]: SceneLoader와의 레이스 컨디션을 방지하기 위해 폴백 체크를 비동기로 수행합니다.
-            CheckEditorFallbackAsync().Forget();
-        }
-
-        /// <summary>
-        /// [설명]: SceneLoader에 의한 초기화 여부를 잠시 대기 후 확인하여 에디터 폴백을 실행합니다.
-        /// </summary>
-        private async UniTaskVoid CheckEditorFallbackAsync()
-        {
-            // SceneLoader가 OnInitialize를 호출할 수 있도록 2프레임 정도 대기합니다.
-            await UniTask.DelayFrame(2);
-
+            // 에디터에서 직접 실행했을 때 (SceneLoader를 거치지 않았을 때)를 위한 폴백
+            // [수정]: OnInitialize가 이미 외부(SceneLoader)에서 호출되었거나 호출 중인 경우 중복 실행을 철저히 차단합니다.
             if (!m_isInitialized)
             {
                 LogManager.Log("[GameSceneCompositionRoot] SceneLoader에 의한 초기화가 감지되지 않아 에디터 폴백 초기화를 시작합니다.", LogManager.LogCategory.System);
@@ -138,7 +134,7 @@ namespace InGame
             }
             else
             {
-                LogManager.Log("[GameSceneCompositionRoot] SceneLoader에 의해 이미 초기화되었습니다. 폴백을 건너뜁니다.", LogManager.LogCategory.System);
+                LogManager.Log("[GameSceneCompositionRoot] SceneLoader에 의해 이미 초기화되었거나 진행 중입니다. 폴백을 건너뜁니다.", LogManager.LogCategory.System);
             }
         }
 

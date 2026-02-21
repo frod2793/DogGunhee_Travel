@@ -42,6 +42,7 @@ namespace InGame
         private static SceneLoader s_instance;
 
         private CancellationTokenSource m_cts;
+        private bool m_isLoading; // [추가]: 현재 로딩 진행 중 여부
 
         #endregion
 
@@ -56,7 +57,7 @@ namespace InGame
             {
                 if (s_instance == null)
                 {
-                    s_instance = FindFirstObjectByType<SceneLoader>();
+                    s_instance = FindAnyObjectByType<SceneLoader>(FindObjectsInactive.Include);
                     if (s_instance == null)
                     {
                         s_instance = Create();
@@ -66,6 +67,8 @@ namespace InGame
                 return s_instance;
             }
         }
+
+        public static string CurrentLoadingSceneName { get; private set; }
 
         #endregion
 
@@ -128,9 +131,8 @@ namespace InGame
             {
                 m_canvasGroup.alpha = 0f;
                 m_canvasGroup.blocksRaycasts = false;
+                m_canvasGroup.interactable = false;
             }
-
-            gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -182,7 +184,7 @@ namespace InGame
                 return;
             }
 
-            if (gameObject.activeSelf)
+            if (m_isLoading)
             {
                 LogManager.LogWarning($"[SceneLoader] 이미 로딩이 진행 중입니다: {sceneName}", LogManager.LogCategory.SceneLoader);
                 return;
@@ -209,6 +211,11 @@ namespace InGame
             {
                 LogManager.LogError($"[SceneLoader] 씬 로딩 중 에러 발생: {e.Message}", LogManager.LogCategory.SceneLoader);
             }
+            finally
+            {
+                m_isLoading = false;
+                CurrentLoadingSceneName = string.Empty;
+            }
         }
 
         #endregion
@@ -220,6 +227,8 @@ namespace InGame
         /// </summary>
         private async UniTask ProcessSceneLoadAsync(string sceneName, object payload, CancellationToken ct)
         {
+            m_isLoading = true; // 로딩 시작
+            CurrentLoadingSceneName = sceneName; // 로딩 시작 시 타겟 씬 기록
             m_isFadedOut = false; // [수정]: 페이드 아웃 상태 리셋
             PrepareLoading();
 
@@ -231,11 +240,13 @@ namespace InGame
             // 2. 실제 비동기 씬 로드 및 진행 바 갱신
             await LoadSceneInternalAsync(sceneName, payload, ct);
 
-            // 3. 로딩 완료 연출 대기
-            await WaitForFinishAnimationAsync(ct);
-
-            // 4. 페이드 아웃 (화면 보이기)
-            await FadeAsync(false, ct);
+            // 3. 로딩 완료 연출 및 페이드 아웃 (화면 보이기) 병렬 실행
+            // [최적화]: OnInitialize(리모트 데이터 동기화 로그 출력 시점) 완료 즉시 
+            // 화면이 밝아지기 시작하도록 종료 애니메이션과 페이드 아웃을 동시에 진행합니다.
+            await UniTask.WhenAll(
+                WaitForFinishAnimationAsync(ct),
+                FadeAsync(false, ct)
+            );
 
             FinishLoading();
             m_isFadedOut = true; // [수정]: 페이드 아웃 완료 표시
@@ -252,8 +263,6 @@ namespace InGame
             {
                 Time.timeScale = 1f;
             }
-
-            gameObject.SetActive(true);
 
             if (m_animator != null)
             {
@@ -312,24 +321,46 @@ namespace InGame
                 }
             }
 
-            // 씬 로드 완료 후 Initializer 찾기 및 초기화 대기
-            var initializers = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-            var initTasks = new System.Collections.Generic.List<UniTask>();
+            // [수정]: 씬 활성화 허용 후 실제 완료될 때까지 명시적으로 UniTask로 대기하여 
+            // Hierarchy에 오브젝트들이 완전히 등록된 상태를 보장합니다.
+            await op.ToUniTask(cancellationToken: ct);
 
-            foreach (var mono in initializers)
+            // 씬 로드 완료 후 Initializer 찾기 및 초기화 대기
+            // [수정]: 씬 로드 완료 시점에 활성화된 모든 오브젝트 중 ISceneInitializer를 구현한 대상을 모두 수집합니다.
+            // (새로운 씬의 오브젝트 + DontDestroyOnLoad 객체 포함)
+            var initTasks = new System.Collections.Generic.List<UniTask>();
+            var targets = new System.Collections.Generic.List<Core.ISceneInitializer>();
+
+            // [변경]: FindObjectsByType을 사용하여 현재 하이어라키의 모든 이니셜라이저를 누락 없이 수집합니다.
+            var allCandidates = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var mono in allCandidates)
             {
-                if (mono is Core.ISceneInitializer initializer)
+                if (mono is Core.ISceneInitializer ini)
                 {
-                    initTasks.Add(initializer.OnInitialize(payload));
+                    targets.Add(ini);
+                }
+            }
+
+            // 3. 작업 생성 및 정밀 로깅 적용
+            foreach (var target in targets)
+            {
+                if (target is MonoBehaviour mono)
+                {
+                    string name = mono.gameObject.name;
+                    initTasks.Add(UniTask.Create(async () => {
+                        LogManager.Log($"[SceneLoader] [{name}] 초기화 태스크 대기 시작...", LogManager.LogCategory.SceneLoader);
+                        await target.OnInitialize(payload);
+                        LogManager.Log($"[SceneLoader] [{name}] 초기화 태스크 완료됨", LogManager.LogCategory.SceneLoader);
+                    }));
                 }
             }
 
             if (initTasks.Count > 0)
             {
+                LogManager.Log($"[SceneLoader] {sceneName} 씬 초기화 대기 시작 (대기 대상: {initTasks.Count}개)", LogManager.LogCategory.SceneLoader);
                 await UniTask.WhenAll(initTasks).AttachExternalCancellation(ct);
+                LogManager.Log($"[SceneLoader] {sceneName} 씬 모든 초기화 태스크 완결됨", LogManager.LogCategory.SceneLoader);
             }
-
-            await op.ToUniTask(cancellationToken: ct);
         }
 
         /// <summary>
@@ -384,8 +415,6 @@ namespace InGame
             {
                 m_animator.gameObject.SetActive(false);
             }
-
-            gameObject.SetActive(false);
         }
 
         /// <summary>

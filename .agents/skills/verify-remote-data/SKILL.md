@@ -114,6 +114,26 @@ grep -A 10 "UNITY_EDITOR" Assets/_Game/Scripts/InGame/Manager/GameManager.cs | g
 **PASS:** 강제 동기화 및 에디터 폴백 로직 존재
 **FAIL:** 데이터 정합성 누락 가능성 있음
 
+### Step 6: 모바일 안정성 및 씬 초기화 대기 검사
+
+`RemoteDataService`의 타임아웃 처리와 `RemoteDataUpdateManager`가 씬 로더와 정상 연동되는지 확인합니다.
+
+**파일:** `RemoteDataService.cs`, `RemoteDataUpdateManager.cs`
+
+**검사:**
+
+```bash
+# 1. RemoteDataService의 모바일 타임아웃(15초) 적용 확인
+grep "k_MobileTimeoutSeconds = 15" Assets/_Game/Scripts/Data/Services/RemoteDataService.cs
+
+# 2. RemoteDataUpdateManager의 ISceneInitializer 구현 여부 확인
+grep "class RemoteDataUpdateManager : MonoBehaviour, IRemoteDataUpdateService, InGame.Core.ISceneInitializer" Assets/_Game/Scripts/Data/Managers/RemoteDataUpdateManager.cs
+```
+
+**PASS:** 타임아웃 15초 설정 확인됨, `ISceneInitializer`를 통한 씬 로딩 대기 루프 참여 확인
+**FAIL:** 무한 대기 위험 또는 씬 초기화 인터페이스 미구현
+**수정:** 타임아웃 로직 추가 및 `ISceneInitializer` 인터페이스 구현
+
 ## Output Format
 
 ### 리모트 데이터 시스템 검증 결과
@@ -122,8 +142,9 @@ grep -A 10 "UNITY_EDITOR" Assets/_Game/Scripts/InGame/Manager/GameManager.cs | g
 |-----------|------|-----------|
 | GAS URL 유효성 | PASS | 최신 배포 URL 확인됨 |
 | 스탯 매칭 정합성 | PASS | Range/Duration 매칭 완료 |
+| 모바일 안정성 | PASS | 15초 타임아웃 및 네트워크 체크 적용 |
+| 씬 초기화 대기 | PASS | ISceneInitializer를 통한 안정적 대기 |
 | 로컬 캐싱 경로 | PASS | DataCache/.json 사용 중 |
-| DTO 구조 | PASS | 핵심 DTO 정의 확인됨 |
 
 ## Exceptions
 

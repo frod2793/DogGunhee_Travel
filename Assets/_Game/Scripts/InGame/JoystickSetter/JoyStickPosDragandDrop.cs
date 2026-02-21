@@ -52,30 +52,36 @@ namespace InGame.UI.Joystick
         }
 
         /// <summary>
-        /// [설명]: 드래그 가능한 영역(Canvas 혹은 부모)의 경계를 계산합니다.
+        /// [설명]: 드래그 가능한 영역을 부모 RectTransform 내부로 제한하기 위한 경계를 계산합니다.
         /// </summary>
         private void CalculateBoundaries()
         {
-            if (m_canvas == null || m_targetRect == null) return;
+            if (m_targetRect == null) return;
 
-            // 조이스틱의 부모가 캔버스가 아닐 수도 있으므로, 직계 부모를 기준으로 계산하는 것이 안전함
+            // 조이스틱의 직계 부모 (조이스틱의 anchoredPosition이 이 부모 기준임)
             RectTransform parentRect = m_targetRect.parent as RectTransform;
-
             if (parentRect == null) return;
 
-            // 부모의 크기 및 피벗 고려
-            float parentWidth = parentRect.rect.width;
-            float parentHeight = parentRect.rect.height;
+            // 1. 부모의 Rect 정보 확보 (로컬 좌표계 기준)
+            Rect pRect = parentRect.rect;
 
-            // 타겟(조이스틱)의 크기 및 피벗 고려
-            float targetWidth = m_targetRect.rect.width;
-            float targetHeight = m_targetRect.rect.height;
+            // 2. 조이스틱의 앵커 위치를 부모 로컬 좌표계 기준으로 계산
+            // anchoredPosition은 이 앵커 지점으로부터의 오프셋이므로, 이를 빼주어야 함
+            Vector2 anchorPosInParent = new Vector2(
+                Mathf.Lerp(pRect.xMin, pRect.xMax, m_targetRect.anchorMin.x),
+                Mathf.Lerp(pRect.yMin, pRect.yMax, m_targetRect.anchorMin.y)
+            );
 
-            // 이동 가능한 최소/최대 좌표 계산 (부모 기준 로컬 좌표)
-            float minX = -parentWidth * parentRect.pivot.x + targetWidth * m_targetRect.pivot.x;
-            float minY = -parentHeight * parentRect.pivot.y + targetHeight * m_targetRect.pivot.y;
-            float maxX = parentWidth * (1 - parentRect.pivot.x) - targetWidth * (1 - m_targetRect.pivot.x);
-            float maxY = parentHeight * (1 - parentRect.pivot.y) - targetHeight * (1 - m_targetRect.pivot.y);
+            // 3. 조이스틱의 현재 크기(스케일 포함)와 피벗을 고려하여 Clamp 범위 계산
+            float targetWidth = m_targetRect.rect.width * m_targetRect.localScale.x;
+            float targetHeight = m_targetRect.rect.height * m_targetRect.localScale.y;
+
+            // [계산식]: (부모 경계 - 앵커 위치) + (피벗에 따른 최소/최대 오프셋)
+            // pRect.xMin/xMax는 부모의 피벗 위치에 따른 상대 좌표를 이미 포함하고 있음
+            float minX = pRect.xMin - anchorPosInParent.x + (targetWidth * m_targetRect.pivot.x);
+            float minY = pRect.yMin - anchorPosInParent.y + (targetHeight * m_targetRect.pivot.y);
+            float maxX = pRect.xMax - anchorPosInParent.x - (targetWidth * (1 - m_targetRect.pivot.x));
+            float maxY = pRect.yMax - anchorPosInParent.y - (targetHeight * (1 - m_targetRect.pivot.y));
 
             m_minBoundary = new Vector2(minX, minY);
             m_maxBoundary = new Vector2(maxX, maxY);
@@ -92,10 +98,10 @@ namespace InGame.UI.Joystick
         {
             if (m_targetRect == null || m_canvas == null) return;
 
-            // 1. 이동 범위 재계산 (화면 해상도 변경 대응)
+            // 1. 이동 범위 재계산 (화면 해상도 변경 및 앵커 설정 대응)
             CalculateBoundaries();
 
-            // 2. 터치 지점과 UI 중심점 사이의 오프셋 계산
+            // 2. 터치 지점과 UI 중심점 사이의 오프셋 계산 (부모 로컬 좌표계 기준)
             RectTransform parentRect = m_targetRect.parent as RectTransform;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -104,6 +110,7 @@ namespace InGame.UI.Joystick
                     eventData.pressEventCamera,
                     out Vector2 localPoint))
             {
+                // anchoredPosition space와 localPoint space는 동일한 스케일/방향을 공유함 (앵커 위치만 다름)
                 m_dragOffset = m_targetRect.anchoredPosition - localPoint;
             }
         }
@@ -117,17 +124,17 @@ namespace InGame.UI.Joystick
 
             RectTransform parentRect = m_targetRect.parent as RectTransform;
 
-            // 터치 위치를 로컬 좌표로 변환
+            // 터치 위치를 부모 로컬 좌표로 변환
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     parentRect,
                     eventData.position,
                     eventData.pressEventCamera,
                     out Vector2 localPoint))
             {
-                // 오프셋을 적용한 목표 위치
+                // 드래그 시작 시 계산한 오프셋을 적용하여 목표 anchoredPosition 도출
                 Vector2 desiredPosition = localPoint + m_dragOffset;
 
-                // 캔버스 영역 밖으로 나가지 않도록 Clamp
+                // 캔버스(화면) 영역 밖으로 나가지 않도록 Clamp
                 desiredPosition.x = Mathf.Clamp(desiredPosition.x, m_minBoundary.x, m_maxBoundary.x);
                 desiredPosition.y = Mathf.Clamp(desiredPosition.y, m_minBoundary.y, m_maxBoundary.y);
 

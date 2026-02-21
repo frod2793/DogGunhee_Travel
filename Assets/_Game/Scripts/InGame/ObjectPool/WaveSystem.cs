@@ -30,6 +30,9 @@ namespace InGame.ObjectPool
         /// <summary> 웨이브 사이 휴식 시간(Intermission) 진행 여부 </summary>
         private bool m_isWaitingForNextWave = false;
 
+        /// <summary> [설명]: 현재 진행 중인 웨이브/대기 시간의 남은 초 단위 시간입니다. </summary>
+        private float m_remainingTime = 0f;
+
         /// <summary> 비동기 웨이브 루틴 제어 토큰 </summary>
         private CancellationTokenSource m_waveCts;
 
@@ -92,25 +95,49 @@ namespace InGame.ObjectPool
             m_spawnedMobCount = 0;
             m_isSpawningAllowed = true;
             m_isWaitingForNextWave = false;
+            m_remainingTime = 0f;
 
             ProcessNextWave();
         }
 
         /// <summary>
-        /// [설명]: 웨이브 시스템을 일시 정지 상태로 전환합니다.
+        /// [설명]: 웨이브 시스템을 일시 정지 상태로 전환하며 진행 중인 모든 타이머를 중단합니다.
         /// </summary>
         public void Pause()
         {
             m_isSpawningAllowed = false;
+            CancelCurrentTask();
+            LogManager.Log($"[WaveSystem] 시스템 일시 중지 (남은 시간: {m_remainingTime:F2}s)", LogManager.LogCategory.System);
         }
 
         /// <summary>
-        /// [설명]: 일시 정지된 웨이브 시스템을 다시 재개합니다.
+        /// [설명]: 일시 정지된 웨이브 시스템을 다시 재개하며 중단되었던 타이머를 복구합니다.
         /// </summary>
         public void Resume()
         {
+            if (m_isSpawningAllowed) return;
+
             m_isSpawningAllowed = true;
-            CheckWaveCompletionCondition();
+            
+            if (m_isWaitingForNextWave)
+            {
+                WaitAndStartNextWaveAsync(m_remainingTime).Forget();
+            }
+            else
+            {
+                var wave = GetCurrentWaveData();
+                if (wave != null && wave.duration > 0)
+                {
+                    RunWaveTimerAsync(m_remainingTime).Forget();
+                }
+                else
+                {
+                    // 처치제 웨이브이거나 대기 중이 아니었던 경우 상태 체크
+                    CheckWaveCompletionCondition();
+                }
+            }
+            
+            LogManager.Log($"[WaveSystem] 시스템 재개 (남은 시간: {m_remainingTime:F2}s)", LogManager.LogCategory.System);
         }
 
         /// <summary>
@@ -294,17 +321,23 @@ namespace InGame.ObjectPool
         }
 
         /// <summary>
-        /// [설명]: 시간제 웨이브를 처리하기 위한 비동기 타이머 루틴입니다.
+        /// [설명]: 시간제 웨이브를 처리하기 위한 비동기 타이머 루틴입니다. 
+        /// 프레임 단위로 남은 시간을 차감하여 일시 정지/재개가 가능하게 합니다.
         /// </summary>
         private async UniTaskVoid RunWaveTimerAsync(float duration)
         {
+            m_remainingTime = duration;
             CancelCurrentTask();
             m_waveCts = new CancellationTokenSource();
             var token = m_waveCts.Token;
 
             try
             {
-                await UniTask.Delay(TimeSpan.FromSeconds(duration), ignoreTimeScale: false, cancellationToken: token);
+                while (m_remainingTime > 0)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    m_remainingTime -= UnityEngine.Time.deltaTime;
+                }
 
                 if (!m_isWaitingForNextWave && m_isSpawningAllowed)
                 {
@@ -313,23 +346,28 @@ namespace InGame.ObjectPool
             }
             catch (OperationCanceledException)
             {
-                // 취소됨
+                // Pause 시 취소되지만 m_remainingTime은 보존됨
             }
         }
 
         /// <summary>
         /// [설명]: 웨이브 종료 후 다음 웨이브 시작 전까지 설정된 시간만큼 대기합니다.
         /// </summary>
-        private async UniTaskVoid WaitAndStartNextWaveAsync()
+        private async UniTaskVoid WaitAndStartNextWaveAsync(float? customDuration = null)
         {
             m_isWaitingForNextWave = true;
 
-            float waitDuration = 3.0f;
-            var currentWave = GetCurrentWaveData();
-            if (currentWave != null)
+            float waitDuration = customDuration ?? 3.0f;
+            if (customDuration == null)
             {
-                waitDuration = currentWave.waitDuration;
+                var currentWave = GetCurrentWaveData();
+                if (currentWave != null)
+                {
+                    waitDuration = currentWave.waitDuration;
+                }
             }
+            
+            m_remainingTime = waitDuration;
 
             CancelCurrentTask();
             m_waveCts = new CancellationTokenSource();
@@ -337,9 +375,10 @@ namespace InGame.ObjectPool
 
             try
             {
-                if (waitDuration > 0)
+                while (m_remainingTime > 0)
                 {
-                    await UniTask.Delay(TimeSpan.FromSeconds(waitDuration), ignoreTimeScale: false, cancellationToken: token);
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    m_remainingTime -= UnityEngine.Time.deltaTime;
                 }
 
                 if (m_isSpawningAllowed)
@@ -350,7 +389,7 @@ namespace InGame.ObjectPool
             }
             catch (OperationCanceledException)
             {
-                // 대기 루틴 취소
+                // 취소됨
             }
         }
 

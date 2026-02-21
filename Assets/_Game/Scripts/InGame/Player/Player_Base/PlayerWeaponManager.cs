@@ -85,7 +85,7 @@ namespace InGame.Player.Player_Base
             m_controllers.Add(controller);
 
             // 무기 컨트롤러에 사운드 매니저 주입
-            if (controller is WeaponControllerBase baseController && m_soundManager != null)
+            if (controller != null && controller is WeaponControllerBase baseController && m_soundManager != null)
             {
                 baseController.SetSoundManager(m_soundManager);
             }

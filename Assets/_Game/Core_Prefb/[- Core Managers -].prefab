@@ -73,8 +73,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb363881022808848934719bef03946c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGame.Lobby.InventoryManager
-  m_itemDatabase: {fileID: 0}
-  m_inventoryData: {fileID: 0}
+  m_itemDatabase: {fileID: 11400000, guid: 787b4e8058485ab4db7556097e31520a, type: 2}
+  m_inventoryData: {fileID: 11400000, guid: 9b5c91b61c7a6ec4484a85517973e8b9, type: 2}
 --- !u!114 &414441466229554848
 MonoBehaviour:
   m_ObjectHideFlags: 0

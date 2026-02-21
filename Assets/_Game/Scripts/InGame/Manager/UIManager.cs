@@ -361,6 +361,12 @@ namespace InGame.Managers
             }
 
             InitializeViews();
+
+            // [추가]: 게임 시작 시 UI 토글 상태와 플레이어 컨트롤러 상태 동기화
+            if (m_autoAttackToggle != null && m_playerController != null)
+            {
+                m_playerController.AutoAttackEnabledByToggle = m_autoAttackToggle.isOn;
+            }
         }
 
         private void OnGamePause()
@@ -421,7 +427,6 @@ namespace InGame.Managers
             {
                 m_joystickTransform.gameObject.SetActive(false);
             }
-
             if (m_variableJoystick != null)
             {
                 m_variableJoystick.OnPointerUp(null);
@@ -505,6 +510,17 @@ namespace InGame.Managers
 
         private void OnPlayerChanged(PlayerBase player)
         {
+            // [추가]: 플레이어 스폰/변경 시 컨트롤러 참조 최신화 및 토글 동기화
+            if (m_playerCtx != null)
+            {
+                m_playerController = m_playerCtx.PlayerController;
+
+                if (m_playerController != null && m_autoAttackToggle != null)
+                {
+                    m_playerController.AutoAttackEnabledByToggle = m_autoAttackToggle.isOn;
+                }
+            }
+
             m_viewModel.UpdateIconLists();
         }
 
@@ -653,15 +669,15 @@ namespace InGame.Managers
                     if (ownedWeapon != null)
                     {
                         ownedWeapon.LevelUp();
-                    if (m_effectService != null)
-                    {
-                        m_effectService.PlayLevelUpEffect(renderer);
-                    }
+                        if (m_effectService != null)
+                        {
+                            m_effectService.PlayLevelUpEffect(renderer);
+                        }
                     }
                     else
                     {
                         // [주의]: EquipNewWeapon은 GameManager에 특화된 로직일 수 있음. 확인 필요.
-                        if (m_gameState is GameManager gm)
+                        if (m_gameState != null && m_gameState is GameManager gm)
                         {
                             await gm.EquipNewWeapon(selectedSkill);
                         }
@@ -818,18 +834,51 @@ namespace InGame.Managers
             }
         }
 
+        /// <summary>
+        /// [설명]: 게임을 종료하고 로비 씬으로 이동합니다.
+        /// 데이터 저장 시퀀스를 포함하며, 실패하더라도 반드시 로비로 이동하도록 보장합니다.
+        /// </summary>
         private async void ExitToLobby()
         {
-            if (m_gameState != null)
-            {
-                await m_gameState.SaveGameResult();
-            }
+            LogManager.Log("[UIManager] ExitToLobby 시작", LogManager.LogCategory.UIManager);
 
-            if (m_sceneLoader != null)
+            try
             {
-                m_sceneLoader.LoadLobbyScene();
+                // 씬 전환 시 시간축이 멈춰있으면 로직 지연이 발생할 수 있으므로 1.0으로 복구
+                if (Time.timeScale < 1f)
+                {
+                    Time.timeScale = 1f;
+                    LogManager.Log("[UIManager] Time.timeScale을 1.0으로 복구했습니다.", LogManager.LogCategory.UIManager);
+                }
+
+                if (m_gameState != null)
+                {
+                    LogManager.Log("[UIManager] 게임 결과 저장 시도 중...", LogManager.LogCategory.UIManager);
+                    await m_gameState.SaveGameResult();
+                    LogManager.Log("[UIManager] 게임 결과 저장 성공", LogManager.LogCategory.UIManager);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[UIManager] 로비 이동 전 저장 중 오류 발생: {ex.Message}", LogManager.LogCategory.UIManager);
+            }
+            finally
+            {
+                // 어떤 상황에서도 로비 씬으로 이동을 시도
+                if (m_sceneLoader != null)
+                {
+                    LogManager.Log("[UIManager] 로비 씬 로딩 명령 전달 (최신 데이터 페이로드 포함)", LogManager.LogCategory.UIManager);
+                    // GameManager로부터 로비 복귀용 페이로드를 받아 전달
+                    var resultPayload = (m_gameState as GameManager)?.GetResultPayload();
+                    m_sceneLoader.LoadLobbyScene(resultPayload);
+                }
+                else
+                {
+                    LogManager.LogError("[UIManager] SceneLoader를 찾을 수 없어 로비로 이동할 수 없습니다!", LogManager.LogCategory.UIManager);
+                }
             }
         }
+
 
         private void RestartGame()
         {

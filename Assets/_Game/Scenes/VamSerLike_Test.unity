@@ -839,6 +839,7 @@ MonoBehaviour:
   m_mobDropdown: {fileID: 0}
   m_spawnMobButton: {fileID: 0}
   m_killAllMobsButton: {fileID: 0}
+  m_toggleTestModeButton: {fileID: 0}
   m_showMapBoundsToggle: {fileID: 0}
   m_skillDatabase: {fileID: 11400000, guid: b0afd2fc64f8bf345bcdbe3b66b0399d, type: 2}
   m_stageDatabase: {fileID: 11400000, guid: d06e317a66a50084eacfb4ad783f41ad, type: 2}
@@ -868,15 +869,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9df1fd4a75e3094484a6cc3fd1c9029, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tests.InGameAutoTester
-  m_autoSkillSelection: 1
-  m_autoRestartOnDeath: 1
-  m_forceAutoAttack: 1
+  m_isTestMode: 0
+  m_dummyPrefab: {fileID: 2531807732376964852, guid: 9deba3af47d8147a787f5fe5cf07f8fa, type: 3}
   m_checkInterval: 1
   m_weaponTestDuration: 3
-  m_levelUpKey: 289
-  m_dieKey: 290
-  m_sequenceTestKey: 291
-  m_precisionTestKey: 292
 --- !u!1001 &150548061
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2618,7 +2614,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 542925831}
   m_HandleRect: {fileID: 542925830}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

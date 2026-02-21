@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using Cysharp.Threading.Tasks;
 
 namespace Tests
 {
@@ -20,6 +21,19 @@ namespace Tests
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("테스트 제어 (런타임 전용)", EditorStyles.boldLabel);
 
+            // 0. 테스트 모드 토글
+            Color defaultColor = GUI.color;
+            bool isTestMode = (bool)tester.GetType().GetField("m_isTestMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(tester);
+            
+            GUI.color = isTestMode ? Color.green : Color.gray;
+            if (GUILayout.Button(isTestMode ? "테스트 모드 활성화 중 (OFF 클릭)" : "테스트 모드 비활성화 중 (ON 클릭)", GUILayout.Height(40)))
+            {
+                tester.ToggleTestMode(!isTestMode).Forget();
+            }
+            GUI.color = defaultColor;
+
+            EditorGUILayout.Space();
+
             // 1. 레벨업 버튼
             if (GUILayout.Button("강제 레벨업 (F8 대체)", GUILayout.Height(30)))
             {
@@ -30,6 +44,16 @@ namespace Tests
             if (GUILayout.Button("강제 사망 (F9 대체)", GUILayout.Height(30)))
             {
                 tester.TriggerDeath();
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("경제 제어", EditorStyles.boldLabel);
+
+            // 3. 코인 추가 버튼
+            int addCoinAmount = (int)tester.GetType().GetField("m_defaultAddCoinAmount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(tester);
+            if (GUILayout.Button($"코인 {addCoinAmount}개 추가", GUILayout.Height(30)))
+            {
+                tester.AddPlayerCoin(addCoinAmount);
             }
 
             EditorGUILayout.Space();

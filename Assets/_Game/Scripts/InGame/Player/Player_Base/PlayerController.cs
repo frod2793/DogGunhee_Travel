@@ -92,6 +92,15 @@ namespace InGame.Player.Player_Base
                 if (m_autoAttack != null)
                 {
                     m_autoAttack.EnabledByToggle = value;
+
+                    // [추가]: 토글이 켜지는 순간 게임이 시작된 상태라면 즉시 공격 루프 가동 시도
+                    if (value && m_isGameStarted)
+                    {
+                        if (!m_autoAttack.IsActive)
+                        {
+                            m_autoAttack.Enable();
+                        }
+                    }
                 }
             }
         }

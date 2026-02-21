@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using Tests;
+using InGame.ObjectPool;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ using InGame.Player.Player_Base;
 using InGame.UI.Views;
 using InGame.vamsir;
 using InGame.Weapon.Base;
+using InGame.Services;
 using TMPro;
 
 namespace Tests
@@ -24,15 +27,18 @@ namespace Tests
     public class InGameAutoTester : MonoBehaviour
     {
         #region 에디터 설정
-        [Header("기본 자동화 설정")]
-        [SerializeField] private bool m_autoSkillSelection = true;
-        [SerializeField] private bool m_autoRestartOnDeath = false;
-        [SerializeField] private bool m_forceAutoAttack = true;
-        [SerializeField] private float m_checkInterval = 1.0f;
+        [Header("테스트 모드 설정")]
+        [SerializeField, Tooltip("테스트 모드 활성화 여부")] private bool m_isTestMode = false;
+        [SerializeField, Tooltip("테스트용 무적 더미 프리팹")] private TestDummyMob m_dummyPrefab;
+        [SerializeField, Tooltip("체크 간격")] private float m_checkInterval = 1.0f;
 
         [Header("무기 시퀀스 테스트 설정")]
         [SerializeField, Tooltip("무기 하나당 테스트 유지 시간(초) - 자동 레벨업 완료 후 대기 시간")]
         private float m_weaponTestDuration = 3.0f;
+
+        [Header("경제 테스트 설정")]
+        [SerializeField, Tooltip("추가할 코인 기본 수량")]
+        private int m_defaultAddCoinAmount = 1000;
         #endregion
 
         #region 내부 필드
@@ -40,6 +46,8 @@ namespace Tests
         private UIManager m_uiManager;
         private SkillDatabase m_skillDatabase;
         private bool m_isSequenceTesting = false;
+        private IPlayerDataService m_playerDataService;
+        private TestDummyMob m_spawnedDummy;
         #endregion
 
         #region 유니티 생명주기
@@ -56,26 +64,107 @@ namespace Tests
                 if (field != null) m_skillDatabase = field.GetValue(m_gameManager) as SkillDatabase;
             }
 
+            // ✅ 수정: GameManager 내부 PlayerDataService에 리플렉션으로 접근
+            if (m_gameManager != null)
+            {
+                var playerServiceField = m_gameManager.GetType().GetField("m_playerService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (playerServiceField != null)
+                {
+                    m_playerDataService = playerServiceField.GetValue(m_gameManager) as IPlayerDataService;
+                }
+
+                if (m_playerDataService == null)
+                {
+                    Debug.LogWarning("[InGameAutoTester] GameManager의 PlayerDataService를 찾을 수 없습니다.");
+                }
+            }
+
             if (m_gameManager == null || m_uiManager == null)
             {
                 Debug.LogWarning("[InGameAutoTester] 매니저를 찾을 수 없습니다. 인게임 씬이 맞는지 확인하세요.");
                 return;
             }
 
-            StartAutomationLoop().Forget();
+            // 초기 테스트 모드 상태 적용
+            if (m_isTestMode)
+            {
+                ToggleTestMode(true).Forget();
+            }
         }
 
         private void Update()
         {
-            if (m_gameManager == null || m_gameManager.SpawnedPlayer == null) return;
+            // [삭제]: 자동 공격 및 자동 선택은 게임 기본 기능이므로 여기서 강제하지 않음
+        }
 
-            // 1. 강제 자동 공격 활성화 제어
-            if (m_forceAutoAttack && m_gameManager.PlayerController != null)
+        /// <summary> [설명]: 테스트 모드 상태를 전환합니다. </summary>
+        public async UniTask ToggleTestMode(bool active)
+        {
+            m_isTestMode = active;
+
+            if (m_gameManager == null) return;
+
+            // 1. 웨이브 시스템 제어
+            m_gameManager.SetWaveSystemPause(active);
+
+            if (active)
             {
-                if (!m_gameManager.PlayerController.AutoAttackEnabledByToggle)
+                // 2. 기존 몬스터 제거
+                var spawnerField = m_gameManager.GetType().GetField("m_objectPoolSpawner", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var spawner = spawnerField?.GetValue(m_gameManager) as InGame.ObjectPool.ObjectPoolSpawner;
+                if (spawner != null)
                 {
-                    m_gameManager.PlayerController.AutoAttackEnabledByToggle = true;
+                    spawner.ReturnAllMobsForTest();
                 }
+
+                // 3. 무적 더미 소환
+                await SpawnTestDummy();
+            }
+            else
+            {
+                // 4. 더미 제거
+                RemoveTestDummy();
+            }
+
+            Debug.Log($"<color=yellow>[InGameAutoTester] 테스트 모드 {(active ? "활성화" : "비활성화")}</color>");
+        }
+
+        private async UniTask SpawnTestDummy()
+        {
+            if (m_dummyPrefab == null || m_gameManager == null || m_gameManager.SpawnedPlayer == null) return;
+
+            RemoveTestDummy();
+
+            Vector3 spawnPos = m_gameManager.SpawnedPlayer.transform.position + Vector3.right * 3f;
+            m_spawnedDummy = Instantiate(m_dummyPrefab, spawnPos, Quaternion.identity);
+            
+            // 더미 초기화
+            var gameStateField = m_gameManager.GetType().GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var gameState = gameStateField?.GetValue(m_gameManager) as IGameStateService;
+            
+            var combatCtxField = m_gameManager.GetType().GetField("m_combatContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var combatCtx = combatCtxField?.GetValue(m_gameManager) as ICombatContext;
+
+            var mobManagerField = m_gameManager.GetType().GetField("m_mobManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var mobManager = mobManagerField?.GetValue(m_gameManager) as InGame.Mob.Systems.MobManager;
+
+            m_spawnedDummy.Init(mobManager, null, null, gameState, combatCtx);
+            
+            if (mobManager != null)
+            {
+                mobManager.Register(m_spawnedDummy);
+            }
+            m_spawnedDummy.SetTarget(m_gameManager.SpawnedPlayer);
+            
+            Debug.Log("[InGameAutoTester] 테스트용 무적 더미가 소환되었습니다.");
+        }
+
+        private void RemoveTestDummy()
+        {
+            if (m_spawnedDummy != null)
+            {
+                Destroy(m_spawnedDummy.gameObject);
+                m_spawnedDummy = null;
             }
         }
 
@@ -122,82 +211,6 @@ namespace Tests
         }
         #endregion
 
-        #region 자동화 로직
-        private async UniTaskVoid StartAutomationLoop()
-        {
-            while (this != null)
-            {
-                try
-                {
-                    // 스킬 선택 팝업 자동화
-                    if (m_autoSkillSelection && !m_isSequenceTesting) // 시퀀스 테스트 중에는 방해 금지
-                    {
-                        await CheckAndProcessSkillSelection();
-                    }
-
-                    // 사망 후 재시작 자동화
-                    if (m_autoRestartOnDeath)
-                    {
-                        await CheckAndProcessGameOver();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-
-                await UniTask.Delay(TimeSpan.FromSeconds(m_checkInterval), cancellationToken: this.GetCancellationTokenOnDestroy());
-            }
-        }
-
-        /// <summary>
-        /// [설명]: 스킬 선택 팝업이 활성화되었는지 확인하고 첫 번째 스킬을 자동으로 선택합니다.
-        /// </summary>
-        private async UniTask CheckAndProcessSkillSelection()
-        {
-            var skillView = FindFirstObjectByType<InGameSkillView>();
-            if (skillView == null || !skillView.gameObject.activeInHierarchy) return;
-
-            var buttons = skillView.GetComponentsInChildren<SelectSkillBtnPrefab>(false);
-            if (buttons != null && buttons.Length > 0)
-            {
-                Debug.Log($"[InGameAutoTester] 스킬 자동 선택 중... ({buttons.Length}개 후보)");
-                var btn = buttons[0].GetComponent<Button>();
-                if (btn != null && btn.interactable)
-                {
-                    btn.onClick.Invoke();
-                    await UniTask.Delay(500);
-                }
-            }
-        }
-
-        /// <summary>
-        /// [설명]: 게임 오버 팝업이 활성화되었는지 확인하고 재시작을 시도합니다.
-        /// </summary>
-        private async UniTask CheckAndProcessGameOver()
-        {
-            var gameOverPopup = FindFirstObjectByType<GameOverPopup>();
-            if (gameOverPopup == null || !gameOverPopup.gameObject.activeInHierarchy)
-            {
-                await UniTask.Yield();
-                return;
-            }
-
-            // [Refine]: 리플렉션을 통해 private 필드인 m_restartButton에 직접 접근 (경로 의존성 제거)
-            var buttonField = typeof(GameOverPopup).GetField("m_restartButton", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (buttonField != null)
-            {
-                var restartBtn = buttonField.GetValue(gameOverPopup) as Button;
-                if (restartBtn != null && restartBtn.gameObject.activeInHierarchy && restartBtn.interactable)
-                {
-                    Debug.Log("[InGameAutoTester] 게임 오버 감지 - 자동 재시작 버튼 클릭");
-                    restartBtn.onClick.Invoke();
-                    
-                    // 재시작 처리 중 중복 방지를 위해 잠시 대기
-                    await UniTask.Delay(2000, cancellationToken: this.GetCancellationTokenOnDestroy());
-                }
-            }
-        }
 
         /// <summary>
         /// [설명]: 데이터베이스의 모든 무기를 순차적으로 장착, 만렙 달성, 제거하며 테스트합니다.
@@ -208,6 +221,12 @@ namespace Tests
             {
                 Debug.LogError("[InGameAutoTester] 무기 시퀀스 테스트를 수행할 수 없습니다 (Database/Manager 누락).");
                 return;
+            }
+
+            // 0. 테스트 모드 강제 활성화
+            if (!m_isTestMode)
+            {
+                await ToggleTestMode(true);
             }
 
             m_isSequenceTesting = true;
@@ -269,35 +288,24 @@ namespace Tests
                 return;
             }
 
+            // 0. 테스트 모드 강제 활성화
+            if (!m_isTestMode)
+            {
+                await ToggleTestMode(true);
+            }
+
             m_isSequenceTesting = true;
             Debug.Log("<color=magenta>[InGameAutoTester] 무기 정밀 테스트(Precision Log) 시작</color>");
 
-            // 1. 테스트용 더미 소환
-            GameObject dummyObj = new GameObject("Test_Precision_Dummy");
-            dummyObj.transform.position = m_gameManager.SpawnedPlayer.transform.position + Vector3.right * 3f;
-            
-            // 기존 몬스터들의 레이어 설정 (필요 시)
-            dummyObj.layer = LayerMask.NameToLayer("Enemy"); // 몬스터 레이어 할당 (Enemy로 변경)
-
-            // 컴포넌트 추가
-            var collider = dummyObj.AddComponent<CircleCollider2D>();
-            collider.radius = 0.5f;
-            collider.isTrigger = true;
-
-            var renderer = dummyObj.AddComponent<SpriteRenderer>();
-            // 임시로 하얀 사각형 표시
-            renderer.color = Color.gray; 
-
-            var dummy = dummyObj.AddComponent<TestDummyMob>();
-            
-            // 의존성 주입 (GameManager에서 서비스 조회)
-            var gameStateField = m_gameManager.GetType().GetField("m_gameState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var gameState = gameStateField?.GetValue(m_gameManager) as IGameStateService;
-            
-            var combatCtxField = m_gameManager.GetType().GetField("m_combatContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var combatCtx = combatCtxField?.GetValue(m_gameManager) as ICombatContext;
-
-            dummy.Init(null, null, null, gameState, combatCtx);
+            // 1. 이미 테스트 모드에서 소환된 더미가 있으므로 별도 소환 불필요 (필요 시 위치만 조정)
+            if (m_spawnedDummy != null)
+            {
+                m_spawnedDummy.transform.position = m_gameManager.SpawnedPlayer.transform.position + Vector3.right * 3f;
+            }
+            else
+            {
+                await SpawnTestDummy();
+            }
 
             // 2. 무기 리스트 필터링 (잉크, 꼬순내 제외)
             var excludeCodes = new HashSet<string> { "WP_INK", "WP_SMELL" };
@@ -320,10 +328,45 @@ namespace Tests
                 await UniTask.Delay(TimeSpan.FromSeconds(m_weaponTestDuration), cancellationToken: this.GetCancellationTokenOnDestroy());
             }
 
-            // 3. 더미 제거 및 종료
-            Destroy(dummyObj);
             m_isSequenceTesting = false;
             Debug.Log("<color=magenta>[InGameAutoTester] 무기 정밀 테스트 종료</color>");
+        }
+
+        #region 공개 API (Unity Inspector에서 호출 가능)
+        /// <summary>
+        /// [설명]: 현재 플레이어에게 코인을 추가합니다.
+        /// </summary>
+        /// <param name="amount">추가할 코인 수</param>
+        public void AddPlayerCoin(int amount)
+        {
+            if (m_playerDataService == null)
+            {
+                Debug.LogError("[InGameAutoTester] 코인 추가 실패: IPlayerDataService가 없습니다.");
+                return;
+            }
+
+            if (amount <= 0)
+            {
+                Debug.LogWarning("[InGameAutoTester] 코인 추가 금액은 0보다 커야 합니다.");
+                return;
+            }
+
+            m_playerDataService.AddCurrency("ingameCoin", amount);
+            Debug.Log($"[InGameAutoTester] 코인 {amount}개 추가 완료. 현재 코인: {m_playerDataService.Data.IngameCoin}");
+        }
+
+        /// <summary>
+        /// [설명]: 현재 플레이어의 코인을 확인합니다.
+        /// </summary>
+        public void CheckPlayerCoin()
+        {
+            if (m_playerDataService == null)
+            {
+                Debug.LogError("[InGameAutoTester] 코인 확인 실패: IPlayerDataService가 없습니다.");
+                return;
+            }
+
+            Debug.Log($"[InGameAutoTester] 현재 코인: {m_playerDataService.Data.IngameCoin}");
         }
         #endregion
     }

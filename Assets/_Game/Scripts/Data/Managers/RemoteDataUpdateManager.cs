@@ -3,15 +3,48 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using InGame.Services;
+using InGame;
 
 namespace InGame.Data.Managers
 {
     /// <summary>
     /// [설명]: 리모트 데이터(구글 시트 기반 JSON)의 업데이트를 조율하고 데이터베이스를 갱신하는 매니저 클래스입니다.
     /// </summary>
-    public class RemoteDataUpdateManager : MonoBehaviour, IRemoteDataUpdateService
+    public class RemoteDataUpdateManager : MonoBehaviour, IRemoteDataUpdateService, InGame.Core.ISceneInitializer
     {
+        #region 외부 인터페이스 구현 (ISceneInitializer)
+        /// <summary>
+        /// [설명]: 씬 초기화 시 호출되어 원격 데이터 동기화를 수행합니다.
+        /// SceneLoader는 이 작업이 완료될 때까지 로딩 화면을 유지합니다.
+        /// </summary>
+        public async UniTask OnInitialize(object payload)
+        {
+            // [수정]: GetActiveScene().name은 로드 중인 씬이 활성화되기 전에는 이전 씬(Lobby)을 가리킬 수 있습니다.
+            // SceneLoader에서 기록한 정적 타겟 씬 이름을 기반으로 스킵 여부를 정확히 판단합니다.
+            string targetSceneName = SceneLoader.CurrentLoadingSceneName;
+
+            // [최적화]: 이미 동기화가 완료되었고 인게임 씬인 경우 중복 실행 방지
+            if (m_isSyncCompleted && (targetSceneName == SceneNames.RunGame || targetSceneName == SceneNames.VamSerLike))
+            {
+                LogManager.Log($"[RemoteDataUpdateManager] 이미 동기화가 완료되었습니다. ({targetSceneName})", LogManager.LogCategory.System);
+                return;
+            }
+
+            // [최적화]: 로비 씬으로 진입하는 로딩인 경우 리모트 데이터 동기화 스킵 (인게임 진입 시에만 수행)
+            if (targetSceneName == SceneNames.Lobby)
+            {
+                LogManager.Log("[RemoteDataUpdateManager] 로비 씬 진입 감지 - 리모트 데이터 동기화를 스킵합니다.", LogManager.LogCategory.System);
+                return;
+            }
+
+            LogManager.Log($"[RemoteDataUpdateManager] 씬 초기화 단계 (Target: {targetSceneName}) - 데이터 동기화 대기 시작", LogManager.LogCategory.System);
+            await UpdateAllRemoteDataAsync(ct: this.GetCancellationTokenOnDestroy());
+            LogManager.Log("[RemoteDataUpdateManager] 씬 초기화 단계 - 데이터 동기화 완료", LogManager.LogCategory.System);
+        }
+        #endregion
+
         #region 외부 인터페이스 구현 (IRemoteDataUpdateService)
+
         // UpdateAllRemoteDataAsync는 이미 구현되어 있음
         #endregion
 

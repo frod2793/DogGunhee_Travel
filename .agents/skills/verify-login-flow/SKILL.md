@@ -30,6 +30,7 @@ description: 타이틀 씬의 로그인 흐름(MVVM), 어드레서블 로딩, �
 | `Assets/_Game/Scripts/Title/LoginViewModel.cs` | 로그인 뷰모델 (MVVM ViewModel) |
 | `Assets/_Game/Scripts/Manager/AppUpdateManager.cs` | 앱 업데이트 관리자 |
 | `Assets/_Game/Scripts/Data/DTOs/ScenePayloadDTO.cs` | 씬 전환 통합 페이로드 |
+| `Assets/_Game/Scripts/Lobby/Core/LobbySceneCompositionRoot.cs` | 로비 진입점 (페이로드 소비 확인용) |
 
 ## Workflow
 
@@ -96,20 +97,25 @@ grep "UpdateAllRemoteDataAsync" Assets/_Game/Scripts/Title/LoadAddresaableManage
 **PASS:** 업데이트 체크 및 리모트 동기화 로직이 올바른 위치에서 확인됨
 **FAIL:** 호출 누락 또는 잘못된 위치에서 호출됨
 
-### Step 4: 로비 전환 페이로드 구성 검사
+### Step 4: 로비 전환 페이로드 및 첫 로그인 플래그 검사
 
-로그인 성공 후 로비로 전환할 때 `ScenePayloadDTO`를 올바르게 구성하는지 확인합니다.
+로그인 성공 후 로비로 전환할 때 `ScenePayloadDTO`를 올바르게 구성하고 `IsFirstLogin` 플래그를 설정하는지 확인합니다.
 
-**파일:** `Assets/_Game/Scripts/Title/LoginViewMVVM.cs`
+**파일:** `Assets/_Game/Scripts/Title/LoginViewMVVM.cs`, `Assets/_Game/Scripts/Lobby/Core/LobbySceneCompositionRoot.cs`
 
 **검사:**
 
 ```bash
-grep "new ScenePayloadDTO(playerDto, sessionDto, m_soundManager)" Assets/_Game/Scripts/Title/LoginViewMVVM.cs
+# 1. LoginViewMVVM에서 IsFirstLogin = true 설정 확인
+grep "IsFirstLogin = true" Assets/_Game/Scripts/Title/LoginViewMVVM.cs
+
+# 2. LobbySceneCompositionRoot에서 payload.IsFirstLogin 체크 확인
+grep "if (payload.IsFirstLogin)" Assets/_Game/Scripts/Lobby/Core/LobbySceneCompositionRoot.cs
 ```
 
-**PASS:** 플레이어 데이터, 세션, 사운드 서비스를 포함한 페이로드 생성 확인
-**FAIL:** 단일 데이터만 전달하거나 수동으로 싱글톤 참조
+**PASS:** 타이틀에서 플래그를 설정하고 로비에서 이를 분기 조건으로 사용함
+**FAIL:** 플래그 설정 누락 또는 로비에서 조건 없이 항상 서버 로드 시도
+**수정:** `ScenePayloadDTO` 생성 시 `IsFirstLogin = true` 할당 및 로비 진입점에서 조건 처리
 
 ## Output Format
 
@@ -119,7 +125,7 @@ grep "new ScenePayloadDTO(playerDto, sessionDto, m_soundManager)" Assets/_Game/S
 |-----------|------|-----------|
 | 어드레서블 로딩 | PASS | LoadAddresaableManager 확인 |
 | MVVM 바인딩 | PASS | LoginViewMVVM-LoginViewModel 연결됨 |
-| 씬 전환 페이로드 | PASS | ScenePayloadDTO 사용 확인 |
+| 씬 전환 페이로드 | PASS | ScenePayloadDTO 및 IsFirstLogin 플래그 확인 |
 
 ## Exceptions
 

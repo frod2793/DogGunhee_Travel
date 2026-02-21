@@ -154,7 +154,7 @@ namespace InGame.Mob
             m_brain.Initialize();
 
             // 3. 브레인에 필요한 참조 설정
-            if (m_brain is NormalMobBrain normalBrain)
+            if (m_brain != null && m_brain is NormalMobBrain normalBrain)
             {
                 normalBrain.SetPlayerTransform(m_playerTransform);
             }

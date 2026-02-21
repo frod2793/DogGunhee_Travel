@@ -120,41 +120,28 @@ namespace InGame
         }
 
         /// <summary>
-        /// [설명]: 뱀파 서바이버라이크 게임 씬으로 이동합니다.
+        /// [설명]: 구 버전 스크립트입니다. 씬 진입은 LobbyMainMenuView에서 payload를 포함해 수행합니다.
+        /// 이 메서드는 중복 입력 충돌을 방지하기 위해 더 이상 직접 씬 로더를 호출하지 않습니다.
         /// </summary>
         private void EnterVamsirlike()
         {
-            if (m_sceneLoader != null)
-            {
-                m_sceneLoader.LoadVamSerLikeScene();
-            }
-            LogManager.LogError("메시지 매니저가 유효하지 않습니다.", LogManager.LogCategory.System);
+            LogManager.Log("[ChoosegamePopup] (구버전) 뱀서라이크 게임 진입 로직은 무시됩니다. (LobbyMainMenuView에서 처리)", LogManager.LogCategory.System);
         }
 
         /// <summary>
-        /// [설명]: 땅따먹기 게임 모드로 진입합니다. (현재 미구현)
+        /// [설명]: 구 버전 스크립트입니다. 땅따먹기 게임 모드로 진입합니다. (현재 미구현)
         /// </summary>
         private void EnterGroundGame()
         {
-            if (m_messageManager != null)
-            {
-                m_messageManager.OnEmptyGameMessage();
-            }
-
-            LogManager.Log("[ChoosegamePopup] 뱀서라이크 게임 시작", LogManager.LogCategory.System);
+            LogManager.Log("[ChoosegamePopup] (구버전) 땅따먹기 게임 시작 시도", LogManager.LogCategory.System);
         }
 
         /// <summary>
-        /// [설명]: 슈팅 게임 모드로 진입합니다. (현재 미구현)
+        /// [설명]: 구 버전 스크립트입니다. 슈팅 게임 모드로 진입합니다. (현재 미구현)
         /// </summary>
         private void EnterShootingGame()
         {
-            if (m_messageManager != null)
-            {
-                m_messageManager.OnEmptyGameMessage();
-            }
-
-            LogManager.Log("[ChoosegamePopup] 슈팅 게임 진입 시도 (미구현)", LogManager.LogCategory.System);
+            LogManager.Log("[ChoosegamePopup] (구버전) 슈팅 게임 진입 시도", LogManager.LogCategory.System);
         }
 
         #endregion

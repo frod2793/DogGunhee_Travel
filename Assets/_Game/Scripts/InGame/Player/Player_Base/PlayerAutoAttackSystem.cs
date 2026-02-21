@@ -25,6 +25,9 @@ namespace InGame.Player.Player_Base
         [SerializeField, Tooltip("공격 가능 사거리")]
         private float m_attackRadius = 1.5f;
 
+        [SerializeField, Tooltip("적과 유지할 최소 안전 거리 (이보다 가까우면 후퇴)")]
+        private float m_safeDistance = 0.8f;
+
         #endregion
 
         #region 내부 필드 및 캐시
@@ -225,13 +228,20 @@ namespace InGame.Player.Player_Base
                     float dist = Vector3.Distance(myPos, targetPos);
                     Vector3 dirToTarget = (targetPos - myPos).normalized;
 
-                    // 이동 로직: 사거리의 90% 지점까지 근접 시도
-                    if (dist > m_attackRadius * 0.9f)
+                    // 이동 로직: 너무 가까우면 후퇴(카이팅), 멀면 접근
+                    if (dist < m_safeDistance)
                     {
+                        // 적과 너무 가까움 -> 반대 방향으로 이동하여 거리를 벌림
+                        AutoMoveDirection = -dirToTarget;
+                    }
+                    else if (dist > m_attackRadius * 0.9f)
+                    {
+                        // 적이 사거리 밖에 있음 -> 타겟 방향으로 다가감
                         AutoMoveDirection = dirToTarget;
                     }
                     else
                     {
+                        // 공격 적정 사거리 -> 제자리에 멈춰서 공격에 집중
                         AutoMoveDirection = Vector3.zero;
                     }
 

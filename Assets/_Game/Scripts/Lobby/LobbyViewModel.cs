@@ -51,6 +51,12 @@ namespace Lobby
 
             // 초기 데이터 로드 및 적용
             RefreshFromPlayerData();
+
+            // 데이터 변경 이벤트 구독
+            if (m_playerService != null)
+            {
+                m_playerService.OnDataChanged += RefreshFromPlayerData;
+            }
         }
 
         #endregion
@@ -87,6 +93,11 @@ namespace Lobby
         /// </summary>
         public void Dispose()
         {
+            if (m_playerService != null)
+            {
+                m_playerService.OnDataChanged -= RefreshFromPlayerData;
+            }
+
             m_disposables.Dispose();
 
             Nickname.Dispose();

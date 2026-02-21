@@ -20,9 +20,7 @@ namespace InGame.Managers
     /// [설명]: 게임의 전체 흐름(시작, 정지, 종료)과 전역 상태(플레이어, 스포너, UI)를 총괄하는 중앙 관리자 클래스입니다.
     /// 외부 시스템과 연동하는 PlayerDataDTO를 주입받아 초기화됩니다.
     /// </summary>
-
     public class GameManager : MonoBehaviour, IGameStateService, IPlayerContext, ICombatContext, IGameDataProvider, IGameFlowController
-    
     {
         #region 싱글톤 및 이벤트
 
@@ -61,6 +59,7 @@ namespace InGame.Managers
         private PlayerHUD m_playerHUD;
         private PlayerCameraAgent m_playerCameraAgent;
         private MobManager m_mobManager;
+
         private PlayerDataDTO m_playerData;
         private PlayerDataService m_playerService;
         private IGameDataService m_gameDataService;
@@ -115,7 +114,7 @@ namespace InGame.Managers
 
         /// <summary> [IGameStateService 구현]: 현재 게임이 플레이 중인지 여부 </summary>
         public bool IsPlaying => m_state != null && m_state.IsPlaying;
-
+        
         /// <summary> [IGameStateService 구현]: 이펙트 서비스 </summary>
         public IEffectService EffectService => m_effectService;
 
@@ -215,8 +214,8 @@ namespace InGame.Managers
             {
                 var encryptionService = new InGame.Services.EncryptionService();
                 m_playerService = new InGame.Services.PlayerDataService(
-                    m_playerData,
-                    encryptionService,
+                    m_playerData, 
+                    encryptionService, 
                     new InGame.Data.LocalPlayerDataRepository(encryptionService),
                     m_gameDataService
                 );
@@ -238,11 +237,21 @@ namespace InGame.Managers
                 LogManager.LogWarning($"[GameManager] PlayerController 캐싱 재시도 결과: {(m_playerController != null ? "성공" : "실패")}", LogManager.LogCategory.System);
             }
 
-            // 1. 리모트 데이터 동기화
+            // 1. 리모트 데이터 동기화 및 플레이어 스폰 대기
             LogManager.Log($"[GameManager] 씬 전체 초기화 및 리모트 동기화 대기 시작 (TimeScale: {Time.timeScale})", LogManager.LogCategory.System);
             await InitializeGameAsync();
+            
+            // 2. 씬 초기화(InitializeAsync)는 여기서 반환하여 SceneLoader의 페이드 아웃 대기를 해제하고,
+            // 백그라운드에서 페이드 아웃 완료를 기다린 후 카운트다운을 시작합니다.
+            WaitAndStartCountdownAsync().Forget();
 
-            // 2. 플레이어 및 무기 생성 대기 (SceneLoader가 닫히기 전에 생성하여 로딩 화면 뒤에서 캐릭터가 미리 렌더링되도록 함)
+            LogManager.Log($"[GameManager] InitializeAsync 완료", LogManager.LogCategory.System);
+            m_isInitialized = true;
+        }
+
+        private async UniTaskVoid WaitAndStartCountdownAsync()
+        {
+            // 2.5. 백그라운드에서 플레이어를 스폰합니다. (SceneLoader 닫힘 지연 방지)
             try
             {
                 await SpawnPlayerAndInitialWeaponsAsync();
@@ -253,22 +262,13 @@ namespace InGame.Managers
                 LogManager.LogError($"[GameManager] 플레이어 스폰 중 치명적 오류 발생: {ex.Message}", LogManager.LogCategory.System);
             }
 
-            // 3. 페이드 아웃 완료 대기 및 카운트다운 시작 비동기 위임
-            WaitAndStartCountdownAsync().Forget();
-
-            LogManager.Log($"[GameManager] InitializeAsync 완료", LogManager.LogCategory.System);
-            m_isInitialized = true;
-        }
-
-        private async UniTaskVoid WaitAndStartCountdownAsync()
-        {
-            // 4. 페이드 아웃 연출이 끝날 때까지 대기
+            // 3. 페이드 아웃 연출이 끝날 때까지 대기
             if (m_sceneLoader != null)
             {
                 await m_sceneLoader.WaitUntilFadedOutAsync();
             }
 
-            // 5. 화면이 밝아진 후 카운트다운 시작
+            // 4. 화면이 밝아진 후 카운트다운 시작
             if (m_uiManager != null)
             {
                 LogManager.Log("[GameManager] 카운트다운 시작 명령 전달", LogManager.LogCategory.System);
@@ -337,11 +337,6 @@ namespace InGame.Managers
             m_playerCameraAgent = FindFirstObjectByType<PlayerCameraAgent>();
             m_mainCamera = Camera.main;
 
-            if (m_variableJoystick != null)
-            {
-                m_variableJoystick.gameObject.SetActive(false); // [추가]: 조이스틱 초기 비활성화 (카운트다운 중 조작 방지)
-            }
-
             LogManager.Log($"[GameManager] 컴포넌트 캐싱 결과 - Spawner: {m_objectPoolSpawner != null}, PC: {m_playerController != null}, JS: {m_variableJoystick != null}, UI: {m_uiManager != null}", LogManager.LogCategory.System);
         }
 
@@ -382,18 +377,17 @@ namespace InGame.Managers
             }
         }
 
-
         /// <summary>
         /// [설명]: 비동기 방식으로 플레이어 생성 및 초기 게임 설정을 수행합니다.
         /// </summary>
         private async UniTask InitializeGameAsync()
         {
-            try
+            try 
             {
                 if (m_remoteDataService != null)
                 {
                     LogManager.Log("[GameManager] 리모트 데이터 동기화 시작...", LogManager.LogCategory.System);
-
+                    
                     // [복구]: 데이터베이스 참조 확보 (m_gameDataService 대신 실제 SO 전달)
                     var stageDatabase = Resources.Load<StageDatabase>("Data/StageDatabase");
                     if (stageDatabase == null)
@@ -429,16 +423,11 @@ namespace InGame.Managers
         private async UniTaskVoid OnGameStartAsync()
         {
             LogManager.Log($"[GameManager] OnGameStart 진입 (TimeScale: {Time.timeScale})", LogManager.LogCategory.System);
-
+            
             try
             {
                 // 게임 재개 상태 보장 (카운트다운 시 Pause 상태일 수 있음)
                 Time.timeScale = 1f;
-
-                if (m_variableJoystick != null)
-                {
-                    m_variableJoystick.gameObject.SetActive(true); // 카운트다운 완료 후 게임 시작 시 조이스틱 활성화
-                }
 
                 if (m_inventoryCtx != null)
                 {
@@ -447,7 +436,7 @@ namespace InGame.Managers
                 }
 
                 m_playerData.NowPlayMobKillCount = 0; // Assuming m_killCount.Value refers to playerData.NowPlayMobKillCount
-
+                
                 if (m_soundManager != null)
                 {
                     m_soundManager.Play("BGM_Ingame_Wave", Sound.BGM, loop: true);
@@ -460,11 +449,11 @@ namespace InGame.Managers
                         // [수정]: PlayerDataDTO에 LastClearedStageId가 없으므로 우선 1로 설정 (또는 추후 데이터 구조 확장 필요)
                         int targetStageId = 1;
                         LogManager.Log($"[GameManager] Spawner 초기화 시도 - Stage: {targetStageId}", LogManager.LogCategory.System);
-
+                        
                         await m_objectPoolSpawner.InitializeAndStartSpawning(
-                            this,
-                            m_mobManager,
-                            m_playerData,
+                            this, 
+                            m_mobManager, 
+                            m_playerData, 
                             m_soundManager,
                             this,
                             this,
@@ -501,7 +490,7 @@ namespace InGame.Managers
         private void OnStageCleared(int stageId)
         {
             LogManager.Log($"[GameManager] 스테이지 {stageId} 클리어!", LogManager.LogCategory.VamserLikeGameManager);
-
+            
             m_isCleared = true;
 
             if (m_state != null)
@@ -510,6 +499,14 @@ namespace InGame.Managers
             }
         }
 
+        /// <summary>
+        /// [설명]: 테스트 목적으로 스테이지 클리어 상태를 강제로 발생시킵니다.
+        /// </summary>
+        public void ClearStageForTest()
+        {
+            LogManager.Log("[GameManager] 테스트 클리어 비즈니스 로직 실행", LogManager.LogCategory.VamserLikeGameManager);
+            OnStageCleared(0);
+        }
 
         private void OnGameOver()
         {
@@ -572,11 +569,13 @@ namespace InGame.Managers
                 }
                 else
                 {
-                    // 2. 서버에 로컬의 최종 절대값을 업로드하여 동기화합니다.
-                    // (AddCalculation 방식 폐기: 데이터 유실 방지를 위해 절대값 덮어쓰기 사용)
-                    await m_playerService.UploadToServerAsync(includeCurrency: true);
+                    // 2. 서버에는 획득한 '증분'만 합산 요청
+                    await m_playerService.UpdateCurrencyDeltaAsync("gold", earnedCoin);
+                    
+                    // 3. 기타 데이터(레벨, 경험치 등)는 전체 업로드 수행 (재화는 위에서 Delta로 처리했으므로 제외)
+                    await m_playerService.UploadToServerAsync(false);
                 }
-
+                
                 LogManager.Log($"[GameManager] 게임 결과 통합 저장 완료 (획득 골드: {earnedCoin})", LogManager.LogCategory.System);
             }
             catch (Exception e)
@@ -666,7 +665,7 @@ namespace InGame.Managers
 
                 // 플레이어 시스템 초기화 (DTO 서비스 및 사운드 매니저 주입)
                 SpawnedPlayer.Init(
-                    playerService: m_playerService,
+                    playerService: m_playerService, 
                     soundManager: m_soundManager,
                     gameStateService: this);
 
@@ -746,10 +745,6 @@ namespace InGame.Managers
 
                     SpawnedPlayer.AddController(controller);
 
-                    // [추가]: 새로운 무기 획득 시 즉시 1회 공격을 수행하여 무기 활성화 확인
-                    Vector3 attackDir = m_playerController != null ? m_playerController.GetCalculatedAttackDirection() : Vector3.right;
-                    controller.Attack(attackDir);
-
                     if (playEffect)
                     {
                         var renderer = SpawnedPlayer.GetComponent<SpriteRenderer>();
@@ -811,7 +806,7 @@ namespace InGame.Managers
             if (m_optionPopupPrefab != null)
             {
                 var popup = Instantiate(m_optionPopupPrefab, transform);
-                popup.Initialize(m_soundManager, m_popupService);
+                popup.Initialize(m_soundManager);
 
                 // ESC 키 등으로 닫힐 수 있도록 PopupManager에 등록
                 if (m_popupService != null)
@@ -879,27 +874,6 @@ namespace InGame.Managers
         public Transform PlayerTransfrom()
         {
             return m_playerContainer != null ? m_playerContainer.transform : transform;
-        }
-        #endregion
-
-        #region 테스트 관련 기능
-
-        /// <summary>
-        /// [설명]: 테스트 목적으로 스테이지 클리어 상태를 강제로 발생시킵니다.
-        /// </summary>
-        public void ClearStageForTest()
-        {
-            LogManager.Log("[GameManager] 테스트 클리어 비즈니스 로직 실행", LogManager.LogCategory.VamserLikeGameManager);
-            OnStageCleared(0);
-        }
-
-        /// <summary> [설명]: 웨이브 시스템을 일시 중단하거나 재개합니다. (테스트용) </summary>
-        public void SetWaveSystemPause(bool pause)
-        {
-            if (m_objectPoolSpawner != null)
-            {
-                m_objectPoolSpawner.SetWavePause(pause);
-            }
         }
 
         #endregion

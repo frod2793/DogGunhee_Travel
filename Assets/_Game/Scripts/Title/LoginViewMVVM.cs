@@ -331,7 +331,10 @@ namespace Title
                 sessionDto = m_serverManager.GetSession();
             }
 
-            var payload = new ScenePayloadDTO(playerDto, sessionDto, m_soundManager);
+            var payload = new ScenePayloadDTO(playerDto, sessionDto, m_soundManager)
+            {
+                IsFirstLogin = true
+            };
 
             if (m_loginPopUp != null)
             {

@@ -114,8 +114,18 @@ namespace InGame.Services
 
         private async UniTask<string> GetTextFromUrlAsync(string url, CancellationToken ct)
         {
+            // [개선]: 모바일 환경 대응 - 인터넷 연결 상태 사전 확인
+            if (Application.internetReachability == NetworkReachability.NotReachable)
+            {
+                Debug.LogWarning($"[RemoteDataService] 인터넷 연결이 없어 요청을 중단합니다. (URL: {url})");
+                return null;
+            }
+
             using (var request = UnityWebRequest.Get(url))
             {
+                // [개선]: 15초 타임아웃 설정 (무한 대기 방지)
+                request.timeout = 15;
+
                 await request.SendWebRequest().WithCancellation(ct);
 
                 if (request.result != UnityWebRequest.Result.Success)
@@ -127,6 +137,7 @@ namespace InGame.Services
                 return request.downloadHandler.text;
             }
         }
+
 
         #endregion
     }

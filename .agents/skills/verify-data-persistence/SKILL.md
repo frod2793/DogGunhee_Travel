@@ -12,7 +12,8 @@ description: 플레이어 데이터의 DTO/Service 구조, 암호화 처리, 로
 1.  **DTO 정합성** — `PlayerDataDTO`가 필드 위주로 구성되어 있고 로직을 포함하지 않는지 확인
 2.  **서비스 의존성** — `PlayerDataService`가 `IPlayerDataService`를 구현하고 암호화/저장소 의존성을 명시적으로 주입받는지 확인
 3.  **암호화 보안** — `EncryptionService`를 통해 데이터가 암호화되어 저장되는지, `PlayerPrefs`가 잔존하지 않는지 확인
-4.  **명명 규칙** — DTO의 필드가 PascalCase 등 프로젝트 표준을 준수하는지 확인
+4.  **데이터 유실 방지** — 씬 전환 및 앱 종료 시 저장 로직의 완결성(`await` 여부) 및 실시간 저장 흐름 확인
+5.  **명명 규칙** — DTO의 필드가 PascalCase 등 프로젝트 표준을 준수하는지 확인
 
 ## When to Run
 
@@ -109,6 +110,85 @@ grep "public ServerSessionDTO GetSession()" Assets/_Game/Scripts/Data/ServerMana
 **FAIL:** `Instance`가 public으로 남아있거나 `GetSession`이 없음
 **수정:** 싱글톤 패턴 제거 및 세션 반환 메서드 구현
 
+### Step 5: 실시간 서버 동기화 및 절대값 업로드 완결 대기 검사
+
+`PlayerDataService`가 더 이상 `AddCalculation`을 사용하지 않고, 클라이언트 주도의 절대값 업로드를 수행하는지 확인합니다.
+
+**파일:** `PlayerDataService.cs`, `GameManager.cs`
+
+**검사:**
+
+```bash
+# 1. UpdateCurrencyDeltaAsync 메서드 폐기 확인 (grep 결과가 없어야 함)
+grep "UpdateCurrencyDeltaAsync" Assets/_Game/Scripts/Data/Services/PlayerDataService.cs
+
+# 2. AddCalculation 키워드 사용 여부 확인 (기존 코드에서 제거되었는지 확인)
+grep "AddCalculation" Assets/_Game/Scripts/Data/Services/PlayerDataService.cs
+
+# 3. GameManager.SaveGameResult에서 includeCurrency: true를 사용한 전체 업로드 확인
+grep "UploadToServerAsync(includeCurrency: true)" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
+```
+
+**PASS:** `UpdateCurrencyDeltaAsync` 및 `AddCalculation`이 발견되지 않으며, `GameManager`에서 절대값 업로드를 대기함
+**FAIL:** 구식 합산 방식이 남아있거나 절대값 업로드 호출 누락
+**수정:** `UpdateCurrencyDeltaAsync` 삭제 및 절대값 업로드 로직으로 통합
+
+### Step 6: JsonData 하위 필드 파싱 및 동기화 무결성 검사
+
+서버에 저장된 `AddCalculation` 데이터(`{"number": val, "operator": "+"}`)를 안전하게 파싱하여 로컬 `m_data`에 반영하는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Data/Services/PlayerDataService.cs`
+
+**검사:**
+
+```bash
+# 1. targetData가 Object이고 "number" 키를 포함하는지 체크하는 로직 확인
+grep "targetData.IsObject && targetData.Keys.Contains(\"number\")" Assets/_Game/Scripts/Data/Services/PlayerDataService.cs
+
+# 2. 추출된 number가 m_data의 해당 필드(Currency1, Currency2 등)에 할당되는지 확인
+grep -A 5 "targetData\[\"number\"\].ToString()" Assets/_Game/Scripts/Data/Services/PlayerDataService.cs
+```
+
+**PASS:** `IsObject` 확인 후 `number` 값을 추출하여 `m_data` 필드에 할당하는 로직 존재
+**FAIL:** 오브젝트 형식 처리 누락 또는 `m_data` 반영 전 단순 리턴
+**수정:** `ParseIntSafe`/`ParseFloatSafe` 내에 오브젝트 하위 필드 추출 및 할당 로직 보강
+
+### Step 7: 데이터 흐름 완결성 및 유실 위험 검사
+
+재화 변경 시 실시간 저장이 이루어지는지, 핵심 저장 로직이 씬 전환 전에 완료되는지 확인합니다.
+
+**검사:**
+
+```bash
+# 1. PlayerDataService에서 재화 변경 시 SaveData() 호출 확인
+grep -A 5 "m_data.Currency1 +=" Assets/_Game/Scripts/Data/Services/PlayerDataService.cs | grep "SaveData()"
+
+# 2. GameManager에서 씬 전환 전 SaveGameResult를 기다리는지(await) 확인
+# SaveAndCleanupAsync가 Forget()으로 실행되는지 await로 실행되는지 체크
+grep -n "SaveAndCleanupAsync().Forget()" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
+```
+
+**PASS:** 재화 변경 시 즉시 저장되며, 중요 시점(GameOver 등)에서 저장 완결성이 보장됨
+**FAIL:** `Forget()` 사용으로 인해 씬 전환 시 저장이 취소될 위험이 있거나 저장 호출 누락
+**수정:** `UniTaskVoid` 대신 `UniTask`를 반환하고 씬 로드 전 `await` 처리
+
+### Step 8: 데이터 충돌 및 로드 안전성 검사
+
+서버 로드 실패 시의 폴백 로직과 데이터 덮어쓰기 위험을 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Data/Services/PlayerDataService.cs`
+
+**검사:**
+
+```bash
+# LoadFromServerAsync에서 실패 시(catch/null)의 처리 확인
+grep -A 10 "catch (Exception ex)" Assets/_Game/Scripts/Data/Services/PlayerDataService.cs
+```
+
+**PASS:** 예외 발생 시 로그를 남기고 `false`를 반환하여 호출 측에서 인지 가능함
+**FAIL:** 에러 발생 시 부분적인 데이터만 덮어씌워져 정합성이 깨질 위험이 있음
+**수정:** 원자적(Atomic) 업데이트 로직 적용 또는 로드 실패 시 경고 팝업 고도화
+
 ## Output Format
 
 ### 검증 결과
@@ -116,10 +196,13 @@ grep "public ServerSessionDTO GetSession()" Assets/_Game/Scripts/Data/ServerMana
 | 검사 항목 | 상태 | 상세 |
 |-----------|------|------|
 | DTO 정합성 | PASS | POCO 및 PascalCase 준수 |
-| 서비스 주입 | PASS | DI 패턴 적용 확인 |
+| 서비스 주입 | PASS | DI 패턴 및 GameDataService 주입 확인 |
+| 서버 동기화 | PASS | 실시간 업로드 및 완결 대기 확인 |
+| 데이터 유실 방지 | PASS | 씬 전환 시 저장 완결성 확인 |
 | 보안성 | PASS | PlayerPrefs 완전 제거됨 |
 
 ## Exceptions
 
 -   `PlayerPrefs`는 볼륨 설정이나 간단한 옵션 데이터에는 예외적으로 허용될 수 있으나, 게임 진행 데이터에는 금지합니다.
 -   타사 SDK 내부에서 사용하는 `PlayerPrefs`는 검사에서 제외합니다.
+-   네트워크 끊김으로 인한 즉각적인 업로드 실패는 유실이 아닌 '지연 동기화' 상태로 간주하며, 다음 로그인 혹은 저장 시 재시도됨을 전제로 합니다.

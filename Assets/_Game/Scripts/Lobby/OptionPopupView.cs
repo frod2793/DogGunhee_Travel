@@ -176,7 +176,16 @@ namespace Lobby
                 .Subscribe(_ =>
                 {
                     m_viewModel.SaveSettings();
-                    m_popupService.CloseTopPopup();
+
+                    // [수정]: IPopupService가 주입되지 않은 경우(에디터 폴백 등) 직접 삭제 처리하여 NRE 방지
+                    if (m_popupService != null)
+                    {
+                        m_popupService.CloseTopPopup();
+                    }
+                    else
+                    {
+                        Destroy(gameObject);
+                    }
                 })
                 .AddTo(m_disposables);
 

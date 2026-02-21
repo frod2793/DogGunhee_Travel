@@ -121,6 +121,15 @@ namespace InGame.ObjectPool
         /// </summary>
         public int CurrentStage => m_waveSystem?.CurrentStageId ?? 0;
 
+        /// <summary> [설명]: 웨이브 시스템의 스폰을 일시적으로 중단하거나 재개합니다. (테스트용) </summary>
+        public void SetWavePause(bool pause)
+        {
+            if (pause) m_waveSystem?.Pause();
+            else m_waveSystem?.Resume();
+            
+            LogManager.Log($"[ObjectPoolSpawner] 웨이브 스폰 {(pause ? "중단" : "재개")}", LogManager.LogCategory.System);
+        }
+
         #endregion
 
         #region 이벤트
@@ -486,7 +495,7 @@ namespace InGame.ObjectPool
                 return null;
             }
 
-            if (obj is IObjectPoolUser poolUser)
+            if (obj != null && obj is IObjectPoolUser poolUser)
             {
                 poolUser.ObjectPoolSpawner = this;
             }
@@ -597,7 +606,7 @@ namespace InGame.ObjectPool
             // 원본 리스트 수정을 방지하기 위해 복사본 생성
             for (int i = 0; i < activeTargets.Count; i++)
             {
-                if (activeTargets[i] is InGame.Mob.MobBase.MobBase mob)
+                if (activeTargets[i] != null && activeTargets[i] is InGame.Mob.MobBase.MobBase mob)
                 {
                     mobsToReturn.Add(mob);
                 }
@@ -621,11 +630,11 @@ namespace InGame.ObjectPool
                 return;
             }
 
-            if (item is EXP_Obj exp && ExpObjectPool != null)
+            if (item != null && item is EXP_Obj exp && ExpObjectPool != null)
             {
                 ExpObjectPool.Release(exp);
             }
-            else if (item is Coin_Obj coin && CoinObjectPool != null)
+            else if (item != null && item is Coin_Obj coin && CoinObjectPool != null)
             {
                 CoinObjectPool.Release(coin);
             }
@@ -789,7 +798,7 @@ namespace InGame.ObjectPool
             }
 
             var obj = Instantiate(prefab, m_mobParent).GetComponent<T>();
-            if (obj is IObjectPoolUser poolUser)
+            if (obj != null && obj is IObjectPoolUser poolUser)
             {
                 poolUser.ObjectPoolSpawner = this;
             }

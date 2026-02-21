@@ -36,6 +36,7 @@ description: 로비 UI의 팝업 관리 및 뒤로가기(ESC) 로직을 검증�
 | `Assets/_Game/Scripts/Lobby/UI/Popups/StoreView.cs` | 상점 팝업 뷰 |
 | `Assets/_Game/Scripts/Lobby/OptionPopupView.cs` | 옵션 팝업 뷰 (PopupManager 연동) |
 | `Assets/_Game/Scripts/Data/DTOs/ScenePayloadDTO.cs` | 씬 전환 통합 페이로드 DTO |
+| `Assets/_Game/Scripts/Lobby/ChoosegamePopup.cs` | 게임 선택 팝업 (중복 로딩 방지 적용) |
 
 ## Workflow
 
@@ -120,6 +121,60 @@ grep "payload is InGame.Data.ScenePayloadDTO scenePayload" Assets/_Game/Scripts/
 
 **권장:** 싱글톤(`SoundManager.Instance`)에 의존하지 않고 주입받은 인스턴스 사용 권장.
 
+### Step 6: 씬 로딩 정밀성 및 서버 데이터 로딩 검사
+
+`SceneLoader`가 정확한 씬 범위를 검색하는지, 로비 진입 시 서버 데이터 동기화를 대기하는지 확인합니다.
+
+**파일:** `SceneLoader.cs`, `LobbySceneCompositionRoot.cs`
+
+**검사:**
+
+```bash
+# 1. SceneLoader의 RootGameObjects 기반 검색 로직 확인
+grep "loadedScene.GetRootGameObjects()" Assets/_Game/Scripts/Lobby/SceneLoader.cs
+
+# 2. LobbySceneCompositionRoot에서 서버 데이터 로딩(await) 대기 확인
+grep "await playerService.LoadFromServerAsync()" Assets/_Game/Scripts/Lobby/Core/LobbySceneCompositionRoot.cs
+```
+
+**PASS:** `GetRootGameObjects()`를 통한 정밀 검색 확인, 로비 진입 전 서버 데이터 완결 대기(`await`) 확인
+**FAIL:** 전체 객체 검색(`FindObjectsByType`) 잔존 또는 서버 데이터 로드 대기 누락
+**수정:** 씬 로더 루프 개선 및 `OnInitialize` 내 `await` 추가
+
+### Step 7: OptionPopupView NRE 방지 및 폴백 검사
+
+옵션 팝업 종료 시 `m_popupService`가 없을 때(에디터 단독 실행 등) NRE가 발생하지 않고 폴백 로직이 작동하는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Lobby/OptionPopupView.cs`
+
+**검사:**
+
+```bash
+# m_popupService null 체크 후 CloseTopPopup() 호출 및 else 블록의 Destroy 확인
+grep -A 5 "if (m_popupService != null)" Assets/_Game/Scripts/Lobby/OptionPopupView.cs | grep -E "CloseTopPopup|Destroy"
+```
+
+**PASS:** `if (m_popupService != null)` 체크와 함께 `CloseTopPopup()` 및 폴백 `Destroy`가 모두 확인됨
+**FAIL:** Null 체크 없이 바로 `CloseTopPopup()` 호출
+**수정:** `m_popupService` 호출 전 Null 체크 및 자체 파괴 로직 추가
+
+### Step 8: SceneLoader 전역 로딩 가드 검사
+
+씬 로딩이 한 번에 하나만 진행되도록 `SceneLoader`에 전역 가드가 구현되어 있는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Lobby/SceneLoader.cs`
+
+**검사:**
+
+```bash
+# m_isLoading 플래그 선언 및 LoadSceneAsync에서의 체크 로직 확인
+grep -E "bool m_isLoading|if (m_isLoading)" Assets/_Game/Scripts/Lobby/SceneLoader.cs
+```
+
+**PASS:** `m_isLoading` 필드와 이를 통한 중복 로딩 조기 리턴(LogWarning 포함) 로직 존재
+**FAIL:** 전역 가드 누락 (중복 호출 시 예외 발생 또는 중첩 로딩 가능성)
+**수정:** `bool m_isLoading` 변수 추가 및 `LoadSceneAsync` 시작 부분에 체크 로직 삽입
+
 ## Output Format
 
 ### 검증 결과
@@ -128,6 +183,10 @@ grep "payload is InGame.Data.ScenePayloadDTO scenePayload" Assets/_Game/Scripts/
 |-----------|------|-----------|
 | 개별 ESC 입력 | PASS | 발견되지 않음 |
 | 팝업 등록 | PASS | InventoryView, OptionPopupView 등 확인됨 |
+| 씬 로딩 정밀성 | PASS | RootObjects 기반 타겟팅 확인 |
+| 서버 데이터 동기화 | PASS | 로비 진입 전 LoadFromServerAsync 대기 |
+| NRE 방지 가드 | PASS | OptionPopupView 폴백 로직 확인 |
+| 전역 로딩 가드 | PASS | SceneLoader m_isLoading 가드 확인 |
 
 ## Exceptions
 

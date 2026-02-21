@@ -20,7 +20,8 @@ namespace InGame.Services
         void SaveData(); // 동기식 래퍼 (기존 호환용)
         UniTask SaveLocalAsync();
         UniTask<bool> LoadFromServerAsync();
-        UniTask UploadToServerAsync();
+        UniTask UploadToServerAsync(bool includeCurrency = true);
+        event Action OnDataChanged;
     }
     #endregion
 
@@ -35,10 +36,12 @@ namespace InGame.Services
         private readonly PlayerDataDTO m_data;
         private readonly EncryptionService m_encryptionService;
         private readonly LocalPlayerDataRepository m_localRepository;
+        private readonly IGameDataService m_gameDataService;
         #endregion
 
         #region 프로퍼티
         public PlayerDataDTO Data => m_data;
+        public event Action OnDataChanged;
         #endregion
 
         /// <summary>
@@ -47,14 +50,17 @@ namespace InGame.Services
         /// <param name="data">관리할 데이터 DTO</param>
         /// <param name="encryptionService">암호화 서비스</param>
         /// <param name="localRepository">로컬 저장소 서비스</param>
+        /// <param name="gameDataService">서버 데이터 서비스 (뒤끝)</param>
         public PlayerDataService(
             PlayerDataDTO data, 
             EncryptionService encryptionService, 
-            LocalPlayerDataRepository localRepository)
+            LocalPlayerDataRepository localRepository,
+            IGameDataService gameDataService = null)
         {
             m_data = data ?? new PlayerDataDTO();
             m_encryptionService = encryptionService;
             m_localRepository = localRepository;
+            m_gameDataService = gameDataService;
         }
 
         #region 공개 메서드
@@ -81,8 +87,9 @@ namespace InGame.Services
                     break;
             }
 
-            // 변경 시 즉시 저장
+            // 변경 시 즉시 저장 및 알림
             SaveData();
+            OnDataChanged?.Invoke();
         }
 
         /// <summary>
@@ -109,10 +116,11 @@ namespace InGame.Services
             }
 
             SaveData();
+            OnDataChanged?.Invoke();
         }
 
         /// <summary>
-        /// [설명]: 데이터를 저장합니다 (비동기 작업을 동기적으로 실행).
+        /// [설명]: 데이터를 저장합니다 (로컬 및 서버 동기화).
         /// </summary>
         public void SaveData()
         {
@@ -136,24 +144,159 @@ namespace InGame.Services
         /// </summary>
         public async UniTask<bool> LoadFromServerAsync()
         {
-            // ServerManager.Instance 참조는 순수 클래스에서 지양해야 하나 
-            // 현재 ServerManager도 싱글톤이므로 우선 연결 유지
-            // TODO: ServerManager도 서비스 주입 방식으로 전환 권장
-            
-            // 기존 데이터 관리 로직의 DTO 버전 구현
-            await UniTask.CompletedTask;
-            return true; 
+            if (m_gameDataService == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                // 뒤끝 "User_Data" 테이블에서 내 데이터 다운로드
+                var row = await m_gameDataService.DownloadDataAsync("User_Data");
+                
+                if (row != null)
+                {
+                    LogManager.Log($"[PlayerDataService] 서버 원본 데이터 수신: {row.ToJson()}", LogManager.LogCategory.PlayerDataService);
+                    
+                    // [수정]: 데이터 형식이 다르거나 비어있을 경우를 대비해 안전한 파싱(TryParse)을 사용합니다.
+                    int s_gold = ParseIntSafe(row, "Money1", m_data.Currency1);
+                    int s_dia = ParseIntSafe(row, "Money2", m_data.Currency2);
+                    int s_lv = ParseIntSafe(row, "Level", m_data.Level);
+                    float s_exp = ParseFloatSafe(row, "Exp", m_data.Experience);
+
+                    m_data.Currency1 = s_gold;
+                    m_data.Currency2 = s_dia;
+                    m_data.Level = s_lv;
+                    m_data.Experience = s_exp;
+
+                    LogManager.Log($"[PlayerDataService] 서버 데이터 로드 완료 - Gold: {s_gold}, Dia: {s_dia}, Lv: {s_lv}, Exp: {s_exp}", LogManager.LogCategory.PlayerDataService);
+                    
+                    // 로드 직후 로컬에도 최신화 저장
+                    SaveLocalAsync().Forget();
+                    OnDataChanged?.Invoke();
+                    
+                    return true;
+                }
+                else
+                {
+                    LogManager.Log("[PlayerDataService] 기존 서버 데이터가 없습니다. 신규 유저로 판단하여 서버에 빈 데이터를 초기 생성합니다.", LogManager.LogCategory.PlayerDataService);
+                    // 빈 값이더라도 서버에 row를 만들어주어야 이후 AddCalculation 등이 정상 작동합니다.
+                    UploadToServerAsync().Forget();
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[PlayerDataService] 서버 데이터 로딩 실패: {ex.Message}", LogManager.LogCategory.PlayerDataService);
+            }
+
+            return false; 
         }
 
         /// <summary>
         /// [설명]: 현재 DTO 상태를 서버에 업로드합니다.
         /// </summary>
-        public async UniTask UploadToServerAsync()
+        /// <param name="includeCurrency">재화(Gold, Diamond) 정보를 포함할지 여부</param>
+        public async UniTask UploadToServerAsync(bool includeCurrency = true)
         {
-            // 업로드 로직 구현
-            await UniTask.CompletedTask;
+            if (m_gameDataService == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // 재화 및 경험치 등의 핵심 데이터 파라미터 생성
+                var param = new Param();
+                
+                if (includeCurrency)
+                {
+                    param.Add("Money1", m_data.Currency1);     // Gold
+                    param.Add("Money2", m_data.Currency2);     // Diamond
+                }
+
+                param.Add("Level", m_data.Level);
+                param.Add("Exp", m_data.Experience);
+
+                // 뒤끝 테이블 "User_Data"에 업로드 요청
+                await m_gameDataService.UploadDataAsync("User_Data", param);
+                
+                LogManager.Log($"[PlayerDataService] 서버 데이터 동기화 완료 (User_Data, includeCurrency: {includeCurrency})", LogManager.LogCategory.PlayerDataService);
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[PlayerDataService] 서버 데이터 업로드 실패: {ex.Message}", LogManager.LogCategory.PlayerDataService);
+            }
         }
+
+        #region 데이터 파싱 헬퍼
+
+        /// <summary>
+        /// [설명]: JsonData에서 특정 키의 값을 정수로 안전하게 변환합니다.
+        /// </summary>
+        private int ParseIntSafe(LitJson.JsonData data, string key, int defaultValue)
+        {
+            if (data == null || !data.Keys.Contains(key) || data[key] == null)
+            {
+                LogManager.Log($"[PlayerDataService] {key} 필드가 없거나 null입니다. 기본값 {defaultValue} 반환.", LogManager.LogCategory.PlayerDataService);
+                return defaultValue;
+            }
+
+            LitJson.JsonData targetData = data[key];
+
+            // [추가]: 뒤끝 AddCalculation 사용 시 데이터가 {"number": value, "operator": "+"} 오브젝트로 올 수 있음
+            // 하위 호환성을 위해 number 필드가 있다면 추출합니다.
+            if (targetData.IsObject && targetData.Keys.Contains("number"))
+            {
+                targetData = targetData["number"];
+            }
+
+            string valStr = targetData.ToString();
+            if (int.TryParse(valStr, out int result))
+            {
+                return result;
+            }
+
+            // [보강]: double 포맷(예: 103.0)일 경우 int.TryParse가 실패할 수 있으므로 double로 먼저 파싱 시도
+            if (double.TryParse(valStr, out double doubleResult))
+            {
+                return (int)doubleResult;
+            }
+
+            LogManager.LogWarning($"[PlayerDataService] {key} 파싱 실패 (값: {valStr}, 타입: {targetData.GetJsonType()}). 기본값 {defaultValue}을 유지합니다.", LogManager.LogCategory.PlayerDataService);
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// [설명]: JsonData에서 특정 키의 값을 부동소수점으로 안전하게 변환합니다.
+        /// </summary>
+        private float ParseFloatSafe(LitJson.JsonData data, string key, float defaultValue)
+        {
+            if (data == null || !data.Keys.Contains(key) || data[key] == null)
+            {
+                return defaultValue;
+            }
+
+            LitJson.JsonData targetData = data[key];
+
+            // [추가]: 뒤끝 AddCalculation 사용 시 데이터가 {"number": value, "operator": "+"} 오브젝트로 올 수 있음
+            if (targetData.IsObject && targetData.Keys.Contains("number"))
+            {
+                targetData = targetData["number"];
+            }
+
+            string valStr = targetData.ToString();
+            if (float.TryParse(valStr, out float result))
+            {
+                return result;
+            }
+
+            LogManager.LogWarning($"[PlayerDataService] {key} 파싱 실패 (값: {valStr}, 타입: {targetData.GetJsonType()}). 기본값 {defaultValue}을 유지합니다.", LogManager.LogCategory.PlayerDataService);
+            return defaultValue;
+        }
+
         #endregion
     }
+    #endregion
     #endregion
 }
