@@ -1,6 +1,7 @@
 using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
+using InGame.Core.Interfaces;
 
 namespace InGame.Weapon.Strategies
 {
@@ -22,7 +23,12 @@ namespace InGame.Weapon.Strategies
 
         #region 인터페이스 구현
 
-        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
+        public void Init(
+            WeaponDataSO data, 
+            WeaponPoolManager poolManager,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_poolManager = poolManager;
             if (data == null || data.ProjectilePrefab == null || m_poolManager == null)

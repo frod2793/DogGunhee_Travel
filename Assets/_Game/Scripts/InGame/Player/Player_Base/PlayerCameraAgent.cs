@@ -28,6 +28,7 @@ namespace InGame.Player.Player_Base
 
         /// <summary> 카메라 이동 연산을 담당하는 순수 로직 컨트롤러 </summary>
         private PlayerCameraController m_cameraController;
+        private Camera m_mainCamera;
 
         #endregion
 
@@ -36,23 +37,36 @@ namespace InGame.Player.Player_Base
         /// <summary>
         /// [설명]: 카메라 추적 시스템을 구성하고 내부 컨트롤러를 생성하여 초기화합니다.
         /// </summary>
+        /// <param name="mainCamera">메인 카메라 인스턴스</param>
         /// <param name="target">추적 대상 트랜스폼 (null일 경우 인스펙터 설정값 활용)</param>
         /// <param name="mapBoundary">맵 경계 렌더러 (null일 경우 인스펙터 설정값 활용)</param>
-        public void Initialize(Transform target = null, SpriteRenderer mapBoundary = null)
+        public void Initialize(Camera mainCamera, Transform target = null, SpriteRenderer mapBoundary = null)
         {
+            if (mainCamera != null)
+            {
+                m_mainCamera = mainCamera;
+            }
+
+            // 카메라가 주입되지 않은 경우 Camera.main 폴백
+            if (m_mainCamera == null)
+            {
+                m_mainCamera = Camera.main;
+            }
+
             if (target != null)
             {
                 m_targetTransform = target;
             }
+
             if (mapBoundary != null)
             {
                 m_mapBoundary = mapBoundary;
             }
 
-            if (GameManager.Instance != null && GameManager.Instance.MainCamera != null && m_targetTransform != null)
+            if (m_mainCamera != null && m_targetTransform != null)
             {
                 m_cameraController = new PlayerCameraController(
-                    GameManager.Instance.MainCamera,
+                    m_mainCamera,
                     m_targetTransform,
                     m_mapBoundary,
                     m_smoothTime
@@ -63,7 +77,7 @@ namespace InGame.Player.Player_Base
             }
             else
             {
-                LogManager.Log("[PlayerCameraAgent] 초기화 실패: 필수 컴포넌트(카메라 또는 타겟) 누락", LogManager.LogCategory.System);
+                LogManager.Log("[PlayerCameraAgent] 초기화 대기: 카메라 또는 타겟 미확보 — 이후 SetTarget 시 재시도", LogManager.LogCategory.System);
             }
         }
 
@@ -98,7 +112,7 @@ namespace InGame.Player.Player_Base
             else
             {
                 // 아직 컨트롤러가 생성되지 않은 경우 초기화 시도
-                Initialize(newTarget, m_mapBoundary);
+                Initialize(m_mainCamera, newTarget, m_mapBoundary);
             }
         }
 

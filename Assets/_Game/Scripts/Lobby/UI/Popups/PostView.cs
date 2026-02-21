@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -53,6 +54,7 @@ namespace InGame.UI.Popups
         // 성능 최적화를 위한 오브젝트 풀링 자료구조
         private readonly Queue<PostIndex> m_pooledItems = new Queue<PostIndex>();
         private readonly List<PostIndex> m_activeItems = new List<PostIndex>();
+        private InGame.UI.IPopupService m_popupService;
 
         #endregion
 
@@ -61,12 +63,13 @@ namespace InGame.UI.Popups
         /// <summary>
         /// [설명]: 외부로부터 의존성을 주입받아 초기화합니다.
         /// </summary>
-        public void Initialize(IPostService postService)
+        public void Initialize(IPostService postService, IInventoryContext inventoryContext, InGame.UI.IPopupService popupService)
         {
             if (m_viewModel != null) return;
             
+            m_popupService = popupService;
             m_postService = postService;
-            InitializeViewModel();
+            m_viewModel = new PostViewModel(m_postService, inventoryContext);
             BindViewModel();
 
             // 진입 시 데이터 자동 갱신
@@ -88,14 +91,6 @@ namespace InGame.UI.Popups
         #endregion
 
         #region MVVM 데이터 바인딩
-
-        /// <summary>
-        /// [설명]: 우편 로직을 담당하는 뷰모델을 생성합니다.
-        /// </summary>
-        private void InitializeViewModel()
-        {
-            m_viewModel = new PostViewModel(m_postService);
-        }
 
         /// <summary>
         /// [설명]: 뷰모델의 상태 변화에 따라 UI 갱신 시퀀스를 작동시킵니다.
@@ -123,7 +118,7 @@ namespace InGame.UI.Popups
                 {
                     LogManager.Log($"[PostView] 보상 수령 완료: {rewardStr}", LogManager.LogCategory.PostManager);
                     // 직접 Close를 호출하지 않고 스택에서 Pop하여 닫기 수행 (상세창만 닫음)
-                    PopupManager.Instance.CloseTopPopup();
+                    m_popupService.CloseTopPopup();
                 })
                 .AddTo(m_disposables);
         }
@@ -188,7 +183,7 @@ namespace InGame.UI.Popups
             }
 
             m_postBoxPanel.SetActive(true);
-            PopupManager.Instance.RegisterPopup(ClosePostBoxPanel);
+            m_popupService.RegisterPopup(ClosePostBoxPanel);
 
             // 매번 최신 데이터를 서버로부터 불러옴
             m_viewModel?.LoadPostsAsync().Forget();
@@ -225,7 +220,7 @@ namespace InGame.UI.Popups
             if (m_postBoxDetailPanel != null)
             {
                 m_postBoxDetailPanel.SetActive(true);
-                PopupManager.Instance.RegisterPopup(ClosePostDetailPanel);
+                m_popupService.RegisterPopup(ClosePostDetailPanel);
             }
         }
 

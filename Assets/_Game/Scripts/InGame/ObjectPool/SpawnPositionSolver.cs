@@ -71,6 +71,11 @@ namespace InGame.ObjectPool
 
             Bounds viewportBounds = new Bounds(camPos, new Vector3(width + (m_minSpawnDistance * 2f), height + (m_minSpawnDistance * 2f), 100f));
 
+            // [추가]: 맵이 뷰포트보다 작을 경우, 뷰포트 제외 영역을 맵 크기에 맞춰 보정 (최소한의 가용 공간 확보)
+            float safeWidth = Mathf.Min(viewportBounds.size.x, m_mapBounds.size.x * 0.9f);
+            float safeHeight = Mathf.Min(viewportBounds.size.y, m_mapBounds.size.y * 0.9f);
+            viewportBounds.size = new Vector3(safeWidth, safeHeight, viewportBounds.size.z);
+
             return CalculateSpawnPositionInternal(viewportBounds);
         }
 
@@ -111,19 +116,34 @@ namespace InGame.ObjectPool
                 }
             }
 
-            // 3차 시도: 최후의 수단으로 가시 영역 밖인 곳 중 맵 랜덤 위치 검색
-            for (int i = 0; i < 10; i++)
+            // 3차 시도: 맵의 상/하/좌/우 끝단(Edge) 중 카메라 밖에 있는 곳 탐색
+            for (int i = 0; i < 20; i++)
             {
                 Vector3 candidate = GetRandomPositionInBounds();
-                if (!IsInsideViewport(candidate, viewportBounds))
+                // X축이 좁다면 Y축 끝단 위주로, Y축이 좁다면 X축 끝단 위주로 검색
+                if (m_mapBounds.size.x < viewportBounds.size.x)
+                {
+                    candidate.y = Random.value > 0.5f ? m_mapBounds.min.y : m_mapBounds.max.y;
+                }
+                else if (m_mapBounds.size.y < viewportBounds.size.y)
+                {
+                    candidate.x = Random.value > 0.5f ? m_mapBounds.min.x : m_mapBounds.max.x;
+                }
+
+                if (!IsInsideViewport(candidate, viewportBounds) && IsPositionValid(candidate))
                 {
                     return candidate;
                 }
             }
 
-            // 모든 수단 실패 시 맵 내 완전 랜덤 위치 반환
+            // 모든 수단 실패 시 맵 내 완전 랜덤 위치를 찾되, 반드시 경계 내로 제한
             Vector3 finalFallback = GetRandomPositionInBounds();
-            Debug.LogWarning($"[SpawnSolver] 모든 화면 밖 스폰 시도 실패. 맵 랜덤 위치 반환: {finalFallback}");
+            
+            // [수정]: 최종 좌표 강제 클램핑 (안전장치)
+            finalFallback.x = Mathf.Clamp(finalFallback.x, m_mapBounds.min.x, m_mapBounds.max.x);
+            finalFallback.y = Mathf.Clamp(finalFallback.y, m_mapBounds.min.y, m_mapBounds.max.y);
+
+            LogManager.LogWarning($"[SpawnSolver] 모든 화면 밖 스폰 시도 실패. 맵 영역으로 강제 조정: {finalFallback}", LogManager.LogCategory.System);
             return finalFallback;
         }
 
@@ -132,13 +152,10 @@ namespace InGame.ObjectPool
         /// </summary>
         private bool IsInsideViewport(Vector3 position, Bounds viewportBounds)
         {
-            float halfWidth = viewportBounds.size.x * 0.5f;
-            float halfHeight = viewportBounds.size.y * 0.5f;
-
-            return (position.x >= viewportBounds.center.x - halfWidth &&
-                    position.x <= viewportBounds.center.x + halfWidth &&
-                    position.y >= viewportBounds.center.y - halfHeight &&
-                    position.y <= viewportBounds.center.y + halfHeight);
+            return (position.x >= viewportBounds.min.x &&
+                    position.x <= viewportBounds.max.x &&
+                    position.y >= viewportBounds.min.y &&
+                    position.y <= viewportBounds.max.y);
         }
 
         #endregion
@@ -150,9 +167,9 @@ namespace InGame.ObjectPool
         /// </summary>
         private bool IsPositionValid(Vector3 position)
         {
-            Vector3 checkPos = position;
-            checkPos.z = m_mapBounds.center.z;
-            return m_mapBounds.Contains(checkPos);
+            // [수정]: 2D 평면 공간에서의 경계 체크 (Z축 차이로 인한 Contains 실패 방지)
+            return position.x >= m_mapBounds.min.x && position.x <= m_mapBounds.max.x &&
+                   position.y >= m_mapBounds.min.y && position.y <= m_mapBounds.max.y;
         }
 
         /// <summary>

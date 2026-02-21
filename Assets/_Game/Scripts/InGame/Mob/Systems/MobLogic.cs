@@ -30,6 +30,9 @@ namespace InGame.Mob.Systems
         /// <summary> 이동 목표 지점 </summary>
         private Vector3 m_targetPosition;
 
+        /// <summary> 이동 가능 범위를 제한하는 맵의 경계 데이터 </summary>
+        private Bounds m_mapBounds;
+
         #endregion
 
         #region 이벤트
@@ -40,9 +43,11 @@ namespace InGame.Mob.Systems
         public event Action<MobBase.MobBase.MobState> OnStateChanged;
 
         /// <summary>
-        /// [설명]: 위치 정보가 업데이트되었을 때 발생하는 이벤트입니다.
-        /// </summary>
+        /// <summary> 위치가 변경되었을 때(이동 종료 시) 발생하는 이벤트 </summary>
         public event Action<Vector3> OnPositionUpdated;
+
+        /// <summary> 이동이 맵 경계 등에 의해 차단되었을 때 발생하는 이벤트 </summary>
+        public event Action OnMovementBlocked;
 
         /// <summary>
         /// [설명]: 체력이 변경되었을 때 발생하는 이벤트입니다. (현재값, 최대값)
@@ -61,10 +66,11 @@ namespace InGame.Mob.Systems
         /// <summary>
         /// [설명]: 몬스터 로직 객체를 초기화합니다.
         /// </summary>
-        public MobLogic(MobStats stats, Vector3 startPos, IMovementStrategy strategy)
+        public MobLogic(MobStats stats, Vector3 startPos, IMovementStrategy strategy, Bounds mapBounds = default)
         {
+            m_mapBounds = mapBounds;
             InitializeStats(stats);
-            m_position = startPos;
+            m_position = ClampPosition(startPos);
             m_movementStrategy = strategy;
             m_currentState = MobBase.MobBase.MobState.Idle;
         }
@@ -92,9 +98,23 @@ namespace InGame.Mob.Systems
         /// </summary>
         public void SyncPosition(Vector3 newPos)
         {
-            m_position = newPos;
-            m_targetPosition = newPos; // 목표 지점도 현재 위치로 초기화하여 급발진 방지
+            m_position = ClampPosition(newPos);
+            m_targetPosition = m_position; // 목표 지점도 현재 위치로 초기화하여 급발진 방지
             OnPositionUpdated?.Invoke(m_position);
+        }
+
+        /// <summary>
+        /// [설명]: 맵 경계 데이터를 최신으로 갱신하고 필요 시 위치를 보정합니다.
+        /// </summary>
+        public void UpdateMapBounds(Bounds bounds)
+        {
+            m_mapBounds = bounds;
+            
+            // 경계가 바뀌었을 때 현재 위치가 밖이라면 즉시 안으로 보정
+            if (IsOutOfBounds(m_position))
+            {
+                SyncPosition(m_position);
+            }
         }
 
         #endregion
@@ -157,6 +177,20 @@ namespace InGame.Mob.Systems
         public bool HasReachedTarget(float stopDistance = 0.1f)
         {
             return Vector3.Distance(m_position, m_targetPosition) <= stopDistance;
+        }
+
+        /// <summary>
+        /// [설명]: 해당 위치가 맵 경계 내부인지 확인합니다. (브레인에서 목적지 선 검증용)
+        /// </summary>
+        public bool IsInside(Vector3 pos)
+        {
+            if (m_mapBounds == default || m_mapBounds.extents == Vector3.zero)
+            {
+                return true;
+            }
+
+            return pos.x >= m_mapBounds.min.x && pos.x <= m_mapBounds.max.x &&
+                   pos.y >= m_mapBounds.min.y && pos.y <= m_mapBounds.max.y;
         }
 
         #endregion
@@ -249,12 +283,70 @@ namespace InGame.Mob.Systems
             }
 
             Vector3 nextPos = m_movementStrategy.CalculateNextPosition(m_position, m_targetPosition, m_stats.MoveSpeed, deltaTime);
+            
+            // [Refine]: 이동 가능 여부 판단 (복귀 방향은 허용, 이탈 방향은 차단)
+            if (IsMovementBlocked(m_position, nextPos))
+            {
+                OnMovementBlocked?.Invoke();
+                return;
+            }
 
             if (m_position != nextPos)
             {
                 m_position = nextPos;
                 OnPositionUpdated?.Invoke(m_position);
             }
+        }
+
+        /// <summary>
+        /// [설명]: 이동이 차단되어야 하는지 판단합니다. 
+        /// 맵 밖에서 맵 안으로(또는 가까워지는 방향으로) 들어오는 이동은 허용합니다.
+        /// </summary>
+        private bool IsMovementBlocked(Vector3 current, Vector3 next)
+        {
+            if (m_mapBounds == default || m_mapBounds.extents == Vector3.zero)
+            {
+                return false;
+            }
+
+            bool currentInside = IsInside(current);
+            bool nextInside = IsInside(next);
+
+            // 1. 이미 안에 있고 다음 위치도 안이면 통과
+            if (currentInside && nextInside) return false;
+
+            // 2. 안에 있는데 밖으로 나가려고 하면 차단
+            if (currentInside && !nextInside) return true;
+
+            // 3. 이미 밖인 경우: 맵의 중심(또는 가장 가까운 점)에 더 가까워지는 방향이면 허용
+            float currentDist = Vector3.SqrMagnitude(current - m_mapBounds.center);
+            float nextDist = Vector3.SqrMagnitude(next - m_mapBounds.center);
+
+            return nextDist >= currentDist; // 더 멀어지거나 거리가 같으면 차단
+        }
+
+        /// <summary>
+        /// [설명]: 해당 좌표가 맵 경계 밖인지 확인합니다. (기존 로직 유지/호환용)
+        /// </summary>
+        public bool IsOutOfBounds(Vector3 pos)
+        {
+            return !IsInside(pos);
+        }
+
+        /// <summary>
+        /// [설명]: 좌표를 맵 경계 내로 제한합니다.
+        /// </summary>
+        private Vector3 ClampPosition(Vector3 pos)
+        {
+            if (m_mapBounds == default || m_mapBounds.extents == Vector3.zero)
+            {
+                return pos;
+            }
+
+            float clampedX = Mathf.Clamp(pos.x, m_mapBounds.min.x, m_mapBounds.max.x);
+            float clampedY = Mathf.Clamp(pos.y, m_mapBounds.min.y, m_mapBounds.max.y);
+
+            return new Vector3(clampedX, clampedY, pos.z);
         }
 
         #endregion

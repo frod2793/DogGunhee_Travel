@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace InGame.Mob.Systems
 {
@@ -60,6 +61,11 @@ namespace InGame.Mob.Systems
         public virtual void OnDisable()
         {
         }
+
+        /// <summary>
+        /// [설명]: 맵 경계 데이터를 갱신합니다.
+        /// </summary>
+        public virtual void UpdateMapBounds(Bounds bounds) { }
 
         #endregion
     }

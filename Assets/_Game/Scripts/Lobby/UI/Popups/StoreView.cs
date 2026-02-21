@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -33,6 +34,8 @@ namespace InGame.UI.Popups
         // Addressable로 로드된 에셋 및 활성화된 인스턴스 관리
         private readonly List<GameObject> m_storeItemPrefabs = new List<GameObject>();
         private readonly List<StoreItemView> m_spawnedItems = new List<StoreItemView>();
+        private IInventoryContext m_inventoryContext;
+        private InGame.UI.IPopupService m_popupService;
 
         #endregion
 
@@ -41,11 +44,13 @@ namespace InGame.UI.Popups
         /// <summary>
         /// [설명]: 외부(LobbyUIViewManager 등)로부터 의존성을 주입받아 초기화합니다.
         /// </summary>
-        public void Initialize(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
+        public void Initialize(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService, IInventoryContext inventoryContext, InGame.UI.IPopupService popupService)
         {
             if (m_viewModel != null) return;
 
-            m_viewModel = new StoreViewModel(playerData, playerService);
+            m_inventoryContext = inventoryContext;
+            m_popupService = popupService;
+            m_viewModel = new StoreViewModel(playerData, playerService, inventoryContext);
             BindViewModel();
         }
 
@@ -105,7 +110,7 @@ namespace InGame.UI.Popups
             }
 
             m_storePanel.SetActive(true);
-            PopupManager.Instance.RegisterPopup(CloseStorePanel);
+            m_popupService.RegisterPopup(CloseStorePanel);
 
             // 열릴 때 최신 골드/다이아 갱신
             m_viewModel?.RefreshCurrency();
@@ -187,6 +192,7 @@ namespace InGame.UI.Popups
 
                     // 개별 아이템의 구매 요청 이벤트를 뷰모델에 바인딩
                     itemView.OnPurchaseRequest += (code) => m_viewModel?.PurchaseItem(code);
+                    itemView.Initialize(itemView.ItemCode, m_inventoryContext); // 강제 초기화로 데이터 매핑
 
                     m_spawnedItems.Add(itemView);
                 }

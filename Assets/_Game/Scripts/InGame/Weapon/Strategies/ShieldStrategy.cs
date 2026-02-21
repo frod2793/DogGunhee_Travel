@@ -3,6 +3,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
+using InGame.Core.Interfaces;
 using InGame.Weapon.Logic;
 using InGame.Managers;
 
@@ -37,7 +38,12 @@ namespace InGame.Weapon.Strategies
 
         #region 인터페이스 구현
 
-        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
+        public void Init(
+            WeaponDataSO data, 
+            WeaponPoolManager poolManager,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_data = data;
             m_poolManager = poolManager;

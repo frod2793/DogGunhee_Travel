@@ -8,6 +8,7 @@ using UnityEngine;
 using InGame.Managers;
 using InGame.Player.Player_Base;
 using InGame.Lobby;
+using InGame.Core.Interfaces;
 
 namespace InGame.UI.ViewModels
 {
@@ -116,6 +117,13 @@ namespace InGame.UI.ViewModels
         private CancellationTokenSource m_timerCts;
         private bool m_isWaveSubscribed;
 
+        // 주입된 의존성
+        private readonly IGameStateService m_gameState;
+        private readonly IPlayerContext m_playerCtx;
+        private readonly ICombatContext m_combatCtx;
+        private readonly IGameDataProvider m_dataProvider;
+        private readonly IInventoryContext m_inventoryCtx;
+
         #endregion
 
         #region 초기화 및 생명주기
@@ -123,9 +131,20 @@ namespace InGame.UI.ViewModels
         /// <summary>
         /// [설명]: 외부 데이터베이스를 주입받아 초기 구독 환경을 구성하고 업데이트 루프를 가동합니다.
         /// </summary>
-        public InGameViewModel(SkillDatabase skillDatabase)
+        public InGameViewModel(
+            SkillDatabase skillDatabase,
+            IGameStateService gameState,
+            IPlayerContext playerContext,
+            ICombatContext combatContext,
+            IGameDataProvider dataProvider,
+            IInventoryContext inventoryContext)
         {
             m_skillDatabase = skillDatabase;
+            m_gameState = gameState;
+            m_playerCtx = playerContext;
+            m_combatCtx = combatContext;
+            m_dataProvider = dataProvider;
+            m_inventoryCtx = inventoryContext;
 
             InitializeSubscriptions();
             StartUpdateLoop();
@@ -137,7 +156,10 @@ namespace InGame.UI.ViewModels
         private void InitializeSubscriptions()
         {
             // 플레이어 실시간 교체 대응
-            GameManager.OnPlayerChanged += HandlePlayerChanged;
+            if (m_playerCtx != null)
+            {
+                m_playerCtx.OnPlayerChanged += HandlePlayerChanged;
+            }
 
             // 현시점 기준 모든 데이터 즉시 동기화
             RefreshAllData();
@@ -163,7 +185,10 @@ namespace InGame.UI.ViewModels
         public void Dispose()
         {
             // 1. 순수 C# 이벤트 정적 해제
-            GameManager.OnPlayerChanged -= HandlePlayerChanged;
+            if (m_playerCtx != null)
+            {
+                m_playerCtx.OnPlayerChanged -= HandlePlayerChanged;
+            }
             PlayerBase.OnExpChanged -= HandleExpChanged;
             PlayerBase.OnLevelUp -= HandleLevelUp;
             UnsubscribeWaveEvents();
@@ -210,16 +235,15 @@ namespace InGame.UI.ViewModels
         /// </summary>
         private void PollGameData()
         {
-            var gm = GameManager.Instance;
-            if (gm == null)
+            if (m_dataProvider == null)
             {
                 return;
             }
 
-            m_currentWave.Value = gm.GetCurrentWave();
-            m_currentStageId.Value = gm.GetCurrentStageId();
-            m_coinCount.Value = gm.GetCoinCount();
-            m_killCount.Value = gm.GetMobKillCount();
+            m_currentWave.Value = m_dataProvider.GetCurrentWave();
+            m_currentStageId.Value = m_dataProvider.GetCurrentStageId();
+            m_coinCount.Value = m_dataProvider.GetCoinCount();
+            m_killCount.Value = m_dataProvider.GetMobKillCount();
 
             // 웨이브 관리 시스템 로드 시점 조율
             if (!m_isWaveSubscribed)
@@ -236,11 +260,10 @@ namespace InGame.UI.ViewModels
             PollGameData();
             UpdateIconLists();
 
-            var gm = GameManager.Instance;
-            if (gm != null)
+            if (m_dataProvider != null)
             {
-                m_playerLevel.Value = (int)gm.GetPlayerLevel();
-                m_expProgress.Value = gm.GetPlayerExpProgress();
+                m_playerLevel.Value = (int)m_dataProvider.GetPlayerLevel();
+                m_expProgress.Value = m_dataProvider.GetPlayerExpProgress();
             }
         }
 
@@ -249,17 +272,16 @@ namespace InGame.UI.ViewModels
         /// </summary>
         public void UpdateIconLists()
         {
-            var gm = GameManager.Instance;
-            if (gm == null || gm.SpawnedPlayer == null)
+            if (m_playerCtx == null || m_playerCtx.SpawnedPlayer == null)
             {
                 return;
             }
 
             // 1. 무기 계열 추출
             var weapons = new List<Sprite>();
-            if (gm.SpawnedPlayer.Weapons != null)
+            if (m_playerCtx.SpawnedPlayer.Weapons != null)
             {
-                foreach (var w in gm.SpawnedPlayer.Weapons)
+                foreach (var w in m_playerCtx.SpawnedPlayer.Weapons)
                 {
                     if (w != null && w.Thumbnail != null)
                     {
@@ -270,10 +292,10 @@ namespace InGame.UI.ViewModels
             m_weaponSprites.Value = weapons;
 
             // 2. 패시브/장신구 계열 추출
-            if (InventoryManager.Instance != null)
+            if (m_inventoryCtx != null)
             {
                 var accessories = new List<Sprite>();
-                var acquired = InventoryManager.Instance.InGameAcquiredSkills;
+                var acquired = m_inventoryCtx.InGameAcquiredSkills;
                 if (acquired != null)
                 {
                     foreach (var skill in acquired)
@@ -297,11 +319,10 @@ namespace InGame.UI.ViewModels
         /// </summary>
         private void SubscribeWaveEvents()
         {
-            var gm = GameManager.Instance;
-            if (gm != null && gm.ObjectPoolSpawner != null)
+            if (m_combatCtx != null && m_combatCtx.ObjectPoolSpawner != null)
             {
-                gm.ObjectPoolSpawner.OnWaveStarted += HandleWaveStartedEvent;
-                gm.ObjectPoolSpawner.OnWaveCompleted += HandleWaveCompletedEvent;
+                m_combatCtx.ObjectPoolSpawner.OnWaveStarted += HandleWaveStartedEvent;
+                m_combatCtx.ObjectPoolSpawner.OnWaveCompleted += HandleWaveCompletedEvent;
                 m_isWaveSubscribed = true;
             }
         }
@@ -311,11 +332,10 @@ namespace InGame.UI.ViewModels
         /// </summary>
         private void UnsubscribeWaveEvents()
         {
-            var gm = GameManager.Instance;
-            if (gm != null && gm.ObjectPoolSpawner != null)
+            if (m_combatCtx != null && m_combatCtx.ObjectPoolSpawner != null)
             {
-                gm.ObjectPoolSpawner.OnWaveStarted -= HandleWaveStartedEvent;
-                gm.ObjectPoolSpawner.OnWaveCompleted -= HandleWaveCompletedEvent;
+                m_combatCtx.ObjectPoolSpawner.OnWaveStarted -= HandleWaveStartedEvent;
+                m_combatCtx.ObjectPoolSpawner.OnWaveCompleted -= HandleWaveCompletedEvent;
             }
             m_isWaveSubscribed = false;
         }
@@ -413,17 +433,16 @@ namespace InGame.UI.ViewModels
         /// </summary>
         private void GenerateSkillChoices()
         {
-            var gm = GameManager.Instance;
-            if (gm == null)
+            if (m_playerCtx == null)
             {
                 return;
             }
 
             // 1. 현재 보유 중인 무기 맵 구성
             Dictionary<string, Weapon.Base.IWeaponController> ownedWeapons;
-            if (gm.SpawnedPlayer != null && gm.SpawnedPlayer.Weapons != null)
+            if (m_playerCtx.SpawnedPlayer != null && m_playerCtx.SpawnedPlayer.Weapons != null)
             {
-                ownedWeapons = gm.SpawnedPlayer.Weapons.ToDictionary(w => w.SkillCode);
+                ownedWeapons = m_playerCtx.SpawnedPlayer.Weapons.ToDictionary(w => w.SkillCode);
             }
             else
             {
@@ -432,9 +451,9 @@ namespace InGame.UI.ViewModels
 
             // 2. 획득한 패시브(장신구) 코드 셋 구성
             var acquiredAccessoryCodes = new HashSet<string>();
-            if (InventoryManager.Instance != null && InventoryManager.Instance.InGameAcquiredSkills != null)
+            if (m_inventoryCtx != null && m_inventoryCtx.InGameAcquiredSkills != null)
             {
-                foreach (var s in InventoryManager.Instance.InGameAcquiredSkills)
+                foreach (var s in m_inventoryCtx.InGameAcquiredSkills)
                 {
                     if (s.skillType == SkillType.Passive)
                     {

@@ -19,7 +19,7 @@ MonoBehaviour:
     \uB358\uC838 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
   m_baseAttackPower: 12
   m_baseCoolTime: 2
-  m_baseAttackSpeed: 1
+  m_baseAttackSpeed: 12
   m_baseAttackRange: 5
   m_baseDuration: 0
   m_baseProjectileCount: 1

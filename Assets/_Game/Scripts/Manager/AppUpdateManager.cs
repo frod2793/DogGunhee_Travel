@@ -13,43 +13,8 @@ namespace InGame.Managers
     /// [설명]: 구글 플레이 스토어를 통한 앱 강제 업데이트를 관리하는 클래스입니다.
     /// 안드로이드 플랫폼에서 앱 시작 시 업데이트 가용성을 체크하고 즉시 업데이트를 유도합니다.
     /// </summary>
-    public class AppUpdateManager : MonoBehaviour
+    public class AppUpdateManager : MonoBehaviour, IAppUpdateService
     {
-        #region 싱글톤
-
-        private static AppUpdateManager s_instance;
-
-        public static AppUpdateManager Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                {
-                    s_instance = FindFirstObjectByType<AppUpdateManager>();
-                }
-
-                return s_instance;
-            }
-        }
-
-        #endregion
-
-        #region 유니티 생명주기
-
-        private void Awake()
-        {
-            if (s_instance != null && s_instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            s_instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-
-        #endregion
-
         #region 업데이트 로직
 
         /// <summary>

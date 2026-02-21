@@ -1,0 +1,117 @@
+using UnityEngine;
+using Cysharp.Threading.Tasks;
+using InGame.Core;
+using InGame.Core.Interfaces;
+using InGame.Managers;
+using InGame.Player.Player_Base;
+using InGame.ObjectPool;
+
+namespace InGame
+{
+    /// <summary>
+    /// [설명]: 인게임 씬의 의존성 조립(Composition)을 담당하는 클래스입니다.
+    /// SceneLoader로부터 데이터를 전달받아 GameManager를 초기화하고,
+    /// 하위 시스템(UI, Player, Combat 등)에 필요한 인터페이스를 주입합니다.
+    /// </summary>
+    public class GameSceneCompositionRoot : MonoBehaviour, ISceneInitializer
+    {
+        #region 에디터 설정
+        [SerializeField] private GameManager m_gameManager;
+        [SerializeField] private UIManager m_uiManager;
+        [SerializeField] private PlayerController m_playerController;
+        #endregion
+
+        private bool m_isInitialized; // [추가]: 초기화 완료 여부 플래그
+
+        public async UniTask OnInitialize(object payload)
+        {
+            if (m_isInitialized) return;
+            m_isInitialized = true;
+
+            LogManager.Log("[GameSceneCompositionRoot] 초기화 및 의존성 주입 시작", LogManager.LogCategory.System);
+
+            // 1. 컴포넌트 자동 탐색 (에디터에서 미할당 시)
+            if (m_gameManager == null) m_gameManager = FindFirstObjectByType<GameManager>();
+            if (m_uiManager == null) m_uiManager = FindFirstObjectByType<UIManager>();
+            if (m_playerController == null) m_playerController = FindFirstObjectByType<PlayerController>();
+
+            // 2. 인터페이스 추출 및 공용 컨텍스트 준비
+            IGameStateService gameState = m_gameManager;
+            IPlayerContext playerContext = m_gameManager;
+            ICombatContext combatContext = m_gameManager;
+            IGameDataProvider dataProvider = m_gameManager;
+
+            ISceneLoader sceneLoader = null;
+            UI.IPopupService popupService = null;
+            IEffectService effectService = null;
+            IInventoryContext inventoryContext = null;
+
+            if (payload is Data.ScenePayloadDTO scenePayload)
+            {
+                sceneLoader = scenePayload.SceneLoader;
+                popupService = scenePayload.PopupService;
+                effectService = scenePayload.EffectService;
+                inventoryContext = scenePayload.InventoryContext;
+            }
+
+            if (inventoryContext == null)
+            {
+                inventoryContext = FindAnyObjectByType<Lobby.InventoryManager>();
+            }
+
+            if (m_uiManager != null)
+            {
+                m_uiManager.Initialize(
+                    gameState, 
+                    playerContext, 
+                    combatContext, 
+                    dataProvider, 
+                    inventoryContext, 
+                    m_gameManager.SoundManager,
+                    sceneLoader,
+                    popupService,
+                    effectService
+                );
+            }
+
+            // 5. GameManager 초기화 (payload 전달 및 카운트다운 시작 트리거)
+            // — 내부 SpawnPlayer 시 cameraAgent.SetTarget 호출 → Camera.main 폴백으로 카메라 자동 확보
+            if (m_gameManager != null)
+            {
+                await m_gameManager.InitializeAsync(payload);
+            }
+
+            // 6. 카메라 및 테스트 시스템 초기화 (GameManager에서 m_mainCamera 확보 후)
+            var cameraAgent = FindFirstObjectByType<PlayerCameraAgent>();
+            if (cameraAgent != null && m_gameManager != null)
+            {
+                cameraAgent.Initialize(m_gameManager.MainCamera);
+            }
+
+            var testManager = FindFirstObjectByType<TestManager>();
+            if (testManager != null)
+            {
+                testManager.Initialize(playerContext, combatContext, gameState);
+            }
+
+            if (m_playerController != null)
+            {
+                m_playerController.Initialize(gameState, playerContext);
+            }
+
+            LogManager.Log("[GameSceneCompositionRoot] 의존성 주입 완료", LogManager.LogCategory.System);
+        }
+
+        #region 유니티 생명주기 (에디터 폴백용)
+        private void Start()
+        {
+            // 에디터에서 직접 실행했을 때 (SceneLoader를 거치지 않았을 때)를 위한 폴백
+            if (!m_isInitialized)
+            {
+                LogManager.Log("[GameSceneCompositionRoot] 에디터 직접 실행 감지 - 폴백 초기화 시작", LogManager.LogCategory.System);
+                OnInitialize(null).Forget();
+            }
+        }
+        #endregion
+    }
+}

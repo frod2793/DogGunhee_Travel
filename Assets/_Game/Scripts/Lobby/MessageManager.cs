@@ -27,6 +27,19 @@ namespace InGame
         #region 내부 변수
 
         private Coroutine m_fadeCoroutine;
+        private ISceneLoader m_sceneLoader;
+
+        #endregion
+
+        #region 초기화
+
+        /// <summary>
+        /// [설명]: 외부로부터 의존성을 주입받아 초기화합니다.
+        /// </summary>
+        public void Initialize(ISceneLoader sceneLoader)
+        {
+            m_sceneLoader = sceneLoader;
+        }
 
         #endregion
 
@@ -50,9 +63,9 @@ namespace InGame
         /// </summary>
         public void Func_Continue()
         {
-            if (SceneLoader.Instance != null)
+            if (m_sceneLoader != null)
             {
-                SceneLoader.Instance.LoadScene("LobbyScene");
+                m_sceneLoader.LoadScene("LobbyScene");
             }
         }
 

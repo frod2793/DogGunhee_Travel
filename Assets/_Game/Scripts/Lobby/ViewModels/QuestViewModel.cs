@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -57,14 +58,15 @@ namespace InGame.Lobby.ViewModels
 
         #region 내부 변수 및 생성자
 
+        private readonly IInventoryContext m_inventoryContext;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary>
-        /// [설명]: QuestViewModel의 기본 생성자입니다.
+        /// [설명]: QuestViewModel의 생성자입니다.
         /// </summary>
-        public QuestViewModel()
+        public QuestViewModel(IInventoryContext inventoryContext)
         {
-            // 초기화 로직 (필요 시 작성)
+            m_inventoryContext = inventoryContext;
         }
 
         #endregion
@@ -122,16 +124,16 @@ namespace InGame.Lobby.ViewModels
 
             // 1. 보상 아이템 지급 (인벤토리 매니저 연동)
             // 1. 보상 아이템 지급 (인벤토리 매니저 연동)
-            if (InventoryManager.Instance != null)
+            if (m_inventoryContext != null)
             {
                 // [변경] InventoryDataManager -> InventoryManager
                 // 기존 GetItemByItemCode는 아이템을 추가하는 부작용이 있었음.
                 // 변경된 로직에서는 명시적으로 아이템 정보를 조회하고 추가함.
-                var rewardItem = InventoryManager.Instance.GetItemInfo(quest.RewardItemCode);
+                var rewardItem = m_inventoryContext.GetItemInfo(quest.RewardItemCode);
                 if (rewardItem != null)
                 {
-                    InventoryManager.Instance.System.AddItem(rewardItem);
-                    InventoryManager.Instance.SaveInventory();
+                    m_inventoryContext.System.AddItem(rewardItem);
+                    m_inventoryContext.SaveInventory();
                 }
 
                 // 2. 내부 데이터 상태 완료 처리 (서버 연동 시 API 응답에 맞춰 처리)

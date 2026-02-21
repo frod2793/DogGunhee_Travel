@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using UnityEngine;
 using InGame.ObjectPool;
 
@@ -60,8 +61,15 @@ namespace InGame.Weapon.Base
         /// <param name="data">무기 설정 데이터 (ScriptableObject)</param>
         /// <param name="owner">무기를 소유한 주체(플레이어)의 Transform</param>
         /// <param name="poolManager">투사체 생성에 사용할 오브젝트 풀 매니저</param>
-        /// <param name="targetProvider">공격 방향/타겟을 결정하는 델리게이트 함수</param>
-        void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, System.Func<Vector3> targetProvider);
+        /// <param name="getTargetDirection">공격 방향/타겟을 결정하는 델리게이트 함수</param>
+        void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager, 
+            System.Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext);
 
         /// <summary>
         /// [설명]: 매 프레임 호출되어 쿨타임 계산 및 공격 로직을 수행합니다.

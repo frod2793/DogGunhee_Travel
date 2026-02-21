@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using UnityEngine;
 using R3; // Reactive Extensions
 using System;
@@ -70,11 +71,21 @@ namespace InGame.Weapon.Core
             m_currentCooldown = 0f;
         }
 
+        private IGameStateService m_gameState;
+        private ICombatContext m_combatCtx;
+        private IPlayerContext m_playerCtx;
+
         /// <summary>
         /// 무기 데이터를 기반으로 컨트롤러를 초기화하고 의존성을 주입합니다.
         /// </summary>
-        public void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager,
-            System.Func<Vector3> getTargetDirection)
+        public void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager,
+            System.Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             // 1. 기본 데이터 설정
             m_data = data;
@@ -83,10 +94,14 @@ namespace InGame.Weapon.Core
             m_poolManager = poolManager;
             m_targetProvider = getTargetDirection;
 
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            m_playerCtx = playerContext;
+
             // 2. 전략 객체 초기화 (풀 등록 등 위임)
             if (m_strategy != null)
             {
-                m_strategy.Init(data, m_poolManager);
+                m_strategy.Init(data, m_poolManager, m_gameState, m_combatCtx, m_playerCtx);
             }
 
             // 3. R3 반응형 구독 설정 (디버깅 및 UI 연동용)
@@ -146,9 +161,8 @@ namespace InGame.Weapon.Core
         /// </summary>
         private void AttemptAutoAttack()
         {
-            // 적 존재 여부 확인 (GameManager 의존)
-            if (GameManager.Instance.ObjectPoolSpawner == null ||
-                GameManager.Instance.ObjectPoolSpawner.ActiveMobCount <= 0)
+            // 적 존재 여부 확인 (GameManager 의존 제거, ICombatContext 사용)
+            if (m_combatCtx == null || m_combatCtx.ActiveMobCount <= 0)
             {
                 return;
             }
@@ -183,9 +197,9 @@ namespace InGame.Weapon.Core
             if (m_stats != null && m_stats.CurrentAttackRange > 0)
             {
                 // 플레이어의 현재 오토 타겟 참조
-                if (GameManager.Instance.PlayerController != null)
+                if (m_playerCtx != null && m_playerCtx.PlayerController != null)
                 {
-                    var autoAttack = GameManager.Instance.PlayerController.AutoAttack;
+                    var autoAttack = m_playerCtx.PlayerController.AutoAttack;
                     if (autoAttack != null && autoAttack.CurrentTarget != null)
                     {
                         float dist = Vector3.Distance(m_ownerTransform.position,

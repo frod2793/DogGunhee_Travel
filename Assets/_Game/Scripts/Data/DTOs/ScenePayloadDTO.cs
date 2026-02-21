@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 
 namespace InGame.Data
@@ -14,6 +15,12 @@ namespace InGame.Data
         public PlayerDataDTO PlayerData { get; set; }
         public ServerSessionDTO ServerSession { get; set; }
         public InGame.Services.ISoundManager SoundService { get; set; }
+        public InGame.ISceneLoader SceneLoader { get; set; }
+        public InGame.UI.IPopupService PopupService { get; set; }
+        public InGame.Managers.IEffectService EffectService { get; set; }
+        // RemoteDataService 인터페이스를 임시로 object 선언 하거나 실제 타입을 넣음
+        public InGame.Data.Managers.IRemoteDataUpdateService RemoteDataService { get; set; }
+        public InGame.Core.Interfaces.IInventoryContext InventoryContext { get; set; }
 
         #endregion
 

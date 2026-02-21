@@ -7,6 +7,7 @@ using InGame.Managers;
 using InGame.ObjectPool;
 using InGame.Player.Player_Base;
 using InGame.Mob.Systems;
+using InGame.Core.Interfaces;
 
 namespace InGame.Mob.MobBase
 {
@@ -106,6 +107,8 @@ namespace InGame.Mob.MobBase
         /// [설명]: 사운드 서비스 참조 (DI)
         /// </summary>
         protected InGame.Services.ISoundManager m_soundManager;
+        protected IGameStateService m_gameState;
+        protected ICombatContext m_combatCtx;
 
         #endregion
 
@@ -177,11 +180,11 @@ namespace InGame.Mob.MobBase
         {
             get
             {
-                if (GameManager.Instance == null || GameManager.Instance.State == null)
+                if (m_gameState == null)
                 {
                     return false;
                 }
-                return m_canMoveByState && GameManager.Instance.State.IsPlaying;
+                return m_canMoveByState && m_gameState.IsPlaying;
             }
         }
 
@@ -218,9 +221,9 @@ namespace InGame.Mob.MobBase
             ResetDotToken();
 
             // 이벤트 구독
-            if (GameManager.Instance != null && GameManager.Instance.State != null)
+            if (m_gameState != null && m_gameState.State != null)
             {
-                GameManager.Instance.State.OnGameOver += OnGameOver;
+                m_gameState.State.OnGameOver += OnGameOver;
             }
 
             // 타겟 관리자 등록
@@ -253,9 +256,9 @@ namespace InGame.Mob.MobBase
             ResetDotToken();
 
             // 이벤트 해제
-            if (GameManager.Instance != null && GameManager.Instance.State != null)
+            if (m_gameState != null && m_gameState.State != null)
             {
-                GameManager.Instance.State.OnGameOver -= OnGameOver;
+                m_gameState.State.OnGameOver -= OnGameOver;
             }
         }
 
@@ -269,11 +272,18 @@ namespace InGame.Mob.MobBase
         /// <param name="mobManager">전역 몬스터 관리자</param>
         /// <param name="playerData">플레이어 데이터 (킬 카운트 등)</param>
         /// <param name="soundManager">사운드 매니저 (DI)</param>
-        public virtual void Init(MobManager mobManager, InGame.Data.PlayerDataDTO playerData = null, InGame.Services.ISoundManager soundManager = null)
+        public virtual void Init(
+            MobManager mobManager, 
+            InGame.Data.PlayerDataDTO playerData = null, 
+            InGame.Services.ISoundManager soundManager = null,
+            IGameStateService gameState = null,
+            ICombatContext combatContext = null)
         {
             m_mobManager = mobManager;
             m_playerData = playerData;
             m_soundManager = soundManager;
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
 
             if (m_mobManager != null)
             {

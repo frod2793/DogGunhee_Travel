@@ -75,25 +75,26 @@ grep "private readonly IAuthenticationService m_authService" Assets/_Game/Script
 **FAIL:** 구체 클래스 직접 참조 또는 바인딩 누락
 **수정:** `IAuthenticationService` 인터페이스 사용 및 `BindViewModel` 로직 보강
 
-### Step 3: 초기화 시 앱 업데이트 체크 및 리모트 동기화 제외 확인
+### Step 3: 초기화 시 앱 업데이트 체크 및 리모트 동기화 수행 확인
 
-앱 시작 시 `AppUpdateManager`를 통해 업데이트를 확인하는지 검증하고, 불필요한 리모트 데이터 동기화가 중복 수행되지 않는지 확인합니다.
+앱 시작 시 `AppUpdateManager`를 통해 업데이트를 확인하는지 검증하고, `LoadAddresaableManager`에서 리모트 데이터 동기화가 수행되는지 확인합니다.
 
-**파일:** `Assets/_Game/Scripts/Title/LoginViewMVVM.cs`
+**파일:** `Assets/_Game/Scripts/Title/LoginViewMVVM.cs`, `Assets/_Game/Scripts/Title/LoadAddresaableManager.cs`
 
 **검사:**
+1. `LoginViewMVVM.cs`에서 앱 업데이트 체크 확인.
+2. `LoadAddresaableManager.cs`에서 `UpdateAllRemoteDataAsync` 호출 확인.
 
 ```bash
 # 1. 앱 업데이트 체크 확인
 grep "await AppUpdateManager.Instance.CheckForUpdateAsync()" Assets/_Game/Scripts/Title/LoginViewMVVM.cs
 
-# 2. 리모트 데이터 동기화 중복 수행 여부 확인 (제거/주석 처리 상태여야 함)
-grep "UpdateAllRemoteDataAsync" Assets/_Game/Scripts/Title/LoginViewMVVM.cs
+# 2. 리모트 데이터 동기화 수행 여부 확인
+grep "UpdateAllRemoteDataAsync" Assets/_Game/Scripts/Title/LoadAddresaableManager.cs
 ```
 
-**PASS:** 업데이트 체크는 존재하고, 리모트 동기화 호출은 존재하지 않음(인게임으로 이전됨)
-**FAIL:** 리모트 동기화가 여전히 타이틀에서 호출됨
-**수정:** `LoginViewMVVM`에서 리모트 데이터 동기화 로직 제거 및 `GameManager`로 이동 확인
+**PASS:** 업데이트 체크 및 리모트 동기화 로직이 올바른 위치에서 확인됨
+**FAIL:** 호출 누락 또는 잘못된 위치에서 호출됨
 
 ### Step 4: 로비 전환 페이로드 구성 검사
 

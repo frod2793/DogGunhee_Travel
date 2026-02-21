@@ -1,6 +1,6 @@
 ---
 name: verify-ingame-core
-description: 인게임 핵심 시스템(GameManager, UIManager)과 UI 데이터 바인딩 상태를 검증합니다.
+description: 인게임 핵심 시스템(GameManager, UIManager), 초기화 순서 안전성, UI 데이터 바인딩을 검증합니다.
 ---
 
 # 인게임 핵심 시스템 검증
@@ -27,8 +27,12 @@ description: 인게임 핵심 시스템(GameManager, UIManager)과 UI 데이터 
 | `Assets/_Game/Scripts/InGame/Manager/GameManager.cs` | 인게임 전체 흐름 관리 |
 | `Assets/_Game/Scripts/InGame/Manager/UIManager.cs` | 인게임 UI 전환 및 상태 관리 |
 | `Assets/_Game/Scripts/InGame/UI/ViewModels/InGameViewModel.cs` | 인게임 UI용 데이터 바인딩 뷰모델 |
+| `Assets/_Game/Scripts/InGame/Player/Player_Base/PlayerBase.cs` | 플레이어 핵심 로직 및 이벤트 발생지 |
 | `Assets/_Game/Scripts/Data/Services/PlayerDataService.cs` | 플레이어 데이터 비즈니스 로직 관리 |
 | `Assets/_Game/Scripts/Data/DTOs/PlayerDataDTO.cs` | 플레이어 핵심 데이터 구조 |
+| `Assets/_Game/Scripts/InGame/GameSceneCompositionRoot.cs` | 인게임 씬 DI 조립 진입점 |
+| `Assets/_Game/Scripts/InGame/UI/Views/GameOverPopup.cs` | 게임 오버 팝업 뷰 |
+| `Assets/_Game/Scripts/Lobby/SoundManager.cs` | 사운드 매니저 (DontDestroyOnLoad 대상) |
 
 ## Workflow
 
@@ -93,21 +97,59 @@ grep "?." Assets/_Game/Scripts/InGame/**/*.cs | grep -v "Assets/_Game/Scripts/In
 
 **권장:** 하위 개체(몬스터, 발사체 등)가 생성될 때 주입받은 사운드 서비스를 사용하여 사운드를 재생하도록 구현 권장.
 
-### Step 5: 리모트 데이터 동기화 확인
+### Step 5: 초기화 순서 안전성 검사
 
-`GameManager.InitializeGameAsync`에서 인게임 진입 직후 리모트 데이터 동기화를 수행하는지 확인합니다.
+Unity 라이프사이클(`OnEnable`/`Start`)에서 DI 의존 코드를 호출하지 않는지 확인합니다.
+
+**원칙:** `OnEnable`/`Start`에서는 자체 컴포넌트 캐싱만 수행, 외부 의존성 로직은 `Initialize()`/`Init()`에서만 실행.
+
+**파일:** `PlayerBase.cs`, `UIManager.cs`
+
+**검사:**
+
+```bash
+# 1. PlayerBase.OnEnable에서 Init() 호출 없음 확인
+grep -A5 "void OnEnable" Assets/_Game/Scripts/InGame/Player/Player_Base/PlayerBase.cs | grep "Init()"
+
+# 2. UIManager.Start에서 SubscribeToEvents 호출 없음 확인
+grep -A10 "void Start" Assets/_Game/Scripts/InGame/Manager/UIManager.cs | grep "SubscribeToEvents"
+```
+
+**PASS:** 두 검색 모두 결과 없음
+**FAIL:** 라이프사이클에서 DI 의존 메서드 호출 발견
+**수정:** DI 의존 코드를 `Initialize()` 또는 `Init()`으로 이동
+
+### Step 6: async void 이벤트 핸들러 검사
+
+이벤트 핸들러에서 `async void`를 사용하면 예외 발생 시 전체 이벤트 체인이 중단됩니다. `void` + `UniTaskVoid.Forget()` 패턴으로 대체해야 합니다.
 
 **파일:** `Assets/_Game/Scripts/InGame/Manager/GameManager.cs`
 
 **검사:**
 
 ```bash
-grep "RemoteDataUpdateManager.Instance.UpdateAllRemoteDataAsync" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
+grep "async void" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
 ```
 
-**PASS:** `InitializeGameAsync` 내에서 `await` 호출 확인됨
-**FAIL:** 동기화 로직 누락
-**수정:** `InitializeGameAsync` 최상단에 동기화 코드 추가
+**PASS:** 결과 없음 (모든 비동기 핸들러가 void + Forget 패턴 사용)
+**FAIL:** `async void` 메서드 존재
+**수정:** `void Method() { MethodAsync().Forget(); }` + `async UniTaskVoid MethodAsync()` 패턴으로 변환
+
+### Step 7: 사망 시퀀스 추적 로그 검사
+
+`UIManager`의 게임 오버 시퀀스에 디버깅용 추적 로그가 구현되어 있는지 확인합니다.
+
+**파일:** `UIManager.cs`
+
+**검사:**
+
+```bash
+grep -n "OnGameOverAsync: Delay" Assets/_Game/Scripts/InGame/Manager/UIManager.cs
+```
+
+**PASS:** 상세 추적 로그 존재
+**FAIL:** 로그 누락
+**수정:** `OnGameOverAsync` 내 주요 단계에 추적 로그 추가
 
 ## Output Format
 

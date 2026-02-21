@@ -134,6 +134,10 @@ namespace InGame.Weapon
 
         private void ReleaseToPool()
         {
+            // [수정]: 오브젝트가 이미 파괴된 상태에서 호출될 수 있으므로
+            // Unity의 fake null 체크를 선행하여 MissingReferenceException을 방지합니다.
+            if (this == null) return;
+
             if (gameObject.activeInHierarchy && m_poolManager != null)
             {
                 m_poolManager.Release(this);

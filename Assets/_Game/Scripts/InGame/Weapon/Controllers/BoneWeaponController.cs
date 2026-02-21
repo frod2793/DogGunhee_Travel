@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using UnityEngine;
 using InGame.ObjectPool; 
@@ -19,9 +20,16 @@ namespace InGame.Weapon.Controllers
 
         #region 초기화 및 해제
 
-        public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
+        public override void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager, 
+            Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
-            base.Init(data, owner, poolManager, getTargetDirection);
+            base.Init(data, owner, poolManager, getTargetDirection, gameState, combatContext, playerContext);
 
             // 튜닝 데이터 가져오기
             BoneWeaponTuningData tuningData = new BoneWeaponTuningData();
@@ -94,7 +102,8 @@ namespace InGame.Weapon.Controllers
                 m_logic.BoneSpeed,
                 m_logic.IsEvolved,
                 m_poolManager,
-                m_soundManager
+                m_soundManager,
+                m_gameStateService?.EffectService
             );
 
             Vector3 finalDir = direction == Vector3.zero ? Vector3.up : direction;

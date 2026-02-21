@@ -96,6 +96,24 @@ grep "public class" Assets/_Game/Scripts/Data/DTOs/SheetDataDTO.cs
 **PASS:** `StatValueDTO`, `SkillDescriptionDTO` 등이 정의되어 있음
 **FAIL:** 필수 DTO 클래스 누락
 
+### Step 5: 강제 동기화 및 에디터 폴백 검사
+
+초기 로딩 시 구글 시트 데이터의 즉각 반영을 위해 `force: true`를 사용하는지, 그리고 에디터 직접 실행 시 `GameManager`에서 동기화를 수행하는지 확인합니다.
+
+**파일:** `LoadAddresaableManager.cs`, `GameManager.cs`
+
+**검사:**
+1. `LoadAddresaableManager`에서 `UpdateAllRemoteDataAsync(force: true)` 호출 확인.
+2. `GameManager.InitializeAsync` 내에 `#if UNITY_EDITOR`를 활용한 리모트 데이터 동기화 폴백 존재 확인.
+
+```bash
+grep "UpdateAllRemoteDataAsync(force: true)" Assets/_Game/Scripts/Title/LoadAddresaableManager.cs
+grep -A 10 "UNITY_EDITOR" Assets/_Game/Scripts/InGame/Manager/GameManager.cs | grep "RemoteDataUpdateManager"
+```
+
+**PASS:** 강제 동기화 및 에디터 폴백 로직 존재
+**FAIL:** 데이터 정합성 누락 가능성 있음
+
 ## Output Format
 
 ### 리모트 데이터 시스템 검증 결과

@@ -13,7 +13,7 @@ namespace InGame
     /// [설명]: 씬 전환과 로딩 연출을 총괄하는 싱글톤 클래스입니다.
     /// 비동기 씬 로딩, 페이드 효과, 로딩 프로그레스바 및 애니메이션 제어를 담당합니다.
     /// </summary>
-    public class SceneLoader : MonoBehaviour
+    public class SceneLoader : MonoBehaviour, ISceneLoader
     {
         #region 에디터 설정
 

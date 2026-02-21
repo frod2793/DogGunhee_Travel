@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -47,14 +48,18 @@ namespace InGame.UI.Popups
 
         // 관리 중인 퀘스트 항목 리스트
         private readonly List<Quest_Index> m_questItems = new List<Quest_Index>();
+        private InGame.UI.IPopupService m_popupService;
 
         #endregion
 
         #region 유니티 생명주기
 
-        private void Start()
+        public void Initialize(InGame.UI.IPopupService popupService, IInventoryContext inventoryContext)
         {
-            InitializeViewModel();
+            if (m_viewModel != null) return;
+
+            m_popupService = popupService;
+            m_viewModel = new QuestViewModel(inventoryContext);
             BindViewModel();
 
             // 진입 시 퀘스트 로드 시도
@@ -70,14 +75,6 @@ namespace InGame.UI.Popups
         #endregion
 
         #region MVVM 데이터 바인딩
-
-        /// <summary>
-        /// [설명]: 퀘스트 비즈니스 로직을 처리할 뷰모델을 생성합니다.
-        /// </summary>
-        private void InitializeViewModel()
-        {
-            m_viewModel = new QuestViewModel();
-        }
 
         /// <summary>
         /// [설명]: 뷰모델의 반응형 데이터를 구독하여 UI를 동기화합니다.
@@ -174,7 +171,7 @@ namespace InGame.UI.Popups
             }
 
             m_questPanel.SetActive(true);
-            PopupManager.Instance.RegisterPopup(CloseQuestPanel);
+            m_popupService.RegisterPopup(CloseQuestPanel);
         }
 
         /// <summary>
@@ -203,7 +200,7 @@ namespace InGame.UI.Popups
             if (m_questPanelExtensionText != null) m_questPanelExtensionText.SetText(message);
             if (m_rewardItemNameText != null) m_rewardItemNameText.SetText(rewardItemName);
 
-            PopupManager.Instance.RegisterPopup(CloseQuestPanelExtension);
+            m_popupService.RegisterPopup(CloseQuestPanelExtension);
         }
 
         /// <summary>

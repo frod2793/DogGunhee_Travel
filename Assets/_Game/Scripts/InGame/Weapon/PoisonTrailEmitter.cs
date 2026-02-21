@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using InGame.Mob.MobBase;
 using InGame.Managers;
+using InGame.Core.Interfaces;
 
 namespace InGame.Weapon
 {
@@ -76,6 +77,11 @@ namespace InGame.Weapon
         private float m_stunTime;
         private float m_coolTime;
 
+        // [추가]: 인터페이스 기반 의존성
+        private IGameStateService m_gameState;
+        private ICombatContext m_combatCtx;
+        private IPlayerContext m_playerCtx;
+
         #endregion
 
         #region Unity 라이프사이클
@@ -88,9 +94,9 @@ namespace InGame.Weapon
 
         private void OnEnable()
         {
-            if (GameManager.Instance != null)
+            if (m_playerCtx != null)
             {
-                m_playerTransform = GameManager.Instance.PlayerTransfrom();
+                m_playerTransform = m_playerCtx.PlayerTransform;
                 if (m_playerTransform != null)
                 {
                     m_lastFramePlayerPos = m_playerTransform.position;
@@ -102,7 +108,7 @@ namespace InGame.Weapon
         private void Update()
         {
             // 게임 플레이 중이 아닐 경우 업데이트 중단
-            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
+            if (m_gameState != null && m_gameState.State != null && !m_gameState.IsPlaying) return;
             if (m_playerTransform == null || m_trailCollider == null) return;
 
             float currentTime = Time.time;
@@ -147,7 +153,7 @@ namespace InGame.Weapon
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
+            if (m_gameState != null && m_gameState.State != null && !m_gameState.IsPlaying) return;
             if (!other.CompareTag("Mob")) return;
 
             int id = other.gameObject.GetInstanceID();
@@ -175,11 +181,31 @@ namespace InGame.Weapon
         /// <summary>
         /// [설명]: 무기 정보를 기반으로 이미터의 초기 스탯을 설정합니다.
         /// </summary>
-        public void Init(float damage, float stunTime, float coolTime)
+        public void Init(
+            float damage, 
+            float stunTime, 
+            float coolTime,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_damage = damage;
             m_stunTime = stunTime;
             m_coolTime = coolTime;
+
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            m_playerCtx = playerContext;
+
+            // 이미 활성화된 상태라면 즉시 트랜스폼 동기화
+            if (m_playerCtx != null)
+            {
+                m_playerTransform = m_playerCtx.PlayerTransform;
+                if (m_playerTransform != null)
+                {
+                    m_lastFramePlayerPos = m_playerTransform.position;
+                }
+            }
         }
 
         /// <summary>

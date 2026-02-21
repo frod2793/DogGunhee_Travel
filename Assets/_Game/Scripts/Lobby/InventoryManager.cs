@@ -4,13 +4,15 @@ using Cysharp.Threading.Tasks;
 using InGame.ScriptableObjects;
 using InGame.Services;
 
+using InGame.Core.Interfaces;
+
 namespace InGame.Lobby
 {
     /// <summary>
     /// [설명]: 인벤토리 시스템의 수명 주기를 관리하고 전역 접근을 제공하는 매니저 클래스입니다.
     /// 기존 InventoryDataManager를 대체하며, 순수 로직(InventorySystem)과 데이터(ScriptableObject)를 연결합니다.
     /// </summary>
-    public class InventoryManager : MonoBehaviour
+    public class InventoryManager : MonoBehaviour, IInventoryContext
     {
         #region 에디터 설정
 
@@ -22,7 +24,6 @@ namespace InGame.Lobby
 
         #region 프로퍼티
 
-        public static InventoryManager Instance { get; private set; }
 
         public InventorySystem System { get; private set; }
         public ItemDatabaseSO ItemDatabase => m_itemDatabase;
@@ -35,13 +36,6 @@ namespace InGame.Lobby
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
             DontDestroyOnLoad(gameObject);
         }
 
@@ -137,7 +131,8 @@ namespace InGame.Lobby
         /// <summary>
         /// [설명]: 인게임 세션 중에만 사용되는 임시 인벤토리 리스트입니다.
         /// </summary>
-        public System.Collections.Generic.List<SkillData> InGameAcquiredSkills { get; private set; } = new System.Collections.Generic.List<SkillData>();
+        public System.Collections.Generic.IReadOnlyList<SkillData> InGameAcquiredSkills => m_inGameAcquiredSkills;
+        private System.Collections.Generic.List<SkillData> m_inGameAcquiredSkills = new System.Collections.Generic.List<SkillData>();
 
         /// <summary>
         /// [설명]: 인게임 세션 중 획득한 스킬 데이터를 추가합니다.
@@ -146,7 +141,7 @@ namespace InGame.Lobby
         {
             if (skillData != null)
             {
-                InGameAcquiredSkills.Add(skillData);
+                m_inGameAcquiredSkills.Add(skillData);
             }
         }
 
@@ -155,7 +150,7 @@ namespace InGame.Lobby
         /// </summary>
         public void ClearInGameSkills()
         {
-            InGameAcquiredSkills.Clear();
+            m_inGameAcquiredSkills.Clear();
         }
 
         #endregion
@@ -169,6 +164,12 @@ namespace InGame.Lobby
         {
             if (m_itemDatabase == null) return null;
             return m_itemDatabase.GetItemData(itemCode);
+        }
+
+        public ItemDataSO GetItemDataByName(string itemName)
+        {
+            if (m_itemDatabase == null) return null;
+            return m_itemDatabase.GetItemDataByName(itemName);
         }
 
         #endregion

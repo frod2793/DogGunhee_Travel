@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using InGame.Managers;
 using InGame.Weapon.Base;
+using InGame.Core.Interfaces;
 
 namespace InGame.Player.Player_Base
 {
@@ -39,6 +40,11 @@ namespace InGame.Player.Player_Base
         private InGame.Services.PlayerDataService m_playerService;
 
         private InGame.Services.ISoundManager m_soundManager;
+        private IGameStateService m_gameState;
+        
+        private bool m_isInitialized;
+        private bool m_isEventsSubscribed;
+        private bool m_isInternalEventsSubscribed;
 
         #endregion
 
@@ -102,13 +108,17 @@ namespace InGame.Player.Player_Base
         #region 유니티 생명주기
 
         /// <summary>
-        /// [설명]: 플레이어 오브젝트가 활성화될 때 필수 시스템이 초기화되지 않았다면 초기화를 수행합니다.
+        /// [설명]: 플레이어 오브젝트가 활성화될 때 내부 컴포넌트만 캐싱합니다.
+        /// 외부 의존성(GameState 등)이 필요한 Init()은 GameManager에서 명시적으로 호출합니다.
         /// </summary>
         public virtual void OnEnable()
         {
-            if (m_weaponManager == null || m_expSystem == null)
+            // [수정]: OnEnable에서 Init()을 호출하지 않습니다.
+            // Addressables.InstantiateAsync로 생성 시 OnEnable이 Init보다 먼저 실행되어
+            // GameState null 경고가 발생하는 문제를 방지합니다.
+            if (m_collisionHandler == null)
             {
-                Init();
+                m_collisionHandler = GetComponent<PlayerCollisionHandler>();
             }
         }
 
@@ -153,24 +163,47 @@ namespace InGame.Player.Player_Base
         /// </summary>
         /// <param name="weaponManager">무기 관리자 주입 (생략 시 기본 생성)</param>
         /// <param name="expSystem">경험치 시스템 주입 (생략 시 기본 생성)</param>
-        public void Init(PlayerWeaponManager weaponManager = null, ExperienceSystem expSystem = null, InGame.Services.PlayerDataService playerService = null, InGame.Services.ISoundManager soundManager = null)
+        public void Init(
+            PlayerWeaponManager weaponManager = null, 
+            ExperienceSystem expSystem = null, 
+            InGame.Services.PlayerDataService playerService = null, 
+            InGame.Services.ISoundManager soundManager = null,
+            IGameStateService gameStateService = null)
         {
+            // [수정]: 이미 초기화되었더라도 필수 의존성(m_gameState)이 null인 경우 주입을 허용하며 재구독을 시도합니다.
+            if (m_isInitialized && m_gameState != null) return;
+            
+            m_isInitialized = true;
+
             // 의존성 주입 또는 기본 객체 생성
-            m_weaponManager = weaponManager ?? CreateDefaultWeaponManager();
+            if (m_weaponManager == null) m_weaponManager = weaponManager ?? CreateDefaultWeaponManager();
+            
             if (soundManager != null)
             {
                 m_weaponManager.SetSoundManager(soundManager);
             }
             
-            m_expSystem = expSystem ?? new ExperienceSystem();
-            m_playerService = playerService;
-            m_soundManager = soundManager;
+            if (m_expSystem == null) m_expSystem = expSystem ?? new ExperienceSystem();
+            if (m_playerService == null) m_playerService = playerService;
+            if (m_soundManager == null) m_soundManager = soundManager;
+            
+            // 핵심: 게임 상태 서비스 주입 (사망 처리에 필수)
+            if (m_gameState == null) m_gameState = gameStateService;
+
+            if (m_gameState == null)
+            {
+                LogManager.LogWarning("[PlayerBase] GameStateService가 주입되지 않았습니다. 사망 처리가 불가능할 수 있습니다.", LogManager.LogCategory.System);
+            }
+            else
+            {
+                LogManager.Log("[PlayerBase] 초기화 및 의존성 주입 완료", LogManager.LogCategory.System);
+            }
 
             // 내부 컴포넌트 및 데이터 로드
             InitializeComponents();
             InitializeStats();
 
-            // 게임 이벤트 연결
+            // 게임 이벤트 연결 (m_gameState가 주입된 경우에만 성공으로 간주)
             SubscribeEvents();
 
             // 초기 UI 갱신을 위한 알림 호출
@@ -238,27 +271,23 @@ namespace InGame.Player.Player_Base
         /// </summary>
         public void RemoveWeapon(string skillCode) => m_weaponManager?.RemoveWeapon(skillCode);
 
-        /// <summary>
-        /// [설명]: 플레이어의 체력이 0이 되어 사망했을 때의 처리를 수행합니다. (Game Over 전환 및 사운드 재생)
-        /// </summary>
-        public virtual void Player_Die()
-        {
-            if (GameManager.Instance.State != null)
-            {
-                GameManager.Instance.State.GameOver();
-            }
-
-            SoundKeys deathSound = m_config ? m_config.DeathSoundKey : SoundKeys.PlayerDeth;
-            if (m_soundManager != null)
-            {
-                m_soundManager.Play(deathSound.ToString(), Sound.SFX, 1.0f, false);
-            }
-        }
 
         /// <summary>
         /// [설명]: 현재 경험지 진행 상태(0~1)를 반환합니다.
         /// </summary>
         public float GetExpProgress() => m_expSystem.GetProgress();
+
+        #region 테스트용 디버그 메서드
+        /// <summary>
+        /// [설명]: 테스트 목적으로 플레이어에게 경험치를 강제 지급합니다.
+        /// </summary>
+        public void Debug_GainExp(float amount) => m_expSystem?.AddExperience(amount);
+
+        /// <summary>
+        /// [설명]: 테스트 목적으로 플레이어에게 데미지를 강제 입힙니다.
+        /// </summary>
+        public void Debug_TakeDamage(float damage) => ApplyDamage(damage);
+        #endregion
 
         #endregion
 
@@ -272,9 +301,9 @@ namespace InGame.Player.Player_Base
             m_stats.ApplyDamage(damageAmount);
             OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
 
-            if (EffectManager.Instance != null)
+            if (m_gameState?.EffectService != null)
             {
-                EffectManager.Instance.PlayPlayerHitCameraShake();
+                m_gameState.EffectService.PlayPlayerHitCameraShake();
             }
 
             PlayHitEffect();
@@ -302,21 +331,33 @@ namespace InGame.Player.Player_Base
         /// </summary>
         private void SubscribeEvents()
         {
-            if (GameManager.Instance.State != null)
+            // GameState 이벤트 구독 (이미 구독되었으면 건너뜀)
+            if (!m_isEventsSubscribed && m_gameState != null && m_gameState.State != null)
             {
-                GameManager.Instance.State.OnGameOver += OnGameOver;
-                GameManager.Instance.State.OnGamePause += OnGamePause;
-                GameManager.Instance.State.OnGameResume += OnGameResume;
+                m_gameState.State.OnGameOver += OnGameOver;
+                m_gameState.State.OnGamePause += OnGamePause;
+                m_gameState.State.OnGameResume += OnGameResume;
+                
+                m_isEventsSubscribed = true;
+                LogManager.Log("[PlayerBase] GameState 이벤트 구독 성공", LogManager.LogCategory.System);
+            }
+            else if (!m_isEventsSubscribed && (m_gameState == null || m_gameState.State == null))
+            {
+                LogManager.LogWarning("[PlayerBase] GameState가 null이라 이벤트를 구독하지 못했습니다.", LogManager.LogCategory.System);
             }
 
-            m_expSystem.OnLevelUp += HandleLevelUp;
-            m_expSystem.OnExpChanged += (cur, max) => OnExpChanged?.Invoke(cur, max);
-
-            if (m_collisionHandler != null)
+            if (!m_isInternalEventsSubscribed)
             {
-                m_collisionHandler.OnDamageReceived += ApplyDamage;
-                m_collisionHandler.OnExpCollected += m_expSystem.AddExperience;
-                m_collisionHandler.OnCoinCollected += HandleCoinCollected;
+                m_isInternalEventsSubscribed = true;
+                m_expSystem.OnLevelUp += HandleLevelUp;
+                m_expSystem.OnExpChanged += (cur, max) => OnExpChanged?.Invoke(cur, max);
+
+                if (m_collisionHandler != null)
+                {
+                    m_collisionHandler.OnDamageReceived += ApplyDamage;
+                    m_collisionHandler.OnExpCollected += m_expSystem.AddExperience;
+                    m_collisionHandler.OnCoinCollected += HandleCoinCollected;
+                }
             }
         }
 
@@ -325,11 +366,14 @@ namespace InGame.Player.Player_Base
         /// </summary>
         private void UnsubscribeEvents()
         {
-            if (GameManager.Instance.State != null)
+            if (!m_isEventsSubscribed) return;
+            m_isEventsSubscribed = false;
+
+            if (m_gameState != null && m_gameState.State != null)
             {
-                GameManager.Instance.State.OnGameOver -= OnGameOver;
-                GameManager.Instance.State.OnGamePause -= OnGamePause;
-                GameManager.Instance.State.OnGameResume -= OnGameResume;
+                m_gameState.State.OnGameOver -= OnGameOver;
+                m_gameState.State.OnGamePause -= OnGamePause;
+                m_gameState.State.OnGameResume -= OnGameResume;
             }
 
             m_expSystem.OnLevelUp -= HandleLevelUp;
@@ -374,6 +418,34 @@ namespace InGame.Player.Player_Base
             }
         }
 
+        /// <summary>
+        /// [설명]: 플레이어의 체력이 0이 되어 사망했을 때의 처리를 수행합니다. (Game Over 전환 및 사운드 재생)
+        /// </summary>
+        private void Player_Die()
+        {
+            if (m_gameState == null || m_gameState.State == null)
+            {
+                LogManager.LogError("[PlayerBase] GameStateService 또는 그 State가 null입니다! 사망 처리를 중단합니다.", LogManager.LogCategory.System);
+                return;
+            }
+
+            LogManager.Log("[PlayerBase] 플레이어 사망 - GameOver 호출 시작", LogManager.LogCategory.System);
+            
+            // [추가]: 현재 TimeScale 상태 로그
+            LogManager.Log($"[PlayerBase] Current TimeScale: {Time.timeScale}", LogManager.LogCategory.System);
+            
+            m_gameState.State.GameOver();
+
+            if (m_soundManager != null)
+            {
+                m_soundManager.Play(SoundKeys.PlayerDeth.ToString(), Sound.SFX, 1.0f, false);
+            }
+
+            if (m_gameState.EffectService != null)
+            {
+                m_gameState.EffectService.PlayEffect(EffectType.PlayerHit, transform.position);
+            }
+        }
         /// <summary>
         /// [설명]: 코인 수집 시 플레이어의 재화 데이터를 갱신합니다.
         /// </summary>

@@ -39,7 +39,7 @@ namespace InGame.Services
         /// [설명]: 리모트와 로컬의 데이터를 비교하고 필요 시 업데이트합니다.
         /// </summary>
         /// <param name="dataType">데이터 종류 (Skill, Stage 등)</param>
-        public async UniTask<bool> CheckAndUpdateDataAsync(string dataType, CancellationToken ct = default)
+        public async UniTask<bool> CheckAndUpdateDataAsync(string dataType, CancellationToken ct = default, bool force = false)
         {
             try
             {
@@ -57,10 +57,17 @@ namespace InGame.Services
                 string localVersionPath = Path.Combine(m_savePath, $"{dataType}_version.txt");
                 string localVersion = File.Exists(localVersionPath) ? File.ReadAllText(localVersionPath) : string.Empty;
 
-                // 3. 버전 비교 및 다운로드
-                if (localVersion != serverVersion)
+                // 3. 버전 비교 및 다운로드 (force가 true면 무조건 다운로드)
+                if (localVersion != serverVersion || force)
                 {
-                    Debug.Log($"<color=cyan>[RemoteDataService]</color> <b>{dataType}</b> 업데이트 발견! (구버전: {localVersion} -> 신버전: {serverVersion})");
+                    if (force)
+                    {
+                        Debug.Log($"<color=cyan>[RemoteDataService]</color> <b>{dataType}</b> 강제 동기화 트리거됨.");
+                    }
+                    else
+                    {
+                        Debug.Log($"<color=cyan>[RemoteDataService]</color> <b>{dataType}</b> 업데이트 발견! (구버전: {localVersion} -> 신버전: {serverVersion})");
+                    }
                     
                     string dataUrl = $"{k_BaseUrl}?action=get_data&type={dataType}";
                     string jsonData = await GetTextFromUrlAsync(dataUrl, ct);

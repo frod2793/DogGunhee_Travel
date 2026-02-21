@@ -2,6 +2,8 @@ using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
 
+using InGame.Core.Interfaces;
+
 namespace InGame.Weapon.Strategies
 {
     /// <summary>
@@ -15,7 +17,15 @@ namespace InGame.Weapon.Strategies
         /// </summary>
         /// <param name="data">무기 설정 데이터</param>
         /// <param name="poolManager">투사체 생성을 위한 풀 매니저</param>
-        void Init(WeaponDataSO data, WeaponPoolManager poolManager);
+        /// <param name="gameState">게임 상태 서비스</param>
+        /// <param name="combatContext">전투 컨텍스트</param>
+        /// <param name="playerContext">플레이어 컨텍스트</param>
+        void Init(
+            WeaponDataSO data, 
+            WeaponPoolManager poolManager,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext);
 
         /// <summary>
         /// 실제 공격 로직을 수행합니다. (쿨타임이 끝났을 때 호출됨)

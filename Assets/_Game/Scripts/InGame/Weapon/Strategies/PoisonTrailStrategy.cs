@@ -1,6 +1,7 @@
 using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
+using InGame.Core.Interfaces;
 
 namespace InGame.Weapon.Strategies
 {
@@ -16,14 +17,28 @@ namespace InGame.Weapon.Strategies
         private WeaponDataSO m_data;
         private WeaponPoolManager m_poolManager;
 
+        // [추가]: 인터페이스 기반 의존성
+        private IGameStateService m_gameState;
+        private ICombatContext m_combatCtx;
+        private IPlayerContext m_playerCtx;
+
         #endregion
 
         #region 인터페이스 구현
 
-        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
+        public void Init(
+            WeaponDataSO data, 
+            WeaponPoolManager poolManager,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_data = data;
             m_poolManager = poolManager;
+
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            m_playerCtx = playerContext;
         }
 
         public void Attack(WeaponRuntimeStats stats, Transform owner, Vector3 direction)
@@ -41,7 +56,10 @@ namespace InGame.Weapon.Strategies
                         m_emitterInstance.Init(
                             stats.CurrentAttackPower,
                             stats.MobStunTime,
-                            stats.CurrentCoolTime
+                            stats.CurrentCoolTime,
+                            m_gameState,
+                            m_combatCtx,
+                            m_playerCtx
                         );
                     }
                 }

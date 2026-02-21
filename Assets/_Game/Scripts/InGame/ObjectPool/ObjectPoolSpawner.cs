@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using InGame.Managers;
+using InGame.Core.Interfaces;
 using InGame.Mob.MobBase;
 using InGame.Player.Player_Base;
 using InGame.vamsir;
@@ -84,6 +85,9 @@ namespace InGame.ObjectPool
 
         /// <summary> 사운드 매니저 참조 </summary>
         private InGame.Services.ISoundManager m_soundManager;
+        private IGameStateService m_gameState;
+        private ICombatContext m_combatCtx;
+        private IPlayerContext m_playerCtx;
 
         #endregion
 
@@ -98,6 +102,9 @@ namespace InGame.ObjectPool
         /// [설명]: 코인 아이템 오브젝트 풀입니다.
         /// </summary>
         public IObjectPool<Coin_Obj> CoinObjectPool { get; private set; }
+        
+        /// <summary> [설명]: 스포너에서 계산된 실제 맵 경계 데이터를 반환합니다. </summary>
+        public Bounds MapBounds => m_mapBounds;
 
         /// <summary>
         /// [설명]: 현재 월드에 활성화된 전체 몬스터 수입니다.
@@ -223,9 +230,9 @@ namespace InGame.ObjectPool
                     m_mapBounds = new Bounds(m_mapRange.transform.position, new Vector3(100f, 100f, 10f));
                 }
             }
-            else if (GameManager.Instance != null && GameManager.Instance.MapBounds.size.sqrMagnitude > 1f)
+            else if (m_combatCtx != null && m_combatCtx.MapBounds.size.sqrMagnitude > 1f)
             {
-                m_mapBounds = GameManager.Instance.MapBounds;
+                m_mapBounds = m_combatCtx.MapBounds;
             }
             else
             {
@@ -263,14 +270,28 @@ namespace InGame.ObjectPool
         /// <summary>
         /// [설명]: 스포너의 의존성을 주입하고 실제 웨이브를 시작합니다.
         /// </summary>
-        public async UniTask InitializeAndStartSpawning(PlayerBase player, MobManager mobManager, InGame.Data.PlayerDataDTO playerData, InGame.Services.ISoundManager soundManager, int startStageId = 1)
+        public async UniTask InitializeAndStartSpawning(
+            IPlayerContext playerContext, 
+            MobManager mobManager, 
+            InGame.Data.PlayerDataDTO playerData, 
+            InGame.Services.ISoundManager soundManager, 
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            int startStageId = 1)
         {
-            m_player = player;
+            m_playerCtx = playerContext;
+            m_player = m_playerCtx?.SpawnedPlayer;
             m_mobManager = mobManager;
             m_playerData = playerData;
             m_soundManager = soundManager;
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            
+            LogManager.Log($"[ObjectPoolSpawner] InitializeAndStartSpawning 호출 - Player: {(m_player != null ? "있음" : "없음")}, Stage: {startStageId}", LogManager.LogCategory.System);
+
             if (m_player == null)
             {
+                LogManager.LogWarning("[ObjectPoolSpawner] 플레이어가 없어 스폰을 시작할 수 없습니다. (SpawnedPlayer is null)", LogManager.LogCategory.System);
                 return;
             }
 
@@ -330,9 +351,11 @@ namespace InGame.ObjectPool
         {
             foreach (var mobInfo in wave.mobs)
             {
+                LogManager.Log($"[ObjectPoolSpawner] 프리팹 확인 중: {mobInfo.mobKey}", LogManager.LogCategory.System);
                 await EnsureMobPrefabLoaded(mobInfo.mobKey);
             }
 
+            LogManager.Log($"[ObjectPoolSpawner] 웨이브 {wave.waveId} 스폰 루프 진입 완료", LogManager.LogCategory.System);
             m_spawnCts = new CancellationTokenSource();
             var token = CancellationTokenSource
                 .CreateLinkedTokenSource(m_spawnCts.Token, this.GetCancellationTokenOnDestroy()).Token;
@@ -483,7 +506,7 @@ namespace InGame.ObjectPool
             mob.gameObject.SetActive(true);
 
 
-            mob.Init(m_mobManager, m_playerData, m_soundManager);
+            mob.Init(m_mobManager, m_playerData, m_soundManager, m_gameState, m_combatCtx);
             mob.SetTarget(m_player);
 
             m_waveSystem?.OnMobSpawned();
@@ -525,6 +548,67 @@ namespace InGame.ObjectPool
             {
                 Destroy(mob.gameObject);
             }
+        }
+
+        /// <summary>
+        /// [설명]: 특정 몬스터를 지정된 위치에 강제로 스폰합니다. (테스트용)
+        /// </summary>
+        /// <param name="mobKey">스폰할 몬스터의 Addressable Key</param>
+        /// <param name="position">스폰 위치</param>
+        public async UniTask SpawnMobForTest(string mobKey, Vector3 position)
+        {
+            if (string.IsNullOrEmpty(mobKey)) return;
+
+            // 프리팹 로드 보장
+            await EnsureMobPrefabLoaded(mobKey);
+
+            if (!m_mobPools.TryGetValue(mobKey, out var pool))
+            {
+                pool = new ObjectPool<MobBase>(
+                    createFunc: () => CreateMobInstance(mobKey),
+                    actionOnGet: OnGetMob,
+                    actionOnRelease: OnReleaseMob,
+                    actionOnDestroy: OnDestroyObject,
+                    defaultCapacity: 10,
+                    maxSize: m_maxPoolSize
+                );
+                m_mobPools[mobKey] = pool;
+            }
+
+            var mob = pool.Get();
+            if (mob != null)
+            {
+                // OnGetMob에서 설정된 랜덤 위치를 테스트용 위치로 덮어쓰기
+                mob.transform.position = position;
+                LogManager.Log($"[Test] 몬스터 스폰 완료: {mobKey} at {position}", LogManager.LogCategory.ObjectPoolSpawner);
+            }
+        }
+
+        /// <summary>
+        /// [설명]: 현재 활성화된 모든 몬스터를 즉시 풀로 반환합니다. (테스트용)
+        /// </summary>
+        public void ReturnAllMobsForTest()
+        {
+            if (m_mobManager == null) return;
+
+            var activeTargets = m_mobManager.GetAllActiveTargets();
+            List<InGame.Mob.MobBase.MobBase> mobsToReturn = new List<InGame.Mob.MobBase.MobBase>();
+
+            // 원본 리스트 수정을 방지하기 위해 복사본 생성
+            for (int i = 0; i < activeTargets.Count; i++)
+            {
+                if (activeTargets[i] is InGame.Mob.MobBase.MobBase mob)
+                {
+                    mobsToReturn.Add(mob);
+                }
+            }
+
+            foreach (var mob in mobsToReturn)
+            {
+                ReturnMob(mob);
+            }
+
+            LogManager.Log($"[Test] 모든 몬스터 반환 완료 (총 {mobsToReturn.Count}마리)", LogManager.LogCategory.ObjectPoolSpawner);
         }
 
         /// <summary>
@@ -578,14 +662,16 @@ namespace InGame.ObjectPool
         /// </summary>
         private void SubscribeEvents()
         {
-            GameManager.OnPlayerChanged += OnPlayerChanged;
-            if (GameManager.Instance.State == null)
+            if (m_playerCtx != null) {
+                m_playerCtx.OnPlayerChanged += OnPlayerChanged;
+            }
+            if (m_gameState == null || m_gameState.State == null)
             {
                 return;
             }
-            GameManager.Instance.State.OnGamePause += OnPause;
-            GameManager.Instance.State.OnGameResume += OnResume;
-            GameManager.Instance.State.OnGameOver += OnGameOver;
+            m_gameState.State.OnGamePause += OnPause;
+            m_gameState.State.OnGameResume += OnResume;
+            m_gameState.State.OnGameOver += OnGameOver;
         }
 
         /// <summary>
@@ -593,14 +679,16 @@ namespace InGame.ObjectPool
         /// </summary>
         private void UnsubscribeEvents()
         {
-            GameManager.OnPlayerChanged -= OnPlayerChanged;
-            if (GameManager.Instance.State == null)
+            if (m_playerCtx != null) {
+                m_playerCtx.OnPlayerChanged -= OnPlayerChanged;
+            }
+            if (m_gameState == null || m_gameState.State == null)
             {
                 return;
             }
-            GameManager.Instance.State.OnGamePause -= OnPause;
-            GameManager.Instance.State.OnGameResume -= OnResume;
-            GameManager.Instance.State.OnGameOver -= OnGameOver;
+            m_gameState.State.OnGamePause -= OnPause;
+            m_gameState.State.OnGameResume -= OnResume;
+            m_gameState.State.OnGameOver -= OnGameOver;
         }
 
         private void OnPause() => m_waveSystem?.Pause();

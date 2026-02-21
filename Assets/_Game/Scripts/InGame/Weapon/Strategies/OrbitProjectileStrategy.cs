@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using InGame.Weapon.Base;
 using InGame.Managers;
 using InGame.ObjectPool;
+using InGame.Core.Interfaces;
 using InGame.Weapon.Controllers;
 
 namespace InGame.Weapon.Strategies
@@ -22,14 +23,28 @@ namespace InGame.Weapon.Strategies
 
         private readonly List<OrbitProjectile> m_activeBalls = new();
 
+        // [추가]: 인터페이스 기반 의존성
+        private IGameStateService m_gameState;
+        private ICombatContext m_combatCtx;
+        private IPlayerContext m_playerCtx;
+
         #endregion
 
         #region 인터페이스 구현
 
-        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
+        public void Init(
+            WeaponDataSO data, 
+            WeaponPoolManager poolManager,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_data = data;
             m_poolManager = poolManager;
+
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            m_playerCtx = playerContext;
             m_ballPrefab = data.ProjectilePrefab;
 
             if (m_poolManager == null) return;
@@ -64,9 +79,9 @@ namespace InGame.Weapon.Strategies
         public void OnUpdate(WeaponRuntimeStats stats, float deltaTime)
         {
             // 플레이어가 살아있다면 계속 동기화 유지
-            if (GameManager.Instance != null && GameManager.Instance.SpawnedPlayer != null)
+            if (m_playerCtx != null && m_playerCtx.PlayerTransform != null)
             {
-                SyncBallCount(stats, GameManager.Instance.SpawnedPlayer.transform);
+                SyncBallCount(stats, m_playerCtx.PlayerTransform);
             }
         }
 

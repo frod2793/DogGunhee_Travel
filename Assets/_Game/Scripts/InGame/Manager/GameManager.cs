@@ -12,7 +12,7 @@ using InGame.Weapon;
 using InGame.Mob.Systems;
 using InGame.Data;
 using InGame.Services;
-using InGame.Core;
+using InGame.Core.Interfaces;
 
 namespace InGame.Managers
 {
@@ -20,27 +20,12 @@ namespace InGame.Managers
     /// [설명]: 게임의 전체 흐름(시작, 정지, 종료)과 전역 상태(플레이어, 스포너, UI)를 총괄하는 중앙 관리자 클래스입니다.
     /// 외부 시스템과 연동하는 PlayerDataDTO를 주입받아 초기화됩니다.
     /// </summary>
-    public class GameManager : MonoBehaviour, ISceneInitializer
+    public class GameManager : MonoBehaviour, IGameStateService, IPlayerContext, ICombatContext, IGameDataProvider, IGameFlowController
     {
         #region 싱글톤 및 이벤트
 
-        private static GameManager s_instance;
-
-        public static GameManager Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                {
-                    s_instance = FindFirstObjectByType<GameManager>();
-                }
-
-                return s_instance;
-            }
-        }
-
-        /// <summary> 플레이어 캐릭터가 스폰되거나 변경될 때 발생하는 전역 이벤트 </summary>
-        public static event Action<PlayerBase> OnPlayerChanged;
+        /// <summary> 플레이어 캐릭터가 스폰되거나 변경될 때 발생하는 이벤트 </summary>
+        public event Action<PlayerBase> OnPlayerChanged;
 
         #endregion
 
@@ -79,6 +64,12 @@ namespace InGame.Managers
         private PlayerDataService m_playerService;
         private IGameDataService m_gameDataService;
         private ISoundManager m_soundManager;
+        private ISceneLoader m_sceneLoader;
+        private InGame.UI.IPopupService m_popupService;
+        private InGame.Managers.IEffectService m_effectService;
+        private InGame.Data.Managers.IRemoteDataUpdateService m_remoteDataService;
+        private IInventoryContext m_inventoryCtx;
+        private bool m_isInitialized; // [추가]: 초기화 완료 플래그 (중복 방지)
 
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
 
@@ -98,6 +89,9 @@ namespace InGame.Managers
         /// <summary> 플레이어 입력 컨트롤러 </summary>
         public PlayerController PlayerController => m_playerController;
 
+        /// <summary> 사운드 매니저 참조 </summary>
+        public InGame.Services.ISoundManager SoundManager => m_soundManager;
+
         public PlayStateManager.GameState PlayState => m_state?.PlayState ?? PlayStateManager.GameState.Ready;
         /// <summary> 게임의 상태(시작, 정지, 종료) 관리자 </summary>
         public PlayStateManager State => m_state;
@@ -114,8 +108,30 @@ namespace InGame.Managers
         /// <summary> UI 매니저 참조 </summary>
         public UIManager UIManager => m_uiManager;
 
+        /// <summary> [IPlayerContext 구현]: 플레이어 위치 정보를 가진 Transform </summary>
+        public Transform PlayerTransform => m_playerContainer != null ? m_playerContainer.transform : transform;
+
+        /// <summary> [IGameStateService 구현]: 현재 게임이 플레이 중인지 여부 </summary>
+        public bool IsPlaying => m_state != null && m_state.IsPlaying;
+        
+        /// <summary> [IGameStateService 구현]: 이펙트 서비스 </summary>
+        public IEffectService EffectService => m_effectService;
+
+        /// <summary> [IGameStateService 구현]: 사운드 서비스 </summary>
+        public ISoundManager SoundService => m_soundManager;
+
         /// <summary> 현재 맵의 이동 가능 경계 </summary>
-        public Bounds MapBounds => m_mapRange != null ? m_mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 100);
+        public Bounds MapBounds
+        {
+            get
+            {
+                if (m_objectPoolSpawner != null && m_objectPoolSpawner.MapBounds.size.sqrMagnitude > 1f)
+                {
+                    return m_objectPoolSpawner.MapBounds;
+                }
+                return m_mapRange != null ? m_mapRange.bounds : new Bounds(Vector3.zero, Vector3.one * 100);
+            }
+        }
 
         /// <summary> 현재 활성화된 몬스터 수 </summary>
         public int ActiveMobCount => m_objectPoolSpawner != null ? m_objectPoolSpawner.ActiveMobCount : 0;
@@ -132,13 +148,8 @@ namespace InGame.Managers
 
         private void Awake()
         {
-            if (s_instance != null && s_instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            s_instance = this;
+            // [추가]: 씬 진입 시 타임스케일 초기화
+            Time.timeScale = 1f;
 
             // 상태 관리자 및 시스템 초기화
             m_state = new PlayStateManager();
@@ -153,29 +164,49 @@ namespace InGame.Managers
         }
 
         /// <summary>
-        /// [설명]: SceneLoader로부터 전달된 데이터를 사용하여 게임 매니저를 초기화합니다.
+        /// [설명]: CompositionRoot로부터 전달된 데이터를 사용하여 게임 매니저를 초기화합니다.
         /// </summary>
-        public async UniTask OnInitialize(object payload)
+        public async UniTask InitializeAsync(object payload)
         {
+            if (m_isInitialized)
+            {
+                LogManager.Log("[GameManager] 이미 초기화되었습니다. 호출을 무시합니다.", LogManager.LogCategory.System);
+                return;
+            }
+
             if (payload is ScenePayloadDTO scenePayload)
             {
                 m_playerData = scenePayload.PlayerData;
                 m_soundManager = scenePayload.SoundService;
+                m_sceneLoader = scenePayload.SceneLoader;
+                m_popupService = scenePayload.PopupService;
+                m_effectService = scenePayload.EffectService;
+                m_remoteDataService = scenePayload.RemoteDataService;
+                m_inventoryCtx = scenePayload.InventoryContext;
 
                 if (scenePayload.ServerSession != null)
                 {
                     m_gameDataService = scenePayload.ServerSession.GameData;
-                }
-
-                if (m_uiManager != null)
-                {
-                    m_uiManager.Initialize(m_soundManager);
                 }
             }
             else if (payload is PlayerDataDTO dto)
             {
                 m_playerData = dto;
             }
+
+#if UNITY_EDITOR
+            // [에디터 폴백]: 씬 직접 실행 시 RemoteDataUpdateManager 찾기
+            if (m_remoteDataService == null)
+            {
+                m_remoteDataService = FindFirstObjectByType<InGame.Data.Managers.RemoteDataUpdateManager>();
+                if (m_remoteDataService == null)
+                {
+                    GameObject go = new GameObject("[Editor_RemoteDataSync_Fallback]");
+                    m_remoteDataService = go.AddComponent<InGame.Data.Managers.RemoteDataUpdateManager>();
+                    LogManager.Log("[GameManager] 에디터 폴백: RemoteDataUpdateManager를 생성했습니다.", LogManager.LogCategory.System);
+                }
+            }
+#endif
 
             if (m_playerData != null)
             {
@@ -186,7 +217,25 @@ namespace InGame.Managers
                 );
             }
 
+            // [수정]: UIManager.Initialize는 CompositionRoot에서 이미 수행하므로 여기서 중복 호출하지 않습니다.
+            // 다만, 의존성 조립이 필요한 경우를 대비해 캐싱만 확인합니다.
+            if (m_uiManager == null) m_uiManager = FindFirstObjectByType<UIManager>();
+
+            if (m_playerController != null)
+            {
+                m_playerController.Initialize(this, this);
+                LogManager.Log("[GameManager] PlayerController 의존성 주입 완료", LogManager.LogCategory.System);
+            }
+            else
+            {
+                m_playerController = FindFirstObjectByType<PlayerController>();
+                if (m_playerController != null) m_playerController.Initialize(this, this);
+                LogManager.LogWarning($"[GameManager] PlayerController 캐싱 재시도 결과: {(m_playerController != null ? "성공" : "실패")}", LogManager.LogCategory.System);
+            }
+
             // [추가] 씬 전체 초기화 대기 (리모트 데이터 동기화 포함)
+            LogManager.Log($"[GameManager] InitializeAsync 완료 (TimeScale: {Time.timeScale})", LogManager.LogCategory.System);
+            m_isInitialized = true;
             await InitializeGameAsync();
         }
 
@@ -212,20 +261,15 @@ namespace InGame.Managers
 #endif
             }
 
-            // 에디터 직접 실행이나 비정상적인 경로로 진입 시 SoundManager 방어 로직
+            // 에디터 직접 실행이나 비정상적인 경로로 진입 시 서비스 방어 로직
             if (m_soundManager == null)
             {
                 m_soundManager = FindFirstObjectByType<SoundManager>();
-                if (m_uiManager != null && m_soundManager != null)
-                {
-                    m_uiManager.Initialize(m_soundManager);
-                }
             }
-        }
-
-        private void OnEnable()
-        {
-            InitializeGameAsync().Forget();
+            if (m_effectService == null)
+            {
+                m_effectService = FindFirstObjectByType<EffectManager>();
+            }
         }
 
         private void OnDestroy()
@@ -250,6 +294,8 @@ namespace InGame.Managers
             m_playerHUD = FindFirstObjectByType<PlayerHUD>();
             m_playerCameraAgent = FindFirstObjectByType<PlayerCameraAgent>();
             m_mainCamera = Camera.main;
+
+            LogManager.Log($"[GameManager] 컴포넌트 캐싱 결과 - Spawner: {m_objectPoolSpawner != null}, PC: {m_playerController != null}, JS: {m_variableJoystick != null}, UI: {m_uiManager != null}", LogManager.LogCategory.System);
         }
 
         #endregion
@@ -294,18 +340,47 @@ namespace InGame.Managers
         /// </summary>
         private async UniTask InitializeGameAsync()
         {
-            // [추가] 인게임 진입 직후 가장 먼저 리모트 데이터(구글 시트) 동기화 대기
-            if (InGame.Data.Managers.RemoteDataUpdateManager.Instance != null)
+            try 
             {
-                var stageDatabase = Resources.Load<StageDatabase>("Data/StageDatabase");
-                await InGame.Data.Managers.RemoteDataUpdateManager.Instance.UpdateAllRemoteDataAsync(m_skillDatabase, stageDatabase, this.GetCancellationTokenOnDestroy());
+                if (m_remoteDataService != null)
+                {
+                    LogManager.Log("[GameManager] 리모트 데이터 동기화 시작...", LogManager.LogCategory.System);
+                    
+                    // [복구]: 데이터베이스 참조 확보 (m_gameDataService 대신 실제 SO 전달)
+                    var stageDatabase = Resources.Load<StageDatabase>("Data/StageDatabase");
+                    if (stageDatabase == null)
+                    {
+                         LogManager.LogWarning("[GameManager] Resources에서 StageDatabase를 로드하지 못했습니다.", LogManager.LogCategory.System);
+                    }
+
+                    await m_remoteDataService.UpdateAllRemoteDataAsync(m_skillDatabase, stageDatabase, this.GetCancellationTokenOnDestroy(), force: true);
+                    LogManager.Log("[GameManager] 리모트 데이터 동기화 완료 (Force=True)", LogManager.LogCategory.System);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[GameManager] 리모트 데이터 동기화 중 오류 발생: {ex.Message}. 로컬 데이터로 진행을 시도합니다.", LogManager.LogCategory.System);
             }
 
-            await SpawnPlayerAndInitialWeaponsAsync();
+            try
+            {
+                await SpawnPlayerAndInitialWeaponsAsync();
+                LogManager.Log("[GameManager] 플레이어 및 초기 무기 스폰 완료", LogManager.LogCategory.System);
+            }
+            catch (Exception ex)
+            {
+                LogManager.LogError($"[GameManager] 플레이어 스폰 중 치명적 오류 발생: {ex.Message}", LogManager.LogCategory.System);
+            }
 
             if (m_uiManager != null)
             {
+                LogManager.Log("[GameManager] 카운트다운 시작 명령 전달", LogManager.LogCategory.System);
                 m_uiManager.StartGameCountdown().Forget();
+            }
+            else
+            {
+                LogManager.LogWarning("[GameManager] UIManager를 찾을 수 없어 카운트다운을 생략하고 즉시 시작을 시도합니다.", LogManager.LogCategory.System);
+                m_state.StartGame();
             }
         }
 
@@ -313,38 +388,69 @@ namespace InGame.Managers
 
         #region 게임 흐름 제어
 
-        private async void OnGameStart()
+        private void OnGameStart()
         {
+            OnGameStartAsync().Forget();
+        }
+
+        /// <summary>
+        /// [설명]: 게임 시작 시 비동기 초기화 및 웨이브 시작을 수행합니다.
+        /// 이벤트 핸들러와 분리되어 독립적으로 실행됩니다.
+        /// </summary>
+        private async UniTaskVoid OnGameStartAsync()
+        {
+            LogManager.Log($"[GameManager] OnGameStart 진입 (TimeScale: {Time.timeScale})", LogManager.LogCategory.System);
+            
             try
             {
-                // [변경] InventoryDataManager -> InventoryManager
-                if (InventoryManager.Instance != null)
+                // 게임 재개 상태 보장 (카운트다운 시 Pause 상태일 수 있음)
+                Time.timeScale = 1f;
+
+                if (m_inventoryCtx != null)
                 {
-                    InventoryManager.Instance.ClearInGameSkills();
+                    m_inventoryCtx.ClearInGameSkills();
+                    LogManager.Log("[GameManager] 인게임 스킬 인벤토리 초기화 완료", LogManager.LogCategory.System);
                 }
 
-                if (m_playerData != null)
-                {
-                    m_playerData.NowPlayMobKillCount = 0;
-                }
-
-                // BGM 재생 로직 (DI 사용)
+                m_playerData.NowPlayMobKillCount = 0; // Assuming m_killCount.Value refers to playerData.NowPlayMobKillCount
+                
                 if (m_soundManager != null)
                 {
-                    m_soundManager.Play(SoundKeys.InGame.ToString(), Sound.BGM, loop: true);
+                    m_soundManager.Play("BGM_Ingame_Wave", Sound.BGM, loop: true);
                 }
 
                 if (SpawnedPlayer != null)
                 {
                     if (m_objectPoolSpawner != null)
                     {
-                        await m_objectPoolSpawner.InitializeAndStartSpawning(SpawnedPlayer, m_mobManager, m_playerData, m_soundManager, 1);
+                        // [수정]: PlayerDataDTO에 LastClearedStageId가 없으므로 우선 1로 설정 (또는 추후 데이터 구조 확장 필요)
+                        int targetStageId = 1;
+                        LogManager.Log($"[GameManager] Spawner 초기화 시도 - Stage: {targetStageId}", LogManager.LogCategory.System);
+                        
+                        await m_objectPoolSpawner.InitializeAndStartSpawning(
+                            this, 
+                            m_mobManager, 
+                            m_playerData, 
+                            m_soundManager,
+                            this,
+                            this,
+                            targetStageId);
+                    }
+                    else
+                    {
+                        LogManager.LogError("[GameManager] m_objectPoolSpawner가 null이라 웨이브를 시작할 수 없습니다!", LogManager.LogCategory.System);
                     }
                 }
+                else
+                {
+                    LogManager.LogError("[GameManager] SpawnedPlayer가 null이라 웨이브를 시작할 수 없습니다!", LogManager.LogCategory.System);
+                }
+
+                LogManager.Log("[GameManager] OnGameStart 실행 완료", LogManager.LogCategory.System);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                LogManager.LogError($"[GameManager] 게임 시작 실패: {e.Message}");
+                LogManager.LogError($"[GameManager] OnGameStart 중 오류 발생: {ex.Message}\n{ex.StackTrace}", LogManager.LogCategory.System);
             }
         }
 
@@ -379,11 +485,32 @@ namespace InGame.Managers
             OnStageCleared(0);
         }
 
-        private async void OnGameOver()
+        private void OnGameOver()
         {
             Time.timeScale = 0f;
+            LogManager.Log("[GameManager] OnGameOver 진입 - TimeScale=0 설정 완료", LogManager.LogCategory.System);
 
-            await SaveGameResult();
+            // [수정]: async void를 제거하고, 저장 로직을 fire-and-forget으로 분리.
+            // UIManager의 OnGameOver 핸들러가 정상적으로 실행된 후에
+            // 비동기 저장이 독립적으로 진행되도록 합니다.
+            SaveAndCleanupAsync().Forget();
+        }
+
+        /// <summary>
+        /// [설명]: 게임 결과를 저장하고 플레이어 참조를 해제하는 비동기 로직입니다.
+        /// OnGameOver 이벤트 핸들러와 분리되어 독립적으로 실행됩니다.
+        /// </summary>
+        private async UniTaskVoid SaveAndCleanupAsync()
+        {
+            try
+            {
+                await SaveGameResult();
+                LogManager.Log("[GameManager] SaveGameResult 완료", LogManager.LogCategory.System);
+            }
+            catch (Exception e)
+            {
+                LogManager.LogError($"[GameManager] SaveAndCleanupAsync 예외: {e.Message}", LogManager.LogCategory.System);
+            }
 
             // 게임 결과 저장 후 플레이어 참조 해제
             SpawnedPlayer = null;
@@ -483,7 +610,10 @@ namespace InGame.Managers
                 }
 
                 // 플레이어 시스템 초기화 (DTO 서비스 및 사운드 매니저 주입)
-                SpawnedPlayer.Init(playerService: m_playerService, soundManager: m_soundManager);
+                SpawnedPlayer.Init(
+                    playerService: m_playerService, 
+                    soundManager: m_soundManager,
+                    gameStateService: this);
 
                 var initialWeapons = new List<SkillData>();
                 if (m_skillDatabase != null)
@@ -535,7 +665,10 @@ namespace InGame.Managers
                     skillData.weaponData,
                     SpawnedPlayer.transform,
                     m_weaponPoolManager,
-                    () => m_playerController != null ? m_playerController.GetCalculatedAttackDirection() : Vector3.zero
+                    () => m_playerController != null ? m_playerController.GetCalculatedAttackDirection() : Vector3.zero,
+                    this, // IGameStateService
+                    this, // ICombatContext
+                    this  // IPlayerContext
                 );
 
                 if (controller != null)
@@ -561,9 +694,9 @@ namespace InGame.Managers
                     if (playEffect)
                     {
                         var renderer = SpawnedPlayer.GetComponent<SpriteRenderer>();
-                        if (EffectManager.Instance != null && renderer != null)
+                        if (m_effectService != null && renderer != null)
                         {
-                            EffectManager.Instance.PlayLevelUpEffect(renderer);
+                            m_effectService.PlayLevelUpEffect(renderer);
                         }
                     }
 
@@ -622,13 +755,16 @@ namespace InGame.Managers
                 popup.Initialize(m_soundManager);
 
                 // ESC 키 등으로 닫힐 수 있도록 PopupManager에 등록
-                InGame.UI.PopupManager.Instance.RegisterPopup(() =>
+                if (m_popupService != null)
                 {
-                    if (popup != null)
+                    m_popupService.RegisterPopup(() =>
                     {
-                        Destroy(popup.gameObject);
-                    }
-                });
+                        if (popup != null)
+                        {
+                            Destroy(popup.gameObject);
+                        }
+                    });
+                }
             }
         }
 

@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -44,15 +45,17 @@ namespace InGame.Lobby.ViewModels
 
         private readonly InGame.Data.PlayerDataDTO m_playerData;
         private readonly InGame.Services.PlayerDataService m_playerService;
+        private readonly IInventoryContext m_inventoryContext;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary>
         /// [설명]: StoreViewModel 생성 시 DTO와 서비스를 주입받습니다.
         /// </summary>
-        public StoreViewModel(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
+        public StoreViewModel(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService, IInventoryContext inventoryContext)
         {
             m_playerData = playerData;
             m_playerService = playerService;
+            m_inventoryContext = inventoryContext;
             RefreshCurrency();
         }
 
@@ -78,15 +81,15 @@ namespace InGame.Lobby.ViewModels
         /// <param name="itemCode">구입할 아이템의 고유 코드</param>
         public void PurchaseItem(int itemCode)
         {
-            if (InventoryManager.Instance == null)
+            if (m_inventoryContext == null)
             {
-                LogManager.LogError("[StoreViewModel] 인벤토리 매니저가 누락되었습니다.", LogManager.LogCategory.StoreManager);
+                LogManager.LogError("[StoreViewModel] 인벤토리 컨텍스트가 누락되었습니다.", LogManager.LogCategory.StoreManager);
                 m_errorSubject.OnNext("상점 연동 오류가 발생했습니다.");
                 return;
             }
 
             // [변경] InventoryDataManager -> InventoryManager 사용
-            var itemData = InventoryManager.Instance.GetItemInfo(itemCode);
+            var itemData = m_inventoryContext.GetItemInfo(itemCode);
             if (itemData == null)
             {
                 m_errorSubject.OnNext("이 아이템은 현재 판매 정보가 존재하지 않습니다.");
@@ -136,12 +139,12 @@ namespace InGame.Lobby.ViewModels
 
             // 인벤토리에 아이템 추가
             // [변경] 명시적으로 AddItem 호출
-            InventoryManager.Instance.System.AddItem(itemData);
+            m_inventoryContext.System.AddItem(itemData);
 
             // 데이터 저장
             m_playerService.SaveData();
             // [변경] 새 매니저 저장 메서드 호출
-            InventoryManager.Instance.SaveInventory();
+            m_inventoryContext.SaveInventory();
 
             // 상태 갱신 및 시각적 피드백
             RefreshCurrency();

@@ -2,6 +2,7 @@ using InGame.Managers;
 using InGame.Mob.MobBase;
 using InGame.Mob.Systems;
 using UnityEngine;
+using InGame.Core.Interfaces;
 
 namespace InGame.Player.Player_Base
 {
@@ -49,12 +50,19 @@ namespace InGame.Player.Player_Base
         /// <summary> 캐릭터 애니메이션 재생을 위한 애니메이터 캐시 </summary>
         private Animator m_playerAnimator;
 
+        // [수정]: 인터페이스 기반 의존성
+        private IGameStateService m_gameState;
+        private IPlayerContext m_playerCtx;
+
         #endregion
 
         #region 내부 상태 필드
 
         /// <summary> 게임이 공식적으로 시작되었는지 여부 </summary>
         private bool m_isGameStarted;
+
+        /// <summary> 이벤트 구독 여부 확인 플래그 </summary>
+        private bool m_isSubscribed;
 
         /// <summary> 피격 판정을 위한 이전 프레임 체력 값 </summary>
         private float m_previousHealth;
@@ -104,9 +112,9 @@ namespace InGame.Player.Player_Base
         /// <summary> [설명]: 조이스틱 등 외부 의존성을 확인하여 입력 시스템을 가동합니다. </summary>
         private void Start()
         {
-            if (GameManager.Instance != null)
+            if (m_playerCtx != null && m_inputHandler == null)
             {
-                m_inputHandler = new PlayerInputHandler(GameManager.Instance.Joystick);
+                m_inputHandler = new PlayerInputHandler(m_playerCtx.Joystick);
             }
 
             SubscribeEvents();
@@ -132,6 +140,27 @@ namespace InGame.Player.Player_Base
 
             m_inputHandler?.HandleInput();
             HandleControlLogic();
+        }
+
+        #endregion
+
+        #region 초기화 및 바인딩
+
+        /// <summary>
+        /// [설명]: 게임 시스템 및 컨텍스트를 주입받아 초기화합니다.
+        /// </summary>
+        public void Initialize(IGameStateService gameState, IPlayerContext playerContext)
+        {
+            m_gameState = gameState;
+            m_playerCtx = playerContext;
+
+            if (m_playerCtx != null && m_inputHandler == null)
+            {
+                m_inputHandler = new PlayerInputHandler(m_playerCtx.Joystick);
+            }
+
+            // 의존성이 주입된 시점에 즉시 이벤트 구독 시도
+            SubscribeEvents();
         }
 
         #endregion
@@ -333,12 +362,16 @@ namespace InGame.Player.Player_Base
         /// <summary> [설명]: 외부 전역 상태 변경 및 내부 모듈 이벤트를 구독합니다. </summary>
         private void SubscribeEvents()
         {
-            if (GameManager.Instance != null && GameManager.Instance.State != null)
+            if (m_isSubscribed) return;
+
+            if (m_gameState != null && m_gameState.State != null)
             {
-                GameManager.Instance.State.OnGameStart += OnGameStart;
-                GameManager.Instance.State.OnGamePause += OnGamePause;
-                GameManager.Instance.State.OnGameResume += OnGameResume;
-                GameManager.Instance.State.OnGameOver += OnGameOver;
+                m_gameState.State.OnGameStart += OnGameStart;
+                m_gameState.State.OnGamePause += OnGamePause;
+                m_gameState.State.OnGameResume += OnGameResume;
+                m_gameState.State.OnGameOver += OnGameOver;
+                m_isSubscribed = true;
+                LogManager.Log("[PlayerController] 게임 상태 이벤트 구독 성공", LogManager.LogCategory.System);
             }
 
             if (m_autoAttack != null)
@@ -350,12 +383,15 @@ namespace InGame.Player.Player_Base
         /// <summary> [설명]: 객체 파기 또는 비활성화 시 모든 이벤트 연결을 해제합니다. </summary>
         private void UnsubscribeEvents()
         {
-            if (GameManager.Instance != null && GameManager.Instance.State != null)
+            if (!m_isSubscribed) return;
+
+            if (m_gameState != null && m_gameState.State != null)
             {
-                GameManager.Instance.State.OnGameStart -= OnGameStart;
-                GameManager.Instance.State.OnGamePause -= OnGamePause;
-                GameManager.Instance.State.OnGameResume -= OnGameResume;
-                GameManager.Instance.State.OnGameOver -= OnGameOver;
+                m_gameState.State.OnGameStart -= OnGameStart;
+                m_gameState.State.OnGamePause -= OnGamePause;
+                m_gameState.State.OnGameResume -= OnGameResume;
+                m_gameState.State.OnGameOver -= OnGameOver;
+                m_isSubscribed = false;
             }
 
             if (m_playerCharacter != null)
@@ -380,6 +416,7 @@ namespace InGame.Player.Player_Base
 
         /// <summary>
         /// [설명]: 게임 오버 상황에서 모든 입력을 차단하고 캐릭터의 사망 연출 트리거를 호출합니다.
+        /// timeScale이 0이 되어도 애니메이션이 플레이될 수 있도록 updateMode를 변경합니다.
         /// </summary>
         private void OnGameOver()
         {
@@ -392,6 +429,7 @@ namespace InGame.Player.Player_Base
 
             if (m_playerAnimator != null)
             {
+                m_playerAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
                 m_playerAnimator.SetTrigger(k_AnimDie);
             }
         }

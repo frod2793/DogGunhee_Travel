@@ -5,6 +5,7 @@ using UnityEngine.Pool;
 using DG.Tweening;
 using Cysharp.Threading.Tasks;
 using InGame.Effect;
+using InGame.Player.Player_Base;
 
 namespace InGame.Managers
 {
@@ -12,26 +13,9 @@ namespace InGame.Managers
     /// [설명]: 게임 내 모든 시각 효과(VFX)와 연출(Camera Shake, Flash 등)을 중앙 관리하는 싱글톤 매니저 클래스입니다.
     /// UnityEngine.Pool을 사용하여 파티클 시스템을 효율적으로 재사용하며, DOTween을 사용하여 절차적 애니메이션을 처리합니다.
     /// </summary>
-    public class EffectManager : MonoBehaviour
+    public class EffectManager : MonoBehaviour, IEffectService
     {
-        #region 싱글톤
-
-        private static EffectManager s_instance;
-
-        public static EffectManager Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                {
-                    s_instance = FindFirstObjectByType<EffectManager>();
-                }
-
-                return s_instance;
-            }
-        }
-
-        #endregion
+     
 
         #region 에디터 설정
 
@@ -54,6 +38,7 @@ namespace InGame.Managers
         private Camera m_mainCamera;
         private Transform m_mainCameraTransform;
         private Tween m_cameraShakeTween;
+        private PlayerCameraAgent m_cameraAgent;
 
         #endregion
 
@@ -61,19 +46,14 @@ namespace InGame.Managers
 
         private void Awake()
         {
-            if (s_instance != null && s_instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            s_instance = this;
 
             m_mainCamera = Camera.main;
             if (m_mainCamera != null)
             {
                 m_mainCameraTransform = m_mainCamera.transform;
             }
+
+            m_cameraAgent = FindAnyObjectByType<PlayerCameraAgent>();
 
             InitializePools();
         }
@@ -204,7 +184,15 @@ namespace InGame.Managers
         {
             if (m_mainCameraTransform == null)
             {
-                return;
+                if (Camera.main != null)
+                {
+                    m_mainCamera = Camera.main;
+                    m_mainCameraTransform = m_mainCamera.transform;
+                }
+                else
+                {
+                    return;
+                }
             }
 
             if (m_cameraShakeTween != null && m_cameraShakeTween.IsActive())
@@ -212,11 +200,27 @@ namespace InGame.Managers
                 m_cameraShakeTween.Kill(complete: true);
             }
 
+            if (m_cameraAgent == null)
+            {
+                m_cameraAgent = FindAnyObjectByType<PlayerCameraAgent>();
+            }
+
+            if (m_cameraAgent != null)
+            {
+                m_cameraAgent.enabled = false;
+            }
+
             m_cameraShakeTween = m_mainCameraTransform.DOShakePosition(
                 m_shakeDuration,
                 m_shakeStrength,
                 m_shakeVibrato
-            ).SetTarget(m_mainCameraTransform).SetUpdate(true);
+            ).OnComplete(() =>
+            {
+                if (m_cameraAgent != null)
+                {
+                    m_cameraAgent.enabled = true;
+                }
+            }).SetTarget(m_mainCameraTransform).SetUpdate(true);
         }
 
         /// <summary>
@@ -260,6 +264,24 @@ namespace InGame.Managers
             DOTween.Sequence()
                 .Append(targetRenderer.DOColor(targetColor, 0.1f))
                 .Append(targetRenderer.DOColor(Color.white, 0.1f))
+                .SetTarget(targetRenderer.transform)
+                .SetUpdate(true);
+        }
+
+        /// <summary>
+        /// [설명]: 몬스터 피격 시 짧고 강렬한 점멸 효과를 재생합니다.
+        /// </summary>
+        public void PlayMobHitEffect(SpriteRenderer targetRenderer)
+        {
+            if (targetRenderer == null) return;
+
+            targetRenderer.DOKill();
+            targetRenderer.color = Color.white;
+
+            // 순차적 점멸 (흰색 -> 원래색)
+            DOTween.Sequence()
+                .Append(targetRenderer.DOColor(new Color(1f, 0.4f, 0.4f, 1f), 0.05f)) // 약간 붉은 빛이 도는 흰색 (강조)
+                .Append(targetRenderer.DOColor(Color.white, 0.05f))
                 .SetTarget(targetRenderer.transform)
                 .SetUpdate(true);
         }

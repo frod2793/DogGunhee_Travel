@@ -92,6 +92,21 @@ namespace InGame.Mob.Systems
 
         #endregion
 
+        /// <summary> 이펙트 서비스 참조 </summary>
+        private IEffectService m_effectService;
+
+        #region 초기화 및 설정
+
+        /// <summary>
+        /// [설명]: 필요한 서비스 의존성을 주입받아 초기화합니다.
+        /// </summary>
+        public void Initialize(IEffectService effectService)
+        {
+            m_effectService = effectService;
+        }
+
+        #endregion
+
         #region 공개 메서드 (Logic/Controller 호출용)
 
         /// <summary>
@@ -155,9 +170,10 @@ namespace InGame.Mob.Systems
         /// <param name="color">효과에 사용할 색상 (선택 사항)</param>
         public void PlayDamageEffect(Color? color = null)
         {
-            if (EffectManager.Instance != null && m_spriteRenderer != null)
+            if (m_effectService != null && m_spriteRenderer != null)
             {
-                EffectManager.Instance.PlayQueuedFlashEffect(m_spriteRenderer, color).Forget();
+                // [Refine]: 몬스터 전용 히트 효과 호출 (흰색 점멸)
+                m_effectService.PlayMobHitEffect(m_spriteRenderer);
             }
         }
 

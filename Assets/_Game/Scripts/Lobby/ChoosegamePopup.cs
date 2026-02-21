@@ -24,16 +24,38 @@ namespace InGame
 
         #endregion
 
+        #region 내부 변수
+
+        private ISceneLoader m_sceneLoader;
+
+        #endregion
+
         #region 유니티 생명주기
 
         private void Start()
         {
+            // 방어 로직: Initialize가 호출되지 않았을 경우를 대비
             InitializeButtons();
         }
 
         #endregion
 
         #region 초기화 로직
+
+        /// <summary>
+        /// [설명]: 외부로부터 의존성을 주입받아 초기화합니다.
+        /// </summary>
+        public void Initialize(ISceneLoader sceneLoader)
+        {
+            m_sceneLoader = sceneLoader;
+            
+            if (m_messageManager != null)
+            {
+                m_messageManager.Initialize(m_sceneLoader);
+            }
+
+            InitializeButtons();
+        }
 
         /// <summary>
         /// [설명]: 버튼 이벤트 리스너를 초기화합니다.
@@ -102,7 +124,10 @@ namespace InGame
         /// </summary>
         private void EnterVamsirlike()
         {
-            SceneLoader.Instance.LoadVamSerLikeScene();
+            if (m_sceneLoader != null)
+            {
+                m_sceneLoader.LoadVamSerLikeScene();
+            }
             LogManager.LogError("메시지 매니저가 유효하지 않습니다.", LogManager.LogCategory.System);
         }
 

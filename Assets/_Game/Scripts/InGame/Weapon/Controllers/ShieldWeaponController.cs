@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Threading;
 using UnityEngine;
@@ -39,9 +40,16 @@ namespace InGame.Weapon.Controllers
 
         #region 초기화 및 해제
 
-        public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
+        public override void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager, 
+            Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
-            base.Init(data, owner, poolManager, getTargetDirection);
+            base.Init(data, owner, poolManager, getTargetDirection, gameState, combatContext, playerContext);
 
             // 1. 방패 모델 인스턴스화
             if (data.ModelPrefab != null)
@@ -103,9 +111,9 @@ namespace InGame.Weapon.Controllers
             if (data.EffectPrefab != null) m_shockwavePrefab = data.EffectPrefab.GetComponent<ShieldShockwave>();
             if (data.ProjectilePrefab != null) m_boomerangPrefab = data.ProjectilePrefab.GetComponent<ShieldProjectile>();
 
-            if (GameManager.Instance != null)
+            if (m_playerCtx != null)
             {
-                m_playerTransform = GameManager.Instance.PlayerTransfrom();
+                m_playerTransform = m_playerCtx.PlayerTransform;
             }
 
             // 4. 상태 초기화 및 풀 등록

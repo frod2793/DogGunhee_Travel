@@ -786,6 +786,8 @@ GameObject:
   m_Component:
   - component: {fileID: 109534681}
   - component: {fileID: 109534682}
+  - component: {fileID: 109534683}
+  - component: {fileID: 109534684}
   m_Layer: 0
   m_Name: '[ - TestManager - ]'
   m_TagString: Untagged
@@ -834,7 +836,47 @@ MonoBehaviour:
   m_shownPosition: {fileID: 349816980}
   m_animationDuration: 0.3
   m_clearStageButton: {fileID: 1931106483}
+  m_mobDropdown: {fileID: 0}
+  m_spawnMobButton: {fileID: 0}
+  m_killAllMobsButton: {fileID: 0}
+  m_showMapBoundsToggle: {fileID: 0}
   m_skillDatabase: {fileID: 11400000, guid: b0afd2fc64f8bf345bcdbe3b66b0399d, type: 2}
+  m_stageDatabase: {fileID: 11400000, guid: d06e317a66a50084eacfb4ad783f41ad, type: 2}
+--- !u!114 &109534683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109534680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc4b14b818d9854db01d1723bdd5e0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGame.Test.MapBoundsVisualizer
+  m_lineColor: {r: 0, g: 1, b: 1, a: 1}
+  m_lineThickness: 2
+--- !u!114 &109534684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109534680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9df1fd4a75e3094484a6cc3fd1c9029, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Tests.InGameAutoTester
+  m_autoSkillSelection: 1
+  m_autoRestartOnDeath: 1
+  m_forceAutoAttack: 1
+  m_checkInterval: 1
+  m_weaponTestDuration: 3
+  m_levelUpKey: 289
+  m_dieKey: 290
+  m_sequenceTestKey: 291
+  m_precisionTestKey: 292
 --- !u!1001 &150548061
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4719,52 +4761,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8067143449810771328, guid: ef2895a6296aad04f8774815b8ca70a5, type: 3}
   m_PrefabInstance: {fileID: 2160842087480965845}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1510490378
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1510490380}
-  - component: {fileID: 1510490379}
-  m_Layer: 0
-  m_Name: Inventory_Manager_Dontdestory
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1510490379
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1510490378}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fe59489635f72845b52abbc6eeea260, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_itemDataJsonFile: {fileID: 0}
-  m_scriptableobjInventoryData: {fileID: 0}
---- !u!4 &1510490380
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1510490378}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1562213709
 GameObject:
   m_ObjectHideFlags: 0
@@ -8297,7 +8293,6 @@ SceneRoots:
   - {fileID: 1831382540}
   - {fileID: 3551517958830646567}
   - {fileID: 1735073661}
-  - {fileID: 1510490380}
   - {fileID: 543239849}
   - {fileID: 1908247959}
   - {fileID: 5598189427928509602}

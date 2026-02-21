@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -60,6 +61,7 @@ namespace InGame.UI.Popups
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         private readonly List<Item_Index> m_spawnedItems = new List<Item_Index>();
+        private InGame.UI.IPopupService m_popupService;
 
         #endregion
 
@@ -68,11 +70,12 @@ namespace InGame.UI.Popups
         /// <summary>
         /// [설명]: 외부(LobbyUIViewManager 등)로부터 의존성을 주입받아 초기화합니다.
         /// </summary>
-        public void Initialize(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
+        public void Initialize(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService, IInventoryContext inventoryContext, InGame.UI.IPopupService popupService)
         {
             if (m_viewModel != null) return;
 
-            m_viewModel = new InventoryViewModel(playerData, playerService);
+            m_popupService = popupService;
+            m_viewModel = new InventoryViewModel(playerData, playerService, inventoryContext);
             BindViewModel();
             
             // 초기 데이터 로드 시작
@@ -134,8 +137,8 @@ namespace InGame.UI.Popups
                 {
                     LogManager.Log(msg, LogManager.LogCategory.ItemManager);
                     // 직접 Close를 호출하지 않고 스택에서 Pop하여 닫기 수행 (상세창 -> 메인창 순서)
-                    PopupManager.Instance.CloseTopPopup(); // 상세창 닫기
-                    PopupManager.Instance.CloseTopPopup(); // 메인창 닫기
+                    m_popupService.CloseTopPopup(); // 상세창 닫기
+                    m_popupService.CloseTopPopup(); // 메인창 닫기
                 })
                 .AddTo(m_disposables);
 
@@ -251,7 +254,7 @@ namespace InGame.UI.Popups
             {
                 UnityEngine.Debug.Log("[InventoryView] m_inventoryPanel.SetActive(true)");
                 m_inventoryPanel.SetActive(true);
-                PopupManager.Instance.RegisterPopup(CloseInventoryPanel);
+                m_popupService.RegisterPopup(CloseInventoryPanel);
 
                 // 상위 패널이 열릴 때 하위 상세창은 닫음
                 if (m_inventoryExtension != null)
@@ -284,7 +287,7 @@ namespace InGame.UI.Popups
             if (m_inventoryExtension != null)
             {
                 m_inventoryExtension.SetActive(true);
-                PopupManager.Instance.RegisterPopup(CloseInventoryExtensionPanel);
+                m_popupService.RegisterPopup(CloseInventoryExtensionPanel);
             }
         }
 

@@ -56,6 +56,7 @@ namespace InGame.Lobby
 
         private PlayerDataDTO m_playerData;
         private InGame.Services.PlayerDataService m_playerService;
+        private IPopupService m_popupService;
 
         #endregion
 
@@ -76,10 +77,11 @@ namespace InGame.Lobby
         /// <summary>
         /// [설명]: 캐릭터 선택 관리자를 초기화합니다.
         /// </summary>
-        public void Initialize(PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
+        public void Initialize(PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService, IPopupService popupService)
         {
             m_playerData = playerData;
             m_playerService = playerService;
+            m_popupService = popupService;
             
             LoadCharacterData();
             InitializeCharacterUI();
@@ -292,9 +294,9 @@ namespace InGame.Lobby
         public void OpenCharacterSelectPanel()
         {
             SetGameObjectActive(m_characterSelectPanel, true);
-            if (PopupManager.Instance != null)
+            if (m_popupService != null)
             {
-                PopupManager.Instance.RegisterPopup(CloseCharacterSelectPanel);
+                m_popupService.RegisterPopup(CloseCharacterSelectPanel);
             }
 
             InitializeCharacterUI();
@@ -307,9 +309,9 @@ namespace InGame.Lobby
         {
             SetGameObjectActive(m_characterListPanel, true);
             SetGameObjectActive(m_characterExpendViewPanel, false);
-            if (PopupManager.Instance != null)
+            if (m_popupService != null)
             {
-                PopupManager.Instance.RegisterPopup(CloseCharacterListPanel);
+                m_popupService.RegisterPopup(CloseCharacterListPanel);
             }
         }
 
@@ -320,9 +322,9 @@ namespace InGame.Lobby
         {
             SetGameObjectActive(m_characterExpendViewPanel, true);
             SetGameObjectActive(m_characterListPanel, false);
-            if (PopupManager.Instance != null)
+            if (m_popupService != null)
             {
-                PopupManager.Instance.RegisterPopup(CloseCharacterSkinViewPanel);
+                m_popupService.RegisterPopup(CloseCharacterSkinViewPanel);
             }
         }
 

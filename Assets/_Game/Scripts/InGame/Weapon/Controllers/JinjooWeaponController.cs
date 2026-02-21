@@ -3,6 +3,7 @@ using UnityEngine;
 using InGame.ObjectPool;
 using InGame.Weapon.Base;
 using InGame.Weapon.Logic;
+using InGame.Core.Interfaces;
 
 namespace InGame.Weapon.Controllers
 {
@@ -32,10 +33,16 @@ namespace InGame.Weapon.Controllers
         /// <summary>
         /// [설명]: 무기를 초기화하고 진주 투사체 및 전용 오브젝트 풀을 설정합니다.
         /// </summary>
-        public override void Init(WeaponDataSO data, Transform ownerTransform,
-            WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
+        public override void Init(
+            WeaponDataSO data, 
+            Transform ownerTransform,
+            WeaponPoolManager poolManager, 
+            Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
-            base.Init(data, ownerTransform, poolManager, getTargetDirection);
+            base.Init(data, ownerTransform, poolManager, getTargetDirection, gameState, combatContext, playerContext);
 
             // 1. 투사체 프리팹 추출 및 검증
             if (data.ProjectilePrefab != null)

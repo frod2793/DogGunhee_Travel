@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using UnityEngine;
 using InGame.Managers;
 using InGame.ObjectPool;
@@ -33,6 +34,10 @@ namespace InGame.Weapon.Base
         /// <summary> 사운드 매니저 참조 </summary>
         protected InGame.Services.ISoundManager m_soundManager;
 
+        protected IGameStateService m_gameStateService;
+        protected ICombatContext m_combatContext;
+        protected IPlayerContext m_playerContext;
+
         #endregion
 
         #region 프로퍼티
@@ -61,6 +66,9 @@ namespace InGame.Weapon.Base
         #endregion
 
         #region 초기화
+        protected IGameStateService m_gameState;
+        protected ICombatContext m_combatCtx;
+        protected IPlayerContext m_playerCtx;
 
         /// <summary>
         /// [설명]: 무기 컨트롤러를 초기화하고 필요한 의존성을 주입합니다.
@@ -69,7 +77,14 @@ namespace InGame.Weapon.Base
         /// <param name="owner">무기 소유자 Transform</param>
         /// <param name="poolManager">오브젝트 풀 매니저</param>
         /// <param name="getTargetDirection">타겟 방향 계산 함수</param>
-        public virtual void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, System.Func<Vector3> getTargetDirection)
+        public virtual void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager, 
+            System.Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_data = data;
             // 런타임 스탯 객체 생성 (데이터 원본 보호)
@@ -78,6 +93,10 @@ namespace InGame.Weapon.Base
             m_ownerTransform = owner;
             m_poolManager = poolManager;
             m_getTargetDirection = getTargetDirection;
+
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            m_playerCtx = playerContext;
             
             m_currentCooldownTimer = 0f;
         }
@@ -126,7 +145,7 @@ namespace InGame.Weapon.Base
         public virtual void OnUpdate(float deltaTime)
         {
             // 게임이 플레이 중일 때만 로직 수행
-            if (GameManager.Instance == null || GameManager.Instance.State == null || !GameManager.Instance.State.IsPlaying)
+            if (m_gameState == null || !m_gameState.IsPlaying)
             {
                 return;
             }
@@ -177,16 +196,16 @@ namespace InGame.Weapon.Base
         protected virtual bool CanAttack()
         {
             // 1. 게임 상태 체크
-            if (GameManager.Instance == null || GameManager.Instance.State == null || !GameManager.Instance.State.IsPlaying)
+            if (m_gameState == null || !m_gameState.IsPlaying)
             {
                 return false;
             }
 
             // 2. 적 존재 여부 체크 (수정: 적이 없어도 이동 중이면 공격 허용)
             bool isMoving = false;
-            if (GameManager.Instance.PlayerController != null)
+            if (m_playerCtx != null && m_playerCtx.PlayerController != null)
             {
-                isMoving = GameManager.Instance.PlayerController.MoveDirection != Vector3.zero;
+                isMoving = m_playerCtx.PlayerController.MoveDirection != Vector3.zero;
             }
 
             if (!IsEnemyPresent && !isMoving)
@@ -197,9 +216,9 @@ namespace InGame.Weapon.Base
             // 3. 사거리 체크 (타겟이 지정된 경우)
             if (m_runtimeStats != null && m_runtimeStats.CurrentAttackRange > 0)
             {
-                if (GameManager.Instance.PlayerController != null)
+                if (m_playerCtx != null && m_playerCtx.PlayerController != null)
                 {
-                    var autoAttack = GameManager.Instance.PlayerController.AutoAttack;
+                    var autoAttack = m_playerCtx.PlayerController.AutoAttack;
                     
                     // 자동 공격 시스템이 타겟을 잡고 있다면 거리 계산
                     if (autoAttack != null && autoAttack.CurrentTarget != null)
@@ -257,9 +276,9 @@ namespace InGame.Weapon.Base
         {
             get
             {
-                if (GameManager.Instance != null && GameManager.Instance.ObjectPoolSpawner != null)
+                if (m_combatCtx != null)
                 {
-                    return GameManager.Instance.ObjectPoolSpawner.ActiveMobCount > 0;
+                    return m_combatCtx.ActiveMobCount > 0;
                 }
                 return false;
             }

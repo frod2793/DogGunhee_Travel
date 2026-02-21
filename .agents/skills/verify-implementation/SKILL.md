@@ -31,11 +31,13 @@ argument-hint: "[선택사항: 특정 verify 스킬 이름]"
 |---|---|---|
 | 1 | `verify-lobby-navigation` | 로비 UI 팝업 및 뒤로가기 검증 |
 | 2 | `verify-inventory-system` | 인벤토리 환전 및 데이터 구조 검증 |
-| 3 | `verify-ingame-core` | 인게임 핵심 시스템 및 UI 데이터 바인딩 검증 |
+| 3 | `verify-ingame-core` | 인게임 핵심 시스템, 초기화 순서 안전성, UI 데이터 바인딩 검증 |
 | 4 | `verify-data-persistence` | 데이터 DTO, 서비스 의존성 및 암호화 저장소 검증 |
 | 5 | `verify-sound-system` | 사운드 구현 패턴 및 DI 주입 정합성 검증 (추천 방식) |
 | 6 | `verify-login-flow` | 타이틀 씬의 로그인 흐름(MVVM) 및 어드레서블 로딩 검증 |
 | 7 | `verify-remote-data` | 구글 시트(GAS) 기반 리모트 데이터 동기화 시스템의 정합성을 검증합니다. |
+| 8 | `verify-weapon-system` | 리팩토링된 무기 시스템의 의존성 주입(DI), POCO 인터페이스 검증 |
+| 9 | `verify-ingame-mob` | 몹 생태계(풀링, 컴포넌트 설계, 이탈 방지) 구조 검증 |
 
 <!-- 스킬이 추가되면 아래 형식으로 등록:
 | # | 스킬 | 설명 |

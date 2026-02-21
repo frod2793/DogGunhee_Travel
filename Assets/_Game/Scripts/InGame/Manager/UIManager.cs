@@ -7,9 +7,9 @@ using UnityEngine;
 using DG.Tweening;
 using InGame.Player.Player_Base;
 using UnityEngine.UI;
-using InGame.Lobby;
 using InGame.UI.ViewModels;
 using InGame.UI.Views;
+using InGame.Core.Interfaces;
 
 namespace InGame.Managers
 {
@@ -50,14 +50,26 @@ namespace InGame.Managers
         #region 내부 필드 및 상태
 
         private InGameViewModel m_viewModel;
-        private GameManager m_gameManager;
+        
+        // [수정]: 인터페이스 기반 의존성
+        private IGameStateService m_gameState;
+        private IPlayerContext m_playerCtx;
+        private ICombatContext m_combatCtx;
+        private IGameDataProvider m_dataProvider;
+        private IInventoryContext m_inventoryCtx;
+
         private PlayerController m_playerController;
-        private InGame.Services.ISoundManager m_soundManager;
+        private Services.ISoundManager m_soundManager;
+        private ISceneLoader m_sceneLoader;
+        private UI.IPopupService m_popupService;
+        private IEffectService m_effectService;
 
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         private int m_pendingSkillSelections;
         private bool m_isSkillSelectionActive;
+        private bool m_isInitialized; // [추가]: 초기화 완료 여부 플래그
+        private bool m_isCountdownActive; // [추가]: 카운트다운 중복 실행 방지 플래그
 
         private GameClearPopupViewModel m_gameClearPopupViewModel;
 
@@ -67,24 +79,14 @@ namespace InGame.Managers
 
         #region 유니티 생명주기
 
-        private void Awake()
-        {
-            m_gameManager = GameManager.Instance;
-
-            // ViewModel 생성 (MVVM 패턴에 따라 UIManager가 소유)
-            m_viewModel = new InGameViewModel(m_skillDatabase);
-
-            InitializeViews();
-            BindUIEvents();
-            BindViewModel();
-        }
-
         private void Start()
         {
-            if (m_gameManager != null)
+            // [수정]: Start()에서는 SubscribeToEvents()를 호출하지 않습니다.
+            // 의존성 주입(Initialize)이 완료된 시점에서만 이벤트를 구독합니다.
+            if (m_playerCtx != null)
             {
-                m_playerController = m_gameManager.PlayerController;
-                m_variableJoystick = m_gameManager.Joystick;
+                m_playerController = m_playerCtx.PlayerController;
+                m_variableJoystick = m_playerCtx.Joystick;
             }
 
             if (m_settingsData != null)
@@ -92,8 +94,6 @@ namespace InGame.Managers
                 m_settingsData.LoadSettings();
                 ApplyJoystickSettings();
             }
-
-            SubscribeToEvents();
         }
 
         private void OnDestroy()
@@ -110,11 +110,42 @@ namespace InGame.Managers
         #region 초기화 및 바인딩
 
         /// <summary>
-        /// [설명]: 사운드 매니저 등 외부 의존성을 주입합니다.
+        /// [설명]: 게임 시스템 및 사운드 매니저 등 외부 의존성을 주입합니다.
         /// </summary>
-        public void Initialize(InGame.Services.ISoundManager soundManager)
+        public void Initialize(
+            IGameStateService gameState,
+            IPlayerContext playerContext,
+            ICombatContext combatContext,
+            IGameDataProvider dataProvider,
+            IInventoryContext inventoryContext,
+            Services.ISoundManager soundManager,
+            ISceneLoader sceneLoader,
+            UI.IPopupService popupService,
+            IEffectService effectService)
         {
+            if (m_isInitialized) return;
+            
+            m_gameState = gameState;
+            m_playerCtx = playerContext;
+            m_combatCtx = combatContext;
+            m_dataProvider = dataProvider;
+            m_inventoryCtx = inventoryContext;
             m_soundManager = soundManager;
+            m_sceneLoader = sceneLoader;
+            m_popupService = popupService;
+            m_effectService = effectService;
+
+            // 의존성이 주입된 시점에 즉시 이벤트 구독 시도
+            SubscribeToEvents();
+
+            // ViewModel 생성 및 지연 바인딩
+            m_viewModel = new InGameViewModel(m_skillDatabase, m_gameState, m_playerCtx, m_combatCtx, m_dataProvider, m_inventoryCtx);
+            InitializeViews();
+            BindUIEvents();
+            BindViewModel();
+
+            m_isInitialized = true;
+            LogManager.Log("[UIManager] 초기화 완료", LogManager.LogCategory.UIManager);
         }
 
         /// <summary>
@@ -182,7 +213,7 @@ namespace InGame.Managers
                 m_settingButton.OnClickAsObservable()
                     .Subscribe(_ =>
                     {
-                        if (m_gameManager != null) m_gameManager.OpenOptionPopup();
+                        if (m_gameState != null) m_gameState.OpenOptionPopup();
                     })
                     .AddTo(m_disposables);
             }
@@ -206,9 +237,9 @@ namespace InGame.Managers
                 {
                     m_isSkillSelectionActive = isActive;
 
-                    if (m_gameManager != null)
+                    if (m_gameState != null)
                     {
-                        m_gameManager.SetMenuPopupState(isActive);
+                        m_gameState.SetMenuPopupState(isActive);
                     }
 
                     if (m_skillView != null)
@@ -258,42 +289,59 @@ namespace InGame.Managers
 
         #region 이벤트 핸들러
 
+        /// <summary>
+        /// [설명]: 전역 게임 상태 이벤트를 구독합니다.
+        /// Initialize()에서만 호출되므로 m_gameState가 항상 유효합니다.
+        /// </summary>
+        private bool m_isEventsSubscribed;
         private void SubscribeToEvents()
         {
-            if (GameManager.Instance == null || GameManager.Instance.State == null)
-            {
-                return;
-            }
+            if (m_isEventsSubscribed) return;
+            m_isEventsSubscribed = true;
 
-            GameManager.Instance.State.OnGameStart += OnGameStart;
-            GameManager.Instance.State.OnGamePause += OnGamePause;
-            GameManager.Instance.State.OnGameResume += OnGameResume;
-            GameManager.Instance.State.OnGameOver += OnGameOver;
+            if (m_gameState != null && m_gameState.State != null)
+            {
+                m_gameState.State.OnGameStart += OnGameStart;
+                m_gameState.State.OnGamePause += OnGamePause;
+                m_gameState.State.OnGameResume += OnGameResume;
+                m_gameState.State.OnGameOver += OnGameOver;
+                LogManager.Log("[UIManager] 게임 상태 이벤트 구독 성공", LogManager.LogCategory.UIManager);
+            }
+            else
+            {
+                LogManager.LogError("[UIManager] GameState가 null입니다! Initialize가 정상적으로 호출되지 않았습니다.", LogManager.LogCategory.UIManager);
+            }
 
             PlayerBase.OnExpChanged += OnPlayerExpChanged;
             PlayerBase.OnLevelUp += OnPlayerLevelUp;
-            GameManager.OnPlayerChanged += OnPlayerChanged;
             
+            if (m_playerCtx != null)
+            {
+                m_playerCtx.OnPlayerChanged += OnPlayerChanged;
+            }
 
             SettingsData.OnSettingsChanged += ApplyJoystickSettings;
         }
 
         private void UnsubscribeFromEvents()
         {
-            if (GameManager.Instance == null || GameManager.Instance.State == null)
-            {
-                return;
-            }
+            if (!m_isEventsSubscribed) return;
+            m_isEventsSubscribed = false;
 
-            GameManager.Instance.State.OnGameStart -= OnGameStart;
-            GameManager.Instance.State.OnGamePause -= OnGamePause;
-            GameManager.Instance.State.OnGameResume -= OnGameResume;
-            GameManager.Instance.State.OnGameOver -= OnGameOver;
+            if (m_gameState != null && m_gameState.State != null)
+            {
+                m_gameState.State.OnGameStart -= OnGameStart;
+                m_gameState.State.OnGamePause -= OnGamePause;
+                m_gameState.State.OnGameResume -= OnGameResume;
+                m_gameState.State.OnGameOver -= OnGameOver;
+            }
 
             PlayerBase.OnExpChanged -= OnPlayerExpChanged;
             PlayerBase.OnLevelUp -= OnPlayerLevelUp;
-            GameManager.OnPlayerChanged -= OnPlayerChanged;
-
+            if (m_playerCtx != null)
+            {
+                m_playerCtx.OnPlayerChanged -= OnPlayerChanged;
+            }
 
             SettingsData.OnSettingsChanged -= ApplyJoystickSettings;
         }
@@ -334,55 +382,41 @@ namespace InGame.Managers
         }
 
 
+        /// <summary>
+        /// [설명]: 게임 종료 이벤트를 수신하여 결과 팝업을 출력합니다.
+        /// </summary>
         private void OnGameOver()
         {
-            if (m_gameManager != null && m_gameManager.IsCleared)
-            {
-                if (m_gameClearPopup != null && m_gameClearPopupViewModel != null)
-                {
-                    // 별점 계산 (체력 80% 이상 별 3개, 40% 이상 별 2개, 그 외 1개)
-                    int stars = 1;
-                    if (m_gameManager != null && m_gameManager.SpawnedPlayer != null)
-                    {
-                        float currentHealth = m_gameManager.SpawnedPlayer.CurrentHealth;
-                        float maxHealth = m_gameManager.SpawnedPlayer.MaxHealth;
-                        float hpRatio = maxHealth > 0 ? (float)currentHealth / maxHealth : 0;
-                        
-                        if (hpRatio >= 0.8f) stars = 3;
-                        else if (hpRatio >= 0.4f) stars = 2;
-                    }
-                    else
-                    {
-                        // 플레이어 참조를 실패했을 경우에 대한 경고 로그 (정상적인 경우 100% 체력이면 3개여야 함)
-                        LogManager.LogWarning("[UIManager] 별점 계산 중 플레이어 객체를 찾을 수 없습니다. 기본 1개로 설정됩니다.", LogManager.LogCategory.UIManager);
-                    }
+            LogManager.Log("[UIManager] OnGameOver 이벤트 수신", LogManager.LogCategory.UIManager);
 
-                    m_gameClearPopupViewModel.Show(
-                        m_viewModel.CoinCount.CurrentValue,
-                        m_viewModel.CurrentWave.CurrentValue,
-                        m_viewModel.KillCount.CurrentValue,
-                        stars,
-                        RestartGame,
-                        ExitToLobby
-                    );
-                }
-                else
-                {
-                    LogManager.LogError("[UIManager] GameClearPopup 또는 ViewModel이 할당되지 않았습니다! (인스펙터 할당 확인 필요)", LogManager.LogCategory.UIManager);
-                }
-            }
-            else
+            // [변경]: 이벤트발생 즉시(동기적으로) 렌더러 참조를 확보합니다.
+            // GameManager가 플레이어 참조를 null로 밀어버리기 전에 참조를 따야 합니다.
+            SpriteRenderer playerRenderer = null;
+            if (m_playerCtx != null && m_playerCtx.SpawnedPlayer != null)
             {
-                if (m_gameOverPopup != null)
+                playerRenderer = m_playerCtx.SpawnedPlayer.GetComponentInChildren<SpriteRenderer>(true);
+            }
+            if (playerRenderer == null)
+            {
+                // GameManager에서 플레이어 참조를 이미 해제한 경우, 씬에서 직접 검색
+                var playerBase = FindAnyObjectByType<PlayerBase>();
+                if (playerBase != null)
                 {
-                    m_gameOverPopup.Show(
-                        m_viewModel.CoinCount.CurrentValue,
-                        m_viewModel.CurrentWave.CurrentValue,
-                        m_viewModel.KillCount.CurrentValue
-                    );
+                    playerRenderer = playerBase.GetComponentInChildren<SpriteRenderer>(true);
                 }
             }
 
+            LogManager.Log($"[UIManager] OnGameOver: Renderer 확보 성공 ({playerRenderer?.name ?? "null"})", LogManager.LogCategory.UIManager);
+            OnGameOverAsync(playerRenderer).Forget();
+        }
+
+        /// <summary>
+        /// [설명]: 게임 종료 연출 및 팝업 출력을 비동기로 처리합니다.
+        /// 플레이어 사망 시 애니메이션을 고려하여 지연 후 팝업을 표시합니다.
+        /// </summary>
+        private async UniTaskVoid OnGameOverAsync(SpriteRenderer playerRenderer)
+        {
+            // 죠이스틱 등 컨트롤 UI는 즉시 비활성화
             if (m_joystickTransform != null)
             {
                 m_joystickTransform.gameObject.SetActive(false);
@@ -398,6 +432,75 @@ namespace InGame.Managers
             {
                 m_autoAttackToggle.isOn = false;
             }
+
+            if (m_gameState != null && m_gameState.IsCleared)
+            {
+                // 게임 클리어 시의 처리
+                if (m_gameClearPopup != null && m_gameClearPopupViewModel != null)
+                {
+                    int stars = 1;
+                    if (m_playerCtx != null && m_playerCtx.SpawnedPlayer != null)
+                    {
+                        float currentHealth = m_playerCtx.SpawnedPlayer.CurrentHealth;
+                        float maxHealth = m_playerCtx.SpawnedPlayer.MaxHealth;
+                        float hpRatio = maxHealth > 0 ? (float)currentHealth / maxHealth : 0;
+                        
+                        if (hpRatio >= 0.8f) stars = 3;
+                        else if (hpRatio >= 0.4f) stars = 2;
+                    }
+
+                    m_gameClearPopupViewModel.Show(
+                        m_viewModel.CoinCount.CurrentValue,
+                        m_viewModel.CurrentWave.CurrentValue,
+                        m_viewModel.KillCount.CurrentValue,
+                        stars,
+                        RestartGame,
+                        ExitToLobby
+                    );
+                }
+            }
+            else
+            {
+                // 플레이어 사망 시: 애니메이션이 재생될 시간을 벌기 위해 지연 후 팝업 출력
+                try
+                {
+                    LogManager.Log("[UIManager] OnGameOverAsync: Delay 시작 (1.5s)", LogManager.LogCategory.UIManager);
+                    await UniTask.Delay(TimeSpan.FromSeconds(1.5f), ignoreTimeScale: true, cancellationToken: this.GetCancellationTokenOnDestroy());
+                    LogManager.Log("[UIManager] OnGameOverAsync: Delay 종료", LogManager.LogCategory.UIManager);
+                    
+                    // 지연 후, 애니메이션이 끝난 시점의 최종 스프라이트를 추출합니다.
+                    Sprite finalDeadSprite = null;
+                    if (playerRenderer != null)
+                    {
+                        finalDeadSprite = playerRenderer.sprite;
+                        LogManager.Log($"[UIManager] OnGameOverAsync: 최종 스프라이트 추출 성공 ({(finalDeadSprite != null ? finalDeadSprite.name : "null")})", LogManager.LogCategory.UIManager);
+                    }
+                    else
+                    {
+                        LogManager.LogWarning("[UIManager] OnGameOverAsync: 렌더러 참조가 유효하지 않습니다.", LogManager.LogCategory.UIManager);
+                    }
+
+                    if (m_gameOverPopup != null)
+                    {
+                        LogManager.Log("[UIManager] OnGameOverAsync: GameOverPopup.Show() 호출", LogManager.LogCategory.UIManager);
+                        m_gameOverPopup.Show(
+                            m_viewModel.CoinCount.CurrentValue,
+                            m_viewModel.CurrentWave.CurrentValue,
+                            m_viewModel.KillCount.CurrentValue,
+                            finalDeadSprite
+                        );
+                    }
+                    else
+                    {
+                        LogManager.LogError("[UIManager] OnGameOverAsync: m_gameOverPopup이 null입니다!", LogManager.LogCategory.UIManager);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    LogManager.Log("[UIManager] OnGameOverAsync: 비동기 작업 취소됨", LogManager.LogCategory.UIManager);
+                    return;
+                }
+            }
         }
 
         private void OnPlayerChanged(PlayerBase player)
@@ -410,15 +513,21 @@ namespace InGame.Managers
             // MVVM 바인딩에 의해 자동 처리됩니다.
         }
 
+        private int m_lastProcessedLevel = -1;
         private void OnPlayerLevelUp(float newLevel)
         {
-            if (newLevel >= 2)
+            int level = Mathf.FloorToInt(newLevel);
+            if (level < 2 || level <= m_lastProcessedLevel)
             {
-                m_pendingSkillSelections++;
-                if (!m_isSkillSelectionActive)
-                {
-                    ProcessSkillSelectionQueue();
-                }
+                return;
+            }
+
+            m_lastProcessedLevel = level;
+            m_pendingSkillSelections++;
+            
+            if (!m_isSkillSelectionActive)
+            {
+                ProcessSkillSelectionQueue();
             }
         }
 
@@ -431,12 +540,30 @@ namespace InGame.Managers
         /// </summary>
         public async UniTaskVoid StartGameCountdown()
         {
-            if (m_mobWaveText == null)
+            if (m_isCountdownActive)
             {
-                GameManager.Instance.State.StartGame();
+                LogManager.LogWarning("[UIManager] 이미 카운트다운이 진행 중입니다.", LogManager.LogCategory.UIManager);
                 return;
             }
 
+            // [방어 코드]: 초기화가 완료될 때까지 잠시 대기 (최대 3초)
+            float waitTimeout = 3.0f;
+            while (!m_isInitialized && waitTimeout > 0)
+            {
+                await UniTask.DelayFrame(1, cancellationToken: this.GetCancellationTokenOnDestroy());
+                waitTimeout -= Time.unscaledDeltaTime;
+            }
+
+            if (m_mobWaveText == null)
+            {
+                if (m_gameState != null && m_gameState.State != null)
+                {
+                    m_gameState.State.StartGame();
+                }
+                return;
+            }
+
+            m_isCountdownActive = true;
             try
             {
                 if (m_joystickTransform != null)
@@ -455,7 +582,15 @@ namespace InGame.Managers
                     m_joystickTransform.gameObject.SetActive(true);
                 }
 
-                GameManager.Instance.State.StartGame();
+                if (m_gameState != null && m_gameState.State != null)
+                {
+                    LogManager.Log("[UIManager] 카운트다운 종료 -> StartGame 호출", LogManager.LogCategory.UIManager);
+                    m_gameState.State.StartGame();
+                }
+                else
+                {
+                    LogManager.LogError("[UIManager] m_gameState가 null이라 게임을 시작할 수 없습니다!", LogManager.LogCategory.UIManager);
+                }
             }
             catch (Exception ex)
             {
@@ -464,7 +599,12 @@ namespace InGame.Managers
                 {
                     m_joystickTransform.gameObject.SetActive(true);
                 }
-                GameManager.Instance.State.StartGame();
+                if (m_gameState != null && m_gameState.State != null)
+                    m_gameState.State.StartGame();
+            }
+            finally
+            {
+                m_isCountdownActive = false;
             }
         }
 
@@ -502,9 +642,9 @@ namespace InGame.Managers
         {
             m_viewModel.EndSkillSelection();
 
-            if (m_gameManager != null && m_gameManager.SpawnedPlayer != null)
+            if (m_gameState != null && m_playerCtx != null && m_playerCtx.SpawnedPlayer != null)
             {
-                var player = m_gameManager.SpawnedPlayer;
+                var player = m_playerCtx.SpawnedPlayer;
                 var renderer = player.GetComponent<SpriteRenderer>();
 
                 if (selectedSkill.skillType == SkillType.Weapon)
@@ -513,23 +653,33 @@ namespace InGame.Managers
                     if (ownedWeapon != null)
                     {
                         ownedWeapon.LevelUp();
-                        EffectManager.Instance.PlayLevelUpEffect(renderer);
+                    if (m_effectService != null)
+                    {
+                        m_effectService.PlayLevelUpEffect(renderer);
+                    }
                     }
                     else
                     {
-                        await m_gameManager.EquipNewWeapon(selectedSkill);
+                        // [주의]: EquipNewWeapon은 GameManager에 특화된 로직일 수 있음. 확인 필요.
+                        if (m_gameState is GameManager gm)
+                        {
+                            await gm.EquipNewWeapon(selectedSkill);
+                        }
                     }
                 }
                 else
                 {
                     TryUpgradeWeaponByPassive(selectedSkill.skillCode);
-                    EffectManager.Instance.PlayLevelUpEffect(renderer);
+                    if (m_effectService != null)
+                    {
+                        m_effectService.PlayLevelUpEffect(renderer);
+                    }
                 }
             }
 
-            if (InventoryManager.Instance != null)
+            if (m_inventoryCtx != null)
             {
-                InventoryManager.Instance.AddInGameSkill(selectedSkill);
+                m_inventoryCtx.AddInGameSkill(selectedSkill);
             }
 
             m_viewModel.UpdateIconLists();
@@ -547,12 +697,12 @@ namespace InGame.Managers
 
         private void TryUpgradeWeaponByPassive(string passiveItemCode)
         {
-            if (m_gameManager == null || m_gameManager.SpawnedPlayer == null)
+            if (m_playerCtx == null || m_playerCtx.SpawnedPlayer == null)
             {
                 return;
             }
 
-            var weaponToUpgrade = m_gameManager.SpawnedPlayer.Weapons
+            var weaponToUpgrade = m_playerCtx.SpawnedPlayer.Weapons
                 .FirstOrDefault(w => w.SkillData?.upgradeItemCode == passiveItemCode);
 
             if (weaponToUpgrade != null)
@@ -632,9 +782,9 @@ namespace InGame.Managers
             bool isActive = !m_menuPanel.activeSelf;
             m_menuPanel.SetActive(isActive);
 
-            if (m_gameManager != null)
+            if (m_gameState != null)
             {
-                m_gameManager.SetMenuPopupState(isActive);
+                m_gameState.SetMenuPopupState(isActive);
             }
 
             if (m_joystickTransform != null)
@@ -670,12 +820,15 @@ namespace InGame.Managers
 
         private async void ExitToLobby()
         {
-            if (GameManager.Instance != null)
+            if (m_gameState != null)
             {
-                await GameManager.Instance.SaveGameResult();
+                await m_gameState.SaveGameResult();
             }
 
-            SceneLoader.Instance.LoadLobbyScene();
+            if (m_sceneLoader != null)
+            {
+                m_sceneLoader.LoadLobbyScene();
+            }
         }
 
         private void RestartGame()

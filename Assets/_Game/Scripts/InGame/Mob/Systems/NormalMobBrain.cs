@@ -65,6 +65,8 @@ namespace InGame.Mob.Systems
         /// </summary>
         public override void Initialize()
         {
+            m_logic.OnMovementBlocked += HandleMovementBlocked;
+
             // Behavior Tree 구성
             m_btRoot = new Selector()
                 .Add(new BehaviorTree.Sequence()
@@ -157,7 +159,12 @@ namespace InGame.Mob.Systems
 
             if (m_isWandering)
             {
-                if (m_logic.CurrentState == MobBase.MobBase.MobState.Move)
+                // [Refine]: 현재 위치가 맵 밖인데 목적지가 맵 밖이면 즉시 재탐색 (복귀 유도)
+                if (!m_logic.IsInside(m_logic.Position) && !m_logic.IsInside(m_logic.TargetPosition))
+                {
+                    m_isWandering = false; 
+                }
+                else if (m_logic.CurrentState == MobBase.MobBase.MobState.Move)
                 {
                     if (m_logic.HasReachedTarget())
                     {
@@ -173,7 +180,6 @@ namespace InGame.Mob.Systems
                         m_isWandering = false;
                     }
                 }
-                // [BugFix] 배회 중 위치 이동 단계인데 경직 종료 등으로 Idle이 된 경우 복구
                 else if (m_logic.CurrentState == MobBase.MobBase.MobState.Idle && m_wanderWaitTimer <= 0)
                 {
                     m_logic.SetState(MobBase.MobBase.MobState.Move);
@@ -182,8 +188,26 @@ namespace InGame.Mob.Systems
                 return UniTask.FromResult(NodeStatus.Running);
             }
 
-            // 새로운 배회 목표 설정
-            Vector3 dest = GetRandomPositionInMap();
+            // [Refine]: 새로운 목적지 설정 전 현재 위치가 맵 밖인지 체크
+            Vector3 dest;
+            if (!m_logic.IsInside(m_logic.Position))
+            {
+                // 맵 밖이라면 가장 가까운 맵 내부 지점으로 복귀 시도
+                dest = m_mapBounds.ClosestPoint(m_logic.Position);
+                dest.z = 0;
+            }
+            else
+            {
+                // 맵 안이라면 일반적인 랜덤 배회 목적지 산출 (선 검증 포함)
+                dest = GetRandomPositionInMap();
+                int retryCount = 0;
+                while (!m_logic.IsInside(dest) && retryCount < 5)
+                {
+                    dest = GetRandomPositionInMap();
+                    retryCount++;
+                }
+            }
+
             m_logic.SetTargetPosition(dest);
             m_logic.SetState(MobBase.MobBase.MobState.Move);
             m_isWandering = true;
@@ -192,12 +216,47 @@ namespace InGame.Mob.Systems
         }
 
         /// <summary>
+        /// [설명]: 이동이 차단되었을 때(경계 충돌 등) 배회 중이라면 즉시 새로운 목적지를 찾습니다.
+        /// </summary>
+        private void HandleMovementBlocked()
+        {
+            if (m_isWandering)
+            {
+                m_isWandering = false; // Evaluate 시 다시 배회 로직을 타면서 새로운 목적지 설정 유도
+            }
+        }
+
+        public override void OnDisable()
+        {
+            base.OnDisable();
+            if (m_logic != null)
+            {
+                m_logic.OnMovementBlocked -= HandleMovementBlocked;
+            }
+        }
+
+        /// <summary>
+        /// [설명]: 맵 경계 데이터를 갱신하여 배회 타겟팅에 반영합니다.
+        /// </summary>
+        public override void UpdateMapBounds(Bounds bounds)
+        {
+            m_mapBounds = bounds;
+        }
+
+        /// <summary>
         /// [설명]: 지형 경계 내에서 유효한 임의의 위치를 산출합니다.
         /// </summary>
         private Vector3 GetRandomPositionInMap()
         {
-            float x = UnityEngine.Random.Range(m_mapBounds.min.x, m_mapBounds.max.x);
-            float y = UnityEngine.Random.Range(m_mapBounds.min.y, m_mapBounds.max.y);
+            float padding = 1.0f; // 맵 가장자리 여유 공간
+            
+            // 맵 크기가 패딩보다 작을 경우를 대비한 방어 코드
+            float halfWidth = m_mapBounds.extents.x;
+            float halfHeight = m_mapBounds.extents.y;
+            padding = Mathf.Min(padding, halfWidth * 0.5f, halfHeight * 0.5f);
+
+            float x = UnityEngine.Random.Range(m_mapBounds.min.x + padding, m_mapBounds.max.x - padding);
+            float y = UnityEngine.Random.Range(m_mapBounds.min.y + padding, m_mapBounds.max.y - padding);
             return new Vector3(x, y, 0);
         }
 

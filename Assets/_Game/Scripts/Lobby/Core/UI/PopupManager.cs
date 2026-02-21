@@ -8,34 +8,8 @@ namespace InGame.UI
     /// [설명]: UI 팝업 스택을 관리하는 싱글톤 매니저입니다.
     /// ESC 키 입력 시 최상단 팝업을 닫는 기능을 수행합니다.
     /// </summary>
-    public class PopupManager : MonoBehaviour
+    public class PopupManager : MonoBehaviour, IPopupService
     {
-        #region 인스턴스 관리
-
-        private static PopupManager s_instance;
-
-        /// <summary>
-        /// [설명]: PopupManager의 전역 접근 인스턴스입니다.
-        /// </summary>
-        public static PopupManager Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                {
-                    s_instance = FindFirstObjectByType<PopupManager>();
-                    if (s_instance == null)
-                    {
-                        var go = new GameObject("@PopupManager");
-                        s_instance = go.AddComponent<PopupManager>();
-                    }
-                }
-
-                return s_instance;
-            }
-        }
-
-        #endregion
 
         #region 내부 변수
 
@@ -47,19 +21,7 @@ namespace InGame.UI
         #endregion
 
         #region 유니티 생명주기
-
-        private void Awake()
-        {
-            if (s_instance != null && s_instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            s_instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-
+        
         private void Update()
         {
             // ESC 키 입력 시 최상단 팝업 닫기

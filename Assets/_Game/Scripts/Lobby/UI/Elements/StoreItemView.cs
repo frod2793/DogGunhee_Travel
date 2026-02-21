@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using TMPro;
 using UnityEngine;
@@ -49,6 +50,9 @@ namespace InGame.UI.Elements
         public event Action<int> OnPurchaseRequest;
 
         private ItemDataSO m_itemData;
+        private InGame.Core.Interfaces.IInventoryContext m_inventoryCtx;
+
+        public int ItemCode => m_itemCode;
 
         #endregion
 
@@ -57,7 +61,14 @@ namespace InGame.UI.Elements
         private void Start()
         {
             // 인스펙터에 설정된 기본 코드로 로드 시도
-            Initialize(m_itemCode);
+            if (m_inventoryCtx == null)
+            {
+                var inventoryManager = FindAnyObjectByType<InGame.Lobby.InventoryManager>();
+                if (inventoryManager != null)
+                {
+                    Initialize(m_itemCode, inventoryManager);
+                }
+            }
         }
 
         #endregion
@@ -68,14 +79,15 @@ namespace InGame.UI.Elements
         /// [설명]: 특정 아이템 코드를 전달받아 데이터 매니저로부터 실데이터를 불러오고 UI를 동기화합니다.
         /// </summary>
         /// <param name="code">초기화할 아이템 코드</param>
-        public void Initialize(int code)
+        public void Initialize(int code, InGame.Core.Interfaces.IInventoryContext inventoryContext)
         {
             m_itemCode = code;
+            m_inventoryCtx = inventoryContext;
 
             // 데이터 관리자로부터 설정값 로드
-            if (InventoryManager.Instance != null)
+            if (m_inventoryCtx != null)
             {
-                m_itemData = InventoryManager.Instance.GetItemInfo(m_itemCode);
+                m_itemData = m_inventoryCtx.GetItemInfo(m_itemCode);
             }
 
             if (m_itemData == null)

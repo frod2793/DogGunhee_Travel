@@ -63,6 +63,11 @@ public class SoundManager : MonoBehaviour, ISoundManager
 
     private void Awake()
     {
+        // [수정]: 루트 오브젝트가 아닌 경우 부모에서 분리 후 DontDestroyOnLoad 적용
+        if (transform.parent != null)
+        {
+            transform.SetParent(null);
+        }
         DontDestroyOnLoad(gameObject);
         InitializeSystems();
     }

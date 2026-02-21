@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -109,7 +110,10 @@ namespace InGame.Weapon
             WeaponDataSO data,
             Transform ownerTransform,
             WeaponPoolManager poolManager,
-            Func<Vector3> targetProvider)
+            Func<Vector3> targetProvider,
+            IGameStateService gameState = null,
+            ICombatContext combatContext = null,
+            IPlayerContext playerContext = null)
         {
             // 1. 유효성 검사
             if (data == null)
@@ -139,7 +143,7 @@ namespace InGame.Weapon
                 IWeaponController controller = creator();
 
                 // 4. 의존성 주입 및 초기화
-                controller.Init(data, ownerTransform, poolManager, targetProvider);
+                controller.Init(data, ownerTransform, poolManager, targetProvider, gameState, combatContext, playerContext);
 
                 return controller;
             }

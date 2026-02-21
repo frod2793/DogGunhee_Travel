@@ -9,8 +9,7 @@ namespace InGame.Managers
     public class GameSettingsManager : MonoBehaviour
     {
         #region 내부 필드
-
-        private static GameSettingsManager s_instance;
+        
 
         [SerializeField]
         private SettingsData m_settingsData;
@@ -18,29 +17,7 @@ namespace InGame.Managers
         #endregion
 
         #region 프로퍼티
-
-        /// <summary>
-        /// [설명]: GameSettingsManager의 싱글톤 인스턴스를 반환합니다.
-        /// </summary>
-        public static GameSettingsManager Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                {
-                    s_instance = FindFirstObjectByType<GameSettingsManager>();
-
-                    if (s_instance == null)
-                    {
-                        var container = new GameObject(nameof(GameSettingsManager));
-                        s_instance = container.AddComponent<GameSettingsManager>();
-                        DontDestroyOnLoad(container);
-                    }
-                }
-
-                return s_instance;
-            }
-        }
+        
 
         /// <summary>
         /// [설명]: 현재 설정 데이터를 반환합니다.
@@ -71,14 +48,7 @@ namespace InGame.Managers
                 SettingsData.OnSettingsChanged -= ApplyAllSettings;
             }
         }
-
-        private void OnDestroy()
-        {
-            if (s_instance == this)
-            {
-                s_instance = null;
-            }
-        }
+        
 
         #endregion
 
@@ -89,13 +59,6 @@ namespace InGame.Managers
         /// </summary>
         private void Initialize()
         {
-            if (s_instance != null && s_instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            s_instance = this;
             DontDestroyOnLoad(gameObject);
 
             if (m_settingsData != null)

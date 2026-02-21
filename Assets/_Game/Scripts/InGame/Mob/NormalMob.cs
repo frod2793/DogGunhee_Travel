@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
@@ -75,6 +76,13 @@ namespace InGame.Mob
             }
 
             m_logic.Update(Time.deltaTime);
+            
+            // [BugFix]: Stun 상태(넉백 중)일 때의 외부 위치 변화(DOMove 등)를 로직으로 역동기화
+            if (m_logic.CurrentState == MobBase.MobBase.MobState.Stun)
+            {
+                m_logic.SyncPosition(transform.position);
+            }
+
             m_view.UpdatePosition(m_logic.Position, immediate: true);
         }
 
@@ -93,13 +101,29 @@ namespace InGame.Mob
         /// <summary>
         /// [설명]: 인게임 관리자로부터 전역 설정을 주입받고 위치를 동기화합니다.
         /// </summary>
-        public override void Init(MobManager mobManager, InGame.Data.PlayerDataDTO playerData = null, InGame.Services.ISoundManager soundManager = null)
+        public override void Init(MobManager mobManager, InGame.Data.PlayerDataDTO playerData = null, InGame.Services.ISoundManager soundManager = null,
+            IGameStateService gameState = null, ICombatContext combatContext = null)
         {
-            base.Init(mobManager, playerData, soundManager);
+            base.Init(mobManager, playerData, soundManager, gameState, combatContext);
+
+            InitializeMapBounds();
 
             if (m_logic != null)
             {
                 m_logic.SyncPosition(transform.position);
+                // [Refine]: 초기화 시 전달받은 최신 경계를 로직에 즉시 전파
+                m_logic.UpdateMapBounds(m_mapBounds);
+            }
+            
+            // [추가]: 뷰에 이펙트 서비스 주입 (피격 연출용)
+            if (m_view != null && m_gameState != null)
+            {
+                m_view.Initialize(m_gameState.EffectService);
+            }
+            // [Refine]: 브레인에도 최신 경계 전파
+            if (m_brain != null)
+            {
+                m_brain.UpdateMapBounds(m_mapBounds);
             }
         }
 
@@ -125,7 +149,7 @@ namespace InGame.Mob
             );
 
             // 2. 로직 및 브레인 생성 (DI)
-            m_logic = new MobLogic(stats, transform.position, new LinearMovementStrategy());
+            m_logic = new MobLogic(stats, transform.position, new LinearMovementStrategy(), m_mapBounds);
             m_brain = new NormalMobBrain(m_logic, m_view, m_statsData, m_mapBounds);
             m_brain.Initialize();
 
@@ -147,14 +171,18 @@ namespace InGame.Mob
         /// </summary>
         private void InitializeMapBounds()
         {
-            if (GameManager.Instance != null)
+            if (m_combatCtx != null)
             {
-                m_mapBounds = GameManager.Instance.MapBounds;
+                m_mapBounds = m_combatCtx.MapBounds;
             }
             else
             {
                 m_mapBounds = new Bounds(Vector3.zero, Vector3.one * 50f);
             }
+
+            // [Refine]: 갱신된 경계를 하위 시스템(Logic, Brain)에 실시간으로 전파
+            m_logic?.UpdateMapBounds(m_mapBounds);
+            m_brain?.UpdateMapBounds(m_mapBounds);
         }
 
         #endregion

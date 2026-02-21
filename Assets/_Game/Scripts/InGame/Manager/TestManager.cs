@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,15 +46,29 @@ namespace InGame.Managers
         [Header("UI 참조 - 게임 흐름")]
         [SerializeField, Tooltip("스테이지 클리어 테스트 버튼")] private Button m_clearStageButton;
 
+        [Header("UI 참조 - 몬스터")]
+        [SerializeField, Tooltip("스폰할 몬스터 선택 드롭다운")] private TMP_Dropdown m_mobDropdown;
+        [SerializeField, Tooltip("몬스터 스폰 버튼")] private Button m_spawnMobButton;
+        [SerializeField, Tooltip("모든 몬스터 제거 버튼")] private Button m_killAllMobsButton;
+
+        [Header("UI 참조 - 시스템")]
+        [SerializeField, Tooltip("맵 경계 시각화 토글")] private Toggle m_showMapBoundsToggle;
+
         [Header("데이터 참조")]
         [SerializeField, Tooltip("전체 스킬 데이터베이스")] private SkillDatabase m_skillDatabase;
+        [SerializeField, Tooltip("스테이지 데이터베이스")] private StageDatabase m_stageDatabase;
 
         #endregion
 
         #region 내부 필드 및 데이터 구조
 
-        private GameManager m_gameManager;
+        private IPlayerContext m_playerCtx;
+        private ICombatContext m_combatCtx;
+        private IGameStateService m_gameState;
+        private MapBoundsVisualizer m_boundsVisualizer;
+        
         private List<SkillData> m_allWeaponSkills;
+        private List<string> m_availableMobKeys = new List<string>();
         private readonly List<GameObject> m_spawnedWeaponItems = new List<GameObject>();
         private readonly List<CharacterInfo> m_loadedCharacters = new List<CharacterInfo>();
 
@@ -79,36 +94,47 @@ namespace InGame.Managers
 
         #endregion
 
-        #region 유니티 생명주기
-
-        private void Awake()
+        public void Initialize(IPlayerContext playerContext, ICombatContext combatContext, IGameStateService gameState)
         {
-            m_gameManager = GameManager.Instance;
-            if (m_gameManager == null)
+            m_playerCtx = playerContext;
+            m_combatCtx = combatContext;
+            m_gameState = gameState;
+
+            if (m_playerCtx == null || m_combatCtx == null || m_gameState == null)
             {
-                Debug.LogError("[TestManager] GameManager를 찾을 수 없어 패널을 비활성화합니다.");
+                Debug.LogError("[TestManager] 필요한 컨텍스트가 주입되지 않아 패널을 비활성화합니다.");
                 gameObject.SetActive(false);
                 return;
             }
 
             InitializeUI();
-        }
-
-        private void Start()
-        {
+            
             // 데이터 비동기 로드 시작
             InitializeDataAsync().Forget();
 
             // 초기 상태 설정
             InitializePanelPosition();
 
+            // [Refine]: 맵 경계 시각화 초기화
+            m_boundsVisualizer = gameObject.GetComponent<MapBoundsVisualizer>();
+            if (m_boundsVisualizer == null) m_boundsVisualizer = gameObject.AddComponent<MapBoundsVisualizer>();
+            m_boundsVisualizer.Initialize(m_combatCtx);
+
             // 이벤트 구독
-            GameManager.OnPlayerChanged += HandlePlayerChanged;
+            m_playerCtx.OnPlayerChanged += HandlePlayerChanged;
+
+            // [추가]: 초기화 시점에 이미 스폰된 플레이어가 있다면 보유 무기 목록 즉시 갱신
+            if (m_playerCtx.SpawnedPlayer != null)
+            {
+                RefreshOwnedWeaponList();
+            }
         }
+
+        #region 유니티 생명주기
 
         private void OnEnable()
         {
-            if (m_gameManager != null && m_gameManager.SpawnedPlayer != null)
+            if (m_playerCtx != null && m_playerCtx.SpawnedPlayer != null)
             {
                 RefreshOwnedWeaponList();
             }
@@ -116,7 +142,10 @@ namespace InGame.Managers
 
         private void OnDestroy()
         {
-            GameManager.OnPlayerChanged -= HandlePlayerChanged;
+            if (m_playerCtx != null)
+            {
+                m_playerCtx.OnPlayerChanged -= HandlePlayerChanged;
+            }
 
             if (m_panelTransform != null)
             {
@@ -197,6 +226,34 @@ namespace InGame.Managers
                 m_weaponDropdown.ClearOptions();
                 m_weaponDropdown.AddOptions(m_allWeaponSkills.Select(s => s.skillName).ToList());
             }
+
+            // [Refine]: 스테이지 데이터베이스에서 스폰 가능한 몬스터 키 추출
+            m_availableMobKeys.Clear();
+            if (m_stageDatabase != null)
+            {
+                HashSet<string> keys = new HashSet<string>();
+                foreach (var stage in m_stageDatabase.Stages)
+                {
+                    foreach (var wave in stage.waves)
+                    {
+                        foreach (var mob in wave.mobs)
+                        {
+                            if (!string.IsNullOrEmpty(mob.mobKey))
+                            {
+                                keys.Add(mob.mobKey);
+                            }
+                        }
+                    }
+                }
+                m_availableMobKeys = keys.ToList();
+                m_availableMobKeys.Sort();
+            }
+
+            if (m_mobDropdown != null)
+            {
+                m_mobDropdown.ClearOptions();
+                m_mobDropdown.AddOptions(m_availableMobKeys);
+            }
         }
 
         /// <summary>
@@ -217,6 +274,23 @@ namespace InGame.Managers
             if (m_clearStageButton != null)
             {
                 m_clearStageButton.onClick.AddListener(OnClearStageClicked);
+            }
+
+            if (m_spawnMobButton != null)
+            {
+                m_spawnMobButton.onClick.AddListener(OnSpawnMobClicked);
+            }
+
+            if (m_killAllMobsButton != null)
+            {
+                m_killAllMobsButton.onClick.AddListener(OnKillAllMobsClicked);
+            }
+
+            if (m_showMapBoundsToggle != null)
+            {
+                m_showMapBoundsToggle.onValueChanged.AddListener((val) => {
+                    if (m_boundsVisualizer != null) m_boundsVisualizer.UpdateVisibility(val);
+                });
             }
 
             if (m_toggleButton != null)
@@ -288,12 +362,14 @@ namespace InGame.Managers
 
             m_spawnedWeaponItems.Clear();
 
-            if (m_gameManager == null || m_gameManager.SpawnedPlayer == null || m_ownedWeaponItemPrefab == null)
+            if (m_playerCtx == null || m_playerCtx.SpawnedPlayer == null || m_ownedWeaponItemPrefab == null)
             {
+                Debug.LogWarning($"[TestManager] 리프레시 불가: Context={m_playerCtx != null}, Player={m_playerCtx?.SpawnedPlayer != null}, Prefab={m_ownedWeaponItemPrefab != null}");
                 return;
             }
 
-            foreach (var weapon in m_gameManager.SpawnedPlayer.Weapons)
+            int count = 0;
+            foreach (var weapon in m_playerCtx.SpawnedPlayer.Weapons)
             {
                 if (weapon == null)
                 {
@@ -304,7 +380,10 @@ namespace InGame.Managers
                 itemInstance.Setup(weapon, OnLevelUpWeaponClicked, OnRemoveWeaponClicked);
 
                 m_spawnedWeaponItems.Add(itemInstance.gameObject);
+                count++;
             }
+
+            Debug.Log($"[TestManager] 보유 무기 목록 갱신 완료: {count}개 아이템 생성됨");
         }
 
         /// <summary>
@@ -312,7 +391,7 @@ namespace InGame.Managers
         /// </summary>
         private void OnChangeCharacterClicked()
         {
-            if (m_characterDropdown == null)
+            if (m_characterDropdown == null || m_gameState == null)
             {
                 return;
             }
@@ -325,12 +404,15 @@ namespace InGame.Managers
 
             int charIndexToSpawn = m_loadedCharacters[selectedIndex].Index;
 
-            if (m_gameManager.PlayerData != null)
+            // GameManager에 대한 직접 의존성 최소화를 위해 캐스팅 사용 (테스트용)
+            if (m_gameState is GameManager gm)
             {
-                m_gameManager.PlayerData.SelectCharacterIndex = charIndexToSpawn;
+                if (gm.PlayerData != null)
+                {
+                    gm.PlayerData.SelectCharacterIndex = charIndexToSpawn;
+                }
+                gm.ChangeCharacterAndWeapon_Spawn().Forget();
             }
-
-            m_gameManager.ChangeCharacterAndWeapon_Spawn().Forget();
         }
 
         /// <summary>
@@ -343,7 +425,7 @@ namespace InGame.Managers
                 return;
             }
 
-            if (m_gameManager == null || m_gameManager.SpawnedPlayer == null)
+            if (m_playerCtx == null || m_playerCtx.SpawnedPlayer == null)
             {
                 return;
             }
@@ -356,7 +438,7 @@ namespace InGame.Managers
 
             SkillData selectedSkill = m_allWeaponSkills[selectedIndex];
 
-            if (m_gameManager.SpawnedPlayer.Weapons.Any(w => w.SkillCode == selectedSkill.skillCode))
+            if (m_playerCtx.SpawnedPlayer.Weapons.Any(w => w.SkillCode == selectedSkill.skillCode))
             {
                 Debug.LogWarning($"[TestManager] 이미 보유한 무기입니다: {selectedSkill.skillName}");
                 return;
@@ -376,20 +458,49 @@ namespace InGame.Managers
             EquipWeaponAsync(selectedSkill, startLevel, startEvolved).Forget();
         }
 
+        private void OnSpawnMobClicked()
+        {
+            if (m_combatCtx == null || m_playerCtx == null) return;
+
+            int selectedIndex = m_mobDropdown != null ? m_mobDropdown.value : 0;
+            if (selectedIndex < 0 || selectedIndex >= m_availableMobKeys.Count) return;
+
+            string mobKey = m_availableMobKeys[selectedIndex];
+            Vector3 spawnPos = m_playerCtx.PlayerTransform.position + (Vector3)UnityEngine.Random.insideUnitCircle * 5f;
+            
+            if (m_combatCtx.ObjectPoolSpawner != null)
+            {
+                m_combatCtx.ObjectPoolSpawner.SpawnMobForTest(mobKey, spawnPos).Forget();
+            }
+        }
+
+        private void OnKillAllMobsClicked()
+        {
+            if (m_combatCtx == null) return;
+
+            if (m_combatCtx.ObjectPoolSpawner != null)
+            {
+                m_combatCtx.ObjectPoolSpawner.ReturnAllMobsForTest();
+            }
+        }
+
         private async UniTaskVoid EquipWeaponAsync(SkillData skill, int level, bool evolved)
         {
-            await m_gameManager.EquipNewWeapon(skill, true, level, evolved);
-            RefreshOwnedWeaponList();
+            if (m_gameState is GameManager gm)
+            {
+                await gm.EquipNewWeapon(skill, true, level, evolved);
+                RefreshOwnedWeaponList();
+            }
         }
 
         private void OnLevelUpWeaponClicked(string skillCode)
         {
-            if (m_gameManager.SpawnedPlayer == null)
+            if (m_playerCtx == null || m_playerCtx.SpawnedPlayer == null)
             {
                 return;
             }
 
-            var weapon = m_gameManager.SpawnedPlayer.Weapons.FirstOrDefault(w => w.SkillCode == skillCode);
+            var weapon = m_playerCtx.SpawnedPlayer.Weapons.FirstOrDefault(w => w.SkillCode == skillCode);
             if (weapon != null)
             {
                 weapon.LevelUp();
@@ -399,20 +510,18 @@ namespace InGame.Managers
 
         private void OnRemoveWeaponClicked(string skillCode)
         {
-            if (m_gameManager == null)
+            if (m_gameState is GameManager gm)
             {
-                return;
+                gm.RemoveWeaponForTest(skillCode);
+                RefreshOwnedWeaponList();
             }
-
-            m_gameManager.RemoveWeaponForTest(skillCode);
-            RefreshOwnedWeaponList();
         }
 
         private void OnClearStageClicked()
         {
-            if (m_gameManager != null)
+            if (m_gameState is GameManager gm)
             {
-                m_gameManager.ClearStageForTest();
+                gm.ClearStageForTest();
                 
                 // 테스트 패널 닫기 (시각적 확인을 위해)
                 TogglePanelAsync().Forget();

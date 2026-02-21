@@ -61,6 +61,7 @@ namespace InGame.Weapon.Controllers
         // 관리 객체
         private WeaponPoolManager m_poolManager;
         private InGame.Services.ISoundManager m_soundManager;
+        private IEffectService m_effectService;
         private CancellationTokenSource m_lifetimeCts;
         private Tween m_moveTween;
         private Tween m_rotateTween;
@@ -158,7 +159,8 @@ namespace InGame.Weapon.Controllers
         /// <param name="isEvolved">진화 여부(폭발 효과)</param>
         /// <param name="poolManager">오브젝트 풀 매니저</param>
         /// <param name="soundManager">사운드 매니저 (DI)</param>
-        public void Init(float damage, float stunTime, float speed, bool isEvolved, WeaponPoolManager poolManager, InGame.Services.ISoundManager soundManager)
+        /// <param name="effectService">이펙트 서비스 (DI)</param>
+        public void Init(float damage, float stunTime, float speed, bool isEvolved, WeaponPoolManager poolManager, InGame.Services.ISoundManager soundManager, IEffectService effectService)
         {
             m_attackPower = damage;
             m_stunTime = stunTime;
@@ -166,6 +168,7 @@ namespace InGame.Weapon.Controllers
             m_isEvolved = isEvolved;
             m_poolManager = poolManager;
             m_soundManager = soundManager;
+            m_effectService = effectService;
         }
 
         /// <summary>
@@ -275,7 +278,10 @@ namespace InGame.Weapon.Controllers
             Vector3 currentPosition = m_transform.position;
 
             // 1. 시각 효과 재생
-            EffectManager.Instance.PlayEffect(EffectType.BoneExplosion, currentPosition);
+            if (m_effectService != null)
+            {
+                m_effectService.PlayEffect(EffectType.BoneExplosion, currentPosition);
+            }
 
             // 2. 반경 내 적들에게 광역 데미지
             int numColliders = Physics2D.OverlapCircle(currentPosition, m_explosionRadius, m_contactFilter, m_overlapResults);

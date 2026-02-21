@@ -24,6 +24,13 @@ namespace Title
 
         [SerializeField, Tooltip("사운드 매니저 (DI)")]
         private SoundManager m_soundManager;
+
+        [SerializeField, Tooltip("씬 로더 (DI)")]
+        private SceneLoader m_sceneLoader;
+
+        [SerializeField, Tooltip("앱 업데이트 매니저 (DI)")]
+        private AppUpdateManager m_appUpdateManager;
+
         [SerializeField] private InGame.Data.PlayerDataDTO m_playerData;
 
         [Header("UI 패널")]
@@ -118,9 +125,13 @@ namespace Title
             BindViewModel();
             SetupButtonListeners();
 
-            if (AppUpdateManager.Instance == null)
+            if (m_appUpdateManager == null)
             {
-                new GameObject(nameof(AppUpdateManager)).AddComponent<AppUpdateManager>();
+                m_appUpdateManager = FindFirstObjectByType<AppUpdateManager>();
+                if (m_appUpdateManager == null)
+                {
+                    m_appUpdateManager = new GameObject(nameof(AppUpdateManager)).AddComponent<AppUpdateManager>();
+                }
             }
         }
 
@@ -129,9 +140,9 @@ namespace Title
         /// </summary>
         private async UniTaskVoid Start()
         {
-            if (AppUpdateManager.Instance != null)
+            if (m_appUpdateManager != null)
             {
-                await AppUpdateManager.Instance.CheckForUpdateAsync();
+                await m_appUpdateManager.CheckForUpdateAsync();
             }
 
             if (m_soundManager != null)
@@ -339,10 +350,10 @@ namespace Title
                 m_startBtn.gameObject.SetActive(false);
             }
 
-            if (SceneLoader.Instance != null)
+            if (m_sceneLoader != null)
             {
                 // DTO를 페이로드로 전달하며 비동기 씬 로드
-                await SceneLoader.Instance.LoadSceneAsync(SceneNames.Lobby, payload);
+                await m_sceneLoader.LoadSceneAsync(SceneNames.Lobby, payload);
             }
         }
 

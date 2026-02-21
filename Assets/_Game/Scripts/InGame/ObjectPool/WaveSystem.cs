@@ -233,7 +233,8 @@ namespace InGame.ObjectPool
 
             m_spawnedMobCount = 0;
 
-            LogManager.Log($"[WaveSystem] 웨이브 {wave.waveId} 시작 (타입: {(wave.duration > 0 ? "시간제" : "처치제")})", LogManager.LogCategory.System);
+            LogManager.Log($"[WaveSystem] 웨이브 진행: {wave.waveId} (스테이지 내 인덱스: {m_currentWaveIndex}/{m_currentStage.waves.Count - 1})", LogManager.LogCategory.System);
+            LogManager.Log($"[WaveSystem] 웨이브 디테일 - 타입: {(wave.duration > 0 ? $"시간제({wave.duration}s)" : $"처치제({wave.count}마리)")}", LogManager.LogCategory.System);
             OnWaveStarted?.Invoke(wave);
 
             if (wave.duration > 0)

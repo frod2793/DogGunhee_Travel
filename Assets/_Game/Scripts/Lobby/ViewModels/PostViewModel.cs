@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,13 +54,15 @@ namespace InGame.Lobby.ViewModels
 
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
         private readonly IPostService m_postService;
+        private readonly IInventoryContext m_inventoryContext;
 
         /// <summary>
-        /// [설명]: PostViewModel의 기본 생성자입니다.
+        /// [설명]: PostViewModel의 생성자입니다.
         /// </summary>
-        public PostViewModel(IPostService postService)
+        public PostViewModel(IPostService postService, IInventoryContext inventoryContext)
         {
             m_postService = postService;
+            m_inventoryContext = inventoryContext;
         }
 
         #endregion
@@ -167,20 +170,19 @@ namespace InGame.Lobby.ViewModels
                 if (isSuccess)
                 {
                     // 1. 로컬 인벤토리 데이터 매니저 갱신
-                    // 1. 로컬 인벤토리 데이터 매니저 갱신
-                    if (InventoryManager.Instance != null)
+                    if (m_inventoryContext != null)
                     {
                         foreach (var item in postInfo.Items)
                         {
                             // [변경] 이름으로 아이템 데이터 조회 후 추가
-                            var itemData = InventoryManager.Instance.ItemDatabase.GetItemDataByName(item.Key);
+                            var itemData = m_inventoryContext.GetItemDataByName(item.Key);
                             if (itemData != null)
                             {
-                                InventoryManager.Instance.System.AddItem(itemData, item.Value);
+                                m_inventoryContext.System.AddItem(itemData, item.Value);
                             }
                         }
 
-                        InventoryManager.Instance.SaveInventory();
+                        m_inventoryContext.SaveInventory();
                     }
 
                     // 2. 현재 목록에서 해당 우편 제거 (ReactiveProperty 반응 유도)

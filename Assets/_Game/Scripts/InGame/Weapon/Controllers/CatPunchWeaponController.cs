@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -48,9 +49,16 @@ namespace InGame.Weapon.Controllers
 
         #region 초기화 및 해제
 
-        public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
+        public override void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager, 
+            Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
-            base.Init(data, owner, poolManager, getTargetDirection);
+            base.Init(data, owner, poolManager, getTargetDirection, gameState, combatContext, playerContext);
 
             // 1. 무기 모델 인스턴스화
             if (data.ModelPrefab != null)

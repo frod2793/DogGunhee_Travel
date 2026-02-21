@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using InGame.UI.Settings;
 using R3;
@@ -49,6 +50,7 @@ namespace Lobby
         private OptionPopupViewModel m_viewModel;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
         private Canvas m_canvas;
+        private InGame.UI.IPopupService m_popupService;
 
         #endregion
 
@@ -73,13 +75,15 @@ namespace Lobby
         /// [설명]: 옵션 조절을 위한 뷰모델을 생성하고 사운드 매니저와 연동합니다.
         /// </summary>
         /// <param name="soundManager">의존성 주입된 사운드 매니저</param>
-        public void Initialize(InGame.Services.ISoundManager soundManager)
+        public void Initialize(InGame.Services.ISoundManager soundManager, InGame.UI.IPopupService popupService = null)
         {
             if (soundManager == null)
             {
                 LogManager.LogError("[OptionPopupView] SoundManager가 주입되지 않았습니다.");
                 return;
             }
+
+            m_popupService = popupService;
 
             // SoundManager 주입을 통해 ViewModel 초기화
             m_viewModel = new OptionPopupViewModel(m_settingsData, soundManager);
@@ -172,7 +176,7 @@ namespace Lobby
                 .Subscribe(_ =>
                 {
                     m_viewModel.SaveSettings();
-                    InGame.UI.PopupManager.Instance.CloseTopPopup();
+                    m_popupService.CloseTopPopup();
                 })
                 .AddTo(m_disposables);
 

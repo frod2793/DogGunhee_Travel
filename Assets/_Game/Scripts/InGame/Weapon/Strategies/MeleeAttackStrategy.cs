@@ -5,6 +5,7 @@ using System.Threading;
 using InGame.Mob.MobBase;
 using InGame.Weapon.Base;
 using InGame.Managers;
+using InGame.Core.Interfaces;
 using InGame.ObjectPool;
 
 namespace InGame.Weapon.Strategies
@@ -42,14 +43,28 @@ namespace InGame.Weapon.Strategies
         private bool m_isAttacking;
         private CancellationTokenSource m_cts;
 
+        // [추가]: 인터페이스 기반 의존성
+        private IGameStateService m_gameState;
+        private ICombatContext m_combatCtx;
+        private IPlayerContext m_playerCtx;
+
         #endregion
 
         #region 인터페이스 구현
 
-        public void Init(WeaponDataSO data, WeaponPoolManager poolManager)
+        public void Init(
+            WeaponDataSO data, 
+            WeaponPoolManager poolManager,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
             m_data = data;
             m_poolManager = poolManager;
+            
+            m_gameState = gameState;
+            m_combatCtx = combatContext;
+            m_playerCtx = playerContext;
 
             // 충돌 필터 설정 (Mob 레이어만)
             m_contactFilter = ContactFilter2D.noFilter;
@@ -176,9 +191,9 @@ namespace InGame.Weapon.Strategies
 
         private void UpdateWeaponDirection()
         {
-            if (GameManager.Instance != null && GameManager.Instance.Joystick != null)
+            if (m_playerCtx != null && m_playerCtx.Joystick != null)
             {
-                var joystick = GameManager.Instance.Joystick;
+                var joystick = m_playerCtx.Joystick;
                 Vector3 dir = new Vector3(joystick.Horizontal, joystick.Vertical, 0);
 
                 if (dir.sqrMagnitude > 0.01f)

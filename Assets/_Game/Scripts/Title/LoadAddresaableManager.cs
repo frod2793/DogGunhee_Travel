@@ -43,16 +43,16 @@ public class LoadAddresaableManager : MonoBehaviour
     [SerializeField]
     private string m_nextSceneName = "IntroScene";
 
-    #endregion
+    [Header("의존성 주입")]
+    [SerializeField, Tooltip("씬 로더 (DI)")]
+    private InGame.SceneLoader m_sceneLoader;
 
-    #region 싱글톤 및 내부 상태
-
-    /// <summary>
-    /// [설명]: 전역 접근을 위한 싱글톤 인스턴스
-    /// </summary>
-    public static LoadAddresaableManager Instance { get; private set; }
+    [SerializeField, Tooltip("리모트 데이터 업데이트 매니저")]
+    private InGame.Data.Managers.RemoteDataUpdateManager m_remoteDataManager;
 
     #endregion
+
+  
 
     #region 유니티 생명주기
 
@@ -61,13 +61,6 @@ public class LoadAddresaableManager : MonoBehaviour
     /// </summary>
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
@@ -91,10 +84,15 @@ public class LoadAddresaableManager : MonoBehaviour
         {
             await LoadInitialAssetsAsync();
 
-            // 로딩이 완료되면 다음 씬으로 전환
-            if (SceneLoader.Instance != null)
+            // 로딩이 완료되면 다음 씨으로 전환
+            if (m_sceneLoader == null)
             {
-                SceneLoader.Instance.LoadScene(m_nextSceneName);
+                m_sceneLoader = FindFirstObjectByType<InGame.SceneLoader>();
+            }
+
+            if (m_sceneLoader != null)
+            {
+                m_sceneLoader.LoadScene(m_nextSceneName);
             }
         }
         catch (Exception e)
@@ -152,6 +150,29 @@ public class LoadAddresaableManager : MonoBehaviour
             }
 
             Addressables.Release(sizeHandle);
+        }
+
+        // 6. 리모트 데이터 동기화 (구글 시트 기반 JSON 데이터)
+        if (m_remoteDataManager == null)
+        {
+            m_remoteDataManager = FindFirstObjectByType<InGame.Data.Managers.RemoteDataUpdateManager>();
+        }
+
+        if (m_remoteDataManager != null)
+        {
+            UpdateStatus("Synchronizing remote data...");
+            // 진행률을 90%에서 95%로 차지하도록 함
+            UpdateProgressBar(0.9f); 
+            
+            try
+            {
+                await m_remoteDataManager.UpdateAllRemoteDataAsync(null, null, this.GetCancellationTokenOnDestroy(), force: true);
+                UpdateProgressBar(0.95f);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[LoadAddresaableManager] Remote data sync failed: {ex.Message}. Continuing with local data.");
+            }
         }
 
         UpdateStatus("Loading complete!");

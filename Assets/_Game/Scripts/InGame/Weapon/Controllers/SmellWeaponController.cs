@@ -1,3 +1,4 @@
+using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -67,10 +68,16 @@ namespace InGame.Weapon.Controllers
         /// <summary>
         /// [설명]: 무기를 초기화하고 궤적 관리 시스템을 설정합니다.
         /// </summary>
-        public override void Init(WeaponDataSO data, Transform ownerTransform,
-            InGame.ObjectPool.WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
+        public override void Init(
+            WeaponDataSO data, 
+            Transform ownerTransform,
+            InGame.ObjectPool.WeaponPoolManager poolManager, 
+            Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
-            base.Init(data, ownerTransform, poolManager, getTargetDirection);
+            base.Init(data, ownerTransform, poolManager, getTargetDirection, gameState, combatContext, playerContext);
 
             // 1. 모델 인스턴스화 및 컴포넌트 캐싱
             if (data.ProjectilePrefab != null)
@@ -107,9 +114,9 @@ namespace InGame.Weapon.Controllers
             m_cloudSpread = 0.3f;
             m_sizeVariation = 0.2f;
 
-            if (GameManager.Instance != null)
+            if (m_playerCtx != null)
             {
-                m_playerTransform = GameManager.Instance.PlayerTransfrom();
+                m_playerTransform = m_playerCtx.PlayerTransform;
                 if (m_playerTransform != null)
                 {
                     m_lastFramePlayerPos = m_playerTransform.position;
@@ -183,7 +190,7 @@ namespace InGame.Weapon.Controllers
         public override void OnUpdate(float deltaTime)
         {
             // 1. 게임 상태 및 적 존재 여부 체크
-            bool isGamePlaying = GameManager.Instance.State != null && GameManager.Instance.State.IsPlaying;
+            bool isGamePlaying = m_gameState != null && m_gameState.State != null && m_gameState.IsPlaying;
             if (!isGamePlaying || !IsEnemyPresent)
             {
                 if (m_particleSystem != null && m_particleSystem.isPlaying)
@@ -266,7 +273,7 @@ namespace InGame.Weapon.Controllers
         /// <param name="other">충돌한 객체의 Collider2D</param>
         public void ProcessTriggerDamage(Collider2D other)
         {
-            if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying) return;
+            if (m_gameState != null && m_gameState.State != null && !m_gameState.IsPlaying) return;
             if (!other.CompareTag("Mob")) return;
 
             int id = other.gameObject.GetInstanceID();

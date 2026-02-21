@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,15 +68,17 @@ namespace InGame.Lobby.ViewModels
 
         private readonly InGame.Data.PlayerDataDTO m_playerData;
         private readonly InGame.Services.PlayerDataService m_playerService;
+        private readonly IInventoryContext m_inventoryContext;
         private readonly CompositeDisposable m_disposables = new CompositeDisposable();
 
         /// <summary>
         /// [설명]: InventoryViewModel의 생성자입니다. DTO와 서비스를 주입받습니다.
         /// </summary>
-        public InventoryViewModel(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService)
+        public InventoryViewModel(InGame.Data.PlayerDataDTO playerData, InGame.Services.PlayerDataService playerService, IInventoryContext inventoryContext)
         {
             m_playerData = playerData;
             m_playerService = playerService;
+            m_inventoryContext = inventoryContext;
         }
 
         #endregion
@@ -87,13 +90,13 @@ namespace InGame.Lobby.ViewModels
         /// </summary>
         public void LoadItems()
         {
-            if (InventoryManager.Instance == null || InventoryManager.Instance.System == null)
+            if (m_inventoryContext == null || m_inventoryContext.System == null)
             {
                 // [TODO] 에러 처리 or Retry
                 return;
             }
 
-            var entries = InventoryManager.Instance.System.GetAllEntries();
+            var entries = m_inventoryContext.System.GetAllEntries();
             var viewList = new List<InventoryItemData>();
 
             foreach (var entry in entries)
@@ -154,10 +157,10 @@ namespace InGame.Lobby.ViewModels
                 return;
             }
 
-            if (InventoryManager.Instance == null) return;
+            if (m_inventoryContext == null) return;
 
             // 1. 판매 로직 수행
-            var result = InventoryManager.Instance.System.SellItem(item.ItemCode, count);
+            var result = m_inventoryContext.System.SellItem(item.ItemCode, count);
 
             if (result.success)
             {

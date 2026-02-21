@@ -1,3 +1,4 @@
+﻿using InGame.Core.Interfaces;
 using System;
 using System.Threading;
 using UnityEngine;
@@ -40,9 +41,16 @@ namespace InGame.Weapon.Controllers
         /// <summary>
         /// 무기를 초기화하고 불기둥 풀을 생성하며 공격 루프를 시작합니다.
         /// </summary>
-        public override void Init(WeaponDataSO data, Transform owner, WeaponPoolManager poolManager, Func<Vector3> getTargetDirection)
+        public override void Init(
+            WeaponDataSO data, 
+            Transform owner, 
+            WeaponPoolManager poolManager, 
+            Func<Vector3> getTargetDirection,
+            IGameStateService gameState,
+            ICombatContext combatContext,
+            IPlayerContext playerContext)
         {
-            base.Init(data, owner, poolManager, getTargetDirection);
+            base.Init(data, owner, poolManager, getTargetDirection, gameState, combatContext, playerContext);
 
             // 1. 프리팹 컴포넌트 캐싱
             if (data.ProjectilePrefab != null)
@@ -159,7 +167,7 @@ namespace InGame.Weapon.Controllers
                     await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token);
 
                     // 2. 상태 체크 (게임 중지, 플레이어 사망 등)
-                    if (GameManager.Instance.State != null && !GameManager.Instance.State.IsPlaying)
+                    if (m_gameStateService != null && !m_gameStateService.IsPlaying)
                     {
                         continue;
                     }
