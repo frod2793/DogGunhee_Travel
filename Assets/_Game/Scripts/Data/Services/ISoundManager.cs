@@ -34,5 +34,12 @@ namespace InGame.Services
         /// [설명]: 저장된 사운드 설정을 로드합니다.
         /// </summary>
         void LoadSoundSetting();
+
+        /// <summary>
+        /// [설명]: 씬 이름에 매핑된 BGM으로 크로스페이드 전환합니다.
+        /// SoundData의 SceneBgmMapping에 등록된 클립과 페이드 시간을 사용합니다.
+        /// </summary>
+        /// <param name="sceneName">전환 대상 씬 이름</param>
+        void TransitionBGMForScene(string sceneName);
     }
 }

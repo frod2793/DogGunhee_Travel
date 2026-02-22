@@ -117,6 +117,23 @@ grep "if (payload.IsFirstLogin)" Assets/_Game/Scripts/Lobby/Core/LobbySceneCompo
 **FAIL:** 플래그 설정 누락 또는 로비에서 조건 없이 항상 서버 로드 시도
 **수정:** `ScenePayloadDTO` 생성 시 `IsFirstLogin = true` 할당 및 로비 진입점에서 조건 처리
 
+### Step 5: 사운드 초기화 순서 검증
+
+저장된 볼륨 설정이 적용된 상태에서 BGM이 재생되도록 `LoadSoundSetting` 호출이 `Play` 보다 선행되는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Title/LoginViewMVVM.cs`
+
+**검사:**
+
+```bash
+# LoadSoundSetting 호출이 Play(SoundKeys.Intro) 보다 위 라인에 있는지 확인
+grep -nE "LoadSoundSetting|Play\(SoundKeys.Intro" Assets/_Game/Scripts/Title/LoginViewMVVM.cs
+```
+
+**PASS:** `LoadSoundSetting` 호출 라인 번호가 `Play` 호출 라인 번호보다 작음
+**FAIL:** `Play` 이후에 설정이 로드되어 볼륨이 튀는 현상 발생 가능
+**수정:** `LoadSoundSetting()` 호출을 BGM 재생 시점 위로 이동
+
 ## Output Format
 
 ### 로그인 흐름 검증 결과

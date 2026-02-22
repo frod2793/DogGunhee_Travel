@@ -87,6 +87,9 @@ namespace Lobby
 
             // SoundManager 주입을 통해 ViewModel 초기화
             m_viewModel = new OptionPopupViewModel(m_settingsData, soundManager);
+
+            // ViewModel 생성 후 컴포넌트 재설정 (슬라이더 범위 등)
+            InitializeComponents();
             
             // ViewModel 바인딩
             BindViewModel();

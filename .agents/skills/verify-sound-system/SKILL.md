@@ -11,7 +11,9 @@ description: 프로젝트 전체의 사운드 구현 패턴을 검증합니다. 
 
 1.  **패턴 권장** — `SoundManager.Instance` 대신 `ISoundManager` 인터페이스 주입 권장
 2.  **전달 무결성** — 씬 전환(`ScenePayloadDTO`) 및 초기화 시 사운드 서비스가 올바르게 전달되는지 확인
-3.  **정적 호출 최소화** — 비즈니스 로직(Mob, Weapon 등) 내에서 `SoundManager.PlaySound` 정적 메서드 사용 지양 권장
+3.  **크로스페이드 무결성** — 듀얼 `AudioSource`를 통한 부드러운 BGM 전환 및 자원 관리 확인
+4.  **데이터 기반 매핑** — `SoundData`를 통한 씬별 BGM 설정 및 `activeSceneChanged` 연동 확인
+5.  **정적 호출 최소화** — 비즈니스 로직(Mob, Weapon 등) 내에서 `SoundManager.PlaySound` 정적 메서드 사용 지양 권장
 
 ## When to Run
 
@@ -24,9 +26,10 @@ description: 프로젝트 전체의 사운드 구현 패턴을 검증합니다. 
 | File | Purpose |
 |------|---------|
 | `Assets/_Game/Scripts/Data/Services/ISoundManager.cs` | 사운드 서비스 인터페이스 |
-| `Assets/_Game/Scripts/Lobby/SoundManager.cs` | 사운드 매니저 구현체 |
+| `Assets/_Game/Scripts/Lobby/SoundManager.cs` | 사운드 매니저 구현체 (듀얼 소스 크로스페이드) |
+| `Assets/_Game/Scripts/Data/SoundData.cs` | BGM 매핑 정보가 포함된 SO 클래스 |
 | `Assets/_Game/Scripts/Data/DTOs/ScenePayloadDTO.cs` | 서비스 전달용 페이로드 |
-| `Assets/_Game/Scripts/InGame/Manager/GameManager.cs` | 인게임 서비스 주입 주체 |
+| `Assets/_Game/Scripts/InGame/Manager/GameManager.cs` | 인게임 BGM 키 정합성 검사 대상 |
 | `Assets/_Game/Scripts/Lobby/LobbyUIViewManager.cs` | 로비 서비스 주입 주체 |
 
 ## Workflow
@@ -84,6 +87,46 @@ grep "scenePayload.SoundService" Assets/_Game/Scripts/Lobby/LobbyUIViewManager.c
 **PASS:** 모든 주입 및 전달 경로에서 인터페이스 기반 할당이 확인됨
 **FAIL:** 주입이 누락되거나 싱글톤에 직접 의존함
 **수정:** 생성자 주입 및 전달 코드 수정
+
+### Step 4: 크로스페이드 및 자동 전환 무결성 검증
+
+듀얼 `AudioSource`와 씬 매핑 데이터가 올바르게 구현되어 있는지 확인합니다.
+
+**파일:** `SoundManager.cs`, `SoundData.cs`
+
+**검사:**
+
+```bash
+# 1. 듀얼 BGM 소스(A/B) 생성 및 초기화 확인
+grep -E "m_bgmSourceA|m_bgmSourceB" Assets/_Game/Scripts/Lobby/SoundManager.cs
+
+# 2. 씬 전환 이벤트 구독 확인
+grep "SceneManager.activeSceneChanged += OnActiveSceneChanged" Assets/_Game/Scripts/Lobby/SoundManager.cs
+
+# 3. SoundData 내 SceneBgmEntry 매핑 구조 확인
+grep -E "SceneBgmEntry|m_sceneBgmMappings" Assets/_Game/Scripts/Data/SoundData.cs
+```
+
+**PASS:** 듀얼 소스 기반 크로스페이드 로직 및 씬 매핑 데이터 구조가 확인됨
+**FAIL:** 듀얼 소스가 없거나 자동 전환 이벤트 처리가 누락됨
+**수정:** `SoundManager` 내 크로스페이드 메서드 및 이벤트 핸들러 구현
+
+### Step 5: BGM 키 정합성 검증
+
+`GameManager` 등에서 하드코딩된 문자열 대신 `SoundKeys` enum을 사용하여 BGM을 재생하는지 확인합니다.
+
+**파일:** `GameManager.cs`
+
+**검사:**
+
+```bash
+# GameManager에서 SoundKeys enum 사용 여부 확인
+grep "m_soundManager.Play(SoundKeys\..*\.ToString()" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
+```
+
+**PASS:** `SoundKeys` enum을 통한 안정적인 BGM 키 참조 확인
+**FAIL:** 하드코딩된 문자열(예: "BGM_Ingame_Wave") 사용으로 런타임 에러 위험 존재
+**수정:** `SoundKeys` enum 값으로 전환
 
 ## Output Format
 

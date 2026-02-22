@@ -147,8 +147,9 @@ namespace Title
 
             if (m_soundManager != null)
             {
-                m_soundManager.Play(SoundKeys.Intro.ToString(), Sound.BGM, 1.0f, true);
+                // 저장된 볼륨 설정을 먼저 로드한 후 BGM 재생
                 m_soundManager.LoadSoundSetting();
+                m_soundManager.Play(SoundKeys.Intro.ToString(), Sound.BGM, 1.0f, true);
             }
 
             // 리모트 데이터(구글 시트) 업데이트 체크 로직은 인게임 진입(GameManager) 쪽으로 이전되었습니다.

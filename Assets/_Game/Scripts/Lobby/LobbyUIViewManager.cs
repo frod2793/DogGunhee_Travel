@@ -87,11 +87,11 @@ namespace Lobby
             InitializeCore(deps);
             InitializeViews(deps);
 
-            // 배경음악 및 환경 설정
+            // 배경음악 및 환경 설정 (설정 로드 후 BGM 재생)
             if (m_soundManager != null)
             {
-                m_soundManager.Play(SoundKeys.Lobby.ToString(), Sound.BGM, 1.0f, true);
                 m_soundManager.LoadSoundSetting();
+                m_soundManager.Play(SoundKeys.Lobby.ToString(), Sound.BGM, 1.0f, true);
             }
 
             // 초기 배경 연출

@@ -59,7 +59,14 @@ namespace Lobby
             // 1. 기존 설정 로드
             m_settingsData.LoadSettings();
 
-            // 2. 상태 변경 이벤트 구독 (ReactiveProperty -> System)
+            // 2. 로드된 데이터로 초기 상태 설정
+            // [중요]: ReactiveProperty.Subscribe()는 구독 즉시 현재값을 발행합니다.
+            // 따라서 Subscribe 등록 전에 초기값을 설정해야 기본값(0)이 SettingsData를 덮어쓰지 않습니다.
+            EffectSoundVolume.Value = m_settingsData.EffectSoundVolume;
+            BgmSoundVolume.Value = m_settingsData.BackgroundSoundVolume;
+            TargetFrameRate.Value = m_settingsData.TargetFrameRate;
+
+            // 3. 상태 변경 이벤트 구독 (ReactiveProperty -> System)
             EffectSoundVolume.Subscribe(v =>
             {
                 m_settingsData.EffectSoundVolume = v;
@@ -83,11 +90,6 @@ namespace Lobby
                 m_settingsData.TargetFrameRate = v;
                 ApplyFrameRate(v);
             }).AddTo(m_disposables);
-
-            // 3. 로드된 데이터로 초기 상태 설정
-            EffectSoundVolume.Value = m_settingsData.EffectSoundVolume;
-            BgmSoundVolume.Value = m_settingsData.BackgroundSoundVolume;
-            TargetFrameRate.Value = m_settingsData.TargetFrameRate;
         }
 
         #endregion

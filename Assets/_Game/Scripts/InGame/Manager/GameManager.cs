@@ -456,7 +456,7 @@ namespace InGame.Managers
 
                 if (m_soundManager != null)
                 {
-                    m_soundManager.Play("BGM_Ingame_Wave", Sound.BGM, loop: true);
+                    m_soundManager.Play(SoundKeys.InGame.ToString(), Sound.BGM, loop: true);
                 }
 
                 if (SpawnedPlayer != null)

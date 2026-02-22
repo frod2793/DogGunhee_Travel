@@ -175,6 +175,40 @@ grep -E "bool m_isLoading|if (m_isLoading)" Assets/_Game/Scripts/Lobby/SceneLoad
 **FAIL:** 전역 가드 누락 (중복 호출 시 예외 발생 또는 중첩 로딩 가능성)
 **수정:** `bool m_isLoading` 변수 추가 및 `LoadSceneAsync` 시작 부분에 체크 로직 삽입
 
+### Step 9: 사운드 로드 및 BGM 재생 순서 검증
+
+로비 진입 시 설정 데이터를 먼저 불러온 후 BGM을 재생하는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Lobby/LobbyUIViewManager.cs`
+
+**검사:**
+
+```bash
+# LoadSoundSetting 호출이 Play(SoundKeys.Lobby) 보다 위 라인에 있는지 확인
+grep -nE "LoadSoundSetting|Play\(SoundKeys.Lobby" Assets/_Game/Scripts/Lobby/LobbyUIViewManager.cs
+```
+
+**PASS:** `LoadSoundSetting`이 BGM 재생보다 먼저 수행됨
+**FAIL:** 순서 거꾸로 또는 호출 중 하나가 누락됨
+**수정:** 초기화 블록의 코드 순서 조정
+
+### Step 10: 옵션 팝업 MVVM 초기화 정합성 검증 (R3 Subscribe)
+
+`OptionPopupViewModel`에서 `LoadSettings`와 초기값 할당이 `Subscribe` 이전에 수행되어 데이터 덮어쓰기 버그를 방지하는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/Lobby/OptionPopupViewModel.cs`
+
+**검사:**
+
+```bash
+# Initialize() 메서드 내에서 Value 할당이 Subscribe 호출보다 위에 있는지 확인
+grep -nE "EffectSoundVolume.Value =|EffectSoundVolume.Subscribe" Assets/_Game/Scripts/Lobby/OptionPopupViewModel.cs
+```
+
+**PASS:** `.Value =` 할당 라인이 `.Subscribe` 라인보다 위에 위치함
+**FAIL:** `Subscribe`가 먼저 수행되어 초기값(0)이 로드된 설정을 덮어씀
+**수정:** 구독 로직(Subscribe)을 초기값 설정 로직 아래로 이동
+
 ## Output Format
 
 ### 검증 결과

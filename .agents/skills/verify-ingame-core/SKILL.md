@@ -211,6 +211,23 @@ grep -A20 "EquipNewWeapon" Assets/_Game/Scripts/InGame/Manager/GameManager.cs | 
 **FAIL:** 참조만 갱신하거나 강제 공격 로직 누락
 **수정:** `OnPlayerChanged` 및 `EquipNewWeapon`에 최신 동기화/트리거 코드 보강
 
+### Step 11: BGM 키 정합성 검증 (하드코딩 방지)
+
+`GameManager`에서 BGM을 재생할 때 하드코딩된 문자열 대신 `SoundKeys` enum을 사용하는지 확인합니다.
+
+**파일:** `Assets/_Game/Scripts/InGame/Manager/GameManager.cs`
+
+**검사:**
+
+```bash
+# SoundKeys enum 사용 여부 확인 (예: Play(SoundKeys.InGame.ToString(), ...))
+grep "m_soundManager.Play(SoundKeys\..*\.ToString()" Assets/_Game/Scripts/InGame/Manager/GameManager.cs
+```
+
+**PASS:** `SoundKeys` enum을 통한 안정적인 키 참조 확인
+**FAIL:** 하드코딩된 문자열 사용 발견 (예: "BGM_Ingame_Wave")
+**수정:** `SoundKeys` enum 값을 사용하는 코드로 변경
+
 ## Output Format
 
 ### 검증 결과

@@ -389,7 +389,8 @@ namespace InGame.Mob.MobBase
             }
             else
             {
-                Destroy(gameObject);
+                // [수정]: 스포너가 없는 경우에도 메모리 파편화 방지를 위해 Destroy 대신 비활성화 처리 (풀링 원칙 준수)
+                gameObject.SetActive(false);
             }
         }
 
