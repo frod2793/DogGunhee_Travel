@@ -24,10 +24,22 @@ namespace Tests
             var stats = new MobStats(999999f, 0f, 0f, 0f, 0f, 1f);
             m_logic = new MobLogic(stats, transform.position, null, new Bounds(Vector3.zero, Vector3.one * 100f));
             
+            // ✅ [추가]: 물리 감지를 위해 Collider2D가 없다면 추가 (IsTrigger 필수)
+            var col = GetComponent<Collider2D>();
+            if (col == null)
+            {
+                col = gameObject.AddComponent<CircleCollider2D>();
+                ((CircleCollider2D)col).radius = 0.5f;
+            }
+            col.isTrigger = true;
+            
+            // 레이어 강제 재설정 (Enemy 레이어)
+            gameObject.layer = LayerMask.NameToLayer("Enemy");
+
             m_currentState = MobState.Idle;
             IsDead = false;
             
-            Debug.Log("<color=yellow>[TestDummyMob] 초기화 완료 (Immortal Mode)</color>");
+            Debug.Log("<color=yellow>[TestDummyMob] 초기화 완료 (Immortal Mode + Physics Enabled)</color>");
         }
         #endregion
 

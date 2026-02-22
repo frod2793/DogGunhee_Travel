@@ -1,22 +1,14 @@
 #if UNITY_EDITOR
-using Tests;
-using InGame.ObjectPool;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using InGame;
 using InGame.Core.Interfaces;
 using InGame.Managers;
 using InGame.Player.Player_Base;
-using InGame.UI.Views;
-using InGame.vamsir;
-using InGame.Weapon.Base;
 using InGame.Services;
-using TMPro;
 
 namespace Tests
 {
@@ -56,45 +48,47 @@ namespace Tests
             m_gameManager = FindFirstObjectByType<GameManager>();
             m_uiManager = FindFirstObjectByType<UIManager>();
             
-            // SkillDatabase는 GameManager에서 가져오거나 리소스 로드 시도
             if (m_gameManager != null)
             {
-                // GameManager 내부 필드 접근을 위해 캐스팅 시도 (필요 시)
+                // SkillDatabase는 GameManager에서 가져옴
                 var field = m_gameManager.GetType().GetField("m_skillDatabase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (field != null) m_skillDatabase = field.GetValue(m_gameManager) as SkillDatabase;
-            }
 
-            // ✅ 수정: GameManager 내부 PlayerDataService에 리플렉션으로 접근
-            if (m_gameManager != null)
-            {
+                // PlayerDataService 접근
                 var playerServiceField = m_gameManager.GetType().GetField("m_playerService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (playerServiceField != null)
-                {
-                    m_playerDataService = playerServiceField.GetValue(m_gameManager) as IPlayerDataService;
-                }
+                if (playerServiceField != null) m_playerDataService = playerServiceField.GetValue(m_gameManager) as IPlayerDataService;
 
-                if (m_playerDataService == null)
-                {
-                    Debug.LogWarning("[InGameAutoTester] GameManager의 PlayerDataService를 찾을 수 없습니다.");
-                }
+                // 플레이어 스폰 완료 이벤트 구독 (지연 소환 보장)
+                m_gameManager.OnPlayerChanged += OnPlayerSpawned;
             }
 
             if (m_gameManager == null || m_uiManager == null)
             {
-                Debug.LogWarning("[InGameAutoTester] 매니저를 찾을 수 없습니다. 인게임 씬이 맞는지 확인하세요.");
+                Debug.LogWarning("[InGameAutoTester] 매니저를 찾을 수 없습니다.");
                 return;
             }
 
-            // 초기 테스트 모드 상태 적용
-            if (m_isTestMode)
+            // 초기 테스트 모드 상태 적용 (플레이어가 있을 때만 즉시 실행)
+            if (m_isTestMode && m_gameManager.SpawnedPlayer != null)
             {
                 ToggleTestMode(true).Forget();
             }
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            // [삭제]: 자동 공격 및 자동 선택은 게임 기본 기능이므로 여기서 강제하지 않음
+            if (m_gameManager != null)
+            {
+                m_gameManager.OnPlayerChanged -= OnPlayerSpawned;
+            }
+        }
+
+        private void OnPlayerSpawned(PlayerBase player)
+        {
+            if (player != null && m_isTestMode && m_spawnedDummy == null)
+            {
+                ToggleTestMode(true).Forget();
+            }
         }
 
         /// <summary> [설명]: 테스트 모드 상태를 전환합니다. </summary>
@@ -103,6 +97,17 @@ namespace Tests
             m_isTestMode = active;
 
             if (m_gameManager == null) return;
+
+            // GameManager 초기화 완료 대기
+            var initializedField = m_gameManager.GetType().GetField("m_isInitialized", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            float timeoutTotal = 10f;
+            while (timeoutTotal > 0)
+            {
+                bool isInit = (bool)(initializedField?.GetValue(m_gameManager) ?? false);
+                if (isInit) break;
+                await UniTask.Yield();
+                timeoutTotal -= Time.deltaTime;
+            }
 
             // 1. 웨이브 시스템 제어
             m_gameManager.SetWaveSystemPause(active);
@@ -119,10 +124,13 @@ namespace Tests
 
                 // 3. 무적 더미 소환
                 await SpawnTestDummy();
+
+                // 4. 자동 공격 강제 활성화 및 게임 시작 플래그 강제 주입
+                ForceEnablePlayerInteractions();
             }
             else
             {
-                // 4. 더미 제거
+                // 5. 더미 제거
                 RemoveTestDummy();
             }
 
@@ -131,13 +139,31 @@ namespace Tests
 
         private async UniTask SpawnTestDummy()
         {
-            if (m_dummyPrefab == null || m_gameManager == null || m_gameManager.SpawnedPlayer == null) return;
+            if (m_dummyPrefab == null || m_gameManager == null) return;
+            
+            // 플레이어가 생성될 때까지 최대 5초 대기
+            float timeout = 5f;
+            while (m_gameManager.SpawnedPlayer == null && timeout > 0)
+            {
+                await UniTask.Yield();
+                timeout -= Time.deltaTime;
+            }
+
+            if (m_gameManager.SpawnedPlayer == null) 
+            {
+                Debug.LogError("[InGameAutoTester] 플레이어가 소환되지 않아 더미를 만들 수 없습니다.");
+                return;
+            }
 
             RemoveTestDummy();
 
             Vector3 spawnPos = m_gameManager.SpawnedPlayer.transform.position + Vector3.right * 3f;
             m_spawnedDummy = Instantiate(m_dummyPrefab, spawnPos, Quaternion.identity);
-            
+
+            // [수정]: TagManager.asset 확인 결과 레이어 이름은 "Enemy"입니다.
+            m_spawnedDummy.gameObject.layer = LayerMask.NameToLayer("Enemy");
+            m_spawnedDummy.gameObject.tag = "Mob";
+
             // 더미 초기화
             var gameStateField = m_gameManager.GetType().GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var gameState = gameStateField?.GetValue(m_gameManager) as IGameStateService;
@@ -148,15 +174,73 @@ namespace Tests
             var mobManagerField = m_gameManager.GetType().GetField("m_mobManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var mobManager = mobManagerField?.GetValue(m_gameManager) as InGame.Mob.Systems.MobManager;
 
+            if (mobManager == null)
+            {
+                Debug.LogError("[InGameAutoTester] GameManager에서 MobManager를 찾을 수 없습니다! 타겟 등록이 불가능합니다.");
+            }
+
             m_spawnedDummy.Init(mobManager, null, null, gameState, combatCtx);
             
             if (mobManager != null)
             {
                 mobManager.Register(m_spawnedDummy);
+                Debug.Log("[InGameAutoTester] 더미 몬스터가 MobManager에 등록되었습니다.");
             }
             m_spawnedDummy.SetTarget(m_gameManager.SpawnedPlayer);
             
             Debug.Log("[InGameAutoTester] 테스트용 무적 더미가 소환되었습니다.");
+        }
+
+        /// <summary>
+        /// [설명]: 테스트 모드에서 플레이어가 더미를 자동으로 타격할 수 있도록 모든 방어 로직을 우회하여 활성화합니다.
+        /// </summary>
+        private void ForceEnablePlayerInteractions()
+        {
+            if (m_gameManager == null || m_gameManager.SpawnedPlayer == null) return;
+
+            var playerController = m_gameManager.SpawnedPlayer.GetComponentInParent<PlayerController>();
+            if (playerController != null)
+            {
+                // 1. 자동 공격 토글 강제 활성화
+                playerController.AutoAttackEnabledByToggle = true;
+
+                // 2. PlayerController의 m_isGameStarted 강제 활성화 (카운트다운 중에도 공격 가능하게)
+                var gameStartedField = playerController.GetType().GetField("m_isGameStarted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                gameStartedField?.SetValue(playerController, true);
+
+                // 3. 탐지 레이어 마스크 강제 설정 (Enemy 레이어 포함 확인)
+                var enemyLayerField = playerController.GetType().GetField("m_enemyLayer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (enemyLayerField != null)
+                {
+                    LayerMask currentMask = (LayerMask)enemyLayerField.GetValue(playerController);
+                    int enemyLayer = LayerMask.NameToLayer("Enemy");
+                    if (enemyLayer != -1 && (currentMask & (1 << enemyLayer)) == 0)
+                    {
+                        currentMask |= (1 << enemyLayer);
+                        enemyLayerField.SetValue(playerController, currentMask);
+                        Debug.Log("[InGameAutoTester] PlayerController의 m_enemyLayer에 'Enemy' 레이어를 강제로 추가했습니다.");
+                        
+                        // 하위 시스템(AutoAttackSystem)에도 즉시 반영
+                        var autoAttackField = playerController.GetType().GetField("m_autoAttack", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        var autoAttack = autoAttackField?.GetValue(playerController) as PlayerAutoAttackSystem;
+                        if (autoAttack != null)
+                        {
+                            autoAttack.Init(m_gameManager.SpawnedPlayer.transform.parent, m_gameManager.SpawnedPlayer, m_gameManager.MobManager, currentMask, 10f, 1.5f);
+                        }
+                    }
+                }
+
+                // 4. 전역 게임 상태 강제 시작 (무기 시스템의 IsPlaying 체크 우회)
+                var gameStateField = m_gameManager.GetType().GetField("m_state", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var gameState = gameStateField?.GetValue(m_gameManager) as IGameStateService;
+                if (gameState != null && !gameState.IsPlaying)
+                {
+                    gameState.State.StartGame();
+                    Debug.Log("[InGameAutoTester] 게임 상태를 강제로 StartGame() 처리했습니다.");
+                }
+
+                Debug.Log("[InGameAutoTester] 플레이어 자동 공격 및 시작 플래그가 강제 활성화되었습니다.");
+            }
         }
 
         private void RemoveTestDummy()

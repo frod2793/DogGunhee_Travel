@@ -69,7 +69,7 @@ namespace InGame.Weapon.Strategies
             // 충돌 필터 설정 (Mob 레이어만)
             m_contactFilter = ContactFilter2D.noFilter;
             m_contactFilter.useTriggers = true;
-            m_contactFilter.SetLayerMask(LayerMask.GetMask("Mob"));
+            m_contactFilter.SetLayerMask(LayerMask.GetMask("Enemy"));
             m_contactFilter.useLayerMask = true;
         }
 

@@ -25,7 +25,7 @@ namespace InGame.ObjectPool
         private int m_spawnedMobCount = 0;
 
         /// <summary> 시스템 작동 허용 여부 </summary>
-        private bool m_isSpawningAllowed = false;
+        private bool m_isSpawningAllowed = true;
 
         /// <summary> 웨이브 사이 휴식 시간(Intermission) 진행 여부 </summary>
         private bool m_isWaitingForNextWave = false;
@@ -93,7 +93,20 @@ namespace InGame.ObjectPool
             m_currentWaveIndex = -1;
             m_activeMobCount = 0;
             m_spawnedMobCount = 0;
-            m_isSpawningAllowed = true;
+            
+            // [수정]: 외부에서 이미 Pause()를 호출했다면 강제로 true로 설정하지 않습니다.
+            // 다만, 처음 객체 생성 시 m_isSpawningAllowed는 false이므로, '이미 꺼져있는지'를 판단하기 위해 
+            // m_isSpawningAllowed가 false인 경우 그대로 유지하도록 하면 처음 시작 시 작동하지 않는 문제가 생깁니다.
+            // 따라서 '명시적으로 Pause가 호출되었는지'를 체크하는 로직으로 변경하거나,
+            // 여기서는 m_isSpawningAllowed를 건드리지 않고 외부(Spawner)에서 제어하도록 맡깁니다.
+            // 하지만 Start(StageData)는 '새 게임 시작'의 신호이므로 기본은 true여야 합니다. 
+            // Spawner가 Start() 호출 직후에 다시 Pause()를 호출해주므로 이 라인을 제거하거나 그대로 둡니다.
+            // Spawner 수정을 통해 해결되었으므로 여기서는 안전하게 기존 상태가 false인 경우(Pause됨) 유지하도록 합니다.
+            if (m_isSpawningAllowed)
+            {
+                m_isSpawningAllowed = true;
+            }
+
             m_isWaitingForNextWave = false;
             m_remainingTime = 0f;
 

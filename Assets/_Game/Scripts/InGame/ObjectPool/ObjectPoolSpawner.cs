@@ -61,6 +61,8 @@ namespace InGame.ObjectPool
 
         /// <summary> 몬스터 통합 관리자 참조 </summary>
         private MobManager m_mobManager;
+        /// <summary> 웨이브 시스템의 스폰 허용 여부 상태 저장 (초기화 전 명령 대비) </summary>
+        private bool m_isWavePaused = false;
 
         /// <summary> 웨이브 시스템 비즈니스 로직 </summary>
         private WaveSystem m_waveSystem;
@@ -124,8 +126,13 @@ namespace InGame.ObjectPool
         /// <summary> [설명]: 웨이브 시스템의 스폰을 일시적으로 중단하거나 재개합니다. (테스트용) </summary>
         public void SetWavePause(bool pause)
         {
-            if (pause) m_waveSystem?.Pause();
-            else m_waveSystem?.Resume();
+            m_isWavePaused = pause;
+
+            if (m_waveSystem != null)
+            {
+                if (pause) m_waveSystem.Pause();
+                else m_waveSystem.Resume();
+            }
             
             LogManager.Log($"[ObjectPoolSpawner] 웨이브 스폰 {(pause ? "중단" : "재개")}", LogManager.LogCategory.System);
         }
@@ -274,6 +281,12 @@ namespace InGame.ObjectPool
             m_waveSystem.OnWaveStarted += HandleWaveStarted;
             m_waveSystem.OnWaveCompleted += HandleWaveCompleted;
             m_waveSystem.OnStageCleared += HandleStageCleared;
+
+            // [추가]: 초기화 전 설정된 일시 정지 상태가 있다면 적용
+            if (m_isWavePaused)
+            {
+                m_waveSystem.Pause();
+            }
         }
 
         /// <summary>

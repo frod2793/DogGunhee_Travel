@@ -57,7 +57,7 @@ namespace InGame.Weapon.Controllers
         private void Reset()
         {
             // 기본 타겟 레이어를 'Mob'으로 자동 설정 시도
-            m_targetLayer = LayerMask.GetMask("Mob");
+            m_targetLayer = LayerMask.GetMask("Enemy");
             
             // 만약 'Mob' 레이어가 없다면 모든 레이어로 설정
             if (m_targetLayer == 0)

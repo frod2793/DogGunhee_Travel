@@ -103,7 +103,7 @@ namespace InGame.Weapon.Controllers
         private void ApplyViewSettings()
         {
             // 기본값 설정
-            m_targetLayer = LayerMask.GetMask("Mob");
+            m_targetLayer = LayerMask.GetMask("Enemy");
 
             if (m_poolManager != null)
             {

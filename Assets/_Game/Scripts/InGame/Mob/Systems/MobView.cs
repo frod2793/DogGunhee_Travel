@@ -24,6 +24,9 @@ namespace InGame.Mob.Systems
         [SerializeField, Tooltip("방향 전환 속도")]
         private float m_flipSpeed = 15f;
 
+        [SerializeField, Tooltip("좌우 반전 여부 (체크 시 반대로 회전)")]
+        private bool m_invertFlip = false;
+
         /// <summary> 트랜스폼 캐싱 </summary>
         private Transform m_cachedTransform;
 
@@ -189,7 +192,11 @@ namespace InGame.Mob.Systems
         {
             if (Mathf.Abs(dirX) > 0.001f) // 감도 상향
             {
-                float yRotation = dirX > 0 ? 180f : 0f;
+                // 이동 방향 및 반전 옵션(m_invertFlip)에 따른 Y축 회전값 계산
+                float yRotation = dirX > 0 
+                                ? (m_invertFlip ? 0f : 180f) 
+                                : (m_invertFlip ? 180f : 0f);
+
                 m_targetRotation = Quaternion.Euler(0, yRotation, 0);
             }
         }

@@ -72,6 +72,7 @@ namespace InGame.Managers
         private InGame.Data.Managers.IRemoteDataUpdateService m_remoteDataService;
         private IInventoryContext m_inventoryCtx;
         private bool m_isInitialized; // [추가]: 초기화 완료 플래그 (중복 방지)
+        private bool m_initialWavePause = false; // [추가]: 초기화 전 웨이브 일시정지 명령 저장
 
         private static readonly Vector3 k_SpawnPosition = Vector3.zero;
 
@@ -135,8 +136,7 @@ namespace InGame.Managers
             }
         }
 
-        /// <summary> 현재 활성화된 몬스터 수 </summary>
-        public int ActiveMobCount => m_objectPoolSpawner != null ? m_objectPoolSpawner.ActiveMobCount : 0;
+        public int ActiveMobCount => m_mobManager != null ? m_mobManager.GetAllActiveTargets().Count : 0;
 
         /// <summary> 몬스터 타겟팅 및 탐색 관리자 </summary>
         public MobManager MobManager => m_mobManager;
@@ -343,6 +343,12 @@ namespace InGame.Managers
             }
 
             LogManager.Log($"[GameManager] 컴포넌트 캐싱 결과 - Spawner: {m_objectPoolSpawner != null}, PC: {m_playerController != null}, JS: {m_variableJoystick != null}, UI: {m_uiManager != null}", LogManager.LogCategory.System);
+
+            // [추가]: 캐싱 완료 후 보관된 초기 웨이브 일시정지 명령 적용
+            if (m_initialWavePause && m_objectPoolSpawner != null)
+            {
+                m_objectPoolSpawner.SetWavePause(true);
+            }
         }
 
         #endregion
@@ -896,6 +902,8 @@ namespace InGame.Managers
         /// <summary> [설명]: 웨이브 시스템을 일시 중단하거나 재개합니다. (테스트용) </summary>
         public void SetWaveSystemPause(bool pause)
         {
+            m_initialWavePause = pause;
+
             if (m_objectPoolSpawner != null)
             {
                 m_objectPoolSpawner.SetWavePause(pause);
