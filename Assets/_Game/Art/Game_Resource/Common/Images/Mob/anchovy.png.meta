@@ -1,0 +1,845 @@
+fileFormatVersion: 2
+guid: 36a13e67c04b041a29a2b5ffe28dd609
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5418435347614167006
+    second: anchovy_0
+  - first:
+      213: 4884542458418803133
+    second: anchovy_1
+  - first:
+      213: 2955198498394216752
+    second: anchovy_2
+  - first:
+      213: 2296747846371966110
+    second: anchovy_3
+  - first:
+      213: -3894498885126203139
+    second: anchovy_4
+  - first:
+      213: 646880158164604979
+    second: anchovy_5
+  - first:
+      213: 4843819361038149181
+    second: anchovy_6
+  - first:
+      213: 5152972776195873063
+    second: anchovy_7
+  - first:
+      213: -9191075079546556503
+    second: anchovy_8
+  - first:
+      213: 7564957943187830483
+    second: anchovy_9
+  - first:
+      213: -4978756114236390022
+    second: anchovy_10
+  - first:
+      213: 7358502271552654586
+    second: anchovy_11
+  - first:
+      213: -8861532615966173942
+    second: anchovy_12
+  - first:
+      213: 7922304845134382953
+    second: anchovy_13
+  - first:
+      213: -6513119440542833354
+    second: anchovy_14
+  - first:
+      213: 1744410879982248273
+    second: anchovy_15
+  - first:
+      213: 2973268622249964045
+    second: anchovy_16
+  - first:
+      213: -9153338217546110371
+    second: anchovy_17
+  - first:
+      213: -2275746685669685772
+    second: anchovy_18
+  - first:
+      213: -3975417856970779274
+    second: anchovy_19
+  - first:
+      213: -6152383080721838113
+    second: anchovy_20
+  - first:
+      213: 1493540356621762237
+    second: anchovy_21
+  - first:
+      213: 2152211842770358145
+    second: anchovy_22
+  - first:
+      213: -2537706426420456364
+    second: anchovy_23
+  - first:
+      213: -3768809380534786856
+    second: anchovy_24
+  - first:
+      213: 8881574212662049081
+    second: anchovy_25
+  - first:
+      213: 3818729805464523871
+    second: anchovy_26
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: anchovy_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edf66f49d36223b40800000000000000
+      internalID: 5418435347614167006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_1
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db1bd5c8c7169c340800000000000000
+      internalID: 4884542458418803133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_2
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0391e818069f20920800000000000000
+      internalID: 2955198498394216752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_3
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9cf4a16fffafdf10800000000000000
+      internalID: 2296747846371966110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_4
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df8d5edd5e5f3f9c0800000000000000
+      internalID: -3894498885126203139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_5
+      rect:
+        serializedVersion: 2
+        x: 188
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33856a7931e2af800800000000000000
+      internalID: 646880158164604979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_6
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d36a6d29b04b83340800000000000000
+      internalID: 4843819361038149181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_7
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 729d9663079038740800000000000000
+      internalID: 5152972776195873063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_8
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9afaeab59edb27080800000000000000
+      internalID: -9191075079546556503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_9
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d6fa702b212cf860800000000000000
+      internalID: 7564957943187830483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_10
+      rect:
+        serializedVersion: 2
+        x: 373
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a75c2a351b7e7eab0800000000000000
+      internalID: -4978756114236390022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_11
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afc0dc634d6ae1660800000000000000
+      internalID: 7358502271552654586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_12
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a055cc34903850580800000000000000
+      internalID: -8861532615966173942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_13
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9674790584ea1fd60800000000000000
+      internalID: 7922304845134382953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_14
+      rect:
+        serializedVersion: 2
+        x: 521
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 635e0c67060cc95a0800000000000000
+      internalID: -6513119440542833354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_15
+      rect:
+        serializedVersion: 2
+        x: 558
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1512babf374653810800000000000000
+      internalID: 1744410879982248273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_16
+      rect:
+        serializedVersion: 2
+        x: 596
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0236031f0c234920800000000000000
+      internalID: 2973268622249964045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_17
+      rect:
+        serializedVersion: 2
+        x: 633
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5a282a336fc8f080800000000000000
+      internalID: -9153338217546110371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_18
+      rect:
+        serializedVersion: 2
+        x: 670
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f5c2e1627cea60e0800000000000000
+      internalID: -2275746685669685772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_19
+      rect:
+        serializedVersion: 2
+        x: 706
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6751381958a74d8c0800000000000000
+      internalID: -3975417856970779274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_20
+      rect:
+        serializedVersion: 2
+        x: 743
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdf837f4f285e9aa0800000000000000
+      internalID: -6152383080721838113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_21
+      rect:
+        serializedVersion: 2
+        x: 780
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbe762e8a0f1ab410800000000000000
+      internalID: 1493540356621762237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_22
+      rect:
+        serializedVersion: 2
+        x: 817
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18f47b1a4413edd10800000000000000
+      internalID: 2152211842770358145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_23
+      rect:
+        serializedVersion: 2
+        x: 854
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4549bf4537148ccd0800000000000000
+      internalID: -2537706426420456364
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_24
+      rect:
+        serializedVersion: 2
+        x: 891
+        y: 3
+        width: 35
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d4601f16df72bbc0800000000000000
+      internalID: -3768809380534786856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_25
+      rect:
+        serializedVersion: 2
+        x: 929
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 939bdf790b0b14b70800000000000000
+      internalID: 8881574212662049081
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: anchovy_26
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 3
+        width: 34
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f54d8eb868adef430800000000000000
+      internalID: 3818729805464523871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      anchovy_0: 5418435347614167006
+      anchovy_1: 4884542458418803133
+      anchovy_10: -4978756114236390022
+      anchovy_11: 7358502271552654586
+      anchovy_12: -8861532615966173942
+      anchovy_13: 7922304845134382953
+      anchovy_14: -6513119440542833354
+      anchovy_15: 1744410879982248273
+      anchovy_16: 2973268622249964045
+      anchovy_17: -9153338217546110371
+      anchovy_18: -2275746685669685772
+      anchovy_19: -3975417856970779274
+      anchovy_2: 2955198498394216752
+      anchovy_20: -6152383080721838113
+      anchovy_21: 1493540356621762237
+      anchovy_22: 2152211842770358145
+      anchovy_23: -2537706426420456364
+      anchovy_24: -3768809380534786856
+      anchovy_25: 8881574212662049081
+      anchovy_26: 3818729805464523871
+      anchovy_3: 2296747846371966110
+      anchovy_4: -3894498885126203139
+      anchovy_5: 646880158164604979
+      anchovy_6: 4843819361038149181
+      anchovy_7: 5152972776195873063
+      anchovy_8: -9191075079546556503
+      anchovy_9: 7564957943187830483
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
