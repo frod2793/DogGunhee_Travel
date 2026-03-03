@@ -33,7 +33,7 @@
 
 ## 🏗️ 아키텍처 설계 (Architecture Design)
 
-본 프로젝트는 **계층형 아키텍처 (Layered Architecture)**와 **의존성 주입 (Dependency Injection)**을 핵심 철학으로 기반합니다. 전역 싱글톤을 배제하고, 씬 조립 계층(Composition Root)을 통해 객체간 결합도를 낮췄습니다.
+본 프로젝트는 계층형 아키텍처 (Layered Architecture)와 의존성 주입 (Dependency Injection)을 핵심 기반합니다. 씬 조립 계층(Composition Root)을 통해 객체간 결합도를 낮췄습니다.
 
 ### 🧩 시스템 클래스 다이어그램
 
@@ -99,7 +99,7 @@ public async UniTask OnInitialize(object payload)
 ```
 
 ### 2. 비동기 에셋 로딩 파이프라인
-**Addressables**와 **UniTask**를 결합하여 런타임 중에도 프리징 없는 리소스 생성을 보장합니다.
+Addressables와 UniTask를 결합하여 런타임 중에도 프리징 없는 리소스를 생성합니다.
 
 ```csharp
 // [GameManager.cs] 주입받은 데이터를 기반으로 한 비동기 스폰
