@@ -57,6 +57,7 @@ namespace InGame.Services
 
         /// <summary>
         /// [설명]: 게스트 계정으로 로그인을 시도합니다.
+        /// bad customId (401) 에러 처리 로직을 포함합니다.
         /// </summary>
         public async UniTask<(bool success, string error)> GuestLoginAsync()
         {
@@ -71,8 +72,27 @@ namespace InGame.Services
                 return (true, null);
             }
 
-            Backend.BMember.DeleteGuestInfo();
-            LogError("Auth", bro);
+            string errorCode = bro.GetStatusCode();
+            string errorMessage = bro.GetMessage();
+
+            // 401 에러 (bad customId 등) 발생 시 로컬 게스트 정보 초기화 후 1회 재시도
+            if (errorCode == "401" || errorMessage.Contains("bad customId"))
+            {
+                LogWarning("게스트 로그인 401 에러. 로컬 게스트 정보 초기화 후 재시도합니다.");
+                Backend.BMember.DeleteGuestInfo();
+
+                // 1회 재시도
+                bro = await BackendCallAsync(callback => Backend.BMember.GuestLogin(callback));
+
+                if (bro.IsSuccess())
+                {
+                    Log("게스트 로그인 재시도 성공");
+                    OnLoginSuccess();
+                    return (true, null);
+                }
+            }
+
+            LogError("Auth/GuestLogin", bro);
             return (false, bro.GetMessage());
         }
 

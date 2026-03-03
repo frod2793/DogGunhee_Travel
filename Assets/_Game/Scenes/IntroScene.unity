@@ -711,7 +711,7 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d7c55cad567c4b54fbe6828f5c10e182, type: 3}
---- !u!114 &77201961 stripped
+--- !u!114 &77201962 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3337934344284616524, guid: d7c55cad567c4b54fbe6828f5c10e182, type: 3}
   m_PrefabInstance: {fileID: 77201960}
@@ -1078,6 +1078,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 348494725}
+  - {fileID: 451791600}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &197717054
@@ -1382,23 +1383,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd29a993f765f47b38daafec38204736, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_serverManager: {fileID: 1690165584}
-  m_soundManager: {fileID: 1733847518}
-  m_sceneLoader: {fileID: 77201961}
-  m_appUpdateManager: {fileID: 368066360}
-  m_playerData:
-    Nickname: 
-    UID: 
-    Currency1: 0
-    Currency2: 0
-    Experience: 0
-    Level: 0
-    SelectCharacterIndex: 0
-    SelectSkinIndex: 0
-    SelectWeaponIndex: 0
-    TotalMobKillCount: 0
-    NowPlayMobKillCount: 0
-    IngameCoin: 0
   m_signUpPopUp: {fileID: 1864831180}
   m_loginPopUp: {fileID: 460715061}
   m_errorPopup: {fileID: 1290622858}
@@ -2012,6 +1996,59 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &451791599
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 451791600}
+  - component: {fileID: 451791601}
+  m_Layer: 0
+  m_Name: '[ - TitleLifetimeScope - ]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &451791600
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451791599}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 180459241}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &451791601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 451791599}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 160e5113a76a54781a32c1814a60d65d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TitleLifetimeScope
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  m_serverManager: {fileID: 1690165584}
+  m_sceneLoader: {fileID: 77201962}
+  m_soundManager: {fileID: 1733847518}
+  m_appUpdateManager: {fileID: 368066360}
+  m_loginView: {fileID: 348494726}
 --- !u!1 &460715061
 GameObject:
   m_ObjectHideFlags: 0

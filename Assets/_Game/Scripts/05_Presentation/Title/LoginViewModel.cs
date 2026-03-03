@@ -2,15 +2,22 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using InGame.Services;
+using InGame.Data;
+using InGame.Managers;
+using InGame;
+using VContainer;
+using VContainer.Unity;
+using UnityEngine;
 
 namespace Title
 {
     /// <summary>
     /// [설명]: 로그인 화면의 상태와 로직을 관리하는 ViewModel 클래스입니다. (POCO)
+    /// VContainer를 통한 의존성 주입을 지원하며, 앱 초기화 및 네비게이션 책임을 가집니다.
     /// </summary>
-    public class LoginViewModel
+    public class LoginViewModel : IInitializable
     {
-        #region 상태 관련 이벤트
+        #region 공개 API
 
         /// <summary>
         /// [설명]: 작업 중 상태(Busy)가 변경될 때 호출됩니다.
@@ -27,12 +34,26 @@ namespace Title
         /// </summary>
         public Action OnLoginSuccess;
 
+        /// <summary>
+        /// [설명]: 씬 전환(네비게이션)이 시작될 때 호출됩니다.
+        /// </summary>
+        public Action OnNavigationStarted;
+
         #endregion
 
-        #region 내부 데이터 및 프로퍼티
+        #region 내부 변수
 
         private readonly IAuthenticationService m_authService;
+        private readonly ServerManager m_serverManager;
+        private readonly ISceneLoader m_sceneLoader;
+        private readonly ISoundManager m_soundManager;
+        private readonly IAppUpdateService m_appUpdateService;
+
         private bool m_isBusy;
+
+        #endregion
+
+        #region 프로퍼티
 
         /// <summary>
         /// [설명]: 현재 비즈니스 로직이 실행 중인지 여부를 나타냅니다.
@@ -50,15 +71,50 @@ namespace Title
 
         #endregion
 
-        #region 생성자
+        #region 생성자 및 초기화
 
         /// <summary>
-        /// [설명]: 인증 서비스를 주입받아 ViewModel을 생성합니다.
+        /// [설명]: 필요한 서비스들을 VContainer로부터 주입받아 ViewModel을 생성합니다.
         /// </summary>
-        /// <param name="authService">인증 서비스 인터페이스</param>
-        public LoginViewModel(IAuthenticationService authService)
+        [Inject]
+        public LoginViewModel(
+            IAuthenticationService authService,
+            ServerManager serverManager,
+            ISceneLoader sceneLoader,
+            ISoundManager soundManager,
+            IAppUpdateService appUpdateService)
         {
             m_authService = authService;
+            m_serverManager = serverManager;
+            m_sceneLoader = sceneLoader;
+            m_soundManager = soundManager;
+            m_appUpdateService = appUpdateService;
+        }
+
+        /// <summary>
+        /// [설명]: VContainer에 의해 호출되는 초기화 진입점입니다.
+        /// </summary>
+        public void Initialize()
+        {
+            InitializeInternalAsync().Forget();
+        }
+
+        /// <summary>
+        /// [설명]: 앱 강제 업데이트 확인 및 배경음 재생 등 초기화 로직을 수행합니다.
+        /// </summary>
+        private async UniTask InitializeInternalAsync()
+        {
+            if (m_appUpdateService != null)
+            {
+                await m_appUpdateService.CheckForUpdateAsync();
+            }
+
+            if (m_soundManager != null)
+            {
+                m_soundManager.LoadSoundSetting();
+                // Title 씬 진입 시 Intro 사운드 재생
+                m_soundManager.Play(SoundKeys.Intro.ToString(), Sound.BGM, 1.0f, true);
+            }
         }
 
         #endregion
@@ -68,9 +124,6 @@ namespace Title
         /// <summary>
         /// [설명]: 아이디/비밀번호를 이용하여 로그인을 시도합니다.
         /// </summary>
-        /// <param name="id">사용자 아이디</param>
-        /// <param name="pw">사용자 비밀번호</param>
-        /// <param name="ct">작업 취소 토큰</param>
         public async UniTask LoginAsync(string id, string pw, CancellationToken ct)
         {
             if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(pw))
@@ -85,7 +138,7 @@ namespace Title
                 var (success, error) = await m_authService.LoginAsync(id, pw);
                 if (success)
                 {
-                    OnLoginSuccess?.Invoke();
+                    await ProcessLoginSuccessAsync();
                 }
                 else
                 {
@@ -104,7 +157,6 @@ namespace Title
         /// <summary>
         /// [설명]: 게스트 계정으로 로그인을 시도합니다.
         /// </summary>
-        /// <param name="ct">작업 취소 토큰</param>
         public async UniTask GuestLoginAsync(CancellationToken ct)
         {
             IsBusy = true;
@@ -113,7 +165,7 @@ namespace Title
                 var (success, error) = await m_authService.GuestLoginAsync();
                 if (success)
                 {
-                    OnLoginSuccess?.Invoke();
+                    await ProcessLoginSuccessAsync();
                 }
                 else
                 {
@@ -129,7 +181,6 @@ namespace Title
         /// <summary>
         /// [설명]: 로컬에 저장된 세션 토큰을 이용하여 자동 로그인을 시도합니다.
         /// </summary>
-        /// <returns>로그인 성공 여부</returns>
         public async UniTask<bool> TokenLoginAsync()
         {
             IsBusy = true;
@@ -138,7 +189,7 @@ namespace Title
                 var (success, error) = await m_authService.TokenLoginAsync();
                 if (success)
                 {
-                    OnLoginSuccess?.Invoke();
+                    await ProcessLoginSuccessAsync();
                     return true;
                 }
                 return false;
@@ -152,11 +203,6 @@ namespace Title
         /// <summary>
         /// [설명]: 새로운 계정을 생성(회원가입)하고 성공 시 즉시 로그인을 시도합니다.
         /// </summary>
-        /// <param name="nick">사용자 닉네임</param>
-        /// <param name="id">사용자 아이디</param>
-        /// <param name="pw">사용자 비밀번호</param>
-        /// <param name="pwCheck">비밀번호 확인</param>
-        /// <param name="ct">작업 취소 토큰</param>
         public async UniTask SignUpAsync(string nick, string id, string pw, string pwCheck, CancellationToken ct)
         {
             if (string.IsNullOrEmpty(nick) || string.IsNullOrEmpty(id) || string.IsNullOrEmpty(pw) || string.IsNullOrEmpty(pwCheck))
@@ -181,11 +227,10 @@ namespace Title
                     return;
                 }
 
-                // 가입 성공 후 즉시 로그인 시도
                 var (loginSuccess, loginError) = await m_authService.LoginAsync(id, pw);
                 if (loginSuccess)
                 {
-                    OnLoginSuccess?.Invoke();
+                    await ProcessLoginSuccessAsync();
                 }
                 else
                 {
@@ -195,6 +240,36 @@ namespace Title
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// [설명]: 로그인 성공 후 데이터 로드 및 로비 씬 전환을 처리합니다.
+        /// </summary>
+        private async UniTask ProcessLoginSuccessAsync()
+        {
+            OnLoginSuccess?.Invoke();
+            OnNavigationStarted?.Invoke();
+            
+            // D토 조립
+            var playerDto = new PlayerDataDTO();
+            ServerSessionDTO sessionDto = null;
+            
+            if (m_serverManager != null && m_authService != null)
+            {
+                playerDto.Initialize(m_authService.NickName, m_authService.Uuid);
+                sessionDto = m_serverManager.GetSession();
+            }
+
+            var payload = new ScenePayloadDTO(playerDto, sessionDto, m_soundManager)
+            {
+                IsFirstLogin = true
+            };
+
+            // 네비게이션 실행
+            if (m_sceneLoader != null)
+            {
+                await m_sceneLoader.LoadSceneAsync(SceneNames.Lobby, payload);
             }
         }
 
@@ -209,3 +284,4 @@ namespace Title
         #endregion
     }
 }
+
