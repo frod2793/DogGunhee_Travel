@@ -33,7 +33,7 @@
 
 ## 🏗️ 아키텍처 설계 (Architecture Design)
 
-본 프로젝트는 계층형 아키텍처 (Layered Architecture)와 의존성 주입 (Dependency Injection)을 핵심 기반합니다. 씬 조립 계층(Composition Root)을 통해 객체간 결합도를 낮췄습니다.
+본 프로젝트는 계층형 아키텍처 (Layered Architecture)와 의존성 주입 (Dependency Injection)을 기반합니다. 씬 조립 계층(Composition Root)을 통해 객체간 결합도를 낮췄습니다.
 
 ### 🧩 시스템 클래스 다이어그램
 
