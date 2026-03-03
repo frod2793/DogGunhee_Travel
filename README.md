@@ -9,9 +9,9 @@
 <br>
 
 ## 🎯 프로젝트 목표
-본 프로젝트는 다음 세 가지 핵심 가치를 목표로 설계되었습니다.
+본 프로젝트는 다음 세 가지 목표로 설계되었습니다.
 - **유연한 라이브 서비스:** 스토어 업데이트 없이 콘텐츠를 추가하고 관리할 수 있는 환경 구축.
-- **최적화된 런타임 성능:** 수백 개의 오브젝트가 등장하는 대규모 전투에서도 안정적인 프레임 확보.
+- **최적화된 런타임 성능:** 수많은 오브젝트가 등장하는 대규모 전투에서도 안정적인 프레임 확보.
 - **안전한 데이터 관리:** 사용자의 게임 데이터를 위변조로부터 안전하게 보호하고 영속성을 보장.
 
 ---
@@ -33,7 +33,7 @@
 
 ## 🏗️ 아키텍처 설계 (Architecture Design)
 
-본 프로젝트는 계층형 아키텍처 (Layered Architecture)와 의존성 주입 (Dependency Injection)을 기반합니다. 씬 조립 계층(Composition Root)을 통해 객체간 결합도를 낮췄습니다.
+본 프로젝트는 계층형 아키텍처 (Layered Architecture)와 의존성 주입 (Dependency Injection)을 기반으로 합니다. 씬 조립 계층(Composition Root)을 통해 객체간 결합도를 낮췄습니다.
 
 ### 🧩 시스템 클래스 다이어그램
 
@@ -80,45 +80,50 @@ classDiagram
 
 ### 1. 의존성 조립 및 씬 진입 (Composition Root)
 `GameSceneCompositionRoot`는 씬 로드 시 `ScenePayloadDTO`를 통해 전달받은 데이터를 각 시스템(`GameManager`, `UIManager` 등)에 명시적으로 주입합니다.
-
-```csharp
-// [GameSceneCompositionRoot.cs] 의존성 주입 샘플
-public async UniTask OnInitialize(object payload)
-{
-    // 1. 데이터 추출 (DTO 활용)
-    if (payload is ScenePayloadDTO scenePayload)
-    {
-        var playerData = scenePayload.PlayerData;
-        var soundService = scenePayload.SoundService;
-
-        // 2. 관리자 클래스에 명시적 주입 (No Singleton Access)
-        await m_gameManager.InitializeAsync(scenePayload);
-        m_uiManager.Initialize(m_gameManager, playerData, soundService);
-    }
-}
-```
-
 ### 2. 비동기 에셋 로딩 파이프라인
 Addressables와 UniTask를 결합하여 런타임 중에도 프리징 없는 리소스를 생성합니다.
+### 3. 구글 스프레드시트 (GAS) 기반 리모트 데이터 동기화
+전용 백엔드 서버 대신 **Google App Script (GAS)**와 스프레드시트를 파싱하여 기획 데이터를 원격으로 동기화하는 시스템을 구축했습니다.
 
-```csharp
-// [GameManager.cs] 주입받은 데이터를 기반으로 한 비동기 스폰
-private async UniTask SpawnPlayerAndInitialWeaponsAsync()
-{
-    // 주입받은 DTO에서 인덱스 참조
-    int charIndex = m_playerData.SelectCharacterIndex; 
-    string charKey = $"Player_Character_{charIndex}";
+**아키텍처 핵심:**
+- **버전 캐싱 (Version Caching):** 실행 시 로컬의 버전 파일(`_version.txt`)과 서버의 버전을 대조하여, 업데이트가 있을 때만 데이터를 받아옵니다.
+- **오프라인 폴백 (Offline Fallback):** 네트워크 문제가 발생해도 로컬에 저장된 마지막 버전의 JSON 캐시를 즉기 로드하여 게임 플레이를 보장합니다.
 
-    // 비동기 프리펩 인스턴스화
-    GameObject charInstance = await Addressables
-        .InstantiateAsync(charKey, k_SpawnPosition, Quaternion.identity, m_playerContainer.transform)
-        .ToUniTask();
+#### 🔀 리모트 데이터 동기화 파이프라인 (Mermaid)
 
-    SpawnedPlayer = charInstance.GetComponent<PlayerBase>();
-    // 플레이어 시스템 초기화 (명시적 주입)
-    SpawnedPlayer.Init(m_playerService, m_soundManager, this);
-}
+```mermaid
+classDiagram
+    class GoogleAppScript {
+        <<Remote Server>>
+        +get_version
+        +get_data (JSON)
+    }
+
+    class RemoteDataUpdateManager {
+        <<MonoBehaviour / ISceneInitializer>>
+        -m_remoteService: RemoteDataService
+        -m_skillDatabase: SkillDatabase
+        +UpdateAllRemoteDataAsync() UniTask
+    }
+
+    class RemoteDataService {
+        <<Service / POCO>>
+        -m_savePath: string
+        +CheckAndUpdateDataAsync(dataType) UniTask~bool~
+        +GetLocalJsonData(dataType) string
+        -GetTextFromUrlAsync(url) UniTask~string~
+    }
+
+    class SkillDatabase {
+        <<ScriptableObject>>
+        +LoadDataFromJSON(jsonString)
+    }
+
+    RemoteDataUpdateManager --> RemoteDataService : 로직 위임
+    RemoteDataService ..> GoogleAppScript : HTTPS 통신
+    RemoteDataService --> SkillDatabase : 캐시 데이터 갱신
 ```
+
 
 ---
 
